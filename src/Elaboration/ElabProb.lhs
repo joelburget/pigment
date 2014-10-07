@@ -66,7 +66,7 @@ updated anyway.
 
 An elaboration problem is said to be \emph{unstable}\index{elaboration
 problem!unstable} if the scheduler can make progress on it, and
-\emph{stable}\emph{elaboration problem!stable} if not. At present, the
+\emph{stable}\index{elaboration problem!stable} if not. At present, the
 only kind of stable elaboration problem is waiting for a non-canonical
 term to become canonical.
 
