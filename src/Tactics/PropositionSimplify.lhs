@@ -17,7 +17,8 @@
 
 > import Prelude hiding (any, foldl)
 
-> import Control.Applicative 
+> import Control.Applicative
+> import Control.Monad.Error
 > import Control.Monad.Reader
 
 > import Data.Traversable
@@ -237,7 +238,7 @@ to give up, as otherwise we would end up simplifying the proposition to itself.
 >         let q = l $$ A (evTm ph)
 >         guard (simplifiedP || not (q == ABSURD))
 >         forkSimplify (delta <+> fmap fstEx pis) q (consequent x)
-     
+
 >     consequent :: (Simplify, Bool) -> (Simplify, Bool) -> Simplifier Simplify
 
 If $Q$ is absurd, then the simplified proposition is an implication from the
@@ -276,7 +277,7 @@ assume a proof of $P$, then construct proofs of the |pis| from it and proofs of
 the |qis| by applying the proofs of the |ris| to these. We can then substitute
 these proofs for the |pis| and |qis| in the proof of $Q$.
 
->     consequent (Simply pis pgs ph, simpP) (Simply qis qgs qh, simpQ) 
+>     consequent (Simply pis pgs ph, simpP) (Simply qis qgs qh, simpQ)
 >         | simpP || simpQ = do
 >             let ris = fmap (dischargeAllREF pis) qis
 >             let rgs = fmap wrapper qgs
@@ -293,13 +294,13 @@ these proofs for the |pis| and |qis| in the proof of $Q$.
 If we get to this point, neither the antecedent nor the consequent simplified,
 so we had better give up.
 
->     consequent (_, False) (_, False) = (|) 
+>     consequent (_, False) (_, False) = (|)
 
 
 To simplify a proposition that is universally quantified over a (completely
 canonical) enumeration, we can simplify it for each possible value.
 
-> propSimplify delta p@(ALL (ENUMT e) b) | Just ts <- getTags B0 e = 
+> propSimplify delta p@(ALL (ENUMT e) b) | Just ts <- getTags B0 e =
 >     process B0 B0 B0 (ZE :=>: ZE) ts
 >   where
 >     getTags :: Bwd VAL -> VAL -> Maybe (Bwd VAL)
@@ -330,7 +331,7 @@ To simplify $\ALL{x}{S} L x$ where $S$ is not of the form $\prf{P}$, we generate
 a fresh reference and apply $L$ to it to get the proposition $Q$ under the
 binder, which we can then simplify.
 
-> propSimplify delta p@(ALL s l) = freshRef (fortran l :<: s) $ \ refS -> do 
+> propSimplify delta p@(ALL s l) = freshRef (fortran l :<: s) $ \ refS -> do
 >     let q = l $$ A (NP refS)
 >     guard (not (q == ABSURD))
 >     forkPropSimplify (delta :< refS) q (consequent refS)
@@ -371,7 +372,7 @@ for each $Q_i$ in the simplification of $Q$.
 
 To simplify a blue equation, we use |simplifyBlue|.
 
-> propSimplify delta (EQBLUE (sty :>: s) (tty :>: t)) = 
+> propSimplify delta (EQBLUE (sty :>: s) (tty :>: t)) =
 >     simplifyBlue True delta (sty :>: s) (tty :>: t)
 
 
@@ -404,8 +405,8 @@ resulting pieces), or just searching the context. Note that if the
 equation and return |SimplyTrivial|, or it will fail.
 
 > simplifyBlue ::  Bool -> Bwd REF -> TY :>: VAL -> TY :>: VAL ->
->     Simplifier Simplify 
-> simplifyBlue canUnroll delta (sty :>: s) (tty :>: t) = 
+>     Simplifier Simplify
+> simplifyBlue canUnroll delta (sty :>: s) (tty :>: t) =
 >     useRefl
 >     <|> unroll canUnroll
 >     <|> propSearch delta (EQBLUE (sty :>: s) (tty :>: t))
@@ -432,24 +433,24 @@ and if it finds one, returns the trivial simplification. When |seekProof| finds
 a proof in the context, it calls |backchain| to go under any implications and
 test if the consequent matches the goal; if so, |backchain| then calls
 |seekProof| to attempt to prove the hypotheses, in the context with the
-backchained proposition removed. 
+backchained proposition removed.
 
 > propSearch :: Bwd REF -> VAL -> Simplifier Simplify
 > propSearch delta p = do
 >     prf <- seekProof delta F0 p
 >     prf' <- bquote B0 prf
 >     return $ SimplyTrivial prf'
->   where 
+>   where
 >     seekProof :: Bwd REF -> Fwd REF -> VAL -> Simplifier VAL
 >     seekProof B0 _ _ = (|)
 >     seekProof (rs :< ref@(_ := DECL :<: PRF q)) fs p =
 >         backchain (rs :< ref) fs B0 p q <|> seekProof rs (ref :> fs) p
 >     seekProof (rs :< ref) fs p = seekProof rs (ref :> fs) p
->  
+>
 >     backchain :: Bwd REF -> Fwd REF -> Bwd REF -> VAL -> VAL -> Simplifier VAL
 >     backchain rs fs ss p (ALL (PRF s) l) = freshRef ("bc" :<: PRF s) $ \sRef ->
 >         backchain rs fs (ss :< sRef) p (l $$ A (NP sRef))
->                                                                       
+>
 >     backchain (rs :< ref) fs ss p q = do
 >         guard =<< (asks . equal $ PROP :>: (p, q))
 >         ssPrfs <- traverse (seekProof (rs <>< fs) F0 . unPRF . pty) ss
@@ -476,7 +477,7 @@ The first argument is an optional hint for the name of the reference.
 >           ty' <- bquote B0 ty
 >           freshRef (nameHint ty :<: ty) $ \ ref ->
 >               return (SimplyOne (ref :<: ty') N (NP ref), False)
->   
+>
 >       nameHint :: VAL -> String
 >       nameHint _ | not (null hint)  = hint
 >       nameHint (NP (n := _))        = fst (last n)
@@ -528,9 +529,9 @@ current goal with the subgoals, and return a list of their types.
 >     pSimp <- runPropSimplify p
 >     case pSimp of
 >         Nothing                   ->
->             throwError' $ err "propSimplifyHere: unable to simplify."
+>             throwError $ sErr "propSimplifyHere: unable to simplify."
 >         Just (SimplyAbsurd _)     ->
->             throwError' $ err "propSimplifyHere: oh no, goal is absurd!"
+>             throwError $ sErr "propSimplifyHere: oh no, goal is absurd!"
 >         Just (SimplyTrivial prf)  -> give prf >> return B0
 >         Just (Simply pis _ ph)    -> do
 >             subs <- traverse makeSubgoal pis
@@ -556,13 +557,13 @@ but this is left for backwards compatibility.
 > import -> CochonTacticsCode where
 >     propSimplifyTactic :: ProofState String
 >     propSimplifyTactic = do
->         subs <- propSimplifyHere 
+>         subs <- propSimplifyHere
 >         case subs of
 >             B0  -> return "Solved."
 >             _   -> do
 >                 subStrs <- traverse prettyType subs
 >                 nextGoal
->                 return ("Simplified to:\n" ++ 
+>                 return ("Simplified to:\n" ++
 >                     foldMap (\s -> s ++ "\n") subStrs)
 >       where
 >         prettyType :: INTM -> ProofState String

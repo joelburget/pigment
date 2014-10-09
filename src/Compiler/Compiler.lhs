@@ -1,6 +1,6 @@
 \section{Compiler}
 
-This module uses Epic (@git clone git://github.com/edwinb/EpiVM.git@, 
+This module uses Epic (@git clone git://github.com/edwinb/EpiVM.git@,
 or download from @http://github.com/edwinb/EpiVM@) to
 generate an executable from a collection of supercombinator definitions.
 
@@ -13,13 +13,15 @@ generate an executable from a collection of supercombinator definitions.
 > module Compiler.Compiler where
 
 > import System.Environment
+> import System.Exit
 > import System.IO
-> import System
-> import Char
-> import List
+> import System.Process
+> import Data.Char
+> import Data.List
 > import Control.Monad.State
 > import Data.Traversable
 > import Control.Applicative
+> import Control.Exception
 
 > import NameSupply.NameSupply
 
@@ -61,7 +63,7 @@ of names into |CName|s.
 >     cname (x := d) = cname x
 
 
-> data CompileFn = Comp [CName] FnBody 
+> data CompileFn = Comp [CName] FnBody
 
 > data FnBody = Var CName
 >             | App FnBody [FnBody]
@@ -73,7 +75,7 @@ of names into |CName|s.
 >             | Let CName FnBody FnBody
 >             | Tuple [FnBody]
 >             | Lazy FnBody       -- evaluate body lazily
->             | Missing String    
+>             | Missing String
 >             | Ignore            -- anything we can't inspect. Types, basically.
 >             | Error String
 >    deriving Show
@@ -81,7 +83,7 @@ of names into |CName|s.
 
 \subsection{Compiling functions}
 
-The |MakeBody| typeclass describes how to convert a term into the body of a 
+The |MakeBody| typeclass describes how to convert a term into the body of a
 function (need to add the argument names elsewhere).
 
 > class MakeBody t where
@@ -120,7 +122,7 @@ write by hand in the Epic support file @epic/support.e@.
 \question{Why do we not report unknown operators sooner?}
 
 > instance CNameable n => MakeBody (Op, [Tm {In, p} n]) where
->     makeBody (Op name arity _ _ _, args) 
+>     makeBody (Op name arity _ _ _, args)
 >          = case (name, map makeBody args) of
 >                import <- OpCompile
 >                _ -> Lazy (Error ("Unknown operator" ++ show name))
@@ -140,9 +142,9 @@ The |CodeGen| typeclass describes things that are convertible to Epic code.
 >     codegen (n, def) = n ++ " " ++ codegen def
 
 > instance CodeGen CompileFn where
->     codegen (Comp args body) = "(" ++ arglist (map showarg args) ++ ") -> Data = " ++ 
+>     codegen (Comp args body) = "(" ++ arglist (map showarg args) ++ ") -> Data = " ++
 >                                codegen body
->        where 
+>        where
 >              showarg n = n ++ ":Data"
 
 > instance CodeGen FnBody where
@@ -150,7 +152,7 @@ The |CodeGen| typeclass describes things that are convertible to Epic code.
 >     codegen (App f args) = codegen f ++ "(" ++ arglist (map codegen args) ++ ")"
 >     codegen (Case sc opts def)
 >             = "case " ++ codegen sc ++ " of { " ++
->               concat (intersperse " | " 
+>               concat (intersperse " | "
 >                       (addDefault def (zipWith genOpt (map show [0..]) opts)))
 >               ++ " } "
 >       where addDefault Nothing opts = opts
@@ -173,23 +175,23 @@ The |CodeGen| typeclass describes things that are convertible to Epic code.
 \subsection{Flattening and lambda-lifting}
 
 > makeFns :: [(Name, Bwd Name, FnBody)] -> [(CName, CompileFn)]
-> makeFns xs = map (\ (n, args, tm) -> 
+> makeFns xs = map (\ (n, args, tm) ->
 >                  (cname n, Comp (map cname (trail args)) tm)) xs
 >              ++ opGen
 
-> flatten :: ParamKind -> Name -> Bwd Name -> Dev Fwd -> 
+> flatten :: ParamKind -> Name -> Bwd Name -> Dev Fwd ->
 >            [(Name, Bwd Name, FnBody)]
 > flatten b     ma del (Dev F0 Module _ _) = []
 > flatten ParamLam  ma del (Dev F0 (Unknown _) _ _) = [(ma, del, Missing (cname ma))]
-> flatten ParamLam  ma del (Dev F0 (Defined tm _) _ _) = 
->     let (t, (_, defs)) = runState (lambdaLift ma del (fmap refName tm)) 
+> flatten ParamLam  ma del (Dev F0 (Defined tm _) _ _) =
+>     let (t, (_, defs)) = runState (lambdaLift ma del (fmap refName tm))
 >                                   (ma ++ [("lift",0)],[]) in
 >            (ma, del, makeBody t) : defs
 > flatten ParamAll  ma del (Dev F0 _ _ _) = [(ma, del, Ignore)]
 > flatten ParamPi   ma del (Dev F0 _ _ _) = [(ma, del, Ignore)]
 > flatten _         ma del dev@(Dev {devEntries = EPARAM (x := _) _ b _ _ :> es}) =
 >     flatten b ma (del :< x) dev{devEntries=es}
-> flatten b         ma del dev@(Dev {devEntries = EDEF (her := _) _ _ herDev _ _ :> es}) = 
+> flatten b         ma del dev@(Dev {devEntries = EDEF (her := _) _ _ herDev _ _ :> es}) =
 >     flatten ParamLam her del herDev ++ flatten b ma del dev{devEntries=es}
 
 Lambda lifting: every lambda which is not at the top level is lifted out as a
@@ -201,7 +203,7 @@ added, and the next available name,
 > nextName xs = reverse (nextName' (reverse xs))
 >    where nextName' ((nm,i):xs) = (nm,i+1):xs
 
-> addDef :: Name -> (Bwd Name, InTm Name) -> 
+> addDef :: Name -> (Bwd Name, InTm Name) ->
 >           State LiftState ()
 > addDef nm (args, t) = do (n, fns) <- get
 >                          put (n, (nm, args, makeBody t):fns)
@@ -216,12 +218,12 @@ the arguments we've collected so far, plus the arguments to the lambda.
 Then replace the lambda with an application of the new function to all
 the names in scope.
 
-> lambdaLift :: Name -> Bwd Name -> Tm {d,TT} Name -> 
+> lambdaLift :: Name -> Bwd Name -> Tm {d,TT} Name ->
 >               State LiftState (Tm {d,TT} Name)
 > lambdaLift nm args l@(L (x :. t)) = lift args args l where
->     lift :: Bwd Name -> Bwd Name -> (InTm Name) -> 
+>     lift :: Bwd Name -> Bwd Name -> (InTm Name) ->
 >             State LiftState (InTm Name)
->     lift tlargs args (L sc@(x :. t)) 
+>     lift tlargs args (L sc@(x :. t))
 >       = let name = nm ++ [(x,bwdLength args)] in
 >             lift tlargs (args :< name) (underScope sc name)
 >     lift tlargs args t = do t' <- lambdaLift nm args t
@@ -237,11 +239,11 @@ Everything else is boring traversal of the term.
 >                                   return (L (K t'))
 > lambdaLift nm args (C can) = (|C (traverse (lambdaLift nm args) can) |)
 > lambdaLift nm args (N t) = (|N (lambdaLift nm args t) |)
-> lambdaLift nm args (op :@ as) = 
+> lambdaLift nm args (op :@ as) =
 >      (| ~op :@ (traverse (lambdaLift nm args) as) |)
-> lambdaLift nm args (t :$ el) = 
+> lambdaLift nm args (t :$ el) =
 >      (| lambdaLift nm args t :$ traverse (lambdaLift nm args) el |)
-> lambdaLift nm args (v :? t) = 
+> lambdaLift nm args (v :? t) =
 >      (| lambdaLift nm args v :? (| (error "Can't happen") |) |)
 > lambdaLift nm args tm = (| tm |)
 
@@ -284,7 +286,7 @@ code).
 >       return (exit == ExitSuccess)
 
 > tempfile :: IO (FilePath, Handle)
-> tempfile = 
+> tempfile =
 >    do env <- environment "TMPDIR"
 >       let dir = case env of
 >                    Nothing -> "/tmp"
@@ -294,13 +296,13 @@ code).
 > environment :: String -> IO (Maybe String)
 > environment x = catch (do e <- getEnv x
 >                           return (Just e))
->                       (\_ -> return Nothing)
+>                       (\(_ :: SomeException) -> return Nothing)
 
 > readLibFile :: [FilePath] -> FilePath -> IO String
 > readLibFile xs x = tryReads (map (\f -> f ++ "/" ++ x) (".":xs))
 >    where tryReads [] = fail $ "Can't find " ++ x
 >          tryReads (x:xs) = catch (readFile x)
->                                  (\e -> tryReads xs)
+>                                  (\(_ :: SomeException) -> tryReads xs)
 
 > mainDef :: CName -> String
 > mainDef m = "main () -> Unit = __dumpData(" ++ m ++ "())"
@@ -329,17 +331,17 @@ Generating operator definitions from descriptions
 
 > makeOpCompile :: String -> OpDef -> CompileFn
 > makeOpCompile opname op = mkOp argNames [] op where
->     mkOp (x:xs) args (Arg fn) 
->         = mkOp xs (args ++ [aname x]) 
+>     mkOp (x:xs) args (Arg fn)
+>         = mkOp xs (args ++ [aname x])
 >                   (fn (NP (aname x := fakeRef)))
->     mkOp (x:xs) args (ConArg fn) 
->         = mkOp xs (args ++ [aname x]) 
+>     mkOp (x:xs) args (ConArg fn)
+>         = mkOp xs (args ++ [aname x])
 >                   (fn (NP (aname x := fakeRef)))
 >     mkOp ns args (Body b) = Comp (map cname args) (mkDef ns b)
 
 >     mkDef _ (Val v) = makeBody v
 >     mkDef (x:xs) (Dec v scope)
->            = Let (cname (aname x)) (DTag (makeBody v)) 
+>            = Let (cname (aname x)) (DTag (makeBody v))
 >                  (mkDef xs (scope (NP (aname x := fakeRef))))
 >     mkDef xs (IsZero v z s)
 >            = Case (mkDef xs v) [mkDef xs z] (Just (mkDef xs s))

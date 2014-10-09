@@ -11,6 +11,7 @@
 
 > import Control.Applicative
 > import Control.Monad
+> import Control.Monad.Error
 > import Data.Foldable
 > import Data.List hiding (elem)
 > import Data.Traversable
@@ -64,8 +65,8 @@ $\Gamma$ is empty, so the hypotheses are all internal.
 
 Obviously, we also need to be provided the eliminator we want to use.
 We expect the user to provide the eliminator for us in the form
-$$\Gamma, \Delta \vdash e : (P : \Xi \rightarrow \Set) 
-                            \rightarrow \vec{m} 
+$$\Gamma, \Delta \vdash e : (P : \Xi \rightarrow \Set)
+                            \rightarrow \vec{m}
                             \rightarrow P \vec{t}$$
 where we call $P$ the \emph{motive} of the elimination, $\Xi$ the
 \emph{indices}, $\vec{m}$ the \emph{methods}, $\vec{t}$ the \emph{targets}
@@ -86,7 +87,7 @@ Presented as a development, |elim| is called in the context
 \begin{center}
 \begin{minipage}{5cm}
 \begin{alltt}
-[ \((\Gamma)\) \(\rightarrow\) 
+[ \((\Gamma)\) \(\rightarrow\)
   \((\Delta)\) \(\rightarrow\)
 ] := ? : T
 \end{alltt}
@@ -103,7 +104,7 @@ we need to check that it \emph{is} an eliminator, that is:
 \end{itemize}
 Second, we have to extract some vital pieces of information from the
 eliminator, namely:
-\begin{itemize} 
+\begin{itemize}
 \item the type $\Xi \rightarrow \Set$ of the motive, and
 \item the targets $\vec{t}$ applied to the motive.
 \end{itemize}
@@ -121,11 +122,11 @@ rebuilding the eliminator in the current development:
 \begin{center}
 \begin{minipage}{6cm}
 \begin{alltt}
-[ \((\Gamma)\) \(\rightarrow\) 
+[ \((\Gamma)\) \(\rightarrow\)
   \((\Delta)\) \(\rightarrow\)
   makeE [   P := ? : \(\Xi \rightarrow Set\)
             \(m\sb{1}\) := ? : \(M\sb{1}\) P
-            (...)  
+            (...)
             \(m\sb{n}\) := ? : \(M\sb{n}\) P
   ] := e P \(\vec{m}\) : P \(\vec{t}\)
 ] := ? : T
@@ -180,7 +181,7 @@ and go to the next subproblem, i.e. making the motive $P$:
 If the eliminator is not a function from motive and methods to return type, there
 is nothing we can do:
 
-> introElim _ = throwError' $ err "elimination: eliminator not a pi-type!"
+> introElim _ = throwError $ sErr "elimination: eliminator not a pi-type!"
 
 
 \subsubsection{Making the methods}
@@ -211,14 +212,14 @@ some arguments (the targets), which are returned.
 > checkTargets :: INTM -> VAL -> (VAL :<: VAL) -> ProofState (Bwd INTM)
 > checkTargets returnType SET (motive :<: motiveType) = do
 >      isEqual <- withNSupply $ equal (motiveType :>: (evTm returnType, motive))
->      if isEqual 
+>      if isEqual
 >          then return B0
->          else throwError' $ err "elimination: return type does not use motive!"
+>          else throwError $ sErr "elimination: return type does not use motive!"
 > checkTargets (N (f :$ A x)) (PI s t) (motive :<: motiveType) =
 >     freshRef ("s" :<: s) $ \s -> do
 >         xs <- checkTargets (N f) (t $$ (A $ pval s)) (motive :<: motiveType)
 >         return (xs :< x)
-> checkTargets _ _ _ = throwError' $ err "elimination: your motive is suspicious!"
+> checkTargets _ _ _ = throwError $ sErr "elimination: your motive is suspicious!"
 
 \pierre{There are also some conditions on the variables that can be used in
 these terms! I have to look that up too. This is a matter of traversing the
@@ -308,7 +309,7 @@ $$M P \equiv \Pi \Delta_S \rightarrow P \vec{s}$$
 This will therefore compute to:
 
 $$\Pi \Delta_S \Pi \Delta \Rightarrow
-     \vec{s} == \vec{t}\ [\Delta'/\Delta] \Rightarrow 
+     \vec{s} == \vec{t}\ [\Delta'/\Delta] \Rightarrow
      T[\Delta'/\Delta]$$
 
 The effect is therefore that this type becomes more parametric than it
@@ -376,7 +377,7 @@ are not interested in $\Delta_0$, we fearlessly throw it away.
 We aim to implement the |findNonParametricHyps| command, which takes the context
 $\Delta$ as a list of references with their types in term form and the type of
 the eliminator, and returns the filtered context $\Delta_1$. The initial
-dependencies are those of the motive and methods. 
+dependencies are those of the motive and methods.
 
 > findNonParametricHyps :: Bwd (REF :<: INTM) -> TY
 >     -> ProofState (Bwd (REF :<: INTM), Bwd (REF :<: INTM))
@@ -393,7 +394,7 @@ That would not work: the motive
 is defined under the scope of $\Delta$, so its lambda-lifted form includes
 $\Delta$. Hence, the type of the methods are defined in terms of the
 motive. Hence, all $\Delta$ is innocently included into these types,
-making them useless. 
+making them useless.
 \end{danger}
 
 The real solution is to go back to the type of the eliminator. We
@@ -468,11 +469,11 @@ should be replaced with a proper type-directed traversal for this to make sense.
 
 \subsubsection{Representing the context as |Binder|s}
 
-As we have seen, simplifying the motive will involve considering the 
+As we have seen, simplifying the motive will involve considering the
 non-parametric context $\Delta_1$ and, as we go along, remove some of its
 components. We will work with $\Delta_1$ in the following form.
-A |Binder| is a reference with the |INTM| representation of its type, 
-and a corresponding argument term that will be used when applying the motive. 
+A |Binder| is a reference with the |INTM| representation of its type,
+and a corresponding argument term that will be used when applying the motive.
 
 > type Binder = (REF :<: INTM, INTM)
 
@@ -532,7 +533,7 @@ term in |INTM| form. In such a case, renaming is simply a matter of
 When renaming a forwards list of binders, we need to update the types of the
 corresponding references and update those references in later binders.
 Note that we never update the argument term (the second component of the binder)
-as it needs to remain in the scope of the original context. 
+as it needs to remain in the scope of the original context.
 
 > renameBinders :: [(REF, REF)] -> Bwd Binder -> Fwd Binder
 >     -> (Bwd Binder, [(REF, REF)])
@@ -541,7 +542,7 @@ as it needs to remain in the scope of the original context.
 >          y''    = n := DECL :<: evTm yt''
 >          us'    = (y' , y'') : us
 >     renameBinders us' (bs :< (y'' :<: yt'', a)) xs
-> renameBinders us bs F0 = (bs, us) 
+> renameBinders us bs F0 = (bs, us)
 
 
 \subsubsection{Representing equational constraints}
@@ -551,7 +552,7 @@ sitting in some internal context $\Delta$. We have segregated this
 context in two parts, keeping only $\Delta_1$, the non-parametric
 hypotheses. Moreover, we have turned $\Delta_1$ into a list of binders. Our
 mission here is to add a bunch of equational constraints to the binders,
-simplifying them wherever possible. 
+simplifying them wherever possible.
 
 A |Constraint| represents an equation between a reference (in the indices $\Xi$)
 with its type, and a target in $\vec{t}$ with its type.
@@ -562,14 +563,14 @@ We will be renaming references when we solve constraints, but we need to keep
 track of the original terms (without renaming) for use when constructing
 arguments to the eliminator (the second component of the binders, which are in
 the scope of the original context). We use the type |a :~>: b| for a pair
-in which |a| is not updated and |b| is updated. 
+in which |a| is not updated and |b| is updated.
 
 > data a :~>: b = a :~>: b
 >   deriving (Eq, Show)
 
 Note that there is no need to rename the left-hand sides of constraints, since they
 are fresh references that do not depend on the binders. Hence we can implement
-|renameConstraints| to apply a list of updates to the right-hand sides  
+|renameConstraints| to apply a list of updates to the right-hand sides
 
 > renameConstraints :: [(REF, REF)] -> Bwd Constraint -> Fwd Constraint
 >     -> Bwd Constraint
@@ -599,7 +600,7 @@ simplify the introduced constraints by splitting the pair. We make a new subgoal
 by currying the motive type, solve the current motive with the curried version,
 then continue with the target replaced by its projections.
 We exclude the case where the target is a variable, because if so we might be able
-to simplify its constraint.   
+to simplify its constraint.
 
 > introMotive (PI (SIGMA dFresh rFresh) tFresh) (PI (SIGMA dTarg rTarg) tTarg) (x:xs) cs n
 >   | not . isVar $ evTm x = do
@@ -633,11 +634,11 @@ to simplify its constraint.
 
 If |PI (SIGMA d r) t| is the type of functions whose domain is a sigma-type, then
 |currySigma d r t| is the curried function type that takes the projections
-separately. 
+separately.
 
 > currySigma :: VAL -> VAL -> VAL -> VAL
-> currySigma d r t = PI d . L $ (fortran r) :. [.a. 
->               PI (r -$ [NV a]) . L $ (fortran t) :. [.b. 
+> currySigma d r t = PI d . L $ (fortran r) :. [.a.
+>               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
 >               t -$ [PAIR (NV a) (NV b)]]]
 
 
@@ -659,7 +660,7 @@ the references are equated.
 For each constraint, we check if the term on the right is a reference. If so,
 we check the equation is homogeneous (so substitution is allowed) and look for the
 reference in $\Delta$. If we find it, we can simplify by removing the equation,
-updating the binder and renaming the following binders, constraints and term. 
+updating the binder and renaming the following binders, constraints and term.
 
 > simplifyMotive bs (c@(x :<: xt, (q :~>: q') :<: (pt :~>: pt')) :> cs) tm
 >   | NP p' <- evTm q' = do
@@ -684,7 +685,7 @@ Eventually, we run out of constraints, and we win:
 
 
 To pass a constraint, we append a binder with a fresh reference whose type is the
-proof of the equation. When applying the motive, we will need to use reflexivity 
+proof of the equation. When applying the motive, we will need to use reflexivity
 applied to the non-updated target.
 
 > passConstraint :: Bwd Binder -> Constraint -> Fwd Constraint -> INTM
@@ -745,10 +746,10 @@ of times as |introMotive| went in:
 
 \subsection{Putting things together}
 
-Now we can combine the pieces to produce the |elim| command: 
+Now we can combine the pieces to produce the |elim| command:
 
 > elim :: Maybe REF -> (TY :>: EXTM) -> ProofState [EXTM :=>: VAL]
-> elim comma (elimTy :>: elim) = do 
+> elim comma (elimTy :>: elim) = do
 
 Here we go. First, we need to retrieve some information about our
 goal and its context, before we start modifying the development.
@@ -757,12 +758,12 @@ goal and its context, before we start modifying the development.
 >     delta <- getLocalContext comma
 
 We call |introElim| to rebuild the eliminator as a definition, check that
-everything is correct, and make subgoals for the motive and methods. 
+everything is correct, and make subgoals for the motive and methods.
 
 >     (elimName, motiveType, targets) <- introElim (elimTy :>: elim)
 
 Then we call |makeMotive| to introduce the indices, build and simplify
-constraints, and solve the motive subgoal. 
+constraints, and solve the motive subgoal.
 
 >     (delta0, binders) <- makeMotive motiveType goal delta targets elimTy
 
@@ -771,7 +772,7 @@ unimplemented, and return to the original problem.
 
 >     goOut
 
-We solve the problem by applying the eliminator. 
+We solve the problem by applying the eliminator.
 Since the binders already contain the information we need in their second
 components, it is straightforward to build the term we want and to give it.
 Note that we have to look up the latest version of the rebuilt eliminator
@@ -807,9 +808,9 @@ Then we return to the methods and solve them with the lifted versions:
 >     flip traverse liftedMethods $ \ tt -> do
 >         goDown
 >         give $ N $ termOf tt $## args
->      
+>
 
-Finally we move back to the bottom of the original development:   
+Finally we move back to the bottom of the original development:
 
 >     goOut
 >     goOut
@@ -835,7 +836,7 @@ excluded.
 > getLocalContext :: Maybe REF -> ProofState (Bwd (REF :<: INTM))
 > getLocalContext comma = do
 >     delta <- getDefinitionsToImpl
->     return . bwdList $ case comma of 
+>     return . bwdList $ case comma of
 >         Nothing  -> delta
 >         Just c   -> dropWhile (\ (r :<: _) -> c /= r) delta
 
@@ -846,7 +847,7 @@ We make elimination accessible to the user by adding it as a Cochon tactic:
 
 > import -> CochonTacticsCode where
 >   elimCTactic :: Maybe RelName -> DExTmRN -> ProofState String
->   elimCTactic c r = do 
+>   elimCTactic c r = do
 >     c' <- traverse resolveDiscard c
 >     (e :=>: _ :<: elimTy) <- elabInferFully r
 >     elim c' (elimTy :>: e)

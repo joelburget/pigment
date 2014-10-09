@@ -35,7 +35,7 @@
 >                   throwError e'
 
 > distillErrors :: StackError DInTmRN -> ProofState (StackError DInTmRN)
-> distillErrors e = sequence $ fmap (sequence . fmap distillError) e
+> distillErrors (StackError e) = StackError `fmap` (sequence $ fmap (sequence . fmap distillError) e)
 
 > distillError :: ErrorTok DInTmRN -> ProofState (ErrorTok DInTmRN)
 > distillError (ErrorVAL (v :<: mt)) = do
@@ -55,7 +55,7 @@
 
 
 > prettyStackError :: StackError DInTmRN -> Doc
-> prettyStackError e = 
+> prettyStackError (StackError e) =
 >     vcat $
 >     fmap (text "Error:" <+>) $
 >     fmap hsep $

@@ -62,7 +62,12 @@ arguments.
 >     help ty cs [] as = do
 >         let t = P r $## fmap NP cs
 >         return (t :=>: evTm t :<: ty, as)
->     help ty cs rs as = throwError' $ err "partApplyREF: failed on type " ++ errTyVal (ty :<: SET) ++ err " with refs " ++ map ErrorREF rs
+>     help ty cs rs as = throwError $ StackError
+>         [ err "partApplyREF: failed on type "
+>         , errTyVal (ty :<: SET)
+>         , err " with refs "
+>         , map ErrorREF rs
+>         ]
 
 
 A relabelling is a map from refrences to strings, giving a new name that should
@@ -82,15 +87,15 @@ and refines the proof state appropriately.
 >         LABEL (N l) ty -> do
 >             let Just (r, as) = splitSpine l
 >             unless (f == refNameAdvice r) $
->                 throwError' $ err "relabel: mismatched function name!"
+>                 throwError $ sErr "relabel: mismatched function name!"
 >             ts'  <- traverse unA ts
 >             (_ :<: rty, as') <- partApplyREF r as
 >             rl   <- execStateT (relabelArgs rty ts' as') B0
 >             es   <- getEntriesAbove
 >             refineProofState (liftType es tau') (N .($:$ paramSpine es))
 >             introLambdas rl (paramREFs es)
->         _ -> throwError' $ err "relabel: goal is not a labelled type!"
-> relabel _ = throwError' $ err "relabel: malformed relabel target!"
+>         _ -> throwError $ sErr "relabel: goal is not a labelled type!"
+> relabel _ = throwError $ sErr "relabel: malformed relabel target!"
 
 Once the refinement has been made, we need to introduce the hypotheses using
 their new names. The |introLambdas| command takes a relabelling and the
@@ -107,7 +112,7 @@ hypothesis corresponding to each reference with the reference's new name.
 
 > unA :: MonadError (StackError t) m => Elim a -> m a
 > unA (A a)  = return a
-> unA _      = throwError' $ err "unA: not an A!"
+> unA _      = throwError $ sErr "unA: not an A!"
 
 
 
@@ -117,21 +122,26 @@ hypothesis corresponding to each reference with the reference's new name.
 >     case find ((r ==) . fst) rl of
 >         Nothing                   -> put (rl :< (r, s))
 >         Just (_, t)  | s == t     -> return ()
->                      | otherwise  -> throwError' $
->             err ("relabelValue: inconsistent names '" ++ s ++ "' and '" ++ t
->                         ++ "' for") ++ errRef r
+>                      | otherwise  -> throwErrorS
+>             [ err ("relabelValue: inconsistent names '" ++ s ++ "' and '" ++
+>                    t ++ "' for")
+>             , errRef r
+>             ]
 
 
 > relabelArgs :: TY -> [DInTmRN] -> [VAL] -> StateT Relabelling ProofState ()
 > relabelArgs _ []  []   = return ()
-> relabelArgs _ []  _    = throwError' $ err "relabel: too few arguments!"
-> relabelArgs _ _   []   = throwError' $ err "relabel: too many arguments!"
+> relabelArgs _ []  _    = throwError $ sErr "relabel: too few arguments!"
+> relabelArgs _ _   []   = throwError $ sErr "relabel: too many arguments!"
 > relabelArgs (PI s t) (w:ws) (a:as) = do
 >     relabelValue (s :>: (w, a))
 >     relabelArgs (t $$ A a) ws as
-> relabelArgs ty ws as  = throwError' $ err "relabel: unmatched\nty ="
->                              ++ errTyVal (ty :<: SET)
->                              ++ err "\nas =" ++ foldMap errVal as
+> relabelArgs ty ws as  = throwErrorS
+>     [ err "relabel: unmatched\nty ="
+>     , errTyVal (ty :<: SET)
+>     , err "\nas ="
+>     , foldMap errVal as
+>     ]
 
 
 > relabelValue :: (TY :>: (DInTmRN, VAL)) -> StateT Relabelling ProofState ()
@@ -140,7 +150,7 @@ If the value we are matching against is a stuck recursive call, we match against
 the user-friendly label (which is what the user would expect) rather than the
 horrible induction term.
 
-> relabelValue (ty :>: (w, N (n :$ Call l))) = relabelValue (ty :>: (w, l)) 
+> relabelValue (ty :>: (w, N (n :$ Call l))) = relabelValue (ty :>: (w, l))
 
 If we are matching two parameters (applied to some arguments), we can extend
 the relabelling and matching the arguments.
@@ -157,10 +167,10 @@ If the display term is an underscore then we make no changes to the relabelling.
 > relabelValue (ty :>: (DU, _)) = return ()
 
 If the display term and value are both canonical, we halfzip them together
-(ensuring the constructors match) and use |canTy| to match the pieces. 
+(ensuring the constructors match) and use |canTy| to match the pieces.
 
 > relabelValue (C cty :>: (DC w, C v)) = case halfZip w v of
->     Nothing -> throwError' $ err "relabelValue: mismatched constructors!"
+>     Nothing -> throwError $ sErr "relabelValue: mismatched constructors!"
 >     Just wv -> (liftage fst $ canTy chev (cty :>: wv)) >> return ()
 >   where
 >     chev :: (TY :>: (DInTmRN, VAL)) ->
@@ -181,7 +191,7 @@ an element of an inductive type, we match the tags and values.
 >   | Just (e, f) <- sumlike d = do
 >     ntm :=>: nv  <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
 >     sameTag      <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->     unless sameTag $ throwError' $ err "relabel: mismatched tags!"
+>     unless sameTag $ throwError $ sErr "relabel: mismatched tags!"
 >     relabelValue (descOp @@ [f t, ty] :>: (foldr DPAIR DVOID as, xs))
 
 Similarly for indexed data types:
@@ -190,7 +200,7 @@ Similarly for indexed data types:
 >   | Just (e, f) <- sumilike _I (d $$ A i) = do
 >     ntm :=>: nv  <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
 >     sameTag      <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->     unless sameTag $ throwError' $ err "relabel: mismatched tags!"
+>     unless sameTag $ throwError $ sErr "relabel: mismatched tags!"
 >     relabelValue (idescOp @@ [_I, f t,
 >         L $ "i" :. [.i. IMU (fmap (-$ []) l) (_I -$ []) (d -$ []) (NV i)] ]
 >             :>: (foldr DPAIR DU as, xs))
@@ -200,12 +210,16 @@ Lest we forget, tags may also belong to enumerations!
 > relabelValue (ENUMT e :>: (DTag s [], t)) = do
 >   ntm :=>: nv <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
 >   sameTag <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->   unless sameTag $ lift $ throwError' $ err "relabel: mismatched tags!"
+>   unless sameTag $ lift $ throwError $ sErr "relabel: mismatched tags!"
 
 Nothing else matches? We had better give up.
 
-> relabelValue (ty :>: (w, v)) = lift $ throwError' $ err "relabel: can't match"
->                                 ++ errTm w ++ err "with" ++ errTyVal (v :<: ty)
+> relabelValue (ty :>: (w, v)) = lift $ throwErrorS
+>     [ err "relabel: can't match"
+>     , errTm w
+>     , err "with"
+>     , errTyVal (v :<: ty)
+>     ]
 
 
 > import -> CochonTactics where

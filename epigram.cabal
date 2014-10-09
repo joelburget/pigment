@@ -7,6 +7,12 @@ Synopsis:       A dependently-typed programming language
 Build-Type:     Custom
 
 Executable Pig
-  Build-Depends:  base, mtl, haskell98, pretty, filepath
+  Build-Depends:
+      base,
+      mtl,
+      pretty,
+      filepath,
+      process == 1.2.0.0
   Main-Is:        Main.lhs
   Hs-Source-Dirs: src
+  other-modules: Kit.MissingLibrary

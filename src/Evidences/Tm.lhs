@@ -5,7 +5,7 @@
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
->     FlexibleContexts, ScopedTypeVariables #-}
+>     FlexibleContexts, ScopedTypeVariables, ConstraintKinds #-}
 
 > module Evidences.Tm where
 
@@ -14,6 +14,7 @@
 > import Control.Applicative
 > import Control.Monad.Error
 > import qualified Data.Monoid as M
+> import Data.Monoid (mempty, mappend, (<>))
 > import Data.Foldable
 > import Data.List hiding (foldl)
 > import Data.Traversable
@@ -133,7 +134,7 @@ sure that the operator is indeed applied to a stuck term \emph{which
 is used} by the operator. During evaluation, for example, we have been
 careful in returning a neutral operator if and only if the operator
 was consuming a stuck term. As a corollary, if the operator can be
-fully computed, then it \emph{must} be so. 
+fully computed, then it \emph{must} be so.
 
 More tricky but for the same reason: when \emph{implementing} term
 builders (not when using them), we are indeed making terms,
@@ -174,7 +175,7 @@ both syntactic and functional scopes in both places.}
 
 > data Scope :: {Phase} -> * -> * where
 >   (:.)  :: String -> Tm {In, TT} x           -> Scope p{-TT-} x  -- binding
->   H     :: Env x -> String -> Tm {In, TT} x    -> Scope p{-VV-} x  
+>   H     :: Env x -> String -> Tm {In, TT} x    -> Scope p{-VV-} x
 >   K     :: Tm {In, p} x                      -> Scope p x     -- constant
 
 
@@ -273,14 +274,14 @@ checker-evaluator |chev|. Based on this chev, it simply goes over the
 telescope, checking and evaluating as it moves further.
 
 > telCheck ::  (Alternative m, MonadError (StackError t) m) =>
->              (TY :>: t -> m (s :=>: VAL)) -> 
->              (TEL x :>: [t]) -> m ([s :=>: VAL] , x) 
+>              (TY :>: t -> m (s :=>: VAL)) ->
+>              (TEL x :>: [t]) -> m ([s :=>: VAL] , x)
 > telCheck chev (Target x :>: []) = return ([] , x)
 > telCheck chev ((_ :<: sS :-: tT) :>: (s : t)) = do
->     ssv@(s :=>: sv) <- chev (sS :>: s) 
+>     ssv@(s :=>: sv) <- chev (sS :>: s)
 >     (svs , x) <- telCheck chev ((tT sv) :>: t)
->     return (ssv : svs , x) 
-> telCheck _ _ = throwError' $ err "telCheck: opTy mismatch"
+>     return (ssv : svs , x)
+> telCheck _ _ = throwError $ sErr "telCheck: opTy mismatch"
 
 \paragraph{Running the operator}
 
@@ -446,7 +447,7 @@ circumstances, however.
 > instance Eq REF where
 >   (x := _) == (y := _) = x == y
 
-%if false 
+%if false
 
 > instance Show REF where
 >   show (name := kt) = intercalate "." (map (\(x,n) -> x ++ "_" ++ show n) name) ++ " := " ++ show kt
@@ -473,7 +474,7 @@ A hole will be in one of three ``Buddy Holly'' states:
 \item |Crying|: the elaboration strategy intended to solve the hole has
 gone wrong.
 \item |Waiting|: a solution strategy exists for the hole (including the
-``strategy'' of waiting for the user to solve it). 
+``strategy'' of waiting for the user to solve it).
 \item |Hoping|: no solution strategy is assigned to the hole, so it will
 take any value that you can give it.
 \end{itemize}
@@ -523,8 +524,8 @@ labelled.
 > instance (Traversable f, HalfZip f, Eq t) => Eq (Labelled f t) where
 >   (Just a  :?=: _)  ==  (Just b  :?=: _) | a == b  = True
 >   (_       :?=: s)  ==  (_       :?=: t)           = case halfZip s t of
->     Nothing -> False 
->     Just x -> M.getAll (crush (M.All . uncurry (==)) x) 
+>     Nothing -> False
+>     Just x -> M.getAll (crush (M.All . uncurry (==)) x)
 
 If we have a labelled |INTM|, we can try to extract the name from the label.
 
@@ -566,7 +567,7 @@ The aptly named |$##| operator applies an |ExTm| to a list of |InTm|s.
 > f $## xs = foldl (\ v w -> v :$ A w) f xs
 
 Sensible name advice is a hard problem. The |fortran| function tries to extract
-a useful name from a binder.  
+a useful name from a binder.
 
 > fortran :: Tm {In, p} x -> String
 > fortran (L (x :. _))   | not (null x) = x
@@ -597,7 +598,7 @@ following to make it suit your need.
 >                 | ErrorREF REF
 >                 | ErrorVAL      (VAL     :<: Maybe TY)
 
-> instance Functor ErrorTok where 
+> instance Functor ErrorTok where
 >     fmap f (StrMsg x)              = StrMsg x
 >     fmap f (ErrorTm (t :<: mt))    = ErrorTm (f t :<: fmap f mt)
 >     fmap f (ErrorCan t)   = ErrorCan (fmap f t)
@@ -612,18 +613,22 @@ An error is list of error tokens:
 Errors a reported in a stack, as failure is likely to be followed by
 further failures. The top of the stack is the head of the list.
 
-> type StackError t = [ErrorItem t]
-
-
+> newtype StackError t = StackError { unStackError :: [ErrorItem t] }
 
 > instance Error (StackError t) where
->   strMsg s = [err s]
+>   strMsg = sErr
 
+> instance M.Monoid (StackError t) where
+>   (StackError a) `mappend` (StackError b) = StackError (a ++ b)
+>   mempty = StackError []
 
 To ease the writing of error terms, we have a bunch of combinators:
 
 > err :: String -> ErrorItem t
 > err s = [StrMsg s]
+
+> sErr :: String -> StackError t
+> sErr = StackError . pure . err
 
 > errTm :: t -> ErrorItem t
 > errTm t = [ErrorTm (t :<: Nothing)]
@@ -642,6 +647,32 @@ To ease the writing of error terms, we have a bunch of combinators:
 
 > errRef :: REF -> ErrorItem t
 > errRef r = [ErrorREF r]
+
+> pushError :: MonadError (StackError t) m => m a -> StackError t -> m a
+> pushError c e = catchError c (\x -> throwError (e <> x))
+
+> throwErrorS :: MonadError (StackError t) m => [ErrorItem t] -> m a
+> throwErrorS = throwError . StackError
+
+> catchMaybe :: MonadError (StackError t) m => Maybe a -> StackError t -> m a
+> catchMaybe (Just x) _ = return x
+> catchMaybe Nothing  e = throwError e
+
+> catchEither :: MonadError (StackError t) m
+>             => Either (StackError t) a
+>             -> StackError t
+>             -> m a
+> catchEither (Right x) _ = return x
+> catchEither (Left s) e = throwError (e <> s)
+
+
+> throwErrorStr :: MonadError (StackError t) m => String -> m a
+> throwErrorStr = throwError . StackError . pure . err
+
+TODO(joel) rename to throwErrorTm
+
+> throwError' :: MonadError (StackError t) m => t -> m a
+> throwError' = throwError . StackError . pure . errTm
 
 
 > convertErrorVALs :: ErrorTok VAL -> ErrorTok t
@@ -668,11 +699,6 @@ To ease the writing of error terms, we have a bunch of combinators:
 >    import <- CanHalfZip
 >    halfZip _          _          = Nothing
 
-> instance Functor Can where
->   fmap = fmapDefault
-> instance Foldable Can where
->   foldMap = foldMapDefault
-
 > instance Traversable Elim where
 >   traverse f (A s)  = (|A (f s)|)
 >   traverse _ Out    = (|Out|)
@@ -683,18 +709,8 @@ To ease the writing of error terms, we have a bunch of combinators:
 >   import <- ElimHalfZip
 >   halfZip _ _          = Nothing
 
-> instance Functor Elim where
->   fmap = fmapDefault
-> instance Foldable Elim where
->   foldMap = foldMapDefault
-
-
-> instance Functor Irr where
->   fmap = fmapDefault
-> instance Foldable Irr where
->   foldMap = foldMapDefault
 > instance Traversable Irr where
->    traverse f (Irr x) = (|Irr (f x)|)
+>   traverse f (Irr x) = (|Irr (f x)|)
 
 
 > instance Show x => Show (Tm dp x) where
@@ -716,32 +732,20 @@ To ease the writing of error terms, we have a bunch of combinators:
 > instance Show Op where
 >   show = opName
 
-> instance Functor (Scope {p}) where
->   fmap = fmapDefault
-> instance Foldable (Scope {p}) where
->   foldMap = foldMapDefault
 > instance Traversable (Scope {p}) where
 >   traverse f (x :. t)   = (|(x :.) (traverse f t)|)
 >   traverse f (K t)      = (|K (traverse f t)|)
 >   traverse f (H (e, s) x t)  = (|H (| (traverse (traverse f) e) , ~s|) ~x (traverse f t)|)
 
-> instance Traversable f => Functor (Labelled f) where
->   fmap = fmapDefault
-> instance (Traversable f, Foldable f) => Foldable (Labelled f) where
->   foldMap = foldMapDefault
 > instance Traversable f => Traversable (Labelled f) where
 >   traverse f (mt :?=: ft)  = (| traverse f mt :?=: traverse f ft |)
 
 > instance (Traversable f, HalfZip f) => HalfZip (Labelled f) where
->   halfZip (Just a  :?=: fs)  (Just b :?=: ft)  = 
+>   halfZip (Just a  :?=: fs)  (Just b :?=: ft)  =
 >     (| (Just (a, b)  :?=:) (halfZip fs ft) |)
->   halfZip (_       :?=: fs)  (_      :?=: ft)  = 
+>   halfZip (_       :?=: fs)  (_      :?=: ft)  =
 >     (| (Nothing  :?=:) (halfZip fs ft) |)
 
-> instance Functor (Tm {d,p}) where
->   fmap = fmapDefault
-> instance Foldable (Tm {d,p}) where
->   foldMap = foldMapDefault
 > instance Traversable (Tm {d,p}) where
 >   traverse f (L sc)     = (|L (traverse f sc)|)
 >   traverse f (C c)      = (|C (traverse (traverse f) c)|)

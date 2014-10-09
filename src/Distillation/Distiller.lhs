@@ -19,7 +19,7 @@
 
 > import ProofState.Edition.ProofState
 
-> import ProofState.Interface.ProofKit         
+> import ProofState.Interface.ProofKit
 > import ProofState.Interface.NameResolution
 > import ProofState.Interface.Name
 
@@ -54,7 +54,7 @@ Section~\ref{subsec:Evidences.TypeChecker.type-checking}. |distill| mirrors
 The |distill| command converts a typed |INTM| in the Evidence language
 to a term in the Display language; that is, it reverses |elaborate|.
 It peforms christening at the same time, turning absolute names into
-relative names. 
+relative names.
 
 The distiller first tries to apply Feature-specific rules. These rules
 contain the inteligence of the distiller, aiming at making a concise
@@ -93,9 +93,11 @@ will switch the entries to |Bwd REF| so this will not be necessary.)
 
 > distillBase entries (ty :>: l@(L sc)) = do
 >     let x = fortran l
->     (kind, dom, cod) <- lambdable ty `catchMaybe`  (err "distill: type " 
->                                                    ++ errVal ty 
->                                                    ++ err " is not lambdable.")
+>     (kind, dom, cod) <- lambdable ty `catchMaybe`  (StackError
+>         [ err "distill: type "
+>         , errVal ty
+>         , err " is not lambdable."
+>         ])
 >     tm' :=>: _ <-  freshRef (x :<: dom) $ \ref ->
 >                    distill  (entries :< EPARAM  ref (mkLastName ref) kind
 >                                                 (error "distill: type undefined") Nothing)
@@ -114,16 +116,19 @@ If we encounter a neutral term, we switch to |distillInfer|.
 
 If none of the cases match, we complain loudly.
 
-> distillBase _ (ty :>: tm) =  throwError' $ 
->                              err "distill: can't cope with\n" ++
->                              errTm tm ++ err " :<: " ++ errVal ty
+> distillBase _ (ty :>: tm) =  throwErrorS
+>     [ err "distill: can't cope with\n"
+>     , errTm tm
+>     , err " :<: "
+>     , errVal ty
+>     ]
 
 
 \subsection{Distilling |EXTM|s}
 
 The |distillInfer| command is the |EXTM| version of |distill|, which
 also yields the type of the term. Following |distill|, we maintain the
-local scope of fresh references. 
+local scope of fresh references.
 
 Moreover, recall that the |DExTm| terms are in Spine form: they are
 composed of a |DHead| --- either parameter, type annotation, or
@@ -132,7 +137,7 @@ perform this translation, we accumulate a |spine| and distill it when
 we reach the head. Doing so, shared parameters can be removed (see
 subsection~\ref{subsec:ProofState.Interface.NameResolution.christening}).
 
-> distillInfer ::  Entries -> EXTM -> Spine {TT} REF -> 
+> distillInfer ::  Entries -> EXTM -> Spine {TT} REF ->
 >                  ProofStateT INTM (DExTmRN :<: TY)
 >
 > import <- DistillInferRules
@@ -146,7 +151,7 @@ elimination with the shared parameters and implicit arguments removed.
 > distillInfer entries tm@(P (name := kind :<: ty)) spine = do
 >     -- Compute a relative name from |name|
 >     proofCtxt <- get
->     let  (relName, argsToDrop, mSch) = 
+>     let  (relName, argsToDrop, mSch) =
 >           unresolve name kind spine (inBScope proofCtxt) entries
 >     -- Distill the spine
 >     (e', ty') <- distillSpine entries (evTm tm :<: ty) spine
@@ -178,7 +183,7 @@ To distill an elimination, we simply push the eliminator on to the spine.
 Because there are no operators in the display syntax, we replace them with
 parameters containing the appropriate primitive references.
 
-> distillInfer entries (op :@ args) spine = 
+> distillInfer entries (op :@ args) spine =
 >     distillInfer  entries (P  (lookupOpRef op)) (map A args ++ spine)
 
 Unnecessary type ascriptions can simply be dropped. As we can always
@@ -212,8 +217,10 @@ the distilled term, together with the distilled spine.
 
 If nothing matches, we are unable to distill this term, so we complain loudly.
 
-> distillInfer _ tm _ =  throwError' $ 
->                        err "distillInfer: can't cope with " ++ errTm (N tm)
+> distillInfer _ tm _ =  throwErrorS
+>     [ err "distillInfer: can't cope with "
+>     , errTm (N tm)
+>     ]
 
 
 \subsection{Distillation support}
@@ -223,7 +230,7 @@ and a spine of arguments for the value. It distills the spine, using
 |elimTy| to determine the appropriate type to push in at each step, and returns
 the distilled spine and the overall type of the application.
 
-> distillSpine ::  Entries -> (VAL :<: TY) -> Spine {TT} REF -> 
+> distillSpine ::  Entries -> (VAL :<: TY) -> Spine {TT} REF ->
 >                  ProofStateT INTM (DSPINE, TY)
 > distillSpine _        (_ :<: ty)    []         = return ([], ty)
 > distillSpine entries  (v :<: C ty)  (a:spine)  = do
@@ -233,10 +240,14 @@ the distilled spine and the overall type of the application.
 >     (es, ty2) <- distillSpine entries (v $$ (fmap valueOf e1) :<: ty1) spine
 >     -- Return distilled spine and type of the application
 >     return (fmap termOf e1 : es, ty2)
-> distillSpine entries  (v :<: ty)    spine      = throwError' $
->     err "distillSpine: cannot cope with" ++ errTyVal (v :<: ty)
->     ++ err "which has non-canonical type" ++ errTyVal (ty :<: SET)
->     ++ err "applied to spine" ++ map ErrorElim spine
+> distillSpine entries  (v :<: ty)    spine      = throwErrorS
+>     [ err "distillSpine: cannot cope with"
+>     , errTyVal (v :<: ty)
+>     , err "which has non-canonical type"
+>     , errTyVal (ty :<: SET)
+>     , err "applied to spine"
+>     , map ErrorElim spine
+>     ]
 
 
 The |toDExTm| helper function will distill a term to produce an |Ex|

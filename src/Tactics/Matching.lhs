@@ -12,6 +12,7 @@
 
 > import Control.Applicative
 > import Control.Monad
+> import Control.Monad.Error
 > import Control.Monad.State
 > import Data.Foldable
 
@@ -80,7 +81,7 @@ ensure none of the unsafe references occur.
 projections). If you do something too complicated, it may end up matching
 references with things of the wrong type. A cheap improvement would be to check
 types before calling |insertSubst|, thereby giving a sound but incomplete matching
-algorithm. Really we should do proper higher-order matching.} 
+algorithm. Really we should do proper higher-order matching.}
 
 > matchValue :: Bwd REF -> TY :>: (VAL, VAL) -> StateT MatchSubst ProofState ()
 > matchValue zs (ty :>: (NP x, t)) = do
@@ -99,7 +100,7 @@ algorithm. Really we should do proper higher-order matching.}
 >     put rs'
 
 > matchValue' zs (C cty :>: (C cs, C ct)) = case halfZip cs ct of
->     Nothing   -> throwError' $ err "matchValue: unmatched constructors!"
+>     Nothing   -> throwError $ sErr "matchValue: unmatched constructors!"
 >     Just cst  -> do
 >         (mapStateT $ mapStateT $ liftError'
 >             (\ v -> convertErrorVALs (fmap fst v)))
@@ -138,15 +139,19 @@ with the matching substitution.
 > matchNeutral' zs (f :$ e) (g :$ d)                 = do
 >     C ty <- matchNeutral zs f g
 >     case halfZip e d of
->         Nothing  -> throwError' $ err "matchNeutral: unmatched eliminators!"
+>         Nothing  -> throwError $ sErr "matchNeutral: unmatched eliminators!"
 >         Just ed  -> do
 >             (_, ty') <- (mapStateT $ mapStateT $ liftError' (error "matchNeutral: unconvertable error!")) $ elimTy (chevMatchValue zs) (N f :<: ty) ed
 >             return ty'
 > matchNeutral' zs (fOp :@ as) (gOp :@ bs) | fOp == gOp = do
 >     (_, ty) <- (mapStateT $ mapStateT $ liftError' (error "matchNeutral: unconvertable error!")) $ opTy fOp (chevMatchValue zs) (zip as bs)
 >     return ty
-> matchNeutral' zs a b = throwError' $ err "matchNeutral: unmatched "
->                           ++ errVal (N a) ++ err "and" ++ errVal (N b)
+> matchNeutral' zs a b = throwError $ StackError
+>     [ err "matchNeutral: unmatched "
+>     , errVal (N a)
+>     , err "and"
+>     , errVal (N b)
+>     ]
 
 
 As noted above, fresh references generated when expanding $\Pi$-types must not
@@ -154,7 +159,7 @@ occur as solutions to matching problems. The |checkSafe| function throws an
 error if any of the references occur in the value.
 
 > checkSafe :: Bwd REF -> VAL -> ProofState ()
-> checkSafe zs t  | any (`elem` t) zs  = throwError' $ err "checkSafe: unsafe!"
+> checkSafe zs t  | any (`elem` t) zs  = throwError $ sErr "checkSafe: unsafe!"
 >                 | otherwise          = return ()
 
 
@@ -179,7 +184,7 @@ and another term of the same type. It prints out the resulting substitution.
 >             return (r, Nothing)
 
 > import -> CochonTactics where
->   : (simpleCT 
+>   : (simpleCT
 >     "match"
 >     (do
 >         pars <- tokenListArgs (bracket Round $ tokenPairArgs

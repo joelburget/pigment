@@ -108,7 +108,7 @@ to which source code locations. For the moment, |Loc|s are just ignored.
 >     show (EAskNSupply _)    = "EAskNSupply (...)"
 
 > instance Monad Elab where
->     fail s  = ECry [err $ "fail: " ++ s]
+>     fail s  = ECry (sErr $ "fail: " ++ s)
 >     return  = EReturn
 >
 >     EReturn x        >>= k = k x
@@ -123,21 +123,12 @@ to which source code locations. For the moment, |Loc|s are just ignored.
 >     EResolve rn f    >>= k = EResolve rn    ((k =<<) . f)
 >     EAskNSupply f    >>= k = EAskNSupply    ((k =<<) . f)
 
-> instance Functor Elab where
->     fmap = ap . return
->
-> instance Applicative Elab where
->     pure   = return
->     (<*>)  = ap
-
-> instance Alternative Elab where
->     empty          = ECry [err "empty"]
->     ECry _  <|> x  = x
->     x       <|> _  = x
-
 > instance (MonadError (StackError DInTmRN)) Elab where
 >     throwError e           = ECry e
 >     catchError (ECry e) f  = f e
 >     catchError x _         = x
+
+> instance Alternative Elab where
+>     -- TODO(joel)
 
 %endif

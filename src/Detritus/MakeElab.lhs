@@ -5,12 +5,12 @@ together with a proof that these equal the input.
 
 > eEnsure :: INTM :=>: VAL -> (Can VAL :>: Can ()) -> Elab (INTM :=>: Can VAL, INTM :=>: VAL)
 > eEnsure (tm :=>: C v) (ty :>: t) = case halfZip v t of
->     Nothing  -> throwError' $ err "eEnsure: halfZip failed!"
+>     Nothing  -> throwError $ sErr "eEnsure: halfZip failed!"
 >     Just _   -> do
 >         ty' :=>: _ <- eQuote (C ty)
 >         return (tm :=>: v, N (P refl :$ A ty' :$ A tm)
 >                                  :=>: pval refl $$ A (C ty) $$ A (C v))
-> eEnsure (_ :=>: L _) _ = throwError' $ err "eEnsure: failed to match lambda!"
+> eEnsure (_ :=>: L _) _ = throwError $ sErr "eEnsure: failed to match lambda!"
 > eEnsure (_ :=>: nv) (ty :>: t) = do
 >     vu <- unWrapElab $ canTy chev (ty :>: t)
 >     let v = fmap valueOf vu

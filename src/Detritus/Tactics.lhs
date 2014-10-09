@@ -43,7 +43,7 @@ Haskell, with relative ease. To do that, we have equipped the |Tac|
 data-type with adequate structure, and a set of combinators.
 
 In a first section, we implement |Tac| and dress it up with its
-structure. In a second section, we implement the combinators. 
+structure. In a second section, we implement the combinators.
 
 \subsection{The machinery}
 
@@ -55,7 +55,7 @@ availability of a |NameSupply|. All in all, this goes like this:
 
 In other words, we have two @Reader@ monads stacked on an @Error@
 monad. I don't know for you but I'm quite happy to reinvent the wheel
-by not using the wacky monad transformers. 
+by not using the wacky monad transformers.
 
 \subsubsection{Being monadic}
 
@@ -70,7 +70,7 @@ Then we have a monad:
 
 > instance Monad Tac where
 >     return x = Tac { runTac = \_ _ -> Right x }
->     x >>= f = Tac { runTac = \r t -> 
+>     x >>= f = Tac { runTac = \r t ->
 >                                do -- in Either monad
 >                                x <- runTac x r t
 >                                runTac (f x) r t }
@@ -84,15 +84,15 @@ Then we have a monad:
 
 Because a tactic is some sort of |(->) NameSupply|, it is also a
 |NameSupply|. Therefore, we abstractly get |freshRef| and |forkSupply|
-operations on it. 
+operations on it.
 
 Let us work out the implementation:
 
 > instance NameSupplier Tac where
 >     askNSupply = Tac { runTac = \supply _ -> Right supply }
 >     freshRef x tacF = Tac { runTac = NameSupply.NameSupplier.freshRef x (runTac . tacF) }
->     forkNSupply s child dad = Tac { runTac = \nsupply typ -> 
->                                           do 
+>     forkNSupply s child dad = Tac { runTac = \nsupply typ ->
+>                                           do
 >                                           c <- runTac child (freshNSpace nsupply s) typ
 >                                           runTac (dad c) (freshName nsupply) typ
 >                                }
@@ -105,7 +105,7 @@ we have a monad:
 >     (<*>) = ap
 
 > instance Alternative Tac where
->   empty = throwError' $ err "Alternative empty"
+>   empty = throwError $ sErr "Alternative empty"
 >   s <|> t = catchError s (const t)
 
 \subsection{The tactic combinators}
@@ -124,7 +124,7 @@ inherits the monadic nature of |Either [String]|.
 
 As we have mentioned |TY ->| is a Reader, so are its
 combinators. Hence, we can |ask| what is the current type goal with,
-well, |goal|. 
+well, |goal|.
 
 > goal :: Tac TY
 > goal = Tac { runTac = \nsupply typ -> Right typ }
@@ -134,8 +134,8 @@ environment. Conor is concerned about the fact that, apart from
 Inference rules, nobody should be using this guy.
 
 > subgoal :: (TY :>: Tac x) -> Tac x
-> subgoal (typ :>: tacX) = 
->     Tac { runTac = \nsupply _ -> 
+> subgoal (typ :>: tacX) =
+>     Tac { runTac = \nsupply _ ->
 >             case runTac tacX nsupply typ of
 >               Left x -> Left $ (err "subgoal: unable to build an " ++
 >                                 err "inhabitant of " ++ errVal typ) : x
@@ -148,7 +148,7 @@ When a tactic fails, it is good to know why. So, we provide this
 combinator to report a failure.
 
 > failTac :: String -> Tac x
-> failTac = throwError' . err
+> failTac = throwError . sErr
 
 We are not entirely satisfied with this solution, so this will
 probably change (for the better) in future iterations. The problem
@@ -189,12 +189,12 @@ you got the idea now.
 >                              body <- subgoal (t $$ A (pval x) :>: body x)
 >                              discharge x body
 >     _ -> failTac $ "lambdaTac: could not match the current goal "
->                    ++ show pi ++ 
+>                    ++ show pi ++
 >                    " against a Pi type"
 
 The second builder is significantly simpler, as we don't have to care
 about binding. Taking a canonical term containing well-typed values,
-|can| builds a well-typed (canonical) value. 
+|can| builds a well-typed (canonical) value.
 
 To do that, we first ask our goal to live in the canonical
 world. That's an obvious requirement. Then, we use an hand-crafted
@@ -216,7 +216,7 @@ notation |:=>:| and lack the associated projections.
 >       C t -> do
 >              v <- canTy chev (t :>: cTac)
 >              return $ C $ fmap (\(x :=>: v) -> v) v
->       _ -> failTac $ "can: could not match " ++ show c ++ 
+>       _ -> failTac $ "can: could not match " ++ show c ++
 >                      " against a Can type"
 >     where chev (t :>: x) = do
 >               v <- subgoal (t :>: x)
@@ -243,10 +243,10 @@ work and comparing the inferred type with the current goal.
 >     do
 >       typ' <- goal
 >       p <- equalR (SET :>: (typ, typ'))
->       case p of 
+>       case p of
 >         True -> return v
 >         False -> failTac $ "done: the provided type " ++ show typ ++
->                            " for value " ++ show v ++ 
+>                            " for value " ++ show v ++
 >                            " is not equal to the current goal " ++ show typ'
 >     where equalR x = do
 >             r <- askNSupply
@@ -263,15 +263,15 @@ we can simply apply |v| to |x|, and call into |use| with this result
 and its type |tv|.
 
 > apply :: Elim (Tac VAL) -> Use -> Use
-> apply etacX use (x :<: t) = 
+> apply etacX use (x :<: t) =
 >   case t of
 >     C t -> do
->           (v,tv) <- elimTy chev (x :<: t) etacX 
+>           (v,tv) <- elimTy chev (x :<: t) etacX
 >           let v' = fmap (\(_ :=>: x) -> x) v
 >           use (x $$ v' :<: tv)
->     _ -> failTac $ "apply: cannot apply an elimination" ++ 
+>     _ -> failTac $ "apply: cannot apply an elimination" ++
 >                     " on non canonical type " ++ show t
->     where chev (t :>: x) = do 
+>     where chev (t :>: x) = do
 >             v <- subgoal (t :>: x)
 >             return $ x :=>: v
 
@@ -283,10 +283,10 @@ object, very likely to be a function or any argument of an eliminator
 
 To do so, we call the continuation |useR| with the value and type of
 |ref|. Then, the continuation machinery will build a grown up term
-that, at some point, ends up with a |done|. 
+that, at some point, ends up with a |done|.
 
 > use :: REF -> Use -> Tac VAL
-> use ref useR = 
+> use ref useR =
 >     do
 >       useR (pval ref :<: pty ref)
 
@@ -328,11 +328,11 @@ And here is the twice function:
 
 > twice = tyLambda ("X" :<: SET) $ \tx ->
 >         let vtx = pval tx in
->         tyLambda ("f" :<: (ARR vtx vtx)) $ \f -> 
->         tyLambda ("x" :<: vtx) $ \x -> 
+>         tyLambda ("f" :<: (ARR vtx vtx)) $ \f ->
+>         tyLambda ("x" :<: vtx) $ \x ->
 >         infr $ vtx :>:
 >                (use f .
->                 apply (A (use f . 
+>                 apply (A (use f .
 >                           apply  (A (use x done)) $
 >                           done)) $
 >                 done)
@@ -348,7 +348,7 @@ And here is the twice function:
 
 Having a |Tac (VAL :<: TY)| at hand is always a good thing. Such a
 beast can be reduced to a value, under any goal, because it doesn't
-look at the goal to build the value: it is here, on the right. 
+look at the goal to build the value: it is here, on the right.
 
 To prove that, we proceed by induction: a |Tac (VAL :<: TY)| is either
 built from another |Tac (VAL :<: TY)| (see |useTac|, |tyLambda|), or
@@ -452,7 +452,7 @@ by a list of tactics. We simply build a tuple which satisfies the
 Here is a trivial example. We define the enumeration $\{1,2,3,4\}$:
 
 > test1234 :: VAL
-> test1234 = ENUMT (CONSE (TAG "1") 
+> test1234 = ENUMT (CONSE (TAG "1")
 >                   (CONSE (TAG "2")
 >                    (CONSE (TAG "3")
 >                     (CONSE (TAG "4")
@@ -476,11 +476,11 @@ Here is the eliminator for Sigmas:
 > split tacF = do
 >   t <- goal
 >   case t of
->     PI (SIGMA a b) t -> 
+>     PI (SIGMA a b) t ->
 >          lambda $ \x -> do
 >            useOp splitOp [ return a
 >                          , return b
->                          , use x done 
+>                          , use x done
 >                          , return t
 >                          , tacF ] done
 >     _ -> failTac $ "split: current goal is " ++
@@ -495,16 +495,16 @@ Same thing here, for the |Mu| eliminator:
 > foldDesc :: Tac VAL -> Tac VAL
 > foldDesc p = do
 >   t <- goal
->   case t of 
+>   case t of
 >     PI (MU l d) bp ->
 >         lambda $ \v ->
 >             useOp elimOp [ return d
->                          , use v done 
+>                          , use v done
 >                          , return bp
 >                          , p ] done
 >     _ -> failTac $ "foldDesc: current goal is " ++
 >                     show t ++ " but expected a Pi (Mu .) ."
->     
+>
 
 \pierre{I should tell a story above, too.}
 
@@ -521,7 +521,7 @@ corresponding to the type of the value built by the |Tac VAL|. If it
 doesn't, good luck to find the mistake.
 
 > trustMe :: (TY :>: Tac VAL) -> VAL
-> trustMe (typ :>: tacV) = 
+> trustMe (typ :>: tacV) =
 >     case runTac tacV (B0 :< ("tactics",0),0) typ of
 >       Left e -> error $ "Something bad happened." -- concat $ intersperse "\n" $ reverse e
 >       Right x -> x

@@ -69,13 +69,13 @@ The |runElab| proof state command actually interprets an |Elab x| in
 the proof state. In other words, we define here the semantics of the
 |Elab| syntax.
 
-> runElab :: WorkTarget ->  (TY :>: Elab (INTM :=>: VAL)) -> 
+> runElab :: WorkTarget ->  (TY :>: Elab (INTM :=>: VAL)) ->
 >                           ProofState (INTM :=>: VAL, ElabStatus)
 
 This command is given a type and a program in the |Elab| DSL for creating an
 element of that type. It is also given a flag indicating whether elaboration
 is working on the current goal in the proof state. If the target is the current
-goal, the type pushed in must match the type of the goal. 
+goal, the type pushed in must match the type of the goal.
 
 > data WorkTarget = WorkCurrentGoal | WorkElsewhere
 
@@ -115,8 +115,11 @@ type we are elaborating to.
 >     Just (_, s, tyf) -> do
 >         ref <- lambdaParam x
 >         runElab WorkCurrentGoal (tyf (NP ref) :>: f ref)
->     Nothing -> throwError' $ err "runElab: type" ++ errTyVal (ty :<: SET)
->                                  ++ err "is not lambdable!"
+>     Nothing -> throwError $ StackError
+>         [ err "runElab: type"
+>         , errTyVal (ty :<: SET)
+>         , err "is not lambdable!"
+>         ]
 
 |EGoal| retrieves the current goal and passes it to the elaboration task.
 
@@ -138,7 +141,7 @@ representation is interpreted and executed by |runElabProb|.
  and pass its result to the next elaboration task.
 
 > runElab top (ty :>: ECompute (tyComp :>: elab) f) = do
->     (e , _) <- runElab WorkElsewhere (tyComp :>: elab) 
+>     (e , _) <- runElab WorkElsewhere (tyComp :>: elab)
 >     runElab top (ty :>: f e)
 
 |ECry| is used to report an error. It updates the current entry into a
@@ -159,7 +162,7 @@ representation is interpreted and executed by |runElabProb|.
  high-level objects with high-level names}.
 
 > runElab WorkCurrentGoal (ty :>: EFake f) = do
->     r <- getFakeRef 
+>     r <- getFakeRef
 >     inScope <- getInScope
 >     runElab WorkCurrentGoal . (ty :>:) $ f (r, paramSpine inScope)
 
@@ -181,7 +184,7 @@ representation is interpreted and executed by |runElabProb|.
 >     (tmv :<: tyv) <- inferHere tm
 >     tyv'  <- bquoteHere tyv
 >     runElab wrk (ty :>: f (PAIR tyv' (N tm) :=>: PAIR tyv tmv, ms'))
->   
+>
 
 |EAskNSupply| gives access to the name supply to the next elaboration
  task.
@@ -233,12 +236,12 @@ The |runElabProb| interprets the syntactic representation of an
 elaboration problem. In other words, this function defines the
 semantics of the |EProb| language.
 
-> runElabProb :: WorkTarget ->  Loc -> (TY :>: EProb) -> 
+> runElabProb :: WorkTarget ->  Loc -> (TY :>: EProb) ->
 >                               ProofState (INTM :=>: VAL, ElabStatus)
 
 |ElabDone tt| always succeed at returning the given term |tt|.
 
-> runElabProb wrk loc (ty :>: ElabDone tt)  = 
+> runElabProb wrk loc (ty :>: ElabDone tt)  =
 >     return (maybeEval tt, ElabSuccess)
 
 |ElabProb tm| asks for the elaboration of the display term |tm| (for
@@ -357,14 +360,14 @@ parameters and hands them to |seekIn|.
 >           proofTrace $ "Failed to resolve recursive call to "
 >                            ++ renderHouseStyle s
 >           (|)
->       seekOn (es' :< EPARAM param _ ParamLam _ _)  = 
+>       seekOn (es' :< EPARAM param _ ParamLam _ _)  =
 >           seekIn B0 (P param) (pty param) <|> seekOn es'
 >       seekOn (es' :< _)                            =    seekOn es'
 
 Then, |seekIn| tries to match the label we are looking for with an
 hypothesis we have found. Recall that a label is a telescope
 targetting a label, hence we try to peel off this telescope to match
-the label. 
+the label.
 
 >       seekIn :: Bwd REF -> EXTM -> VAL -> ProofState (INTM :=>: VAL, ElabStatus)
 
@@ -434,8 +437,11 @@ the propositional simplification machinery.
 >         Just (SimplyTrivial prf) -> do
 >             return (prf :=>: evTm prf, ElabSuccess)
 >         Just (SimplyAbsurd _) -> runElab wrk (PRF p :>:
->             ECry [err "simplifyProof: proposition is absurd:"
->                          ++ errTyVal (p :<: PROP)])
+>             ECry (StackError
+>                       [ err "simplifyProof: proposition is absurd:"
+>                       , errTyVal (p :<: PROP)]
+>                  )
+>             )
 >         Just (Simply qs _ h) -> do
 >             qrs <- traverse partProof qs
 >             let prf = substitute qs qrs h
@@ -453,11 +459,11 @@ the propositional simplification machinery.
 
 After simplification has dealt with the easy stuff, it calls |flexiProof| to
 solve any flex-rigid equations (by suspending a solution process on a subgoal
-and returning the subgoal). 
+and returning the subgoal).
 
 > flexiProof :: WorkTarget -> VAL -> ProofState (INTM :=>: VAL, ElabStatus)
 
-> flexiProof wrk (EQBLUE (_S :>: s) (_T :>: t)) = 
+> flexiProof wrk (EQBLUE (_S :>: s) (_T :>: t)) =
 >     flexiProofMatch           (_S :>: s) (_T :>: t)
 >     <|> flexiProofLeft   wrk  (_S :>: s) (_T :>: t)
 >     <|> flexiProofRight  wrk  (_S :>: s) (_T :>: t)
@@ -484,13 +490,13 @@ This case arises frequently when proving label equality to make recursive calls.
 >       | sn == tn   = Just (ref, ps)
 >       | otherwise  = Nothing
 >     pairSpines (s :$ A as) (t :$ A at) ps = pairSpines s t ((as, at):ps)
->     pairSpines _ _ _ = Nothing 
+>     pairSpines _ _ _ = Nothing
 
 >     proveBits :: TY -> [(VAL, VAL)] -> Bwd (VAL, VAL, VAL)
 >         -> ProofState (Bwd (VAL, VAL, VAL))
 >     proveBits ty [] prfs = return prfs
 >     proveBits (PI s t) ((as, at):ps) prfs = do
->         (_ :=>: prf, _) <- simplifyProof WorkElsewhere (EQBLUE (s :>: as) (s :>: at)) 
+>         (_ :=>: prf, _) <- simplifyProof WorkElsewhere (EQBLUE (s :>: as) (s :>: at))
 >         proveBits (t $$ A as) ps (prfs :< (as, at, prf))
 
 >     smash :: VAL -> [(VAL, VAL, VAL)] -> VAL
@@ -609,9 +615,9 @@ state. That's an invariant.}
 The |suspendThis| command attaches the problem to the current goal if
 we are working on it, and creates a new subgoal otherwise.
 
-> suspendThis :: WorkTarget ->  (String :<: INTM :=>: TY) -> EProb -> 
+> suspendThis :: WorkTarget ->  (String :<: INTM :=>: TY) -> EProb ->
 >                               ProofState (INTM :=>: VAL, ElabStatus)
-> suspendThis WorkCurrentGoal _ ep  = 
+> suspendThis WorkCurrentGoal _ ep  =
 >     return . (, ElabSuspended)  =<< neutralise =<< suspendMe ep
-> suspendThis WorkElsewhere  stt  ep = 
+> suspendThis WorkElsewhere  stt  ep =
 >     return . (, ElabSuccess)    =<< neutralise =<< suspend stt ep

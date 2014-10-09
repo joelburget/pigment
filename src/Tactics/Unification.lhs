@@ -9,6 +9,7 @@
 
 > import Prelude hiding (any, elem)
 
+> import Control.Monad.Error
 > import Data.Foldable
 > import qualified Data.Monoid as M
 
@@ -62,8 +63,8 @@ holes with the new ones.
 >   where
 >     pass :: Entry Bwd -> ProofState (EXTM :=>: VAL)
 >     pass (EDEF def@(defName := _) _ _ _ _ _)
->       | name == defName && occurs def = throwError' $
->           err "solveHole: you can't define something in terms of itself!"
+>       | name == defName && occurs def = throwError $
+>           sErr "solveHole: you can't define something in terms of itself!"
 >       | name == defName = do
 >           cursorUp
 >           news <- makeDeps deps []
@@ -79,8 +80,11 @@ holes with the new ones.
 >           solveHole' ref ((def, ty):deps) tm
 >       | otherwise = goIn >> solveHole' ref deps tm
 >     pass (EPARAM param _ _ _ _)
->       | occurs param = throwError' $
->             err "solveHole: param" ++ errRef param ++ err "occurs illegally."
+>       | occurs param = throwErrorS
+>             [ err "solveHole: param"
+>             , errRef param
+>             , err "occurs illegally."
+>             ]
 >       | otherwise = cursorUp >> solveHole' ref deps tm
 >     pass (EModule modName _) = goIn >> solveHole' ref deps tm
 >
@@ -94,11 +98,15 @@ holes with the new ones.
 >         makeKinded Nothing k (fst (last name) :<: ty')
 >         EDEF ref _ _ _ _ _ <- getEntryAbove
 >         makeDeps deps ((name := DEFN (NP ref) :<: tyv, GoodNews) : news)
->     makeDeps _ _ = throwError' $ err "makeDeps: bad reference kind! Perhaps "
->         ++ err "solveHole was called with a term containing unexpanded definitions?"
+>     makeDeps _ _ = throwErrorS
+>         [ err "makeDeps: bad reference kind! Perhaps "
+>         , err "solveHole was called with a term containing unexpanded definitions?"
+>         ]
 
-> solveHole' ref _ _ = throwError' $ err "solveHole:" ++ errRef ref
->                                           ++ err "is not a hole."
+> solveHole' ref _ _ = throwError (StackError
+>     [ err "solveHole:"
+>     , errRef ref
+>     ])
 
 
 \adam{where should this live?}
@@ -114,4 +122,7 @@ holes with the new ones.
 >     stripShared' n (es :< EModule _ _)       = stripShared' n es
 >     stripShared' n es = do
 >       -- |proofTrace $ "stripShared: fail on " ++ show n|
->       throwError' $ err "stripShared: fail on" ++ errVal (N n)
+>       throwErrorS
+>           [ err "stripShared: fail on"
+>           , errVal (N n)
+>           ]

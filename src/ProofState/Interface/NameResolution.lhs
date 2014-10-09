@@ -37,7 +37,7 @@
 
 \newcommand{\relname}[1]{\textit{#1}}
 
-Typographical note: in this section, we write \relname{f} for a relative name 
+Typographical note: in this section, we write \relname{f} for a relative name
 (component) and @f_0@ for an absolute name (component).
 
 A |BScopeContext| contains information from the |ProofContext|
@@ -45,27 +45,27 @@ required for name resolution: a list of the above entries and last
 component of the current entry's name for each layer, along with the
 entries in the current development.
 
-> type BScopeContext =  (Bwd (Entries, (String, Int)), Entries) 
+> type BScopeContext =  (Bwd (Entries, (String, Int)), Entries)
 
 We can extract such a thing from a |ProofContext| using |inBScope|:
 
 > inBScope :: ProofContext -> BScopeContext
-> inBScope (PC layers dev _) = 
+> inBScope (PC layers dev _) =
 >   (  fmap (\l -> (aboveEntries l, last . currentEntryName . currentEntry $ l)) layers
 >   ,  devEntries dev)
 
 An |FScopeContext| is the forwards variant:
 
 > type FScopeContext =  ( Fwd (Entry Bwd)
->                       , Fwd ((String, Int), Fwd (Entry Bwd))) 
+>                       , Fwd ((String, Int), Fwd (Entry Bwd)))
 
 We can reverse the former to produce the latter:
 
 > bToF :: BScopeContext -> FScopeContext
-> bToF (uess :< (es,u),es') = 
->     let (fs, vfss) = bToF (uess,es) in 
+> bToF (uess :< (es,u),es') =
+>     let (fs, vfss) = bToF (uess,es) in
 >     (fs, (u,es' <>> F0) :> vfss)
-> bToF (B0,es) = (es <>> F0,F0) 
+> bToF (B0,es) = (es <>> F0,F0)
 
 
 The |flat| function, up to currying, takes a |BScopeContext| and flattens it
@@ -76,7 +76,7 @@ to produce a list of entries.
 > flat (esus :< (es',_)) es = flat esus (es' <+> es)
 
 The |flatNom| function produces a name by prepending its second argument with
-the name components from the backwards list. 
+the name components from the backwards list.
 
 > flatNom :: Bwd (Entries, (String,Int)) -> Name -> Name
 > flatNom B0 nom = nom
@@ -97,7 +97,7 @@ When in the process of resolving a relative name, we keep track of a
 
 > type ResolveState =  (  Either FScopeContext Entries
 >                      ,  [REF]
->                      ,  Maybe REF 
+>                      ,  Maybe REF
 >                      ,  Maybe (Scheme INTM)
 >                      )
 
@@ -117,8 +117,8 @@ discarded, so all parameters can be provided explicitly.
 > resolveHere x = do
 >     let (x', b) = shouldDiscardScheme x
 >     uess <- gets inBScope
->     (r, s, ms) <- resolve x' uess 
->        `catchEither` (err $ "resolveHere: cannot resolve name: "
+>     (r, s, ms) <- resolve x' uess
+>        `catchEither` (sErr $ "resolveHere: cannot resolve name: "
 >                             ++ showRelName x')
 >     return (r, s, if b then Nothing else ms)
 >   where
@@ -139,7 +139,7 @@ There are four stages relating to whether we are looking up or down
 and whether or nor we are navigating the part of the proof state which is on the
 way back to (or from) the root of the tree to the cursor position.
 
-We start off in |resolve|, which calls |lookUp| (for \relname{\^}) or |lookDown| 
+We start off in |resolve|, which calls |lookUp| (for \relname{\^}) or |lookDown|
 (for \relname{\_}) to find the first name element. Then |lookFor| and |lookFor'|
 recursively call each other and |lookDown| until we find the target name, in
 which case we stop, or we reach the local part of the context, in which case
@@ -155,13 +155,13 @@ then continues with |lookFor|.
 >   | Just ref <- lookup y primitives  = Right (ref, [], Nothing)
 > resolve ((x, Rel i) : us)  bsc = lookUp (x, i) bsc (bToF bsc)   >>= lookFor us
 > resolve ((x, Abs i) : us)  bsc = lookDown (x, i) (bToF bsc) []  >>= lookFor us
-> resolve []                 bsc = Left [err "Oh no, the empty name"]
+> resolve []                 bsc = Left (sErr "Oh no, the empty name")
 
 
 > lookFor :: RelName -> ResolveState -> Either (StackError t) ResolveResult
-> lookFor [] (_,         sp, Just r,   ms)  = Right (r, sp, ms) 
-> lookFor [] (Left fsc,  sp, Nothing,  _)   = Left [err "Direct ancestors are not in scope!"]
-> lookFor us (Left fsc,  sp, _,        _)   = do 
+> lookFor [] (_,         sp, Just r,   ms)  = Right (r, sp, ms)
+> lookFor [] (Left fsc,  sp, Nothing,  _)   = Left (sErr "Direct ancestors are not in scope!")
+> lookFor us (Left fsc,  sp, _,        _)   = do
 >     (x, _, z) <- lookFor' us fsc
 >     return (x, sp, z)
 > lookFor us (Right es, sp, mr, ms)         = lookLocal us es sp mr ms
@@ -170,17 +170,17 @@ then continues with |lookFor|.
 > lookFor' :: RelName -> FScopeContext -> Either (StackError t) ResolveResult
 > lookFor' ((x, Abs i) : us)  fsc = lookDown (x, i) fsc []  >>= lookFor us
 > lookFor' ((x, Rel 0) : us)  fsc = lookDown (x, 0) fsc []  >>= lookFor us
-> lookFor' ((x, Rel i) : us)  fsc = Left [err "Yeah, good luck with that"]
-> lookFor' []                 fsc = Left [err "Oh no, the empty name"]
+> lookFor' ((x, Rel i) : us)  fsc = Left (sErr "Yeah, good luck with that")
+> lookFor' []                 fsc = Left (sErr "Oh no, the empty name")
 
 
-> lookUp :: (String, Int) -> BScopeContext -> FScopeContext -> 
+> lookUp :: (String, Int) -> BScopeContext -> FScopeContext ->
 >               Either (StackError t) ResolveState
-> lookUp (x,i) (B0, B0) fs = Left [err $ "Not in scope " ++ x]
-> lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss) | x == y = 
+> lookUp (x,i) (B0, B0) fs = Left (sErr $ "Not in scope " ++ x)
+> lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss) | x == y =
 >   if i == 0 then Right (Left (fs,vfss), paramREFs (flat esus es), Nothing, Nothing)
 >             else lookUp (x,i-1) (esus,es) (F0,((y,j),fs) :> vfss)
-> lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss) = 
+> lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss) =
 >   lookUp (x,i) (esus,es) (F0,((y,j),fs) :> vfss)
 > lookUp (x,i) (esus, es :< e@(EModule n (Dev {devEntries=es'}))) (fs,vfss) | lastNom n == x =
 >   if i == 0 then Right (Right es', paramREFs (flat esus es), Nothing, Nothing)
@@ -194,7 +194,7 @@ then continues with |lookFor|.
 > lookUp u (esus, es :< e) (fs,vfss) = lookUp u (esus,es) (e:>fs,vfss)
 
 
-> lookDown :: (String,Int) -> FScopeContext -> [REF] -> 
+> lookDown :: (String,Int) -> FScopeContext -> [REF] ->
 >                 Either (StackError t) ResolveState
 
 > lookDown (x, i) (e :> es, uess) sp =
@@ -202,7 +202,7 @@ then continues with |lookFor|.
 >     then if i == 0
 >          then case (|devEntries (entryDev e)|) of
 >              Just zs  -> Right (Right zs, sp, entryRef e, entryScheme e)
->              Nothing  -> Right (Right B0, [], entryRef e, entryScheme e) 
+>              Nothing  -> Right (Right B0, [], entryRef e, entryScheme e)
 >          else lookDown (x, i-1) (es, uess) (pushSpine e sp)
 >     else lookDown (x, i) (es, uess) (pushSpine e sp)
 >   where
@@ -215,9 +215,9 @@ then continues with |lookFor|.
 >     then if i == 0
 >          then Right (Left (es, uess), sp, Nothing, Nothing)
 >          else lookDown (x, i-1) (es, uess) sp
->     else lookDown (x, i) (es, uess) sp 
+>     else lookDown (x, i) (es, uess) sp
 
-> lookDown (x, i) (F0, F0) fs = Left [err $ "Not in scope " ++ x]
+> lookDown (x, i) (F0, F0) fs = Left (sErr $ "Not in scope " ++ x)
 
 
 > lookLocal :: RelName -> Entries -> [REF] -> Maybe REF -> Maybe (Scheme INTM) ->
@@ -225,7 +225,7 @@ then continues with |lookFor|.
 > lookLocal ((x, Rel i) : ys) es sp _ _  = huntLocal (x, i) ys (reverse $ trail es) sp
 > lookLocal ((x, Abs i) : ys) es sp _ _  = huntLocal (x, i) ys (trail es) sp
 > lookLocal [] _ sp  (Just r)  ms        = Right (r, sp, ms)
-> lookLocal [] _ _   Nothing   _         = Left [err "Modules have no term representation"]
+> lookLocal [] _ _   Nothing   _         = Left (sErr "Modules have no term representation")
 
 
 > huntLocal :: (String, Int) -> RelName -> [Entry Bwd] -> [REF] ->
@@ -235,10 +235,10 @@ then continues with |lookFor|.
 >     then if i == 0
 >          then case (|devEntries (entryDev e)|) of
 >              Just zs  -> lookLocal ys zs as (entryRef e) (entryScheme e)
->              Nothing  -> Left [err "Params in other Devs are not in scope"] 
+>              Nothing  -> Left (sErr "Params in other Devs are not in scope")
 >          else huntLocal (x, i-1) ys es as
->     else huntLocal (x, i) ys es as 
-> huntLocal (x, i) ys [] as = Left [err $ "Had to give up looking for " ++ x]
+>     else huntLocal (x, i) ys es as
+> huntLocal (x, i) ys [] as = Left (sErr $ "Had to give up looking for " ++ x)
 
 
 
@@ -263,8 +263,8 @@ f [
 
 \subsubsection{In more detail}
 
-Our job is to take a machine name and print as little of it a possible, while at 
-the same time, turning the IANAN representation into a more human friendly, 
+Our job is to take a machine name and print as little of it a possible, while at
+the same time, turning the IANAN representation into a more human friendly,
 (hah!) relative offset form. Consider:
 
 \begin{verbatim}
@@ -273,7 +273,7 @@ X [ \ a : A
        g [ ] => ? : T
      -= We are here =-
      ] => ? : S
-   ] 
+   ]
 \end{verbatim}
 
 How should we print the computer name @X_0.f_0.g_0@ ? A first
@@ -294,9 +294,9 @@ parameters spine. So:
 \item @X_0.f_0.g_0@ resoves to \relname{X.f.g}
 \end{itemize}
 
-The job of naming boils down to unwinding the current name and spine until 
-both are a prefix of the name we want to print, and its spine. We then print 
-the suffix of the name applied to the suffix of the spine. So, far, so simple, 
+The job of naming boils down to unwinding the current name and spine until
+both are a prefix of the name we want to print, and its spine. We then print
+the suffix of the name applied to the suffix of the spine. So, far, so simple,
 but there are complications:
 
 \paragraph{1) The current development is, kind of, in scope}
@@ -311,25 +311,25 @@ X [ \ a : A
    ]
 \end{verbatim}
 
-We never want the current development to be in scope, but with this naming 
+We never want the current development to be in scope, but with this naming
 scheme, we need to be very careful since \relname{f.g} is a valid name. Thus we
 must  call @X_0.f_0@ by the name \relname{f\^1} even though @X_0.f_1@ is not in
 scope.
 
 \paragraph{2) Counting back to the top}
 
-When we start looking for the first part of the name we need to print, we can't 
-possibly know what it is, so we can't count how many times it is shadowed 
-(without writing a circular program) This requires us to make two passes through 
-the proof state. If we name @X_0.f_0 a@ in the 2nd example above, we must 1st 
+When we start looking for the first part of the name we need to print, we can't
+possibly know what it is, so we can't count how many times it is shadowed
+(without writing a circular program) This requires us to make two passes through
+the proof state. If we name @X_0.f_0 a@ in the 2nd example above, we must 1st
 work out the first part of the name is \relname{f} and then go back out work out
-how many \relname{f}'s we jump over to get there. 
+how many \relname{f}'s we jump over to get there.
 
 \paragraph{3) Counting down from the top}
 
-Consider naming @X_0.f_1.g_0@ with no spine (again in the 2nd example dev) how 
-do we render @f_1@. It's my contention that or reference point cannot be where 
-the cursor is, since we've escaped that context, instead we should name it 
+Consider naming @X_0.f_1.g_0@ with no spine (again in the 2nd example dev) how
+do we render @f_1@. It's my contention that or reference point cannot be where
+the cursor is, since we've escaped that context, instead we should name it
 absolutely, counting down from @X@, so we should print \relname{X.f\_1.g}. Note
 that \relname{f\_1} as a relative name component has a different meaning from
 @f_1@ as an absolute name component, and in:
@@ -354,17 +354,17 @@ We can split the name into 3 parts:
 \item the section where both are the same.
 \end{itemize}
 
-We must only print the last part of the 1st, and we must print the 2nd 
-absolutely. As far as I remember the naming of these three parts is dealt with 
-by (respectively) |nomTop|, |nomAbs| and |nomRel|. 
+We must only print the last part of the 1st, and we must print the 2nd
+absolutely. As far as I remember the naming of these three parts is dealt with
+by (respectively) |nomTop|, |nomAbs| and |nomRel|.
 
 \paragraph{4) Don't snap your spine}
 
 Final problem! Consider this dev:
 
 \begin{verbatim}
-X [   
-   f [ \ a : A -> 
+X [
+   f [ \ a : A ->
        \ b : B ->
        g [ ] => ? : T
      -= We are here =-
@@ -387,7 +387,7 @@ shared parameters to drop, and the scheme of the name (if there is one).
 
 > unresolve :: Name -> RKind -> Spine {TT} REF -> BScopeContext
 >                   -> Entries -> (RelName, Int, Maybe (Scheme INTM))
-> unresolve tar rk tas msc@(mesus, mes) les = 
+> unresolve tar rk tas msc@(mesus, mes) les =
 
 We first check if the name refers to an element of the |primitives| list:
 
@@ -417,7 +417,7 @@ and we do not need to worry about shared parameters. We simply call
 >                          mnom = take (length nom' - length nom) nom'
 >                     (tn,  tms)  <- nomTop top' (mesus, mes <+> les)
 >                     (an,  ams)  <- nomAbs mnom fsc
->                     (rn,  rms)  <- nomRel nom (es <+> les) Nothing 
+>                     (rn,  rms)  <- nomRel nom (es <+> les) Nothing
 >                     let ms = case  (null nom,  null mnom) of
 >                                    (True,      True)   -> tms
 >                                    (True,      False)  -> ams
@@ -425,7 +425,7 @@ and we do not need to worry about shared parameters. We simply call
 >                     return ((tn : an) ++ rn, i, ms)
 
 >                 (Just (xs, Nothing), FAKE) -> do
->                     let (top', nom', i, fsc) = matchUp xs tas 
+>                     let (top', nom', i, fsc) = matchUp xs tas
 >                     (tn, tms) <- nomTop top' (mesus, mes <+> les)
 >                     (an, ams) <- nomAbs nom' fsc
 >                     return ((tn : an), i, if null nom' then tms else ams)
@@ -439,14 +439,14 @@ If nothing else matches, we had better give up and go home.
 
 \question{Does anyone know what this does?}
 
-> partNoms :: Name -> BScopeContext -> Name 
+> partNoms :: Name -> BScopeContext -> Name
 >                  -> Bwd (Name, Name, Spine {TT} REF, FScopeContext)
->                  -> Maybe ( Bwd (Name, Name, Spine {TT} REF, FScopeContext) 
->                     , Maybe (Name,Name, Spine {TT} REF, Entries) ) 
+>                  -> Maybe ( Bwd (Name, Name, Spine {TT} REF, FScopeContext)
+>                     , Maybe (Name,Name, Spine {TT} REF, Entries) )
 > partNoms [] bsc _ xs = Just (xs, Nothing)
 > partNoms nom@(top:rest) bsc n xs = case partNom n top bsc (F0,F0) of
 >  Just (sp, Left es) -> Just (xs, Just (n ++ [top], rest, sp, es))
->  Just (sp, Right fsc) -> 
+>  Just (sp, Right fsc) ->
 >    partNoms rest bsc (n ++ [top]) (xs:<(n ++ [top], rest, sp, fsc))
 >  Nothing -> Nothing
 
@@ -471,7 +471,7 @@ If we have a backward list of gibberish and a spine, it is not hard to go
 back until the spine from the gibberish is a prefix of the given spine,
 then return the gibberish.
 
-> matchUp :: Bwd (Name, Name, Spine {TT} REF, FScopeContext) 
+> matchUp :: Bwd (Name, Name, Spine {TT} REF, FScopeContext)
 >              -> Spine {TT} REF ->  (Name, Name, Int, FScopeContext)
 > matchUp (xs :< (x, nom, sp, fsc)) tas
 >     | sp `isPrefixOf` tas  = (x, nom, length sp, fsc)
@@ -502,7 +502,7 @@ name component. This also returns the scheme attached, if there is one.
 >
 > countB i n (esus, es :< EModule n' (Dev {devEntries=es'}))
 >   | n == n'                                    = (| (i, Nothing) |)
-> countB i n (esus, es :< EModule n' _)           
+> countB i n (esus, es :< EModule n' _)
 >   | lastNom n == lastNom n'                    = countB (i+1) n (esus, es)
 > countB i n (esus, es :< e@(EEntity r u' _ _ _))
 >   | last n == u' && refName r == n             = (| (i, entryScheme e) |)
@@ -511,7 +511,7 @@ name component. This also returns the scheme attached, if there is one.
 >
 > countB i n (esus, es :< _)                     = countB i n (esus, es)
 >
-> countB _ n _                                   = Nothing 
+> countB _ n _                                   = Nothing
 
 
 
@@ -524,7 +524,7 @@ location but the spine is different.
 > nomAbs [u] (es,(_,es'):>uess) = do
 >   (v,ms) <- findF 0 u es
 >   (| ([v],ms) |)
-> nomAbs ((x,_):nom) (es,(_,es'):>uess) = do 
+> nomAbs ((x,_):nom) (es,(_,es'):>uess) = do
 >   (nom',ms) <- nomAbs nom (es',uess)
 >   case countF x es of
 >     0 -> (| ((x,Rel 0) : nom', ms) |)
@@ -538,14 +538,14 @@ location but the spine is different.
 > countF x (EEntity _ (y,_) _ _ _ :> es) | y == x = 1 + countF x es
 > countF x (_ :> es) = countF x es
 
-> findF :: Int -> (String,Int) -> Fwd (Entry Bwd) 
+> findF :: Int -> (String,Int) -> Fwd (Entry Bwd)
 >              -> Maybe ((String,Offs), Maybe (Scheme INTM))
-> findF i u (EModule n _ :> es) | (last $ n) == u = 
+> findF i u (EModule n _ :> es) | (last $ n) == u =
 >   Just ((fst u, if i == 0 then Rel 0 else Abs i), Nothing)
 > findF i u@(x,_) (EModule n _ :> es) | (fst . last $ n) == x = findF (i+1) u es
-> findF i u (e@(EDEF _ v dkind _ _ _) :> es) | v == u = 
+> findF i u (e@(EDEF _ v dkind _ _ _) :> es) | v == u =
 >   Just ((fst u, if i == 0 then Rel 0 else Abs i), entryScheme e)
-> findF i u (EEntity _ v _ _ _ :> es) | v == u = 
+> findF i u (EEntity _ v _ _ _ :> es) | v == u =
 >   Just ((fst u, if i == 0 then Rel 0 else Abs i), Nothing)
 > findF i u@(x,_) (EEntity _ (y,_) _ _ _ :> es) | y == x = findF (i+1) u es
 > findF i u (_ :> es) = findF i u es
@@ -557,22 +557,22 @@ location but the spine is different.
 Finally, |nomRel| handles the section where the name and spine both match the
 current location.
 
-> nomRel :: Name -> Entries 
->                -> Maybe (Scheme INTM) -> Maybe (RelName, Maybe (Scheme INTM)) 
+> nomRel :: Name -> Entries
+>                -> Maybe (Scheme INTM) -> Maybe (RelName, Maybe (Scheme INTM))
 > nomRel [] _ ms = (| ([], ms) |)
 > nomRel (x : nom) es _ = do
 >   (i,es',ms) <- nomRel' 0 x es
 >   (nom',ms') <- nomRel nom es' ms
 >   return ((fst x,Rel i):nom',ms')
 
-> nomRel' :: Int -> (String,Int) -> Entries 
+> nomRel' :: Int -> (String,Int) -> Entries
 >                -> Maybe (Int,Entries, Maybe (Scheme INTM))
-> nomRel' o (x,i) (es:< EModule n (Dev {devEntries=es'})) | (fst . last $ n) == x  = 
->   if i == (snd . last $ n) then (| (o,es',Nothing) |) 
+> nomRel' o (x,i) (es:< EModule n (Dev {devEntries=es'})) | (fst . last $ n) == x  =
+>   if i == (snd . last $ n) then (| (o,es',Nothing) |)
 >                            else nomRel' (o+1) (x,i) es
 > nomRel' o (x,i) (es:< e@(EDEF _ (y,j) dkind (Dev {devEntries=es'}) _ _)) | y == x =
 >   if i == j then (| (o,es',entryScheme e) |) else nomRel' (o+1) (x,i) es
-> nomRel' o (x,i) (es:< EEntity _ (y,j) _ _ _) | y == x = 
+> nomRel' o (x,i) (es:< EEntity _ (y,j) _ _ _) | y == x =
 >   if i == j then (| (o,B0,Nothing) |) else nomRel' (o+1) (x,i) es
 > nomRel' o (x,i) (es:<e) = nomRel' o (x,i) es
 > nomRel' _ _ _ = Nothing

@@ -63,7 +63,7 @@ definition can be in one of three states: an |Unknown| of the given
 type, a |Suspended| elaboration problem for producing a value of the
 type (see section~\ref{sec:Elaboration.ElabMonad}), or a |Defined| term
 of the type. Note that the type is presented as both a term and a
-value for performance purposes. 
+value for performance purposes.
 
 > data Tip
 >   = Module
@@ -78,7 +78,7 @@ value for performance purposes.
 
 As mentionned above, a |Dev| is a kind of tree. The branches are
 introduced by the container |f (Entry f)| where |f| is Traversable,
-typically a backward list. 
+typically a backward list.
 
 An |Entry| leaves a choice of shape for the branches. Indeed, it can
 either be:
@@ -94,11 +94,11 @@ or value
 
 \end{itemize}
 
-> data Traversable f => Entry f
->   =  EEntity  { ref       :: REF 
+> data Entry f
+>   =  EEntity  { ref       :: REF
 >               , lastName  :: (String, Int)
 >               , entity    :: Entity f
->               , term      :: INTM 
+>               , term      :: INTM
 >               , anchor    :: Maybe String }
 >   |  EModule  { name      :: Name
 >               , dev       :: (Dev f) }
@@ -146,7 +146,7 @@ An |Entity| is either a |Parameter| or a |Definition|. A |Definition|
 can have children, that is sub-developments, whereas a |Parameter|
 cannot.
 
-> data Traversable f => Entity f
+> data Entity f
 >   =  Parameter   ParamKind
 >   |  Definition  DefKind (Dev f)
 
@@ -156,7 +156,7 @@ these useful patterns:
 
 > pattern EPARAM ref name paramKind term anchor =
 >     EEntity ref name (Parameter paramKind) term anchor
-> pattern EDEF ref name defKind dev term anchor = 
+> pattern EDEF ref name defKind dev term anchor =
 >     EEntity ref name (Definition defKind dev) term anchor
 
 
@@ -208,7 +208,7 @@ by |lambdable|:
 
 > instance Show (Entity Fwd) where
 >     show (Parameter k) = "Param " ++ show k
->     show (Definition k d) = "Def " ++ show k ++ " " ++ show d 
+>     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
 
 %endif
 

@@ -49,17 +49,18 @@ have to follow this itinerary to reach our destination.
 >   goTo' name
 >   where
 >     goTo' :: Name -> ProofState ()
->     goTo'  []          =  do 
->                           -- Reached the end of the journey
->                           return ()
+>     goTo'  []          =  return () -- Reached the end of the journey
 >     goTo'  x@(xn:xns)  =  goIn >> seek xn >> goTo' xns
->                           `pushError` 
->                           (err "goTo: could not find " ++ err (showName x))
+>                           `pushError`
+>                           (StackError
+>                                [ err "goTo: could not find "
+>                                , err (showName x)
+>                                ]
+>                           )
 >
 >     -- |seek| find the local short name on our itinerary
 >     seek :: (String, Int) -> ProofState ()
->     seek xn = do
->         goUp `whileA` (guard . (== xn) . last =<< getCurrentName)
+>     seek xn = goUp `whileA` (guard . (== xn) . last =<< getCurrentName)
 
 
 \subsection{Searching for a goal}
@@ -70,8 +71,10 @@ have the check the |Tip|.
 
 > isGoal :: ProofState ()
 > isGoal = do
->     Unknown _ <- getDevTip
->     return ()
+>     devTip <- getDevTip
+>     case devTip of
+>         Unknown _ -> return ()
+>         _ -> throwErrorStr "couldn't get dev tip"
 
 Let us start with some gymnastic. We implement |prevStep| and
 |nextStep| that respectively looks for the previous and the next
@@ -83,26 +86,26 @@ development. In other words, it has been defined ``just
 
 > prevStep :: ProofState ()
 > prevStep =  (goUp >> much goIn) <|> goOut
->             `pushError` 
->             (err "prevStep: no previous steps.")
+>             `pushError`
+>             (sErr "prevStep: no previous steps.")
 >
 > nextStep :: ProofState ()
 > nextStep =  (goIn >> goTop) <|> goDown <|> (goOut `untilA` goDown)
->             `pushError` 
->             (err "nextStep: no more steps.")
+>             `pushError`
+>             (sErr "nextStep: no more steps.")
 
 It is then straightforward to navigate relatively to goals: we move
 from steps to steps, looking for a step that would be a goal.
 
 > prevGoal :: ProofState ()
 > prevGoal =  prevStep `untilA` isGoal
->             `pushError` 
->             (err "prevGoal: no previous goals.")
+>             `pushError`
+>             (sErr "prevGoal: no previous goals.")
 >
 > nextGoal :: ProofState ()
 > nextGoal =  nextStep `untilA` isGoal
->             `pushError` 
->             (err "nextGoal: no more goals.")
+>             `pushError`
+>             (sErr "nextGoal: no more goals.")
 
 In the very spirit of a theorem prover, we sometimes want to stay at
 the current location if it is a goal, and go to the next goal

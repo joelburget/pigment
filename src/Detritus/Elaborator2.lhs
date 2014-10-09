@@ -13,7 +13,7 @@
 > import Control.Monad.State
 > import Control.Monad.Identity
 > import Data.Traversable
-> import Data.Monoid hiding (All) 
+> import Data.Monoid hiding (All)
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
@@ -121,7 +121,7 @@ the moment, we can try to prove things, but not much else:
 >     ty' <- bquoteHere ty
 >     x <- pickName "underscore" ""
 >     neutralise =<< make' Hoping (x :<: ty' :=>: ty)
->     
+>
 
 Elaborating a canonical term with canonical type is a job for |canTy|.
 
@@ -148,7 +148,7 @@ with constant functions.
 >     return (L (K tm) :=>: L (K tmv))
 
 If we are not at top level, we create a subgoal corresponding to the term, solve it
-by elaboration, then return the reference. 
+by elaboration, then return the reference.
 
 > elaborate False (ty :>: DL sc) = do
 >     Just _ <- return $ lambdable ty
@@ -167,8 +167,8 @@ and carry on elaborating.
 >     l <- lambdaBoy (dfortran (DL sc))
 >     _ :=>: ty <- getGoal "elaborate lambda"
 >     elaborate True (ty :>: dScopeTm sc)
->     
-    
+>
+
 We push types in to neutral terms by calling |elabInfer| on the term, then
 checking how the inferred type compares to what we pushed in. If they are
 definitionally equal, we are done. Otherwise, we run |eqGreen|: if the
@@ -183,37 +183,41 @@ a solution to the required equation and return a coercion.
 >         else do
 >             p <- (case opRunEqGreen [SET, y, SET, w] of
 >                         Right ABSURD ->
->                             throwError' $ err "elaborate: inferred type "
->                                             ++ errTyVal (y :<: SET)
->                                             ++ err " of "
->                                             ++ errTyVal (nv :<: y)
->                                             ++ err " is not " 
->                                             ++ errTyVal (w :<: SET)
+>                             throwError $ StackError
+>                                 [ err "elaborate: inferred type "
+>                                 , errTyVal (y :<: SET)
+>                                 , err " of "
+>                                 , errTyVal (nv :<: y)
+>                                 , err " is not "
+>                                 , errTyVal (w :<: SET)
+>                                 ]
 >                         Right p  -> return p
 >                         Left _   -> return (EQBLUE (SET :>: y) (SET :>: w))
 >                  ) :: ProofState VAL
->             _ :=>: q <- prove False p 
+>             _ :=>: q <- prove False p
 >             let r = coe @@ [y, w, q, nv]
 >             r' <- bquoteHere r
 >             return (r' :=>: r)
 
 
 If the elaborator made up a term, it does not require further elaboration, but
-we should type-check it for safety's sake. 
+we should type-check it for safety's sake.
 
 > elaborate top (ty :>: DT (InTmWrap tm)) = checkHere (ty :>: tm)
 
 If nothing else matches, give up and report an error.
 
-> elaborate top (ty :>: t) = throwError'  $ err "elaborate: can't cope with " 
->                                         ++ errTm t
->                                         ++ err " of type "
->                                         ++ errTyVal (ty :<: SET)
+> elaborate top (ty :>: t) = throwError $ SimpleError
+>     [ err "elaborate: can't cope with "
+>     , errTm t
+>     , err " of type "
+>     , errTyVal (ty :<: SET)
+>     ]
 
 
 \subsection{Elaborating |EXDTM|s}
 
-The |elabInfer| command is to |infer| in subsection~\ref{subsec:type-inference} 
+The |elabInfer| command is to |infer| in subsection~\ref{subsec:type-inference}
 as |elaborate| is to |check|. It infers the type of a display term, calling on
 the elaborator rather than the type-checker. In addition to returning the
 evidence term, value and type, it may return a scheme with which to interpret
@@ -248,8 +252,10 @@ implicit syntax; this will have no implicit arguments at the start.
 >     x <- pickName "x" ""
 >     return ((idTM x :? ARR ty' ty') :=>: idVAL x :<: ARR vty vty, Nothing)
 
-> elabInfer tt = throwError'  (err "elabInfer: can't cope with " 
->                             ++ errTm (DN tt))
+> elabInfer tt = throwError $ SimpleError
+>     [ err "elabInfer: can't cope with "
+>     , errTm (DN tt)
+>     ]
 
 
 > processScheme :: ExDTmRN -> Maybe (Scheme INTM)
@@ -259,7 +265,7 @@ implicit syntax; this will have no implicit arguments at the start.
 > processScheme tm ms@(Just (SchExplicitPi _ _))  = do
 >     (ttt, _) <- elabInfer tm
 >     return (ttt, ms)
-> processScheme tm (Just (SchImplicitPi (_ :<: s) sch)) = 
+> processScheme tm (Just (SchImplicitPi (_ :<: s) sch)) =
 >     processScheme (tm $::$ A DU) (Just sch)
 
 \subsection{Proof Construction}
@@ -322,7 +328,7 @@ discarded, so all parameters can be provided explicitly.
 > elabResolve x = do
 >    pc <- get
 >    let uess = inBScope pc
->    ans@(r, s, ms) <- resolve x (Just $ uess) (inBFScope uess)  
+>    ans@(r, s, ms) <- resolve x (Just $ uess) (inBFScope uess)
 >      `catchEither` (err $ "elabResolve: cannot resolve name: " ++ showRelName x)
 >    if fst (last x) == "/" then return (r, s, Nothing) else return ans
 
@@ -344,7 +350,7 @@ a reference to the current goal (applied to the appropriate shared parameters).
 > elabGive' :: InDTmRN -> ProofState (EXTM :=>: VAL)
 > elabGive' tm = do
 >     tip <- getDevTip
->     case tip of         
+>     case tip of
 >         Unknown (tipTyTm :=>: tipTy) -> do
 >             case tm of
 >                 DQ "" -> do
@@ -354,7 +360,7 @@ a reference to the current goal (applied to the appropriate shared parameters).
 >                 _ -> do
 >                     (tm' :=>: tv) <- elaborate True (tipTy :>: tm)
 >                     give' tm'
->         _  -> throwError' $ err "elabGive: only possible for incomplete goals."
+>         _  -> throwError $ sErr "elabGive: only possible for incomplete goals."
 
 
 The |elabMake| command elaborates the given display term in a module to
@@ -393,9 +399,9 @@ plus [
 >     let fty = pity (mkTel pn goal [] args (\l t -> (PI l t)))
 >     fty' <- bquoteHere fty
 >     -- (N fn) <- make (n :<: fty')
->     (N g) <- make ("g" :<: newty') 
+>     (N g) <- make ("g" :<: newty')
 >     argrefs <- traverse lambdaBoy args
->     let fcall = pn $## (map NP argrefs) 
+>     let fcall = pn $## (map NP argrefs)
 >     let call = g $## (map NP argrefs) :$ Call (N fcall)
 >     r <- give' (N call)
 >     goIn
@@ -404,7 +410,7 @@ plus [
 >         mkTel n (PI s t) args (x:xs)
 >            = (x :<: s) :-: (\val -> mkTel n (t $$ A val) (val:args) xs)
 >         mkTel n r args _ = Target (LABEL (mkL n (reverse args)) r)
->         
+>
 >         mkL :: NEU -> [VAL] -> VAL
 >         mkL n [] = N n
 >         mkL n (x:xs) = mkL (n :$ (A x)) xs
@@ -433,7 +439,7 @@ creates a $\Pi$-boy with that type.
 >     make ("tau" :<: SET)
 >     goIn
 >     (sch', ty :=>: _) <- elabScheme B0 sch
->     moduleToGoal (N ty)     
+>     moduleToGoal (N ty)
 >     putMotherScheme sch'
 >     r <- elabProgram (schemeNames sch')
 >     putMotherScheme sch' -- this is wrong but does it matter?
@@ -463,7 +469,7 @@ creates a $\Pi$-boy with that type.
 >     (t', tt) <- elabScheme (es :< e) t
 >     return (SchImplicitPi (x :<: (es -| termOf ss)) t', tt)
 
-> import <- ElabCode 
+> import <- ElabCode
 
 
 

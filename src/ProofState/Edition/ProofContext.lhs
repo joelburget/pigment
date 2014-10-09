@@ -48,7 +48,7 @@ zipper is a record with the following fields:
 \item[|currenEntry|] data about the working development
 \item[|belowEntries|] appearing \emph{below} the working development
 \item[|layTip|] the |Tip| of the development that contains the current entry
-\item[|layNSupply|] the |NameSupply| of the development that contains the 
+\item[|layNSupply|] the |NameSupply| of the development that contains the
                     current entry
 \item[|laySuspendState|] the state of the development that contains the
                          current entry
@@ -109,10 +109,6 @@ justifies some piece of kit to deal with this global context.
 >     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
 > instance Traversable NewsyFwd where
 >     traverse g (NF x) = NF <$> traverse (traverse g) x
-> instance Foldable NewsyFwd where
->     foldMap = foldMapDefault
-> instance Functor NewsyFwd where
->     fmap = fmapDefault
 
 %endif
 

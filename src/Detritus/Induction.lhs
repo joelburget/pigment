@@ -27,14 +27,14 @@ This machinery aims at making the life with |Desc| easier. Whereas
 subgoal is often a nightmare. Indeed, the subgoal has the following
 shape:
 
-$$(x : \mbox{descOp}(D,\mbox{Mu} D)) \rightarrow 
-  (y : \mbox{boxOp}(D, \mbox{Mu} D, P, x)) -> 
+$$(x : \mbox{descOp}(D,\mbox{Mu} D)) \rightarrow
+  (y : \mbox{boxOp}(D, \mbox{Mu} D, P, x)) ->
   P (\mbox{con} x)$$
 
 I will arbitrarily call the content of |x| the \emph{data}, and the
 content of |y| the \emph{hypotheses}. By definition of |descOp| and
 |boxOp|, the data and the hypotheses are stored into some ugly dependent
-record. 
+record.
 
 The purpose of the following code is to unpack these things, and get
 rid of the junk (such as the empty record, for instance). To operate,
@@ -48,7 +48,7 @@ chunk it up in smaller sub-goals.
 First of all, let us implement some piece of generic machinery. Both
 functions have a similar role: facing a particular proof goal, they
 synthesize an equivalent but "nicer" goal and close the first one with
-the synthesized one. 
+the synthesized one.
 
 \pierre{This code can be moved somewhere else, and even
 renamed. Moreover, these two functions are duplicating the behavior of
@@ -66,19 +66,21 @@ subgoal. This allows further simplifications on the subgoal.
 >     _TVoidtm <- bquoteHere (_T $$ A VOID)
 >     (t :=>: _) <- make $ "t" :<: _TVoidtm
 >     -- Potentially, act on it
->     goIn 
+>     goIn
 >     action
 >     goOut
 >     -- Solve the first goal
 >     give' $ L $ K (N t)
 >     return ()
-> eatUnit _ e = 
->     throwError' $  err "eatUnit: expecting a (Sig () -> T)," 
->                    ++ err " got a " 
->                    ++ errVal e
+> eatUnit _ e =
+>     throwError $ SimpleError
+>         [ err "eatUnit: expecting a (Sig () -> T),"
+>         , err " got a "
+>         , errVal e
+>         ]
 
 Similarly, the function |unpackSigma| turns a goal |Sig (A ; B) -> T|
-into a goal |(a : A)(b : B a) -> T'|. 
+into a goal |(a : A)(b : B a) -> T'|.
 
 > unpackSigma :: ProofState () -> TY -> ProofState ()
 > unpackSigma action (PI (SIGMA _A _B) _T) = do
@@ -98,9 +100,11 @@ into a goal |(a : A)(b : B a) -> T'|.
 >   give' $ N (t  :$ A (N (P ab :$ Fst))
 >                 :$ A (N (P ab :$ Snd)))
 >   return ()
-> unpackSigma _ e = throwError' $ err "unpackSigma: expecting a (Sig (A ; B) -> T)," 
->                                 ++ err " got a " 
->                                 ++ errVal e
+> unpackSigma _ e = throwErrorS
+>     [ err "unpackSigma: expecting a (Sig (A ; B) -> T),"
+>     , err " got a "
+>     , errVal e
+>     ]
 
 
 
@@ -109,12 +113,12 @@ into a goal |(a : A)(b : B a) -> T'|.
 
 Let us recall one more time the shape of the goal:
 
-$$(x : \mbox{descOp}(D,\mbox{Mu} D)) \rightarrow 
-  (y : \mbox{boxOp}(D, \mbox{Mu} D, P, x)) -> 
+$$(x : \mbox{descOp}(D,\mbox{Mu} D)) \rightarrow
+  (y : \mbox{boxOp}(D, \mbox{Mu} D, P, x)) ->
   P (\mbox{con} x)$$
 
-In this section, we flatten the data part, that is a 
-$(x : \mbox{descOp}(D,\mbox{Mu} D))$. 
+In this section, we flatten the data part, that is a
+$(x : \mbox{descOp}(D,\mbox{Mu} D))$.
 
 Doing that, we actually walk through the description as a tree, with
 |DONE| as leaves. For each kind of node, the record takes a specific
@@ -153,8 +157,8 @@ By definition of |descOp|, we have:
 
 Meaning that the goal has the following shape:
 
-$$(x : Unit) \rightarrow 
-  (y : \mbox{box}(D, \mbox{Mu} D, P, x)) -> 
+$$(x : Unit) \rightarrow
+  (y : \mbox{box}(D, \mbox{Mu} D, P, x)) ->
   P (\mbox{con} x)$$
 
 Trivially, we can eat the unecessary |Unit|, using |eatUnit|. Much
@@ -164,16 +168,16 @@ next part. Intuitively, |introHyps| reads the history to flatten the
 hypotheses part.
 
 If you trust me on |introHyps|, at the end of that transformation, we
-have computed the entirely flattened goal. 
+have computed the entirely flattened goal.
 
 \pierre{I admit that presenting |DONE| in a first step is a bit
 counter-intuitive. We kind of start with the end. However, it is the
 simplest in term of data flattening.}
 
-> introData branch DONE = 
->   withGoal $ 
+> introData branch DONE =
+>   withGoal $
 >   -- Eat the Unit prefix
->   eatUnit $ 
+>   eatUnit $
 >   -- Flatten the hypothesis part
 >   introHyps branchFwd
 >       where branchFwd = branch <>> F0
@@ -190,8 +194,8 @@ this non-dependent |Sigma|. Then, we can bring the element of |Mu D|
 in the context: this is flattened data. Finally, we recursively
 flatten the structure made by the interpretation of |D'|.
 
-> introData branch (IND1 _D') = 
->   withGoal $ 
+> introData branch (IND1 _D') =
+>   withGoal $
 >   unpackSigma $ do
 >                 -- Bring (x : Mu D) in context
 >                 lambdaBoy "x"
@@ -200,8 +204,8 @@ flatten the structure made by the interpretation of |D'|.
 >                 return ()
 
 
-> introData branch (IND _H _D') = 
->   withGoal $ 
+> introData branch (IND _H _D') =
+>   withGoal $
 >   unpackSigma $ do
 >                 -- Bring (xh : H -> Mu D) in context
 >                 lambdaBoy "xh"
@@ -235,7 +239,7 @@ flatten the structure made by the interpretation of |D'|.
 >     x <- lambdaBoy "x"
 >     introData (branch :< ReadArg) (_F $$ A (NP x))
 >     return ()
-            
+
 
 
 
@@ -246,9 +250,9 @@ flatten the structure made by the interpretation of |D'|.
 > mkCases branch n (TIMES goal t) accF = do
 >   goalTm <- bquoteHere goal
 >   subgoalTm :=>: subgoal <- make $ "case" :<: goalTm
->   goIn 
+>   goIn
 >   introData  branch (accF n)
->   goOut 
+>   goOut
 >   cases <- mkCases branch (SU n) t accF
 >   return $ PAIR (N subgoalTm) cases
 > mkCases _ t v _ = error $ "mkCases: " ++ show t ++ "\n" ++ show v
@@ -278,11 +282,11 @@ flatten the structure made by the interpretation of |D'|.
 > induction :: RelName -> ProofState ()
 > induction desc = do
 >     _D <- resolveDiscard desc
->     case _D of 
+>     case _D of
 >       _ := (DEFN (MU _ v) :<: _) -> do
 >                    introData B0 v
 >                    nextGoal
->       _ -> throwError' $ err "induction: undefined Desc"
+>       _ -> throwError $ sErr "induction: undefined Desc"
 
 > import -> CochonTactics where
 >   : (unaryNameCT  "induction"

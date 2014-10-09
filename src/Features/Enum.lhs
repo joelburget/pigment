@@ -30,7 +30,7 @@
 >   enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
 
 >   enumREF :: REF
->   enumREF = [("Primitive", 0), ("EnumU", 0)] := DEFN enumU :<: SET 
+>   enumREF = [("Primitive", 0), ("EnumU", 0)] := DEFN enumU :<: SET
 
 >   enumDREF :: REF
 >   enumDREF = [("Primitive", 0), ("EnumD", 0)] := DEFN enumD :<: desc
@@ -53,7 +53,7 @@
 > import -> CanConstructors where
 >   EnumT  :: t -> Can t
 >   Ze     :: Can t
->   Su     :: t -> Can t 
+>   Su     :: t -> Can t
 
 > import -> CanPats where
 >   pattern ZE         = C Ze
@@ -62,13 +62,13 @@
 >   pattern NILN       = ZE
 >   pattern CONSN      = SU ZE
 
->   pattern ENUMT e    = C (EnumT e) 
+>   pattern ENUMT e    = C (EnumT e)
 >   pattern NILE       = CON (PAIR NILN VOID)
 >   pattern CONSE t e  = CON (PAIR CONSN (PAIR t (PAIR e VOID)))
 
 
 > import -> CanDisplayPats where
->   pattern DENUMT e    = DC (EnumT e) 
+>   pattern DENUMT e    = DC (EnumT e)
 >   pattern DNILE       = DCON (DPAIR {-(DTAG "nil")-} DZE DVOID)
 >   pattern DCONSE t e  = DCON (DPAIR {- (DTAG "cons") -} (DSU DZE) (DPAIR t (DPAIR e DVOID)))
 >   pattern DZE         = DC Ze
@@ -81,7 +81,7 @@
 > import -> CanTraverse where
 >   traverse f (EnumT e)    = (|EnumT (f e)|)
 >   traverse f Ze           = (|Ze|)
->   traverse f (Su n)       = (|Su (f n)|) 
+>   traverse f (Su n)       = (|Su (f n)|)
 
 > import -> CanHalfZip where
 >   halfZip (EnumT t0) (EnumT t1) = Just (EnumT (t0,t1))
@@ -105,14 +105,14 @@
 >   canTy chev (Set :>: EnumT e)  = do
 >     eev@(e :=>: ev) <- chev (enumU :>: e)
 >     return $ EnumT eev
->   canTy _ (EnumT (CON e) :>: Ze)       | CONSN <- e $$ Fst  = return Ze 
+>   canTy _ (EnumT (CON e) :>: Ze)       | CONSN <- e $$ Fst  = return Ze
 >   canTy chev (EnumT (CON e) :>: Su n)  | CONSN <- e $$ Fst  = do
 >     nnv@(n :=>: nv) <- chev (ENUMT (e $$ Snd $$ Snd $$ Fst) :>: n)
 >     return $ Su nnv
 
 > import -> OpCode where
 
->   type EnumDispatchTable = (VAL, VAL -> VAL -> VAL) 
+>   type EnumDispatchTable = (VAL, VAL -> VAL -> VAL)
 >
 >   mkLazyEnumDef :: VAL -> EnumDispatchTable -> Either NEU VAL
 >   mkLazyEnumDef arg (nilECase, consECase) = let args = arg $$ Snd in
@@ -122,9 +122,9 @@
 >           N t    -> Left t
 >           _      -> error "mkLazyEnumDef: invalid constructor!"
 
->   branchesOp = Op 
+>   branchesOp = Op
 >     { opName   = "branches"
->     , opArity  = 2 
+>     , opArity  = 2
 >     , opTyTel  = bOpTy
 >     , opRun    = {-bOpRun-} runOpTree $
 >         oData  [ oTup $ OLam $ \_P -> ORet UNIT
@@ -150,11 +150,11 @@
 >         projector i = OLam $ \_ -> OLam $ \bs -> ORet (proj i bs)
 >         proj 0 bs = bs $$ Fst
 >         proj i bs = proj (i - 1) (bs $$ Snd)
->         sOpTy = 
+>         sOpTy =
 >           "e" :<: enumU :-: \e ->
 >           "x" :<: ENUMT e :-: \x ->
 >           "p" :<: ARR (ENUMT e) SET :-: \p ->
->           "b" :<: branchesOp @@ [e , p] :-: \b -> 
+>           "b" :<: branchesOp @@ [e , p] :-: \b ->
 >           Target (p $$ A x)
 
 >   enumInductionOp = Op
@@ -165,7 +165,7 @@
 >        oData  [  oTup $ OSet $ \ c -> OBarf
 >               ,  oTup $ \ t e ->
 >                  OSet $ \ c ->
->                  oLams $ \ p mz ms -> 
+>                  oLams $ \ p mz ms ->
 >                  case c of
 >                    Ze      -> ORet (mz $$ A t $$ A e)
 >                    (Su x)  -> ORet (ms $$ A t $$ A e $$ A x $$ A
@@ -257,10 +257,10 @@ tag in the enumeration to determine the appropriate index.
 >       findTag a (CONSE (TAG b) t) n
 >         | a == b        = return (toNum n :=>: toNum n)
 >         | otherwise     = findTag a t (succ n)
->       findTag a _ n  = throwError' . err $ "elaborate: tag `" 
->                                             ++ a 
+>       findTag a _ n  = throwError . sErr $ "elaborate: tag `"
+>                                             ++ a
 >                                             ++ " not found in enumeration."
->                         
+>
 >       toNum :: Int -> Tm {In, p} x
 >       toNum 0  = ZE
 >       toNum n  = SU (toNum (n-1))
@@ -280,5 +280,5 @@ rules take over; the pretty-printer will then do the right thing.
 Since elaboration turns lists into functions from enumerated types, we can
 do the reverse when distilling. This is slightly dubious.
 
->   distill es (PI (ENUMT e) t :>: L (x :. N (op :@ [e', NV 0, t', b]))) 
+>   distill es (PI (ENUMT e) t :>: L (x :. N (op :@ [e', NV 0, t', b])))
 >     | op == switchOp = distill es (branchesOp @@ [e, t] :>: b)

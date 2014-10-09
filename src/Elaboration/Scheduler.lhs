@@ -145,9 +145,9 @@ been suspended) then the cursor could be anywhere earlier in the proof state.
 
 > resume :: (INTM :=>: VAL) -> EProb -> ProofState (Maybe (INTM :=>: VAL))
 > resume _ (ElabDone tt) = return . Just . maybeEval $ tt
-> resume (ty :=>: tyv) ElabHope = 
+> resume (ty :=>: tyv) ElabHope =
 >     return . ifSnd =<< runElabHope WorkCurrentGoal tyv
-> resume (ty :=>: tyv) (ElabProb tm) = 
+> resume (ty :=>: tyv) (ElabProb tm) =
 >     return . ifSnd =<< runElab WorkCurrentGoal (tyv :>: makeElab (Loc 0) tm)
 > resume (ty :=>: tyv) (ElabInferProb tm) =
 >     return . ifSnd =<< runElab WorkCurrentGoal (tyv :>: makeElabInfer (Loc 0) tm)
@@ -186,10 +186,14 @@ there a better way to do this?}
 >         else  runElabHope WorkElsewhere (PRF (EQBLUE (ty :>: tmv') (ty :>: stv))) >>
 >               schedTrace "resume: WaitSolve failed!" >> resume tt prob
 
-<         else  throwError' $ err "resume: hole" ++ errRef ref ++
-<                    err "has been solved with" ++ errTyVal (tmv' :<: ty) ++
-<                    err "but I wanted to solve it with" ++
-<                            errTyVal (valueOf stt' :<: ty)
+<         else  throwErrorS
+<             [ err "resume: hole"
+<             , errRef ref
+<             , err "has been solved with"
+<             , errTyVal (tmv' :<: ty)
+<             , err "but I wanted to solve it with"
+<             , errTyVal (valueOf stt' :<: ty)
+<             ]
 
 
 > resume tt (ElabSchedule prob) = resume tt prob

@@ -9,6 +9,7 @@
 
 > module ProofState.Edition.GetSet where
 
+> import Control.Monad.Error
 > import Control.Monad.State
 
 > import Kit.BwdFwd
@@ -27,6 +28,8 @@
 > import ProofState.Edition.Scope
 
 > import Evidences.Tm
+
+> import Debug.Trace
 
 %endif
 
@@ -62,8 +65,10 @@ And some specialized versions:
 
 > getLayer :: ProofStateT e Layer
 > getLayer = do
->     _ :< l <- getLayers
->     return l
+>     layers <- getLayers
+>     case layers of
+>         _ :< l  -> return l
+>         _ -> throwErrorStr "couldn't get layer"
 
 
 \subsubsection{Getting in |AboveCursor|}
@@ -96,8 +101,10 @@ And some specialized versions:
 >     case tip of
 >       Unknown (ty :=>: tyTy) -> return (ty :=>: tyTy)
 >       Defined _ (ty :=>: tyTy) -> return (ty :=>: tyTy)
->       _ -> throwError'  $ err "getGoal: fail to match a goal in " 
->                         ++ err s
+>       _ -> throwError $ StackError
+>           [ err "getGoal: fail to match a goal in "
+>           , err s
+>           ]
 >
 > withGoal :: (VAL -> ProofState ()) -> ProofState ()
 > withGoal f = do
@@ -111,7 +118,7 @@ And some specialized versions:
 >     ls <- getLayers
 >     case ls of
 >         _ :< l  -> return (currentEntry l)
->         B0      -> return (CModule []) 
+>         B0      -> return (CModule [])
 
 \subsubsection{Getting in the |CurrentEntry|}
 
@@ -132,7 +139,9 @@ And some specialized versions:
 
 > getHoleGoal :: ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do
->     CDefinition _ (_ := HOLE _ :<: _) _ _ _ <- getCurrentEntry
+>     x <- getCurrentEntry
+>     let CDefinition _ (_ := HOLE _ :<: _) _ _ _ = traceShowId x
+>     -- CDefinition _ (_ := HOLE _ :<: _) _ _ _ <- getCurrentEntry
 >     getGoal "getHoleGoal"
 >
 > getHoleKind :: ProofStateT e HKind
@@ -154,7 +163,7 @@ And some specialized versions:
 > getGlobalScope = gets globalScope
 >
 > getParamsInScope :: ProofStateT e [REF]
-> getParamsInScope = do  
+> getParamsInScope = do
 >     inScope <- getInScope
 >     return $ paramREFs inScope
 
@@ -262,9 +271,10 @@ And some specialized versions:
 
 > removeLayer :: ProofStateT e Layer
 > removeLayer = do
->     pc@PC{pcLayers=ls :< l} <- get
->     put pc{pcLayers=ls}
->     return l
+>     pc <- get
+>     case pc of
+>         PC{pcLayers=ls :< l} -> put pc{pcLayers=ls} >> return l
+>         _ -> throwErrorStr "couldn't remove layer"
 
 \subsubsection{Removing in |AboveEntries|}
 

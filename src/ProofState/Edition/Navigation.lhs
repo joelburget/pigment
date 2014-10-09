@@ -10,6 +10,7 @@
 > module ProofState.Edition.Navigation where
 
 > import Control.Applicative
+> import Control.Monad.Error
 
 > import Data.Traversable
 
@@ -116,7 +117,7 @@ cursor or focus move.
 With |getCurrentEntry| and |putCurrentEntry|, we know how to access
 the current entry, and overwrite it. However, when navigating through
 the proof context, we will change focus, therefore \emph{leaving} the
-current entry, or \emph{entering} into another. 
+current entry, or \emph{entering} into another.
 
 When leaving the current entry, the current entry is turned back into
 a conventional entry, so that it can inserted with its peers in the
@@ -134,7 +135,7 @@ back the current entry.
 >         CModule n                      ->  return $ EModule n dev
 
 Conversely, when entering a new development, the former entry needs to
-be \emph{unzipped} to form the current development. 
+be \emph{unzipped} to form the current development.
 
 > putEnterCurrent :: Entry Bwd -> ProofState ()
 > putEnterCurrent (EDEF ref xn dkind dev ty a) = do
@@ -168,7 +169,7 @@ versa.
 >             return ()
 >         B0 -> do
 >             -- There is no above..
->             throwError' $ err "cursorUp: cannot move cursor up."
+>             throwError $ sErr "cursorUp: cannot move cursor up."
 >
 > cursorDown :: ProofState ()
 > cursorDown = do
@@ -183,7 +184,7 @@ versa.
 >             return ()
 >         F0 -> do
 >             -- There is no below..
->             throwError' $ err "cursorDown: cannot move cursor down."
+>             throwError $ sErr "cursorDown: cannot move cursor down."
 
 \subsubsection{Focus navigation}
 
@@ -206,7 +207,7 @@ definition. If one can be found, it enters it and goes at the bottom.
 >     case above of
 >         B0 -> do
 >           -- Nothing above: we cannot go above
->           throwError' $ err "goIn: you can't go that way."
+>           throwError $ sErr "goIn: you can't go that way."
 >         aboveE :< e -> case entryDev e of
 >           Nothing   -> do
 >              -- This entry is not a Definition: look further up
@@ -239,7 +240,7 @@ development, with the additional burden of dealing with news.
 >     -- Move one layer out
 >     mLayer <- optional removeLayer
 >     case mLayer of
->         Just l -> do 
+>         Just l -> do
 >             -- Update the current development
 >             putAboveCursor $ Dev  {  devEntries       =  aboveEntries l :< e
 >                                   ,  devTip           =  layTip l
@@ -251,7 +252,7 @@ development, with the additional burden of dealing with news.
 >             return ()
 >         Nothing -> do
 >             -- Already at outermost position
->             throwError' $ err "goOut: you can't go that way."
+>             throwError $ sErr "goOut: you can't go that way."
 
 
 
@@ -269,7 +270,7 @@ that it brings the cursor right under the previous point of focus.
 >             -- Move cursor up by as many entries there was
 >             Data.Traversable.mapM (const cursorUp) below
 >             return ()
->         B0 -> throwError' $ err "goOutBelow: you can't go that way."
+>         B0 -> throwError $ sErr "goOutBelow: you can't go that way."
 
 
 
@@ -285,19 +286,19 @@ the new development.
 >         -- Get the directly enclosing layer
 >         l <- getLayer
 >         case l of
->           (Layer (aboveE :< e) m (NF below) tip nsupply state) -> 
+>           (Layer (aboveE :< e) m (NF below) tip nsupply state) ->
 >             -- It has at least one entry
 >             case entryDev e of
 >             Just dev -> do
 >                 -- The entry is a Definition
->                 
+>
 >                 -- Leave our current position
 >                 currentE <- getLeaveCurrent
 >                 -- Put the cursor at the bottom of the development
 >                 putAboveCursor dev
 >                 putBelowCursor F0
 >                 -- Set focus on this definition
->                 let belowE = NF  $    visitedBelow 
+>                 let belowE = NF  $    visitedBelow
 >                                  <+>  (Right (reverseEntry currentE) :> below)
 >                 replaceLayer $ l  {  aboveEntries  =  aboveE
 >                                   ,  currentEntry  =  mkCurrentEntry e
@@ -311,7 +312,7 @@ the new development.
 >                 goUpAcc $ NF (Right (reverseEntry e) :> visitedBelow)
 >           _ -> do
 >             -- There is no up
->             throwError' $ err "goUp: you can't go that way."
+>             throwError $ sErr "goUp: you can't go that way."
 
 
 Similarly to |goUp|, the |goDown| command moves the focus downward,
@@ -328,23 +329,23 @@ parameteres on our way.
 >         -- Get the directly enclosing layer
 >         l <- getLayer
 >         case l of
->           (Layer {aboveEntries = above , belowEntries=NF (ne :> belowNE)}) -> 
+>           (Layer {aboveEntries = above , belowEntries=NF (ne :> belowNE)}) ->
 >             -- What is the entry below?
 >             case ne of
->             Left newsBulletin -> do 
+>             Left newsBulletin -> do
 >                 -- A news bulletin:
 >
 >                 -- Keep going down, accumulating the news
 >                 replaceLayer $ l { belowEntries = NF belowNE }
 >                 goDownAcc visitedAbove $ mergeNews visitedNews newsBulletin
->             Right e -> 
+>             Right e ->
 >                 -- A real entry:
->                 
+>
 >                 -- Definition or Parameter?
 >                 case entryCoerce e of
 >                 Left (Dev es' tip' nsupply' ss') -> do
 >                   -- Definition:
->                    
+>
 >                   -- Leave our current position
 >                   currentE <- getLeaveCurrent
 >                   -- Set focus on this definition
@@ -371,7 +372,7 @@ parameteres on our way.
 >                   goDownAcc (visitedAbove :< param') news
 >           _ -> do
 >             -- There is no down
->             throwError' $ err "goDown: you can't go that way."
+>             throwError $ sErr "goDown: you can't go that way."
 
 
 
@@ -379,7 +380,7 @@ parameteres on our way.
 
 
 The following functions are trivial iterations of the ones developed
-above. 
+above.
 
 > cursorTop :: ProofState ()
 > cursorTop = much cursorUp

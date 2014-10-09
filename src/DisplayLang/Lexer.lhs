@@ -61,7 +61,7 @@ implement a function to crush tokens down to strings.
 > crushToken (Identifier s) = s
 > crushToken (Keyword s) = key s
 > crushToken (Brackets bra toks) = showOpenB bra ++
->     (intercalate " " (map crushToken toks)) ++ showCloseB bra 
+>     (intercalate " " (map crushToken toks)) ++ showCloseB bra
 >   where
 >     showOpenB   Round        = "("
 >     showOpenB   Square       = "["
@@ -82,7 +82,7 @@ implement a function to crush tokens down to strings.
 We implement the tokenizer as a |Parsley| on |Char|s. That's a cheap
 solution for what we have to do. The previous implementation was
 running other the string of characters, wrapped in a |StateT| monad
-transformer. 
+transformer.
 
 \question{What was the benefit of a |StateT| lexer, as we have a
           parser combinator library at hand?}
@@ -93,8 +93,8 @@ following parser:
 
 > parseToken :: Parsley Char Token
 > parseToken = (|id parseBrackets
->               |id parseKeyword 
->               |id parseIdent 
+>               |id parseKeyword
+>               |id parseIdent
 >               |)
 
 Tokenizing an input string then simply consists in matching a bunch of
@@ -131,7 +131,7 @@ first |Idenfitier foo| then |Keyword ,|. In |Parsley|, this translates
 to:
 
 > parseWord :: Parsley Char String
-> parseWord = (|id (some $ tokenFilter (\t -> not $ elem t $ space ++ bracketChars ++ protected)) 
+> parseWord = (|id (some $ tokenFilter (\t -> not $ elem t $ space ++ bracketChars ++ protected))
 >              |(: []) (tokenFilter (flip elem protected))|)
 >     where protected = ",`';"
 
@@ -141,7 +141,7 @@ matching a given word:
 > wordEq :: String -> Parsley Char ()
 > wordEq "" = pure ()
 > wordEq word = pFilter filter parseWord
->     where filter s | s == word = Just () 
+>     where filter s | s == word = Just ()
 >                    | otherwise = Nothing
 
 Equipped with |parseWord| and |wordEq|, the following lexers win a
@@ -230,12 +230,12 @@ Brackets, open and closed, are one of the following.
 
 Parsing brackets, as you would expect, requires a monad: we're not
 context-free my friend. This is slight variation around the |pLoop|
-combinator. 
+combinator.
 
 First, we use |parseOpenBracket| to match an opening bracket, and get
 it's code. Thanks to this code, we can already say that we hold a
 |Brackets|. We are left with tokenizing the content of the bracket, up
-to parsing the corresponding closing bracket. 
+to parsing the corresponding closing bracket.
 
 Parsing the closing bracket is made slightly more complex by the
 presence of fancy brackets: we have to match the fancy name of the
@@ -256,17 +256,17 @@ opening bracket with the one of the closing bracket.
 >                               |id (% tokenEq '{' %)
 >                                     (|CurlyB possibleWord (% tokenEq '|' %)
 >                                      |Curly (% spaces %)|)
->                               |)                                                        
+>                               |)
 >           parseCloseBracket :: Bracket -> Parsley Char ()
->           parseCloseBracket Round = tokenEq ')' 
+>           parseCloseBracket Round = tokenEq ')'
 >           parseCloseBracket Square = tokenEq ']'
 >           parseCloseBracket Curly = tokenEq '}'
 >           parseCloseBracket (RoundB s) = matchBracketB s ')'
 >           parseCloseBracket (SquareB s) = matchBracketB s ']'
 >           parseCloseBracket (CurlyB s) = matchBracketB s '}'
 >           parseBracket x = tokenFilter (flip elem x)
->           matchBracketB s bra = (|id ~ () (% tokenEq '|' %) 
->                                           (% wordEq s %) 
+>           matchBracketB s bra = (|id ~ () (% tokenEq '|' %)
+>                                           (% wordEq s %)
 >                                           (% tokenEq bra %) |)
 >
 >           possibleWord = parseWord <|> pure ""
@@ -309,7 +309,7 @@ parser for the bracketted tokens:
 
 > bracket :: Bracket -> Parsley Token x -> Parsley Token x
 > bracket bra p = pFilter filterBra nextToken
->     where filterBra (Brackets bra' toks) | bra == bra' = 
+>     where filterBra (Brackets bra' toks) | bra == bra' =
 >               either (\_ ->Nothing) Just $ parse p toks
 >           filterBra _ = Nothing
 

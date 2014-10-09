@@ -9,7 +9,8 @@
 > module Main where
 
 > import Control.Monad.State
-> import System
+> import System.Environment
+> import System.Process
 > import System.IO
 > import System.Console.GetOpt
 
@@ -63,7 +64,7 @@ either.
 
 > main :: IO ()
 > main = do
->        argv <- System.getArgs
+>        argv <- getArgs
 >        case getOpt RequireOrder options argv of
 >          -- Help:
 >          (Help : _, _, [])            -> do
@@ -84,10 +85,10 @@ either.
 >            loadDev file
 >          -- Empty development:
 >          (Interactive : _,[],[])      -> do
->            cochon emptyContext            
+>            cochon emptyContext
 >          -- Empty development:
 >          ([],[],[])                   -> do
->            cochon emptyContext            
+>            cochon emptyContext
 >          -- Error:
 >          (_,_,errs)                   -> do
 >            ioError (userError (concat errs ++

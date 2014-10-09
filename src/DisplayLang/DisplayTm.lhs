@@ -33,7 +33,7 @@ type-checker, the Display language is the one of humans in an
 interactive development. Hence, in addition to the terms from the
 Evidence language, we have the following:
 
-\begin{itemize} 
+\begin{itemize}
 
 \item Question marks (holes), which are turned into subgoals during elaboration
       (Chapter \ref{chap:elaboration}) ;
@@ -152,17 +152,9 @@ document.
 
 %if False
 
-> instance Functor (InTmWrap p) where
->   fmap = fmapDefault
-> instance Foldable (InTmWrap p) where
->   foldMap = foldMapDefault
 > instance Traversable (InTmWrap p) where
 >   traverse f (InTmWrap x) = pure (InTmWrap x)
 
-> instance Functor (ExTmWrap p) where
->   fmap = fmapDefault
-> instance Foldable (ExTmWrap p) where
->   foldMap = foldMapDefault
 > instance Traversable (ExTmWrap p) where
 >   traverse f (ExTmWrap x) = pure (ExTmWrap x)
 
@@ -208,9 +200,9 @@ The convention for display term pattern synonyms is that they should match
 their evidence term counterparts, but with the addition of |D|s in appropriate
 places.
 
-> pattern DSET        = DC Set              
-> pattern DARR s t    = DPI s (DL (DK t)) 
-> pattern DPI s t     = DC (Pi s t)         
+> pattern DSET        = DC Set
+> pattern DARR s t    = DPI s (DL (DK t))
+> pattern DPI s t     = DC (Pi s t)
 > pattern DCON t      = DC (Con t)
 > pattern DNP n       = DN (DP n ::$ [])
 > pattern DLAV x t    = DL (x ::. t)

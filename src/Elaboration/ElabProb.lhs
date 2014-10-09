@@ -35,8 +35,8 @@ the proof state).
 It caches the value representations of terms it contains.
 \adam{Is this optimisation actually worth the complication?}
 
-\pierre{I don't understand |ElabSchedule|.}  
-\adam{The idea is that |ElabSchedule| makes the scheduler work on other problems 
+\pierre{I don't understand |ElabSchedule|.}
+\adam{The idea is that |ElabSchedule| makes the scheduler work on other problems
 before coming back to work on this one. It doesn't seem to be used at the moment,
 so perhaps we can get rid of it. This data type may need to be redesigned to
 allow solution of hoping holes earlier in the elaboration process.}
@@ -111,12 +111,6 @@ functions for producing and manipulating these.
 >     show (WaitSolve ref tt prob)  = "WaitSolve (" ++ show ref ++ ") ("
 >                                         ++ show tt ++ ") (" ++ show prob ++ ")"
 >     show (ElabSchedule prob)      = "ElabSchedule (" ++ show prob ++ ")"
-
-> instance Functor ElabProb where
->     fmap = fmapDefault
-
-> instance Foldable ElabProb where
->     foldMap = foldMapDefault
 
 > instance Traversable ElabProb where
 >     traverse f (ElabDone tt)            = (|ElabDone (travEval f tt)|)

@@ -89,16 +89,16 @@ Backward and forward lists, applicative with zipping.
 > bwdFoldCtxt :: (Fwd x -> t) ->
 >                (t -> x -> Fwd x -> t) ->
 >                Bwd x -> t
-> bwdFoldCtxt n s xs = help xs F0 
+> bwdFoldCtxt n s xs = help xs F0
 >     where help B0 ys = n ys
 >           help (xs :< x) ys = s (help xs (x :> ys)) x ys
 
 > elemIndex :: Eq x => x -> Bwd x -> Maybe Int
 > elemIndex x = bwdFoldCtxt (\_ -> Nothing)
->                            (\t y i -> 
->                             if y == x then 
->                                 Just $ sum i 
->                             else 
+>                            (\t y i ->
+>                             if y == x then
+>                                 Just $ sum i
+>                             else
 >                                 t)
 >     where sum = foldr' (\_ x -> x+1) 0
 
@@ -109,21 +109,11 @@ Backward and forward lists, applicative with zipping.
 > instance Traversable Bwd where
 >   traverse f B0         = (|B0|)
 >   traverse f (xs :< x)  = (|(f ^$ xs) :< f x|)
->
-> instance Functor Bwd where
->   fmap = fmapDefault
->
-> instance Foldable Bwd where
->   foldMap = foldMapDefault
+>   hiding instance Functor Bwd
 >
 > instance Traversable Fwd where
 >   traverse f F0         = (|F0|)
 >   traverse f (x :> xs)  = (|f x :> (f ^$ xs)|)
->
-> instance Functor Fwd where
->   fmap = fmapDefault
->
-> instance Foldable Fwd where
->   foldMap = foldMapDefault
+>   hiding instance Functor Fwd
 
 %endif

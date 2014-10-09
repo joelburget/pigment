@@ -8,6 +8,7 @@
 > module Tactics.Data where
 
 > import Control.Applicative
+> import Control.Monad.Error
 > import Control.Monad.Identity
 
 > import Data.Monoid hiding (All)
@@ -46,7 +47,7 @@
 
 
 
-> elabCons :: String -> INTM -> [Elim VAL] -> (String , DInTmRN) -> 
+> elabCons :: String -> INTM -> [Elim VAL] -> (String , DInTmRN) ->
 >             ProofState ( String          -- con name
 >                        , EXTM            -- con ty
 >                        , INTM            -- con desc
@@ -56,57 +57,57 @@
 >                        )
 > elabCons nom ty ps (s , t) = do
 >             make ((s ++ "Ty") :<: ARR ty SET)
->             goIn 
+>             goIn
 >             r <- lambdaParam nom
 >             (tyi :=>: v) <- elabGive' t
 >             (x,i,j,y) <- ty2desc r ps (v $$ A (NP r))
 >             goOut
 >             return (s, tyi, x, i, j, y)
 
-> ty2desc :: REF -> [Elim VAL] -> VAL -> 
+> ty2desc :: REF -> [Elim VAL] -> VAL ->
 >            ProofState (INTM, [String], [String], [REF] -> INTM)
 > ty2desc r ps (PI a b) = do
 >             let anom = fortran b
 >             a' <- bquoteHere a
->             if occurs r a' 
->               then do 
+>             if occurs r a'
+>               then do
 >                 (a'',i) <- ty2h r ps a
 >                 (b',j,k,c) <- freshRef (fortran b:<:a)
 >                             (\s -> do (b',j,k,c) <- ty2desc r ps (b $$ A (N (P s)))
->                                       when (occurs s b') $ 
->                                         throwError' (err "Bad dependency")
+>                                       when (occurs s b') $
+>                                         throwError (sErr "Bad dependency")
 >                                       return (b',j,k,c))
 >                 case i of
 >                   0 -> return $ (PRODD (TAG anom) IDD  b', anom : j, anom : k,\(v:vs) -> PAIR (NP v) (c vs))
 >                   _ -> return $ (PRODD (TAG anom) (PID a'' IDD) b' , anom : j , anom : k
 >                                 , \(v:vs) -> PAIR (L $ anom :. uncur i (P v) (V 0))
 >                                                   (c vs))
->               else do 
->                 freshRef (anom :<: a) 
->                  (\s -> ty2desc r ps (b $$ A (NP s)) >>= 
->                           \(x,j,k,y) -> 
+>               else do
+>                 freshRef (anom :<: a)
+>                  (\s -> ty2desc r ps (b $$ A (NP s)) >>=
+>                           \(x,j,k,y) ->
 >                             (| ( SIGMAD a' (L $ "a" :. (capM s 0 %% x)), anom : j, k
 >                                , \(v:vs) -> PAIR (NP v) (swapM s v %% (y vs))) |))
-> ty2desc r ps x = do 
+> ty2desc r ps x = do
 >             b <- withNSupply (equal (SET :>: (x, NP r $$$ ps)))
->             unless b $ throwError' (err "C doesn't target T")   
+>             unless b $ throwError (sErr "C doesn't target T")
 >             return (CONSTD UNIT,[],[],\[] -> VOID)
 
 > ty2h :: REF -> [Elim VAL] -> VAL -> ProofState (INTM,Int)
 > ty2h r ps (PI a b) = do
 >             a' <- bquoteHere a
->             if occurs r a' 
->               then throwError' (err "Not strictly positive")
+>             if occurs r a'
+>               then throwError (sErr "Not strictly positive")
 >               else do
->                 (b',i) <- freshRef (fortran b :<: a) 
->                            (\s -> ty2h r ps (b $$ A (NP s)) >>= \(x,y) -> 
+>                 (b',i) <- freshRef (fortran b :<: a)
+>                            (\s -> ty2h r ps (b $$ A (NP s)) >>= \(x,y) ->
 >                                          (| (L $ "a" :. (capM s 0 %% x),y) |))
 >                 case i of
->                   0 -> return ( a' , 1 ) 
->                   _ -> return ( SIGMA a' b', i + 1 ) 
+>                   0 -> return ( a' , 1 )
+>                   _ -> return ( SIGMA a' b', i + 1 )
 > ty2h r ps x = do
 >             b <- withNSupply (equal (SET :>: (x, NP r $$$ ps)))
->             unless b $ throwError' (err "Not SP")   
+>             unless b $ throwError (sErr "Not SP")
 >             return (UNIT,0)
 
 > occursM :: REF -> Mangle (Ko Any) REF REF
@@ -118,8 +119,8 @@
 
 > swapM :: REF -> REF -> Mangle Identity REF REF
 > swapM r s = Mang
->             {  mangP = \ x xes -> 
->                          if x == r then (| ((P s) $:$) xes |) 
+>             {  mangP = \ x xes ->
+>                          if x == r then (| ((P s) $:$) xes |)
 >                                    else (| ((P x) $:$) xes |)
 >             ,  mangV = \ i ies -> (|(V i $:$) ies|)
 >             ,  mangB = \ _ -> swapM r s
@@ -127,8 +128,8 @@
 
 > capM :: REF -> Int -> Mangle Identity REF REF
 > capM r i = Mang
->             {  mangP = \ x xes -> 
->                          if x == r then (| ((V i) $:$) xes |) 
+>             {  mangP = \ x xes ->
+>                          if x == r then (| ((V i) $:$) xes |)
 >                                    else (| ((P x) $:$) xes |)
 >             ,  mangV = \ j jes -> (|(V j $:$) jes|)
 >             ,  mangB = \ _ -> capM r (i+1)
@@ -148,7 +149,7 @@
 >             (c :=>: _) <- elabGive (DTAG s)
 >             rs <- traverse (\x -> lambdaParam x) i
 >             giveOutBelow $ CON (PAIR (N c) (body rs))
->             return () 
+>             return ()
 
 > mkAllowed :: [(String, EXTM, REF)] -> (INTM, INTM)
 > mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON)
@@ -157,24 +158,24 @@
 >             (PI (N ty) allowingTy',
 >              ALLOWEDCONS (N ty) allowingTy' (N (P refl :$ A SET :$ A (PI (N ty) allowingTy'))) (NP r) allowedTy)
 
-> elabData :: String -> [ (String , DInTmRN) ] -> 
+> elabData :: String -> [ (String , DInTmRN) ] ->
 >                       [ (String , DInTmRN) ] -> ProofState (EXTM :=>: VAL)
 > elabData nom pars scs = do
 >       oldaus <- (| paramSpine getInScope |)
 >       makeModule nom
 >       goIn
->       pars' <- traverse (\(x,y) -> do  
+>       pars' <- traverse (\(x,y) -> do
 >         make ((x ++ "ParTy") :<: SET)
 >         goIn
 >         (yt :=>: yv) <- elabGive y
 >         r <- assumeParam (x :<: (N yt :=>: yv))
 >         return (x,yt,r)) pars
 >       moduleToGoal SET
->       cs <- traverse (elabCons nom 
->                       (foldr (\(x,s,r) t -> PI (N s) (L $ x :. 
+>       cs <- traverse (elabCons nom
+>                       (foldr (\(x,s,r) t -> PI (N s) (L $ x :.
 >                                               (capM r 0 %% t))) SET pars')
 >                       (map (\(_,_,r) -> A (NP r)) pars')) scs
->       make ("ConNames" :<: NP enumREF) 
+>       make ("ConNames" :<: NP enumREF)
 >       goIn
 >       (e :=>: ev) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE scs)
 >       make ("ConDescs" :<: N (branchesOp :@ [ N e, L $ K (NP descREF)])) -- ARR (ENUMT (N e)) (NP descREF)
@@ -198,12 +199,12 @@ assigned throughout, so the label will be preserved when eliminating by inductio
 >       makeModule "Ind"
 >       goIn
 >       v <- assumeParam (comprefold (concat (map (\(_,_,_,_,c,_) -> c) cs)) :<: (N dty :=>: dtyv))
->       let indTm = P (lookupOpRef inductionOp) :$ A (N d) :$ A (NP v) 
+>       let indTm = P (lookupOpRef inductionOp) :$ A (N d) :$ A (NP v)
 >       indV :<: indTy <- inferHere indTm
 >       indTy' <- bquoteHere indTy
 >       moduleToGoal (setLabel anchor indTy')
 >       giveOutBelow (N indTm)
->       
+>
 
 >       giveOutBelow $ N dty
 
@@ -238,7 +239,7 @@ equality, so it doesn't catch the wrong |MU|s.
 > import -> CochonTactics where
 >   : CochonTactic
 >         {  ctName = "data"
->         ,  ctParse = do 
+>         ,  ctParse = do
 >              nom <- tokenString
 >              pars <- tokenListArgs (bracket Round $ tokenPairArgs
 >                tokenString
@@ -252,9 +253,9 @@ equality, so it doesn't catch the wrong |MU|s.
 >                tokenInTm)
 >               (keyword KwSemi)
 >              return $ B0 :< nom :< pars :< scs
->         , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $ 
->                     elabData nom (argList (argPair argToStr argToIn) pars) 
->                                  (argList (argPair argToStr argToIn) cons) 
+>         , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
+>                     elabData nom (argList (argPair argToStr argToIn) pars)
+>                                  (argList (argPair argToStr argToIn) cons)
 >                       >> return "Data'd.")
 >         ,  ctHelp = "data <name> [<para>]* := [(<con> : <ty>) ;]* - builds a data type for thee."
->         } 
+>         }

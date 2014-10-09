@@ -9,6 +9,7 @@
 > module Elaboration.Elaborator where
 
 > import Control.Applicative
+> import Control.Monad.Error
 > import Control.Monad.Identity
 > import Data.Traversable
 
@@ -35,7 +36,7 @@
 > import ProofState.Interface.Lifting
 > import ProofState.Interface.Parameter
 > import ProofState.Interface.Definition
-> import ProofState.Interface.Solving 
+> import ProofState.Interface.Solving
 
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
@@ -118,14 +119,14 @@ a reference to the current goal (applied to the appropriate shared parameters).
 > elabGive' :: DInTmRN -> ProofState (EXTM :=>: VAL)
 > elabGive' tm = do
 >     tip <- getDevTip
->     case (tip, tm) of         
+>     case (tip, tm) of
 >         (Unknown _, DQ "")  -> getDefn
 >         (Unknown _, _)      -> do
 >             (tm' :=>: _, status) <- elaborateHere' tm
 >             case status of
 >               ElabSuccess -> give tm'
 >               ElabSuspended -> getDefn
->         _  -> throwError' $ err "elabGive: only possible for incomplete goals."
+>         _  -> throwError $ sErr "elabGive: only possible for incomplete goals."
 >   where
 >     getDefn :: ProofState (EXTM :=>: VAL)
 >     getDefn = do
@@ -202,7 +203,7 @@ then convert the module into a goal with the scheme assigned.
 >     make (x ++ "-type" :<: SET)
 >     goIn
 >     (sch', ty :=>: _) <- elabLiftedScheme sch
->     moduleToGoal (N ty)     
+>     moduleToGoal (N ty)
 >     putCurrentScheme sch'
 
 Now we add a definition with the same name as the function being defined,
@@ -210,7 +211,7 @@ to handle recursive calls. This has the same arguments as the function,
 plus an implicit labelled type that provides evidence for the recursive call.
 
 >     CDefinition _ (mnom := HOLE _ :<: ty) _ _ _ <- getCurrentEntry
->     pn :=>: _ <- getFakeCurrentEntry 
+>     pn :=>: _ <- getFakeCurrentEntry
 >     let schCall = makeCall (P $ mnom := FAKE :<: ty) 0 sch'
 >     us <- getParamsInScope
 >     let schCallLocal = applyScheme schCall us
@@ -255,13 +256,13 @@ plus [
 > elabProgram :: [String] -> ProofState (EXTM :=>: VAL)
 > elabProgram args = do
 >     n   <- getCurrentName
->     pn  <- getFakeCurrentEntry 
+>     pn  <- getFakeCurrentEntry
 >     (gUnlifted :=>: _) <- getHoleGoal
 >     newty <- withNSupply $ pity (mkTel (unN $ valueOf pn) (evTm gUnlifted) [] args)
 >     newty'       <- bquoteHere newty
->     impl :=>: _  <- make (magicImplName :<: newty') 
+>     impl :=>: _  <- make (magicImplName :<: newty')
 >     argrefs      <- traverse lambdaParam args
->     let  fcall  = termOf pn $## (map NP argrefs) 
+>     let  fcall  = termOf pn $## (map NP argrefs)
 >          call   = impl $## (map NP argrefs) :$ Call (N fcall)
 >     r <- give (N call)
 >     goIn
@@ -271,7 +272,7 @@ plus [
 >     mkTel n (PI s t) args (x:xs)
 >         = (x :<: s) :-: (\val -> mkTel n (t $$ A val) (val:args) xs)
 >     mkTel n r args _ = Target (LABEL (mkL n (reverse args)) r)
->         
+>
 >     mkL :: NEU -> [VAL] -> VAL
 >     mkL n [] = N n
 >     mkL n (x:xs) = mkL (n :$ (A x)) xs

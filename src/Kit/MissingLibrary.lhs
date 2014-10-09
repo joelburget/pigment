@@ -45,6 +45,8 @@
 
 \subsection{Newtype Unwrapping}
 
+TODO(joel) there's a newtype library now, right?
+
 > class Newtype n where
 >   type Unwrap n
 >   wrap :: Unwrap n -> n
@@ -86,76 +88,8 @@
 >   unwrap (AppLift ax) = ax
 
 
-\subsection{Error Handling}
-
-> catchMaybe :: MonadError [e] m => Maybe a -> e -> m a
-> catchMaybe (Just x)  _ = return x
-> catchMaybe Nothing   s = throwError [s]
-
-> catchEither :: MonadError [e] m => Either [e] a -> e -> m a
-> catchEither (Right x) _ = return x
-> catchEither (Left s) e = throwError (e : s)
-
-
-> throwError' :: MonadError [e] m => e -> m a
-> throwError' e = throwError [e]
-
-> pushError :: MonadError [e] m => m a -> e -> m a
-> pushError c e = catchError c (\x -> throwError (e:x))
-
-
-\subsection{Missing Applicatives}
-
-Ah, if only 
-
-< instance Monad m => Applicative m 
-
-were possible. Unfortunately it isn't (at least without |UndecidableInstances|)
-so we have to do things the long way...
-
-
-> instance Applicative (State s) where
->   pure = return
->   (<*>) = ap
-
-> instance Applicative Identity where
->   pure = return
->   (<*>) = ap
-
-> instance Monad m => Applicative (ReaderT r m) where
->     pure = return 
->     (<*>) = ap
-
-> instance MonadPlus m => Alternative (ReaderT r m) where
->     empty = mzero
->     (<|>) = mplus
-
-> instance Monad m => Applicative (StateT r m) where
->     pure = return 
->     (<*>) = ap
-
-> instance MonadPlus m => Alternative (StateT r m) where
->     empty = mzero
->     (<|>) = mplus
-
-> instance Error x => Applicative (Either x) where
->   pure = return
->   (<*>) = ap
-
-> instance Error x => Alternative (Either x) where
->     empty = Left $ strMsg "empty alternative"
->     (Left _) <|> p = p
->     p@(Right _) <|> _ = p
-
 
 \subsection{Missing Instances}
-
-> instance Traversable (Either x) where
->     traverse g (Left a) = pure (Left a)
->     traverse g (Right b) = Right <$> g b
-
-> instance Foldable (Either x) where
->     foldMap = foldMapDefault
 
 > instance (Applicative f, Num x, Show (f x), Eq (f x)) => Num (f x) where
 >   x + y          = (|x + y|)
@@ -165,10 +99,6 @@ so we have to do things the long way...
 >   negate x       = (|negate x|)
 >   signum x       = (|signum x|)
 >   fromInteger i  = (|(fromInteger i)|)
-
-> instance Monoid o => Applicative (Writer o) where
->   pure = return
->   (<*>) = ap
 
 Grr.
 
@@ -228,26 +158,36 @@ Grr.
 
 > instance Traversable Id where
 >   traverse f (Id x) = Id <$> f x
+>   hiding instance Functor id
+>   hiding instance Foldable id
 
 > instance Traversable (Ko a) where
 >   traverse f (Ko c) = pure (Ko c)
+>   hiding instance Functor (Ko a)
+>   hiding instance Foldable (Ko a)
 
 > instance (Traversable p, Traversable q) => Traversable (p :+: q) where
 >   traverse f (Le px)  = Le <$> traverse f px
 >   traverse f (Ri qx)  = Ri <$> traverse f qx
+>   hiding instance Functor (p :+: q)
+>   hiding instance Foldable (p :+: q)
 
 > instance (Traversable p, Traversable q) => Traversable (p :*: q) where
 >   traverse f (px :& qx)  = (:&) <$> traverse f px <*> traverse f qx
+>   hiding instance Functor (p :*: q)
+>   hiding instance Foldable (p :*: q)
 
 > instance Applicative Id where  -- makes fmap from traverse
 >   pure = Id
 >   Id f <*> Id s = Id (f s)
+>   hiding instance Functor id
 
 > instance Monoid c => Applicative (Ko c) where-- makes crush from traverse
 >   -- pure :: x -> K c x
 >   pure x = Ko mempty
 >   -- (<*>) :: K c (s -> t) -> K c s -> K c t
 >   Ko f <*> Ko s = Ko (mappend f s)
+>   hiding instance Functor (Ko c)
 
 > crush :: (Traversable f, Monoid c) => (x -> c) -> f x -> c
 > crush m fx = unKo $ traverse (Ko . m) fx
@@ -267,12 +207,12 @@ Grr.
 
 > instance (Eq a) => HalfZip (Ko a) where
 >   halfZip (Ko x) (Ko y) | x == y = (| (Ko x) |)
->   halfZip _ _ = Nothing  
+>   halfZip _ _ = Nothing
 
 > instance (HalfZip p, HalfZip q) => HalfZip (p :+: q) where
 >   halfZip (Le x) (Le y) = (|Le (halfZip x y)|)
 >   halfZip (Ri x) (Ri y) = (|Ri (halfZip x y)|)
->   halfZip _ _ = Nothing  
+>   halfZip _ _ = Nothing
 
 > instance (HalfZip p, HalfZip q) => HalfZip (p :*: q) where
 >   halfZip (x0 :& y0) (x1 :& y1) = (| (halfZip x0 x1) :& (halfZip y0 y1) |)

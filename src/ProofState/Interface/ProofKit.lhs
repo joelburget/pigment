@@ -56,7 +56,7 @@ supply, because it cannot generates new namespaces.
 >           ) nsupply
 >
 >     forkNSupply = error "ProofState does not provide forkNSupply"
->     
+>
 >     askNSupply = getDevNSupply
 
 We also provide an operator to lift functions from a name supply to
@@ -116,19 +116,25 @@ location, which may be useful for paranoia purposes.
 >         CDefinition _ (_ := DEFN tm :<: ty) _ _ _ -> do
 >             ty' <- bquoteHere ty
 >             checkHere (SET :>: ty')
->                 `pushError`  (err "validateHere: definition type failed to type-check: SET does not admit"
->                              ++ errTyVal (ty :<: SET))
+>                 `pushError`  (StackError
+>                     [ err "validateHere: definition type failed to type-check: SET does not admit"
+>                     , errTyVal (ty :<: SET)
+>                     ])
 >             tm' <- bquoteHere tm
 >             checkHere (ty :>: tm')
->                 `pushError`  (err "validateHere: definition failed to type-check:"
->                              ++ errTyVal (ty :<: SET)
->                              ++ err "does not admit"
->                              ++ errTyVal (tm :<: ty))
+>                 `pushError`  (StackError
+>                     [ err "validateHere: definition failed to type-check:"
+>                     , errTyVal (ty :<: SET)
+>                     , err "does not admit"
+>                     , errTyVal (tm :<: ty)
+>                     ])
 >             return ()
 >         CDefinition _ (_ := HOLE _ :<: ty) _ _ _ -> do
 >             ty' <- bquoteHere ty
 >             checkHere (SET :>: ty')
->                 `pushError`  (err "validateHere: hole type failed to type-check: SET does not admit" 
->                              ++ errTyVal (ty :<: SET))
+>                 `pushError`  (StackError
+>                     [ err "validateHere: hole type failed to type-check: SET does not admit"
+>                     , errTyVal (ty :<: SET)
+>                     ])
 >             return ()
 >         _ -> return ()

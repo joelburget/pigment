@@ -8,6 +8,8 @@
 
 > module ProofState.Interface.Module where
 
+> import Control.Monad.Error
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 
@@ -42,10 +44,10 @@ level. For making modules, we use |makeModule|.
 >     let n = mkName nsupply s
 >     -- Insert a new entry above, the empty module |s|
 >     let dev = Dev {  devEntries       =  B0
->                   ,  devTip           =  Module 
+>                   ,  devTip           =  Module
 >                   ,  devNSupply       =  freshNSpace nsupply s
 >                   ,  devSuspendState  =  SuspendNone }
->     putEntryAbove $ EModule  {  name   =  n 
+>     putEntryAbove $ EModule  {  name   =  n
 >                              ,  dev    =  dev}
 >     putDevNSupply $ freshName nsupply
 >     return n
@@ -85,5 +87,5 @@ dangling references is high.
 >     mm <- removeEntryAbove
 >     case mm of
 >         Just (EModule _ _) -> return t
->         _ -> throwError' . err $ "draftModule: drafty " ++ name
+>         _ -> throwError . sErr $ "draftModule: drafty " ++ name
 >                                  ++ " did not end up in the right place!"

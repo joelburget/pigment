@@ -8,7 +8,8 @@
 
 > import Prelude hiding (any, foldl, elem)
 
-> import Control.Applicative 
+> import Control.Applicative
+> import Control.Monad.Error
 > import Control.Monad.Reader
 
 > import Data.Foldable
@@ -120,8 +121,8 @@ Given a function from a $\Sigma$-type, we can split it into its components.
 
 > simplifyGoal b (PI (SIGMA d r) t) = do
 >     simpTrace "PI SIGMA"
->     let mt =  PI d . L $ (fortran r) :. [.a. 
->               PI (r -$ [NV a]) . L $ (fortran t) :. [.b. 
+>     let mt =  PI d . L $ (fortran r) :. [.a.
+>               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
 >               t -$ [PAIR (NV a) (NV b)] ] ]
 >     x :=>: xv <- simplifyGoal False mt
 >     ex <- annotate x mt
@@ -140,7 +141,7 @@ avoiding the worst problems with this simplification step.}
 >     e' <- bquoteHere e
 >     t' <- bquoteHere t
 >     let body = N (switchOp :@ [e', NV 0, t', x])
->     topWrap b $ L ("pe" :. body) :=>: L ("pe" :. body)            
+>     topWrap b $ L ("pe" :. body) :=>: L ("pe" :. body)
 >   where
 >     checkTags :: VAL -> Bool
 >     checkTags NILE         = True
@@ -159,7 +160,7 @@ the context and carry on. Note that this assumes we are at the top level.
 >     pSimp <- runPropSimplify p
 >     maybe (elimEquation p t <|> passHypothesis t) (simplifyProp p t) pSimp
 >   where
->     elimEquation :: VAL -> VAL -> ProofState (INTM :=>: VAL) 
+>     elimEquation :: VAL -> VAL -> ProofState (INTM :=>: VAL)
 >     elimEquation (EQBLUE (_X :>: x) (_Y :>: NP y@(yn := DECL :<: _))) t = do
 >         guard =<< (withNSupply $ equal (SET :>: (_X, _Y)))
 >         t' <- bquoteHere t
@@ -190,7 +191,7 @@ the context and carry on. Note that this assumes we are at the top level.
 >         elimSimplify (ety :>: ex)
 >         neutralise =<< getCurrentDefinition
 >     elimEquation _ _ = (|)
->     
+>
 >     simplifyProp :: VAL -> VAL -> Simplify -> ProofState (INTM :=>: VAL)
 >     simplifyProp p t (SimplyAbsurd prf) = do
 >         r    <- lambdaParam (fortran t)
@@ -291,14 +292,14 @@ If we are really lucky, the goal is trivial and we win.
 
 Otherwise, we cannot simplify the problem.
 
-> simplifyGoal _ _ = throwError' $ err "simplifyGoal: cannot simplify"
+> simplifyGoal _ _ = throwError $ sErr "simplifyGoal: cannot simplify"
 
 
 When at the top level and simplifying a $\Pi$-type, |passHypothesis| introduces
 a hypothesis into the context and continues simplifying. Its argument is the
 codomain function of the $\Pi$-type.
 
-> passHypothesis :: VAL -> ProofState (INTM :=>: VAL)                     
+> passHypothesis :: VAL -> ProofState (INTM :=>: VAL)
 > passHypothesis t = do
 >     ref <- lambdaParam (fortran t)
 >     trySimplifyGoal True (t $$ A (NP ref))

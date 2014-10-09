@@ -25,7 +25,9 @@
 
 The proof state monad provides access to the |ProofContext| as in a
 |State| monad, but with the possibility of command failure represented
-by |Either (StackError e)|. 
+by |Either (StackError e)|.
+
+TODO(joel) - figure out the fail semantics for ProofStateT
 
 > type ProofStateT e = StateT ProofContext (Either (StackError e))
 
@@ -44,7 +46,7 @@ monad. Therefore, in order to use it, we will need to lift from the
 former to the latter.
 
 > mapStackError :: (ErrorTok a -> ErrorTok b) -> StackError a -> StackError b
-> mapStackError = fmap . fmap
+> mapStackError f = StackError . (fmap . fmap) f . unStackError
 
 > liftError :: (a -> b) -> Either (StackError a) c -> Either (StackError b) c
 > liftError f = either (Left . mapStackError (fmap f)) Right

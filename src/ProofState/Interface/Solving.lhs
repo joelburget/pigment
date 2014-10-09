@@ -9,6 +9,7 @@
 > module ProofState.Interface.Solving where
 
 > import Control.Applicative
+> import Control.Monad.Error
 
 > import Kit.MissingLibrary
 
@@ -47,15 +48,20 @@ that entries below the cursor are (lazily) notified of the good news.
 > give :: INTM -> ProofState (EXTM :=>: VAL)
 > give tm = do
 >     tip <- getDevTip
->     case tip of         
+>     case tip of
 >         Unknown (tipTyTm :=>: tipTy) -> do
 >             -- Working on a goal
 >
 >             -- The |tm| is of the expected type
->             checkHere (tipTy :>: tm) 
+>             checkHere (tipTy :>: tm)
 >                 `pushError`
->                 (err "give: typechecking failed:" ++ errTm (DTIN tm)
->                  ++ err "is not of type" ++ errTyVal (tipTy :<: SET))
+>                 (StackError
+>                      [ err "give: typechecking failed:"
+>                      , errTm (DTIN tm)
+>                      , err "is not of type"
+>                      , errTyVal (tipTy :<: SET)
+>                      ]
+>                 )
 >             -- Lambda lift the given solution
 >             globalScope <- getGlobalScope
 >             above <- getEntriesAbove
@@ -69,7 +75,7 @@ that entries below the cursor are (lazily) notified of the good news.
 >             updateRef ref
 >             -- Return the reference
 >             return $ applySpine ref globalScope
->         _  -> throwError' $ err "give: only possible for incomplete goals."
+>         _  -> throwError $ sErr "give: only possible for incomplete goals."
 
 For convenience, we combine giving a solution and moving. Indeed,
 after |give|, the cursor stands in a rather boring position: under a
@@ -103,7 +109,7 @@ the |done| command that tries to |give| the entry above the cursor.
 >         giveOutBelow $ NP ref
 >     _ -> do
 >         -- The entry was not a definition
->         throwError' $ err "done: entry above cursor must be a definition."
+>         throwError $ sErr "done: entry above cursor must be a definition."
 
 
 Slightly more sophisticated is the well-known |apply| tactic in Coq:
@@ -127,14 +133,14 @@ solve the goal |S|. We have this tactic too and, guess what, it is
 >         make $ "t" :<: _TTm
 >         goIn
 >         giveOutBelow $ N $ P f :$ A (N sTm)
->     _ -> throwError' $ err  $ "apply: last entry in the development" 
+>     _ -> throwError $ sErr  $ "apply: last entry in the development"
 >                             ++ " must be a definition with a pi-type."
 
 The |ungawa| command looks for a truly obvious thing to do, and does it.
 
 > ungawa :: ProofState ()
 > ungawa =  ignore done <|> ignore apply <|> ignore (lambdaParam "ug")
->           `pushError` (err "ungawa: no can do.")
+>           `pushError` (sErr "ungawa: no can do.")
 
 
 \subsection{Refining the proof state}
@@ -142,7 +148,7 @@ The |ungawa| command looks for a truly obvious thing to do, and does it.
 To refine the proof state, we must supply a new goal type and a realiser, which
 takes values in the new type to values in the original type. The
 |refineProofState| command creates a new subgoal at the top of the working
-development, so the entries in that development are not in scope. 
+development, so the entries in that development are not in scope.
 
 > refineProofState :: INTM -> (EXTM -> INTM) -> ProofState ()
 > refineProofState ty realiser = do

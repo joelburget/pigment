@@ -123,7 +123,7 @@ before returning its result.
 We use the |Elab| language to describe how to elaborate a display term to
 produce an evidence term. The |makeElab| and |makeElabInfer| functions read a
 display term and use the capabilities of the |Elab| monad to produce a
-corresponding evidence term. 
+corresponding evidence term.
 
 When part of the display syntax needs to be elaborated as a
 subproblem, we call |subElab| or |subElabInfer| rather than |makeElab|
@@ -160,6 +160,11 @@ question marks |DQ| require us to wait for a user-provided value.
 
 Elaborating a canonical term with canonical type is a job for |canTy|.
 
+canTy ::  (Alternative m, MonadError (StackError t) m) =>
+          (TY :>: t -> m (s :=>: VAL)) ->
+          (Can VAL :>: Can t) ->
+          m (Can (s :=>: VAL))
+
 > makeElab' loc (C ty :>: DC tm) = do
 >     v <- canTy (subElab loc) (ty :>: tm)
 >     return $ (C $ fmap termOf v) :=>: (C $ fmap valueOf v)
@@ -167,7 +172,13 @@ Elaborating a canonical term with canonical type is a job for |canTy|.
 
 There are a few possibilities for elaborating $\lambda$-abstractions. If both the
 range and term are constants, then we simply |makeElab| underneath. This avoids
-creating some trivial children. 
+creating some trivial children.
+
+subElab :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
+makeElab' :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
+DK     :: DInTm p x            -> DScope p x  -- constant
+K     :: Tm {In, p} x                      -> Scope p x     -- constant
+pattern LK t      = L (K t)              -- Lambda (with constant)
 
 > makeElab' loc (PI s (L (K t)) :>: DL (DK dtm)) = do
 >     tm :=>: tmv <- subElab loc (t :>: dtm)
@@ -210,8 +221,12 @@ there is nothing we can do but wait for the type to become canonical.
 
 If nothing else matches, give up and report an error.
 
-> makeElab' loc (ty :>: tm) = throwError' $ err "makeElab: can't push"
->     ++ errTyVal (ty :<: SET) ++ err "into" ++ errTm tm 
+> makeElab' loc (ty :>: tm) = throwErrorS $
+>     [ err "makeElab: can't push"
+>     , errTyVal (ty :<: SET)
+>     , err "into"
+>     , errTm tm
+>     ]
 
 
 \subsection{Elaborating |DExTm|s}
@@ -229,7 +244,7 @@ respectively).
 > sigSetVAL = SIGMA SET (idVAL "ssv")
 
 > sigSetTM :: INTM
-> sigSetTM =  sigSetVAL 
+> sigSetTM =  sigSetVAL
 
 
 The |extractNeutral| function separates type-term pairs in both term and value
@@ -322,9 +337,10 @@ the overall type-term pair from the result.
 >         tm :=>: tv <- eCompute
 >             (PI sv (L $ K sigSetVAL) :>: do
 >                 r <- eLambda x
->                 let rt = NP r
->                 handleSchemeArgs (es :< (rt :=>: rt)) schT
->                     (tm :$ A rt :=>: tv $$ A rt :<: t $$ A rt) []
+>                 let rtVal = NP r :: VAL
+>                     rtInTm = NP r :: INTM
+>                 handleSchemeArgs (es :< (rtInTm :=>: rtVal)) schT
+>                     (tm :$ A rtInTm :=>: tv $$ A rtVal :<: t $$ A rtVal) []
 >             )
 >         s' :=>: _ <- eQuote sv
 >         let  atm  = tm ?? PIV x s' sigSetTM :$ A (NV 0)
@@ -332,12 +348,16 @@ the overall type-term pair from the result.
 >         return $ rtm :=>: evTm rtm
 
 Otherwise, we probably have a scheme with an explicit $\Pi$-binding but an
-eliminator other than application, so we give up and throw an error. 
+eliminator other than application, so we give up and throw an error.
 
->     handleSchemeArgs es sch (_ :=>: v :<: ty) as = throwError' $
->         err "handleSchemeArgs: cannot handle scheme" ++ errScheme sch ++
->         err "with neutral term" ++ errTyVal (v :<: ty) ++
->         err "and eliminators" ++ map ErrorElim as
+>     handleSchemeArgs es sch (_ :=>: v :<: ty) as = throwErrorS
+>         [ err "handleSchemeArgs: cannot handle scheme"
+>         , errScheme sch
+>         , err "with neutral term"
+>         , errTyVal (v :<: ty)
+>         , err "and eliminators"
+>         , map ErrorElim as
+>         ]
 
 
 The |handleArgs| function is a simplified version of |handleSchemeArgs|, for

@@ -1,0 +1,10 @@
+.cabal-sandbox/
+dist/
+*.hers
+*.o
+*.hi
+*.o-boot
+*.hi-boot
+*.hspp
+*.dvi
+*.pdf

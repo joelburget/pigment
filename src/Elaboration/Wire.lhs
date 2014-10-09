@@ -10,6 +10,7 @@
 > module Elaboration.Wire where
 
 > import Control.Applicative
+> import Control.Monad.Error
 
 > import Kit.BwdFwd
 
@@ -57,7 +58,7 @@ news bulletin to each entry in turn, picking up other bulletins along
 the way. This function is called when navigating to a development that
 may contain news bulletins, so they can be pushed out of sight.
 
-> propagateNews :: PropagateStatus ->  NewsBulletin -> NewsyEntries -> 
+> propagateNews :: PropagateStatus ->  NewsBulletin -> NewsyEntries ->
 >                                      ProofState NewsBulletin
 
 We need to keep track of whether news propagation was called normally or as a
@@ -88,12 +89,12 @@ module, at which point everyone knows the news anyway.
 To update a |Parameter|, we check to see if its type has become more defined,
 and pass on the good news if necessary.
 
-> propagateNews  top news 
+> propagateNews  top news
 >                (NF (Right (EPARAM (name := DECL :<: tv) sn k ty a) :> es)) = do
 >     case tellNews news ty of
 >         (_, NoNews) -> do
 >           let ref = name := DECL :<: tv
->           putEntryAbove (EPARAM ref sn k ty a) 
+>           putEntryAbove (EPARAM ref sn k ty a)
 >           propagateNews top news (NF es)
 >         (ty', GoodNews) -> do
 >           let ref = name := DECL :<: evTm ty'
@@ -239,7 +240,7 @@ process.
 >         tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor)
 >       _         -> do
 >         -- \pierre{Is that a |throwError| or an |error|?}
->         throwError' . err . unlines $ [
+>         throwError . sErr . unlines $ [
 >                     "tellEntry: news bulletin contains update", show ne,
 >                     "for hole", show ref,
 >                     "with suspended computation", show prob]
@@ -249,8 +250,8 @@ process.
 >          (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
 >          ref                  = name := HOLE h :<: tyv'
 >          prob'                = tellEProb news prob
->          state                = if isUnstable prob' 
->                                   then SuspendUnstable 
+>          state                = if isUnstable prob'
+>                                   then SuspendUnstable
 >                                   else SuspendStable
 >     suspendHierarchy state
 >     return  (addNews (ref, min n n') news,
@@ -268,7 +269,7 @@ To update a closed definition (|Defined|), we must:
 \item update the news bulletin with news about this definition.
 \end{enumerate}
 
-> tellEntry news (EDEF  (name := DEFN tmL :<: tyv) sn dkind 
+> tellEntry news (EDEF  (name := DEFN tmL :<: tyv) sn dkind
 >                       dev@(Dev {devTip=Defined tm tt}) ty anchor) = do
 >     let  (tt', n)             = tellNewsEval news tt
 >          (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
@@ -294,7 +295,7 @@ updated news.
 > tellCurrentEntry :: NewsBulletin -> ProofState NewsBulletin
 > tellCurrentEntry news = do
 >     e <- getLeaveCurrent
->     (news', e') <- tellEntry news e 
+>     (news', e') <- tellEntry news e
 >     putEnterCurrent e'
 >     return news'
 

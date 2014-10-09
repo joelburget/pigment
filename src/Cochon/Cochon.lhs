@@ -14,9 +14,9 @@
 > import Data.Foldable
 > import Data.Traversable
 > import Data.List hiding (find)
-> import System
+> import System.Process
 > import System.Exit
-> import System.IO 
+> import System.IO
 
 > import NameSupply.NameSupply
 
@@ -77,13 +77,13 @@ Here we have a very basic command-driven interface to the proof state monad.
 
 > cochon' :: Bwd ProofContext -> IO ()
 > cochon' (locs :< loc) = do
->     -- Safety belt: this *must* type-check!      
+>     -- Safety belt: this *must* type-check!
 >     validateDevelopment (locs :< loc)
 >     -- Show goal and prompt
 >     putStr $ fst $ runProofState showPrompt loc
 >     hFlush stdout
 >     l <- getLine
->     case parse tokenize l of 
+>     case parse tokenize l of
 >         Left pf -> do
 >             putStrLn ("Tokenize failure: " ++ describePFailure pf id)
 >             cochon' (locs :< loc)
@@ -176,7 +176,7 @@ A Cochon tactic consinsts of:
 > instance Ord CochonTactic where
 >     compare ct1 ct2 = compare (ctName ct1) (ctName ct2)
 
-           
+
 
 The |tacticsMatching| function identifies Cochon tactics that match the
 given string, either exactly or as a prefix.
@@ -227,7 +227,7 @@ unary tactics.
 >     ,  ctParse = parser
 >     ,  ctIO = (\as -> simpleOutput (eval as))
 >     ,  ctHelp = help
->     } 
+>     }
 
 > nullaryCT :: String -> ProofState String -> String -> CochonTactic
 > nullaryCT name eval help = simpleCT name (pure B0) (const eval) help
@@ -278,9 +278,9 @@ Construction tactics:
 >       "done - solves the goal with the last entry in the development."
 >   : unaryInCT "give" (\tm -> elabGiveNext tm >> return "Thank you.")
 >       "give <term> - solves the goal with <term>."
->   : simpleCT 
+>   : simpleCT
 >         "lambda"
->          (| (|bwdList (pSep (keyword KwComma) tokenString) (%keyword KwAsc%)|) :< tokenInTm 
+>          (| (|bwdList (pSep (keyword KwComma) tokenString) (%keyword KwAsc%)|) :< tokenInTm
 >           | bwdList (pSep (keyword KwComma) tokenString)
 >           |)
 >          (\ args -> case args of
@@ -307,7 +307,7 @@ Construction tactics:
 >   : simpleCT
 >         "make"
 >         (| (|(B0 :<) tokenString (%keyword KwAsc%)|) :< tokenInTm
->          | (|(B0 :<) tokenString (%keyword KwDefn%) |) <>< 
+>          | (|(B0 :<) tokenString (%keyword KwDefn%) |) <><
 >              (| (\ (tm :<: ty) -> InArg tm :> InArg ty :> F0) pAscription |)
 >          |)
 >         (\ (StrArg s:tyOrTm) -> case tyOrTm of
@@ -425,22 +425,22 @@ Miscellaneous tactics:
 >           )
 >         ,  ctHelp = "save <file> - saves proof state to the given file."
 >         }
->             
+>
 
->     : CochonTactic 
+>     : CochonTactic
 >         {  ctName = "undo"
 >         ,  ctParse = pure B0
 >         ,  ctIO = (\ _ (locs :< loc) -> case locs of
->             B0  -> putStrLn "Cannot undo."  >> return (locs :< loc) 
+>             B0  -> putStrLn "Cannot undo."  >> return (locs :< loc)
 >             _   -> putStrLn "Undone."       >> return locs
 >          )
 >         ,  ctHelp = "undo - goes back to a previous state."
 >         }
 
 >     : nullaryCT "validate" (validateHere >> return "Validated.")
->         "validate - re-checks the definition at the current location."  
+>         "validate - re-checks the definition at the current location."
 
->     : CochonTactic 
+>     : CochonTactic
 >         {  ctName = "load"
 >         ,  ctParse = (| (B0 :<) tokenString |)
 >         ,  ctIO = (\ [StrArg file] locs -> do
@@ -497,25 +497,25 @@ Import more tactics from an aspect:
 >           Right command -> do
 >             return command
 
-                           
+
 
 
 > tokenizeCommands :: Parsley Char [String]
 > tokenizeCommands = (|id ~ [] (% pEndOfStream %)
->                     |id (% oneLineComment %) 
+>                     |id (% oneLineComment %)
 >                         (% consumeUntil' endOfLine %)
 >                         tokenizeCommands
 >                     |id (% openBlockComment %)
 >                         (% (eatNestedComments 0) %)
 >                         tokenizeCommands
 >                     |id (spaces *> endOfLine *> tokenizeCommands)
->                     |consumeUntil' endOfCommand : 
+>                     |consumeUntil' endOfCommand :
 >                      tokenizeCommands
 >                     |)
 >     where endOfCommand = tokenEq ';' *> spaces *> endOfLine
 >                      <|> pEndOfStream *> pure ()
->           endOfLine = tokenEq (head "\n") <|> pEndOfStream 
->           oneLineComment = tokenEq '-' *> tokenEq '-' 
+>           endOfLine = tokenEq (head "\n") <|> pEndOfStream
+>           oneLineComment = tokenEq '-' *> tokenEq '-'
 >           openBlockComment = tokenEq '{' *> tokenEq '-'
 >           closeBlockComment = tokenEq '-' *> tokenEq '}'
 >           spaces = many $ tokenEq ' '

@@ -4,14 +4,16 @@
 %if False
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+> {-# LANGUAGE TypeOperators, GADTs, KindSignatures, FlexibleInstances,
+>     TypeSynonymInstances, FlexibleContexts, PatternGuards,
+>     MultiParamTypeClasses, ScopedTypeVariables #-}
 
 > module Evidences.TypeChecker where
 
 > import Control.Applicative
 > import Control.Monad.Error
 
+> import Data.Monoid ((<>))
 > import Data.Traversable
 
 > import Kit.BwdFwd
@@ -65,19 +67,26 @@ any function traversing the types derivation tree can be expressed
 using |canTy|.
 
 > canTy ::  (Alternative m, MonadError (StackError t) m) =>
->           (TY :>: t -> m (s :=>: VAL)) -> 
+>           (TY :>: t -> m (s :=>: VAL)) ->
 >           (Can VAL :>: Can t) ->
 >           m (Can (s :=>: VAL))
+
+canTy ::  (TY :>: t -> Check s (s :=>: VAL)) ->
+          (Can VAL :>: Can t) ->
+          Check s (Can (s :=>: VAL))
+
 > canTy chev (Set :>: Set)     = return Set
 > canTy chev (Set :>: Pi s t)  = do
 >   ssv@(s :=>: sv) <- chev (SET :>: s)
 >   ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
 >   return $ Pi ssv ttv
 > import <- CanTyRules
-> canTy  chev (ty :>: x)  = throwError'  $ err "canTy: the proposed value "
->                                        ++ errCan x
->                                        ++ err " is not of type " 
->                                        ++ errTyVal ((C ty) :<: SET)
+> canTy  chev (ty :>: x) = throwError $ StackError
+>     [ err "canTy: the proposed value "
+>     , errCan x
+>     , err " is not of type "
+>     , errTyVal ((C ty) :<: SET)
+>     ]
 
 
 \subsubsection{Eliminators}
@@ -93,18 +102,29 @@ it computes the type of the argument,
 ie. the eliminator, in |Elim (s :=>: VAL)| and the type of the result in
 |TY|.
 
-> elimTy ::  MonadError (StackError t) m =>
->            (TY :>: t -> m (s :=>: VAL)) -> 
+Carefully bring t into scope (we don't really care about m and s) so we can
+refer to it in `ErrorItem t`, which disambiguates an instance - `ErrorList a =>
+Error [a]` vs `Error [ErrorItem INTM]`, which we want.
+
+> elimTy :: forall t m s. MonadError (StackError t) m =>
+>            (TY :>: t -> m (s :=>: VAL)) ->
 >            (VAL :<: Can VAL) -> Elim t ->
 >            m (Elim (s :=>: VAL),TY)
+
+elimTy ::  (TY :>: t -> Check s (s :=>: VAL)) ->
+           (VAL :<: Can VAL) -> Elim t ->
+           Check s (Elim (s :=>: VAL),TY)
+
 > elimTy chev (f :<: Pi s t) (A e) = do
 >   eev@(e :=>: ev) <- chev (s :>: e)
->   return $ (A eev, t $$ A ev) 
+>   return $ (A eev, t $$ A ev)
 > import <- ElimTyRules
-> elimTy _  (v :<: t) e = throwError'  $ err "elimTy: failed to eliminate" 
->                                      ++ errTyVal (v :<: (C t)) 
->                                      ++ err "with" 
->                                      ++ errElim e
+> elimTy _  (v :<: t) e = throwError $ StackError
+>     [ err "elimTy: failed to eliminate"
+>     , errTyVal (v :<: (C t))
+>     , err "with"
+>     , errElim e
+>     ]
 
 \question{Why not asking |m| to be |Alternative| too?}
 
@@ -145,8 +165,10 @@ Section~\ref{subsubsec:Evidences.TypeChecker.canTy}.
 
 > opTy op chev ss
 >   | length ss == opArity op = telCheck chev (opTyTel op :>: ss)
-> opTy op _ _ = throwError' $  (err "operator arity error: ")
->                              ++ (err $ opName op)
+> opTy op _ _ = throwError $ StackError
+>     [ (err "operator arity error: ")
+>     , (err $ opName op)
+>     ]
 
 
 \subsection{Type checking}
@@ -176,7 +198,7 @@ delegate the hard work to |canTy|. The checker-evaluator simply needs
 to evaluate the well-typed terms.
 
 > check (C cty :>: C ctm) = do
->   cc' <- canTy check (cty :>: ctm)
+>   cc' <- canTy check (cty :>: ctm) -- :: Check INTM (Can (INTM :=>: VAL))
 >   return $ C ctm :=>: (C $ fmap valueOf cc')
 
 
@@ -193,9 +215,9 @@ making a fresh variable $x \in S$ and computing the type |T x|. Then,
 we simply have to check that $T\ x \ni t$.
 
 > check (PI s t :>: L sc) = do
->   freshRef  ("__check" :<: s) 
->             (\ref -> check (  t $$ A (pval ref) :>: 
->                               underScope sc ref)) 
+>   freshRef  ("__check" :<: s)
+>             (\ref -> check (  t $$ A (pval ref) :>:
+>                               underScope sc ref))
 >   return $ L sc :=>: (evTm $ L sc)
 
 Formally, we can bring the |Ex| terms into the |In| world with the
@@ -214,21 +236,25 @@ This translates naturally into the following code:
 >   yv :<: yt <- infer n
 >   case (equal (SET :>: (w, yt)) r) of
 >     True -> return $ N n :=>: yv
->     False -> throwError'  $   err "check: inferred type"
->                           ++  errTyVal (yt :<: SET)
->                           ++  err "of"
->                           ++  errTyVal (yv :<: yt)
->                           ++  err "is not"
->                           ++  errTyVal (w :<: SET)
+>     False -> throwError $ StackError
+>         [ err "check: inferred type"
+>         , errTyVal (yt :<: SET)
+>         , err "of"
+>         , errTyVal (yv :<: yt)
+>         , err "is not"
+>         , errTyVal (w :<: SET)
+>         ]
 
 Finally, we can extend the checker with the |Check| aspect. If no rule
 has matched, then we have to give up.
 
 > import <- Check
-> check (ty :>: tm) = throwError'  $ err "check: type mismatch: type"
->                                  ++ errTyVal (ty :<: SET)
->                                  ++ err "does not admit"
->                                  ++ errTm tm
+> check (ty :>: tm) = throwError $ StackError
+>     [ err "check: type mismatch: type"
+>     , errTyVal (ty :<: SET)
+>     , err "does not admit"
+>     , errTm tm
+>     ]
 
 
 \subsection{Type inference}
@@ -273,11 +299,13 @@ term |t| and we type-check the eliminator, using |elimTy|. Because
 >         C cty -> do
 >             (s', ty') <- elimTy check (val :<: cty) s
 >             return $ (val $$ (fmap valueOf s')) :<: ty'
->         _ -> throwError' $ err "infer: inferred type"
->                            ++ errTyVal (ty :<: SET)
->                            ++ err "of"
->                            ++ errTyVal (val :<: ty)
->                            ++ err "is not canonical."
+>         _ -> throwError $ StackError
+>                  [ err "infer: inferred type"
+>                  , errTyVal (ty :<: SET)
+>                  , err "of"
+>                  , errTyVal (val :<: ty)
+>                  , err "is not canonical."
+>                  ]
 
 Following exactly the same principle, we can infer the result of an
 operator application:
@@ -304,7 +332,7 @@ Which translates directly into the following code:
 Obviously, if none of the rule above applies, then there is something
 fishy.
 
-> infer _                   = throwError' $ err "infer: unable to infer type"
+> infer _                   = throwError $ sErr "infer: unable to infer type"
 
 
 

@@ -49,17 +49,11 @@ types:
 
 %if False
 
-> instance Functor Scheme where
->     fmap = fmapDefault
-
-> instance Foldable Scheme where
->     foldMap = foldMapDefault
-
 > instance Traversable Scheme where
 >     traverse f (SchType t) = (|SchType (f t)|)
 >     traverse f (SchExplicitPi (x :<: schS) schT) =
 >         (| SchExplicitPi (| (x :<:) (traverse f schS) |) (traverse f schT) |)
->     traverse f (SchImplicitPi (x :<: s) schT) = 
+>     traverse f (SchImplicitPi (x :<: s) schT) =
 >         (| SchImplicitPi (| (x :<:) (f s) |) (traverse f schT) |)
 
 %endif
@@ -82,7 +76,7 @@ interpret $\Pi$-bindings:
 
 > schemeToType :: (String -> x -> x -> x) -> Scheme x -> x
 > schemeToType _ (SchType ty) = ty
-> schemeToType piv (SchExplicitPi (x :<: s) t) = 
+> schemeToType piv (SchExplicitPi (x :<: s) t) =
 >     piv x (schemeToType piv s) (schemeToType piv t)
 > schemeToType piv (SchImplicitPi (x :<: s) t) =
 >     piv x s (schemeToType piv t)

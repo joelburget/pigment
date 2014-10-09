@@ -1,10 +1,10 @@
 >        {- proofTrace $ "subst: " ++ show subst
->         mapM (\ (ref, val) -> bquoteHere val >>= solveHole ref) subst 
+>         mapM (\ (ref, val) -> bquoteHere val >>= solveHole ref) subst
 >         let wtm' = fst $ tellNews (map (\ (n := HOLE Hoping :<: ty, val) ->
 >                                         (n := DEFN val :<: ty, GoodNews))
 >                                         subst) wtm -}
 
-<         (q :=>: qv, True) <- runElabHope False (PRF (EQBLUE (s :>: wv) (s :>: a)))         
+<         (q :=>: qv, True) <- runElabHope False (PRF (EQBLUE (s :>: wv) (s :>: a)))
 
 <         tm :=>: _ <- mapStateT (either (Left . (fmap $ fmap $ fmap fst)) Right)
 <                          (match (s :>: (w, a)))
@@ -21,4 +21,4 @@
 >        Just c   -> do
 >            c' <- canTy match (cty :>: c)
 >            return $ C (fmap termOf c') :=>: C (fmap valueOf c')
->        Nothing  -> throwError' $ err "relabel: halfzip failed!"
+>        Nothing  -> throwError $ sErr "relabel: halfzip failed!"

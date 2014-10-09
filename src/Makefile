@@ -7,11 +7,11 @@
 
 HC              = ghc
 HC_PACKAGE      = -hide-all-packages \
-	          -package mtl \
+		  -package mtl \
 		  -package pretty \
 		  -package base \
-		  -package haskell98 \
-	          -package filepath \
+		  -package process \
+		  -package filepath \
 		  $(HC_CABAL_PACKAGE)
 HC_OPTS_DEV     = $(HC_PACKAGE)
 HC_OPTS_TEST    = $(HC_PACKAGE) -fhpc
@@ -44,7 +44,7 @@ SRCS_EVIDENCES := $(wildcard NameSupply/*.lhs) \
 SRCS_PFSTATE := $(wildcard ProofState/Structure/*.lhs) \
 		$(wildcard ProofState/Movement/*.lhs) \
 		$(wildcard ProofState/Edition/*.lhs) \
-		$(wildcard ProofState/Interface/*.lhs) 
+		$(wildcard ProofState/Interface/*.lhs)
 
 SRCS_DISPLAYS := $(wildcard DisplayLang/*.lhs) \
 	  	 $(wildcard Elaboration/*.lhs) \
@@ -63,22 +63,19 @@ SRCS := $(SRCS_KIT) \
 	$(SRCS_PFSTATE) \
 	$(SRCS_DISPLAYS) $(SRCS_TACTICS) \
 	$(SRCS_COCHON) $(SRCS_MAIN)
-OBJS := $(SRCS:.lhs=.o) 
+OBJS := $(SRCS:.lhs=.o)
 
-.SUFFIXES : .o .hs .hi .lhs .hc .s\
-	    .hi-boot .lhs-boot .o-boot
+.SUFFIXES : .o .hs .hi .lhs .hc .s .hi-boot .lhs-boot .o-boot
 
 ################################################################
 # Rules
 ################################################################
 
 ## Default rule:
-#     * build dependency graph
+#     * (build dependency graph)
 #     * make Epigram binary
 #     * make the literate document
-all: 
-	$(MAKE) depend 
-	$(MAKE) Pig Epitome
+all: Pig Epitome
 
 ## Dependency graph:
 # Ask GHC to compute the dependency graph.
@@ -91,12 +88,28 @@ all:
 # Sigma.lhs causes the re-compilation of the (empty) file Sigma.lhs,
 # without causing the re-compilation of Rules.lhs, for example.
 depend : $(SRCS)
-	$(HC) $(HC_PACKAGE) -M -dep-makefile .depend $(SRCS)
+	$(HC) $(HC_PACKAGE) -M -dep-suffix '' -dep-makefile .depend $(SRCS)
 dep : depend
+
+# TODO(joel) - avoid rerunning she over a bunch of files repeatedly
+# - why exactly does this happen?
+# - because we're running --make over all the lhs files?
+#
+# stages:
+# - build .depend
+#   * afaik we're good up to here
+# - run she over any files which have been modified more recently than their
+#   corresponding .hspp
+#   * can't really do this since she is called by ghc as it compiles a file
+#   * give ghc a hint?
+#   * make she smarter (don't run in this case)?
+#
+# .depend : $(SRCS)
+# 	$(HC) $(HC_PACKAGE) -M -dep-suffix '' -dep-makefile .depend $(SRCS)
 
 
 ## Epigram object files:
-# 
+#
 # Let us abuse the power of separate compilation to make some kinda
 # self-contained components. The idea here is to be able to
 # (temporarily) break some parts of the system and not having to
@@ -125,7 +138,7 @@ epigram: kit compiler evidences proofstate displays tactics cochon main
 #
 # Pig takes its orders from HC_OPTS and build a BUILD_MODE. By
 # default, this is a BUILD_DEV, with the corresponding DEV flags.
-Pig : .depend epigram
+Pig: epigram
 	rm -f $@
 	$(HC) -o $@ $(HC_OPTS) $(OBJS)
 	touch $(BUILD_MODE)
@@ -133,22 +146,22 @@ Pig : .depend epigram
 # Then, there are several flavors of build:
 
 # Release: when compilation is slow, things go fast
-release: .depend
+release:
 	$(MAKE) HC_OPTS="$(HC_OPTS_RELEASE)"\
-	        BUILD_MODE="BUILD_RELEASE" Pig 
+	        BUILD_MODE="BUILD_RELEASE" Pig
 
 # Test: with code coverage
-btest: .depend
+btest:
 	$(MAKE) HC_OPTS="$(HC_OPTS_TEST)"\
 	        BUILD_MODE="BUILD_TEST" Pig
 
 # Warning: cautious build mode
-warning: .depend
+warning:
 	$(MAKE) HC_OPTS="$(HC_OPTS_WARNING)"\
 	        BUILD_MODE="BUILD_WARNING" Pig
 
 # Profile: profiler enabled mode
-profile: .depend
+profile:
 	$(MAKE) HC_OPTS="$(HC_OPTS_PROFILE)"\
 	        BUILD_MODE="BUILD_PROFILE" Pig
 
@@ -235,16 +248,11 @@ ifeq ($(or $(if $(wildcard BUILD_*),,1), \
 	# Previous .o files might be left from a previous build mode
 	$(error "Messing up different builds. Please 'make clean'.")
 endif
-	$(HC) -c $< $(HC_OPTS)
-
-.hs.o:
+	# $(HC) --make $< $(HC_OPTS)
 	$(HC) -c $< $(HC_OPTS)
 
 .o-boot.hi-boot:
 	@:
 
 .lhs-boot.o-boot:
-	$(HC) -c $< $(HC_OPTS)
-
-.hs-boot.o-boot:
 	$(HC) -c $< $(HC_OPTS)
