@@ -213,9 +213,7 @@ PageM = (InteractionState -> (a, InteractionState))
 >     tellUser msg
 
 > inputHandler :: InteractionState -> TransitionEvent -> IO ()
-> inputHandler state x@(TransitionChange str) = do
->     print x
->     showPage state{userInput=str}
+> inputHandler state (TransitionChange str) = showPage state{userInput=str}
 > inputHandler state (TransitionSpecial Enter) = do
 >     let action = case parseCmd (userInput state) of
 >             Left err -> tellUser err
@@ -555,11 +553,6 @@ Navigation tactics:
 
 
 Miscellaneous tactics:
-
-TODO(joel) - I cut out help for now; my thinking being that there should be
-ample help already available - a high level overview as well as a filtered list
-of available tactics. It wasn't really working because we can only output a
-string to the user but ctHelp is a ReactM ()
 
 >      : CochonTactic
 >          {  ctName = "help"
