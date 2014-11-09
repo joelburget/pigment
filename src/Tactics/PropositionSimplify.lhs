@@ -18,7 +18,7 @@
 > import Prelude hiding (any, foldl)
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Control.Monad.Reader
 
 > import Data.Traversable

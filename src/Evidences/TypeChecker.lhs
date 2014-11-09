@@ -11,7 +11,7 @@
 > module Evidences.TypeChecker where
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 
 > import Data.Monoid ((<>))
 > import Data.Traversable

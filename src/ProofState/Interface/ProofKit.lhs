@@ -9,7 +9,7 @@
 
 > module ProofState.Interface.ProofKit where
 
-> import Control.Monad.Error
+> import Control.Monad.Except
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary

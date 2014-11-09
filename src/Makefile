@@ -5,13 +5,13 @@
 ################
 #### GHC
 
-HC              = ghc
+HC              = ~/haskell/haste-compiler/.cabal-sandbox/bin/hastec
 HC_PACKAGE      = -hide-all-packages \
-		  -package mtl \
-		  -package pretty \
-		  -package base \
-		  -package process \
-		  -package filepath \
+		  -package transformers-0.3.0.0 \
+		  -package haste-compiler-0.4.3 \
+		  -package mtl-2.2.1 \
+		  -package pretty-1.1.1.1 \
+		  -package base-4.7.0.1 \
 		  $(HC_CABAL_PACKAGE)
 HC_OPTS_DEV     = $(HC_PACKAGE)
 HC_OPTS_TEST    = $(HC_PACKAGE) -fhpc
@@ -55,6 +55,8 @@ SRCS_TACTICS := $(wildcard Tactics/*.lhs)
 
 SRCS_COCHON := $(wildcard Cochon/*.lhs)
 
+SRCS_RASCAL := $(wildcard Rascal/*.hs) Rascal.hs
+
 SRCS_MAIN := $(wildcard *.lhs)
 
 SRCS := $(SRCS_KIT) \
@@ -62,7 +64,7 @@ SRCS := $(SRCS_KIT) \
 	$(SRCS_EVIDENCES) \
 	$(SRCS_PFSTATE) \
 	$(SRCS_DISPLAYS) $(SRCS_TACTICS) \
-	$(SRCS_COCHON) $(SRCS_MAIN)
+	$(SRCS_COCHON) $(SRCS_RASCAL) $(SRCS_MAIN)
 OBJS := $(SRCS:.lhs=.o)
 
 .SUFFIXES : .o .hs .hi .lhs .hc .s .hi-boot .lhs-boot .o-boot
@@ -76,6 +78,9 @@ OBJS := $(SRCS:.lhs=.o)
 #     * make Epigram binary
 #     * make the literate document
 all: Pig Epitome
+
+web:
+	hastec Main.lhs --with-js=react-stubs.js
 
 ## Dependency graph:
 # Ask GHC to compute the dependency graph.
@@ -124,6 +129,7 @@ proofstate: $(SRCS_PFSTATE:.lhs=.o)
 displays: $(SRCS_DISPLAYS:.lhs=.o)
 tactics: $(SRCS_TACTICS:.lhs=.o)
 cochon: $(SRCS_COCHON:.lhs=.o)
+rascal: $(SRCS_RASCAL:.hs=.o)
 main: $(SRCS_MAIN:.lhs=.o)
 
 epigram: kit compiler evidences proofstate displays tactics cochon main
@@ -242,7 +248,10 @@ clean:
 .o.hi:
 	@:
 
-.lhs.o:
+%.o: %.hs
+	$(HC) -c $< $(HC_OPTS)
+
+%.o: %.lhs
 ifeq ($(or $(if $(wildcard BUILD_*),,1), \
 	   $(wildcard $(BUILD_MODE))),)
 	# Previous .o files might be left from a previous build mode

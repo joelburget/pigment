@@ -9,7 +9,7 @@
 > module Evidences.OperatorDSL where
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 
 > import Evidences.Tm
 > import {-# SOURCE #-} Evidences.Eval
@@ -33,7 +33,7 @@ DSEL, try this.
 >   | OBarf
 
 > oData :: [OpTree] -> OpTree
-> oData = OCon . OPr . OCase 
+> oData = OCon . OPr . OCase
 
 > class OLams t where
 >   oLams :: t -> OpTree
@@ -67,8 +67,8 @@ DSEL, try this.
 > runOpTree _  (N e : xs)   = Left e
 
 
-Grot! Why does the |Monad (Either e)| instance demand |(Error e)|? I shut it up.
+Grot! Why does the |Monad (Either e)| instance demand |(Except e)|? I shut it up.
 
-> instance Error NEU where
->   strMsg = error
+instance Error NEU where
+  strMsg = error
 

@@ -68,24 +68,22 @@ representation. Note that it works in its own module which it discards at the
 end, so it will not leave any subgoals lying around in the proof state.
 
 > infoElaborate :: DExTmRN -> ProofState String
-> infoElaborate tm = draftModule "__infoElaborate" (do
+> infoElaborate tm = draftModule "__infoElaborate" $ do
 >     (tm' :=>: tmv :<: ty) <- elabInfer' tm
 >     tm'' <- bquoteHere tmv
 >     s <- prettyHere (ty :>: tm'')
 >     return (renderHouseStyle s)
->  )
 
 
 The |infoInfer| command is similar to |infoElaborate|, but it returns a string
 representation of the resulting type.
 
 > infoInfer :: DExTmRN -> ProofState String
-> infoInfer tm = draftModule "__infoInfer" (do
+> infoInfer tm = draftModule "__infoInfer" $ do
 >     (_ :<: ty) <- elabInfer' tm
 >     ty' <- bquoteHere ty
 >     s <- prettyHere (SET :>: ty')
 >     return (renderHouseStyle s)
->  )
 
 
 The |infoContextual| command displays a distilled list of things in
@@ -133,7 +131,7 @@ the saved state. We can get rid of it once we are confident that the new version
 >     save <- get
 >     let bsc = inBScope save
 >     me <- getCurrentName
->     ds <- many (hypsHere bsc me <* optional killBelow <* goOut <* removeEntryAbove)
+>     ds <- many' (hypsHere bsc me <* optional' killBelow <* goOut <* removeEntryAbove)
 >     d <- hypsHere bsc me
 >     put save
 >     return (renderHouseStyle (vcat (d:reverse ds)))
@@ -144,7 +142,7 @@ the saved state. We can get rid of it once we are confident that the new version
 >        d <- hyps bsc me
 >        putEntriesAbove es
 >        return d
->    
+>
 >    killBelow = do
 >        l <- getLayer
 >        replaceLayer (l { belowEntries = NF F0 })
@@ -248,13 +246,13 @@ of the proof state at the current location.
 >                  (text x  <+> (maybe empty (brackets . brackets . text) anchor)
 >                           <+> kword KwAsc
 >                           <+> tyd))
->      
+>
 >     prettyE e = do
 >         goIn
 >         d <- prettyPS aus me
 >         goOut
->         return (sep  [  text (fst (entryLastName e)) 
->                         <+> (maybe empty (brackets . brackets . text) $ entryAnchor e) 
+>         return (sep  [  text (fst (entryLastName e))
+>                         <+> (maybe empty (brackets . brackets . text) $ entryAnchor e)
 >                      ,  nest 2 d <+> kword KwSemi
 >                      ])
 >
@@ -319,7 +317,7 @@ final type-term pair (using a quick hack).
 
 >   : unaryStringCT "show" (\s -> case s of
 >         "inscope"  -> infoInScope
->         "context"  -> infoContext 
+>         "context"  -> infoContext
 >         "dump"     -> infoDump
 >         "hyps"     -> infoHypotheses
 >         "state"    -> prettyProofState

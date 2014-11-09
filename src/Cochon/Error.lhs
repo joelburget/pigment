@@ -8,7 +8,7 @@
 
 > module Cochon.Error where
 
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Text.PrettyPrint.HughesPJ
 
 > import Evidences.Tm hiding (In)

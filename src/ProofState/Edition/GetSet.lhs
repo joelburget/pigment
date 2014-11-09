@@ -9,7 +9,7 @@
 
 > module ProofState.Edition.GetSet where
 
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Control.Monad.State
 
 > import Kit.BwdFwd
@@ -92,7 +92,7 @@ And some specialized versions:
 
 > getEntryAbove :: ProofStateT e (Entry Bwd)
 > getEntryAbove = do
->     _ :< e <- getEntriesAbove
+>     _ :< e <- getEntriesAbove -- XXX this errors on "done"
 >     return e
 >
 > getGoal :: String -> ProofStateT e (INTM :=>: TY)

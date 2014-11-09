@@ -24,7 +24,7 @@
 
 > import Control.Applicative
 > import Control.Monad
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Data.List
 
 > import Kit.BwdFwd

@@ -10,7 +10,7 @@
 > module NameSupply.NameSupplier where
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Control.Monad.Reader
 
 > import NameSupply.NameSupply
@@ -27,7 +27,7 @@ moderate safety but is easy to use. Ideally, we would like most
 of the code to use |NameSupplier| instead of manipulating the
 |NameSupply| explicitly.
 
-So, what does |NameSupplier| offer? 
+So, what does |NameSupplier| offer?
 
 > class (Applicative m, Monad m) => NameSupplier m where
 

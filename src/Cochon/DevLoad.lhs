@@ -5,14 +5,11 @@
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators #-}
 
-> module Cochon.DevLoad (devLoad, devLoad') where
+> module Cochon.DevLoad () where
 
 > import Control.Monad.State
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Control.Applicative
-> import System.Exit
-> import System.IO
-> import System.FilePath.Posix
 
 > import Kit.BwdFwd
 > import Kit.Parsley
@@ -60,7 +57,7 @@ A module may have a list of definitions in square brackets, followed
 by an optional semicolon-separated list of commands.
 
 > parseDevelopment :: Parsley Token [DevLine]
-> parseDevelopment  = bracket Square (many (pDef <|> pModule)) 
+> parseDevelopment  = bracket Square (many (pDef <|> pModule))
 >                   <|> pure []
 
 \subsubsection{Parsing definitions}
@@ -73,7 +70,7 @@ A definition is an identifier, followed by a list of children, a definition
 >                     pLines                 -- childrens (optional)
 >                     pDefn                  -- definition
 >                     pCTSuffix              -- commands (optional)
->                     (%keyword KwSemi%) 
+>                     (%keyword KwSemi%)
 >          |)
 
 \paragraph{Parsing children:}
@@ -84,7 +81,7 @@ parameters. Parameters are defined below. The absence of
 sub-development is signaled by the @:=@ symbol.
 
 > pLines  :: Parsley Token [DevLine]
-> pLines  =  bracket Square (many (pDef <|> pParam <|> pModule)) 
+> pLines  =  bracket Square (many (pDef <|> pParam <|> pModule))
 >         <|> (keyword KwDefn *> pure [])
 
 \paragraph{Parsing definitions:}
@@ -95,7 +92,7 @@ hand, giving a term corresponds to explicitly solving the goal.
 
 > pDefn :: Parsley Token (Maybe DInTmRN :<: DInTmRN)
 > pDefn  =  (| (%identEq "?"%) (%keyword KwAsc%)
->                   ~Nothing :<: pDInTm 
+>                   ~Nothing :<: pDInTm
 >           |  id pAsc
 >           |)
 >   where pAsc = do
@@ -110,7 +107,7 @@ inside @[| ... |]@ brackets. They are parsed in one go by
 we know things work.
 
 > pCTSuffix  :: Parsley Token [CTData]
-> pCTSuffix  = bracket (SquareB "") pCochonTactics 
+> pCTSuffix  = bracket (SquareB "") pCochonTactics
 >            <|> pure []
 
 
@@ -122,7 +119,7 @@ A module is similar, but has no definition.
 > pModule =  (| DLModule  ident                  -- identifier
 >                         pLines                 -- children (optional)
 >                         pCTSuffix              -- commands (optional)
->                         (%keyword KwSemi%) 
+>                         (%keyword KwSemi%)
 >            |)
 
 \subsubsection{Parsing Parameters}
@@ -132,14 +129,14 @@ $\Pi$-abstraction (represented by @(x : S) ->@).
 
 > pParam :: Parsley Token DevLine
 > pParam =  (|  (%keyword KwLambda%)          -- @\@
->             (DLParam ParamLam)              
+>             (DLParam ParamLam)
 >             ident                         -- @x@
 >             (%keyword KwAsc%)             -- @:@
 >             (sizedDInTm (pred ArrSize))   -- @T@
 >             (%keyword KwArr%) |)          -- @->@
->         <|> 
+>         <|>
 >             (bracket Round                -- @(@
->              (|  (DLParam ParamPi)              
+>              (|  (DLParam ParamPi)
 >                  ident                    -- @x@
 >                  (%keyword KwAsc%)        -- @:@
 >                  pDInTm |)) <*            -- @S)@
@@ -198,7 +195,7 @@ accumulate the commands which might have been issued.
 >                -- Return the kids' commands
 >                return ncs'
 >         _   -> do -- Yes!
->                -- Accumulate our commands 
+>                -- Accumulate our commands
 >                -- With the ones from the kids
 >                return $ (n, commands) : ncs'
 
@@ -222,7 +219,7 @@ for definitions.
 >                -- Return the kids' commands
 >                return ncs'
 >         _   -> do -- Yes!
->                -- Accumulate our commands 
+>                -- Accumulate our commands
 >                -- With the ones from the kids
 >                return $ (n, commands) : ncs'
 
@@ -239,7 +236,7 @@ in the development.
 >     -- Make a fresh reference of that type
 >     freshRef (x :<: tyv) (\ref ->
 >         -- Register |ref| as a Lambda
->         putEntryAbove (EPARAM ref (mkLastName ref) k ty Nothing)) 
+>         putEntryAbove (EPARAM ref (mkLastName ref) k ty Nothing))
 >     -- Pass the accumulated commands
 >     return ncs
 
@@ -251,57 +248,57 @@ from them.  The idea is to use commands defined in
 Section~\ref{sec:ProofState.Edition.ProofState} to build up the proof
 state.
 
-> devLoad :: String -> IO (Bwd ProofContext)
-> devLoad file = do
->   -- Load the development file
->   let devFile = dropExtension file ++ ".dev" 
->   devFileH <- (openFile devFile ReadMode >>= return . Just)
->               `catchError` \ _ -> return Nothing   
->   devLoad' devFileH $
->       withFile file ReadMode readCommands
+devLoad :: String -> IO (Bwd ProofContext)
+devLoad file = do
+  -- Load the development file
+  let devFile = dropExtension file ++ ".dev"
+  devFileH <- (openFile devFile ReadMode >>= return . Just)
+              `catchError` \ _ -> return Nothing
+  devLoad' devFileH $
+      withFile file ReadMode readCommands
 
-> devLoad' :: Maybe Handle -> IO [CTData] -> IO (Bwd ProofContext)
-> devLoad'  fileH commandLoad = do
->   -- Load the development file
->   dev <- case fileH of
->            Just f   -> loadDevelopment f
->            Nothing  -> return []
->   -- Load the development in an empty proof state
->   case runStateT (makeDev dev [] `catchError` catchUnprettyErrors) emptyContext of
->     Left errs -> do
->       putStrLn "Failed to load development:"
->       putStrLn $ renderHouseStyle $ prettyStackError errs
->       exitFailure
->     Right (ncs, loc) -> do
->       -- Load the commands
->       commands <- commandLoad
->       -- Run them
->       doCTacticsAt (([], commands) : ncs) (B0 :< loc)
+devLoad' :: Maybe Handle -> IO [CTData] -> IO (Bwd ProofContext)
+devLoad'  fileH commandLoad = do
+  -- Load the development file
+  dev <- case fileH of
+           Just f   -> loadDevelopment f
+           Nothing  -> return []
+  -- Load the development in an empty proof state
+  case runStateT (makeDev dev [] `catchError` catchUnprettyErrors) emptyContext of
+    Left errs -> do
+      putStrLn "Failed to load development:"
+      putStrLn $ renderHouseStyle $ prettyStackError errs
+      exitFailure
+    Right (ncs, loc) -> do
+      -- Load the commands
+      commands <- commandLoad
+      -- Run them
+      doCTacticsAt (([], commands) : ncs) (B0 :< loc)
 
 
-The following companion function takes care of the dirty details: 
+The following companion function takes care of the dirty details:
 \begin{itemize}
 \item Loading the content of the file;
 \item Tokenizing the file
 \item Parsing the development
 \end{itemize}
 
-> loadDevelopment :: Handle -> IO [DevLine]
-> loadDevelopment file = do
->     f <- hGetContents file
->     -- Tokenize the development file
->     case parse tokenize f of
->       Left err -> do
->         putStrLn $ "loadDevelopment: failed to tokenize:\n" ++ 
->                    show err
->         exitFailure
->       Right toks ->
->           -- Parse the development
->           case parse parseDevelopment toks of
->             Left err -> do
->               putStrLn $ "loadDevelopment: failed to parse:\n" ++
->                            show err
->               exitFailure
->             Right dev -> do
->               -- Return the result
->               return dev
+loadDevelopment :: Handle -> IO [DevLine]
+loadDevelopment file = do
+    f <- hGetContents file
+    -- Tokenize the development file
+    case parse tokenize f of
+      Left err -> do
+        putStrLn $ "loadDevelopment: failed to tokenize:\n" ++
+                   show err
+        exitFailure
+      Right toks ->
+          -- Parse the development
+          case parse parseDevelopment toks of
+            Left err -> do
+              putStrLn $ "loadDevelopment: failed to parse:\n" ++
+                           show err
+              exitFailure
+            Right dev -> do
+              -- Return the result
+              return dev

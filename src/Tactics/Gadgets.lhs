@@ -7,6 +7,9 @@
 
 > module Tactics.Gadgets where
 
+> import ProofState.Edition.ProofState
+> import Control.Applicative
+
 %endif
 
 
@@ -44,10 +47,10 @@ the methods and moves to the first subgoal remaining.
 >     byCTactic :: Maybe RelName -> DExTmRN -> ProofState String
 >     byCTactic n e = do
 >         elimCTactic n e
->         optional problemSimplify            -- simplify first method
->         many (goDown >> problemSimplify)    -- simplify other methods
->         many goUp                           -- go back up to motive
->         optional seekGoal                   -- jump to goal
+>         optional' problemSimplify           -- simplify first method
+>         many' (goDown >> problemSimplify)   -- simplify other methods
+>         many' goUp                          -- go back up to motive
+>         optional' seekGoal                  -- jump to goal
 >         return "Eliminated and simplified."
 
 > import -> CochonTactics where

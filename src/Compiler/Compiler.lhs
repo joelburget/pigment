@@ -12,10 +12,8 @@ generate an executable from a collection of supercombinator definitions.
 
 > module Compiler.Compiler where
 
-> import System.Environment
 > import System.Exit
 > import System.IO
-> import System.Process
 > import Data.Char
 > import Data.List
 > import Control.Monad.State
@@ -274,55 +272,57 @@ Also take a list of extra options to give to Epic (e.g. for keeping intermediate
 code).
 
 > output :: [(CName, CompileFn)] -> CName -> FilePath -> String -> IO Bool
-> output defs mainfn outfile epicopts =
->    do (epicFile, eh) <- tempfile
->       Prelude.mapM_ ((hPutStrLn eh) . codegen) defs
->       support <- readLibFile libPath "support.e"
->       hPutStrLn eh support
->       hPutStrLn eh (mainDef mainfn)
->       hClose eh
->       let cmd = "epic -checking 1 " ++ epicFile ++ " -o " ++ outfile ++ " " ++ epicopts
->       exit <- system cmd
->       return (exit == ExitSuccess)
 
-> tempfile :: IO (FilePath, Handle)
-> tempfile =
->    do env <- environment "TMPDIR"
->       let dir = case env of
->                    Nothing -> "/tmp"
->                    (Just d) -> d
->       openTempFile dir "Pig"
+> output defs mainfn outfile epicopts = undefined
 
-> environment :: String -> IO (Maybe String)
-> environment x = catch (do e <- getEnv x
->                           return (Just e))
->                       (\(_ :: SomeException) -> return Nothing)
+   do (epicFile, eh) <- tempfile
+      Prelude.mapM_ ((hPutStrLn eh) . codegen) defs
+      support <- readLibFile libPath "support.e"
+      hPutStrLn eh support
+      hPutStrLn eh (mainDef mainfn)
+      hClose eh
+      let cmd = "epic -checking 1 " ++ epicFile ++ " -o " ++ outfile ++ " " ++ epicopts
+      exit <- system cmd
+      return (exit == ExitSuccess)
 
-> readLibFile :: [FilePath] -> FilePath -> IO String
-> readLibFile xs x = tryReads (map (\f -> f ++ "/" ++ x) (".":xs))
->    where tryReads [] = fail $ "Can't find " ++ x
->          tryReads (x:xs) = catch (readFile x)
->                                  (\(_ :: SomeException) -> tryReads xs)
+tempfile :: IO (FilePath, Handle)
+tempfile =
+   do env <- environment "TMPDIR"
+      let dir = case env of
+                   Nothing -> "/tmp"
+                   (Just d) -> d
+      openTempFile dir "Pig"
 
-> mainDef :: CName -> String
-> mainDef m = "main () -> Unit = __dumpData(" ++ m ++ "())"
+environment :: String -> IO (Maybe String)
+environment x = catch (do e <- getEnv x
+                          return (Just e))
+                      (\(_ :: SomeException) -> return Nothing)
+
+readLibFile :: [FilePath] -> FilePath -> IO String
+readLibFile xs x = tryReads (map (\f -> f ++ "/" ++ x) (".":xs))
+   where tryReads [] = fail $ "Can't find " ++ x
+         tryReads (x:xs) = catch (readFile x)
+                                 (\(_ :: SomeException) -> tryReads xs)
+
+mainDef :: CName -> String
+mainDef m = "main () -> Unit = __dumpData(" ++ m ++ "())"
 
 
 We add a Cochon tactic to invoke the compiler.
 
-> import -> CochonTactics where
->   : CochonTactic
->         {  ctName = "compile"
->         ,  ctParse = (|(|(B0 :<) tokenName|) :< tokenString|)
->         ,  ctIO = (\ [ExArg (DP r ::$ []), StrArg fn] (locs :< loc) -> do
->             let  Right dev = evalStateT getAboveCursor loc
->                  Right (n := _) = evalStateT (resolveDiscard r) loc
->             b <- compileCommand n (reverseDev dev) fn
->             putStrLn (if b then "Compiled." else "EPIC FAIL")
->             return (locs :< loc)
->           )
->         ,  ctHelp = "compile <name> <file> - compiles the proof state with <name> as the main term to be evalauted, producing a binary called <file>."
->         }
+import -> CochonTactics where
+  : CochonTactic
+        {  ctName = "compile"
+        ,  ctParse = (|(|(B0 :<) tokenName|) :< tokenString|)
+        ,  ctxTrans = (\ [ExArg (DP r ::$ []), StrArg fn] -> InteractionM () $ \(InteractionState{proofCtx=(locs :< loc)} -> do
+            let  Right dev = evalStateT getAboveCursor loc
+                 Right (n := _) = evalStateT (resolveDiscard r) loc
+            b <- compileCommand n (reverseDev dev) fn
+            putStrLn (if b then "Compiled." else "EPIC FAIL")
+            return (locs :< loc)
+          )
+        ,  ctHelp = "compile <name> <file> - compiles the proof state with <name> as the main term to be evalauted, producing a binary called <file>."
+        }
 
 
 \subsection{Operator definitions}

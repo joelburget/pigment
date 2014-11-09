@@ -108,7 +108,11 @@ justifies some piece of kit to deal with this global context.
 >     show (Parameter k) = "Param " ++ show k
 >     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
 > instance Traversable NewsyFwd where
->     traverse g (NF x) = NF <$> traverse (traverse g) x
+>     traverse g (NF x) = -- NF <$> traverse (traverse g) x
+>         let a = traverse g
+>             b = traverse a
+>             c = b x
+>         in NF <$> c
 
 %endif
 

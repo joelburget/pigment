@@ -9,7 +9,7 @@
 > import Prelude hiding (any, foldl, elem)
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Control.Monad.Reader
 
 > import Data.Foldable
@@ -313,7 +313,7 @@ methods, then returns to the original goal.
 >     methods <- elim Nothing tt
 >     simpTrace "Eliminated!"
 >     toFirstMethod
->     replicateM_ (length methods) (optional problemSimplify >> goDown)
+>     replicateM_ (length methods) (optional' problemSimplify >> goDown)
 >     goOut
 
 
@@ -327,5 +327,5 @@ methods, then returns to the original goal.
 
 
 > import -> CochonTactics where
->   : nullaryCT "simplify" (problemSimplify >> optional seekGoal >> return "Simplified.")
+>   : nullaryCT "simplify" (problemSimplify >> optional' seekGoal >> return "Simplified.")
 >       "simplify - simplifies the current problem."

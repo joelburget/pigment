@@ -15,6 +15,7 @@ represent extents numerically.
 
 > import Control.Applicative
 > import Control.Monad
+> import Control.Monad.Except
 > import Control.Monad.Error
 
 
@@ -68,7 +69,7 @@ It's a |Monad| and all that.
 >     (sts, s', ts)  <- s ts
 >     (tts, t', ts)  <- runParsley (f s') ts
 >     return (sts ++ tts, t', ts)
->   fail s = Parsley $ \ _ -> fail s
+>   fail s = Parsley $ \ _ -> Left $ strMsg s
 >   hiding instance Applicative (Parsley t)
 >
 > instance Functor (Parsley t) where

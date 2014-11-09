@@ -18,8 +18,6 @@
 > import Tm
 > import Rules
 
-> import Debug.Trace
-
 > fromRight :: Either a b -> b
 > fromRight (Left x) = error "fromRight: haha!"
 > fromRight (Right x) = x
@@ -33,14 +31,14 @@
 >                     "( y : X ) ( z : Y )  -> t y z"
 >                   ]
 
-> testChunk = 
+> testChunk =
 >     Prelude.sequence_ $
->     map (\tm -> 
+>     map (\tm ->
 >         let Right tm' = parse tokenize tm
 >             Right tm2 = parse (termParse B0) tm'
 >             r = evalStateT (introTm tm2) emptyContext
 >         in do
->           putStrLn $ "\n" ++ show tm 
+>           putStrLn $ "\n" ++ show tm
 >           case r of
 >            Left ss -> do
 >                 putStrLn $ "Error: " ++ intercalate "\n" ss
@@ -53,7 +51,7 @@
 >     where introTm tm = do
 >               make ("" :<: tm)
 >               goIn
->               r <- chunkGoal 
+>               r <- chunkGoal
 >               return r
 
 > testCheckElimTerms = [ ("(N : *)(x : N)(P : N -> *) -> P x", [(),()])
@@ -62,13 +60,13 @@
 >                      ]
 
 
-> testCheckElim = 
+> testCheckElim =
 >     Prelude.sequence_ $
->     map (\(ty, ctxt) -> 
+>     map (\(ty, ctxt) ->
 >         let Right ty' = parse (termParse B0) $ fromRight $ parse tokenize ty
 >             r = evalStateT (checkElim ctxt ty') emptyContext
 >         in do
->           putStrLn $ "\n" ++ show ty 
+>           putStrLn $ "\n" ++ show ty
 >           case r of
 >            Left ss -> do
 >                 putStrLn $ "Error: " ++ intercalate "\n" ss
@@ -85,9 +83,9 @@
 >                       , ("split",[(),(),()])
 >                       , ("elimOp",[(),()]) ]
 
-> testCheckElim2 = 
+> testCheckElim2 =
 >     Prelude.sequence_ $
->     map (\(tm,ctxt) -> 
+>     map (\(tm,ctxt) ->
 >         let Just op = find (\o -> opName o == tm) operators
 >             ty = opType (B0 :< ("a",0),0) op
 >             ty' = bquote B0 ty ((B0 :< ("a",0),0) :: Root)
@@ -116,12 +114,12 @@ These are not quite motive signature, but that's fine for this test:
 
 > testCheckMotive =
 >     Prelude.sequence_ $
->     map (\ty -> 
+>     map (\ty ->
 >         let Right ty' = parse (termParse B0) $ fromRight $ parse tokenize ty
 >             name = [("e",1000)] := (DECL :<: evTm ty')
 >             r = evalStateT (checkMotive name) emptyContext
 >         in do
->           putStrLn $ "\n" ++ show ty 
+>           putStrLn $ "\n" ++ show ty
 >           case r of
 >            Left ss -> do
 >                 putStrLn $ "Error: " ++ intercalate "\n" ss
@@ -134,9 +132,9 @@ These are not quite motive signature, but that's fine for this test:
 >                         , ("split",[(),(),()])
 >                         , ("elimOp",[(),()]) ]
 
-> testCheckMotive2 = 
+> testCheckMotive2 =
 >     Prelude.sequence_ $
->     map (\(tm,ctxt) -> 
+>     map (\(tm,ctxt) ->
 >         let Just op = find (\o -> opName o == tm) operators
 >             ty = opType (B0 :< ("a",0),0) op
 >             ty' = bquote B0 ty ((B0 :< ("a",0),0) :: Root)
@@ -169,7 +167,7 @@ These are not quite motive signature, but that's fine for this test:
 
 > testMkMotive =
 >     Prelude.sequence_ $
->     map (\(goal,eTy) -> 
+>     map (\(goal,eTy) ->
 >         let Right goal' = parse (termParse B0) $ fromRight $ parse tokenize goal
 >             Right eTy' = parse (termParse B0) $ fromRight $ parse tokenize eTy
 >             r = evalStateT (test goal' eTy') emptyContext
@@ -196,9 +194,9 @@ These are not quite motive signature, but that's fine for this test:
 >                      {- , -} ("split",[(),(),()], "(A : *)(B : A -> *)(t : (A ; B)) -> t") ]
 >                      -- , ("elimOp",[(),()],"(D : Desc)(v : Mu D) -> v") ]
 
-> testMkMotive2 = 
+> testMkMotive2 =
 >     Prelude.sequence_ $
->     map (\(tm,ctxt,g) -> 
+>     map (\(tm,ctxt,g) ->
 >         let Just op = find (\o -> opName o == tm) operators
 >             Right goal = parse (termParse B0) $ fromRight $ parse tokenize g
 >             ty = opType (B0 :< ("a",0),0) op
@@ -223,14 +221,14 @@ These are not quite motive signature, but that's fine for this test:
 >                   return motive
 
 > testElimTerms = [-- ("Switch",[()],"(e : EnumU)(x : EnumT e) -> x")
->                  {- , -} ("split",[], "(A : *)(B : A -> *)(t : (A ; B)) -> t") 
+>                  {- , -} ("split",[], "(A : *)(B : A -> *)(t : (A ; B)) -> t")
 >                  , ("split", [], "(A : *)(B : A -> *)(a : A) -> a")
 >                  , ("split", [], "(A : *)(B : A -> *)(b : B) -> b") ]
 >                   -- , ("elimOp",[()],"(D : Desc)(v : Mu D) -> v") ]
 
-> testElim = 
+> testElim =
 >     Prelude.sequence_ $
->     map (\(tm,ctxt,g) -> 
+>     map (\(tm,ctxt,g) ->
 >         let Just op = find (\o -> opName o == tm) operators
 >             Right goal = parse (termParse B0) $ fromRight $ parse tokenize g
 >             ty = opType (B0 :< ("a",0),0) op

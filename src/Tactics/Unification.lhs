@@ -9,7 +9,7 @@
 
 > import Prelude hiding (any, elem)
 
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Data.Foldable
 > import qualified Data.Monoid as M
 

@@ -5,14 +5,12 @@
 > import Root
 > import Rooty
 > import BwdFwd
-> import Control.Monad.Error
-
-> import Debug.Trace
+> import Control.Monad.Except
 
 > testMkRef op = inCheck (check (opTy :>: (N $ P r))) (B0 :< ("tactics",0),0)
 >     where r = mkRef op
 >           opTy = pity $ opTyTel op
 
-> main = 
->     sequence_ $ 
+> main =
+>     sequence_ $
 >     map (putStrLn . show . testMkRef) operators

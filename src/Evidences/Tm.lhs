@@ -5,7 +5,8 @@
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
->     FlexibleContexts, ScopedTypeVariables, ConstraintKinds #-}
+>     FlexibleContexts, ScopedTypeVariables, ConstraintKinds,
+>     GeneralizedNewtypeDeriving #-}
 
 > module Evidences.Tm where
 
@@ -13,6 +14,7 @@
 
 > import Control.Applicative
 > import Control.Monad.Error
+> import Control.Monad.Except
 > import qualified Data.Monoid as M
 > import Data.Monoid (mempty, mappend, (<>))
 > import Data.Foldable
@@ -614,6 +616,17 @@ Errors a reported in a stack, as failure is likely to be followed by
 further failures. The top of the stack is the head of the list.
 
 > newtype StackError t = StackError { unStackError :: [ErrorItem t] }
+
+instance MonadPlus (Either (StackError a)) where
+    mzero = Left (StackError [])
+    mplus x@(Right l) _ = x
+    mplus _ x = x
+
+     mplus (Left (StackError xs)) (Left (StackError ys)) =
+         Left (StackError (xs++ys))
+     mplus l@(Left (StackError xs)) _ = l
+     mplus _ r@(Left (StackError xs)) = r
+     mplus (Right l) (Right r) =k
 
 > instance Error (StackError t) where
 >   strMsg = sErr

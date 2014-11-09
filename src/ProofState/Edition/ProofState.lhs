@@ -9,6 +9,7 @@
 
 > module ProofState.Edition.ProofState where
 
+> import Control.Applicative
 > import Control.Monad.State
 
 > import DisplayLang.Name
@@ -39,6 +40,17 @@ type synonym:
 
 
 \subsection{Error management toolkit}
+
+Work around an overlapping instance error by restricting the type of optional.
+
+> optional' :: ProofState a -> ProofState (Maybe a)
+> optional' = optional
+
+> some' :: ProofState a -> ProofState [a]
+> some' = some
+
+> many' :: ProofState a -> ProofState [a]
+> many' = many
 
 Some functions, such as |distill|, are defined in the |ProofStateT
 INTM| monad. However, Cochon lives in a |ProofStateT DInTmRN|

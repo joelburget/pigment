@@ -11,7 +11,7 @@
 
 > import Control.Applicative
 > import Control.Monad
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Data.Foldable
 > import Data.List hiding (elem)
 > import Data.Traversable
@@ -787,7 +787,7 @@ methods, quoting them (to expand the definition of the motive) and lifting them
 over $\Delta_0$:
 
 >     toMotive
->     methodTypes <- many $ do
+>     methodTypes <- many' $ do
 >         goDown
 >         _ :=>: ty <- getHoleGoal
 >         ty' <- bquoteHere ty

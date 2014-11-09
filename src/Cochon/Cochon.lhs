@@ -4,19 +4,19 @@
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
->     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+>     DeriveFunctor, DeriveFoldable, DeriveTraversable, OverloadedStrings,
+>     CPP #-}
 
 > module Cochon.Cochon where
 
 > import Control.Applicative
 > import Control.Monad.State
-> import Control.Monad.Error
-> import Data.Foldable
-> import Data.Traversable
+> import Control.Monad.Except
+> import Data.Foldable as Foldable
 > import Data.List hiding (find)
-> import System.Process
-> import System.Exit
-> import System.IO
+> import Data.Ord
+> import Data.String
+> import Data.Traversable
 
 > import NameSupply.NameSupply
 
@@ -67,56 +67,224 @@
 > import Kit.Parsley
 > import Kit.MissingLibrary
 
-%endif
+#ifdef __HASTE__
+> import Haste hiding (fromString, prompt)
+> import Haste.JSON
+> import Haste.Prim
+#endif
+> import Prelude hiding (div)
+> import Rascal hiding (key)
+> import qualified Rascal
 
+%endif
 
 Here we have a very basic command-driven interface to the proof state monad.
 
+Model
+=====
+
+> data InteractionState = InteractionState
+>     { proofCtx :: Bwd ProofContext
+>     , userInput :: String
+>     , outputLog :: [ReactM ()]
+>     -- XXX(joel) - should this be ProofState (ReactM ())?
+>     , proofState :: ProofState String
+>     , pageElem :: Elem
+>     }
+
+> data TransitionEvent
+>     = TransitionChange String
+>     | TransitionSpecial SpecialKey
+>     deriving Show
+
+> type CTData = (CochonTactic, [CochonArg])
+
+Controller Helpers
+==================
+
+PageM
+
+> newtype PageM a = PageM
+>     (InteractionState -> (a, InteractionState))
+
+> data SpecialKey
+>     = Enter
+>     deriving Show
+
+> instance Monad PageM where
+>     return a = PageM $ \state -> (a, state)
+>     (PageM fa) >>= interact = PageM $ \state ->
+>         let (a, state') = fa state
+>             PageM fb = interact a
+>         in fb state'
+
+> unPageM :: PageM a -> InteractionState -> InteractionState
+> unPageM (PageM f) = snd . f
+
+> getProofState :: PageM (ProofState String)
+> getProofState = PageM $ \state -> (proofState state, state)
+
+> setProofState :: ProofState String -> PageM ()
+> setProofState st = PageM $ \state -> ((), state{proofState=st})
+
+> setCtx :: Bwd ProofContext -> PageM ()
+> setCtx ctx = PageM $ \state -> ((), state{proofCtx=ctx})
+
+> getInteractionState :: PageM InteractionState
+> getInteractionState = PageM $ \state -> (state, state)
+
+> setInteractionState :: InteractionState -> PageM ()
+> setInteractionState state = PageM $ \_ -> ((), state)
+
+> getCtx :: PageM (Bwd ProofContext)
+> getCtx = PageM $ \state -> (proofCtx state, state)
+
+> displayUser :: ReactM () -> PageM ()
+> displayUser react =
+>     let elem = div (ReactAttrs [("className", "log-elem")] []) react
+>     in PageM $ \state -> ((), state{outputLog=elem:(outputLog state)})
+
+> tellUser :: String -> PageM ()
+> tellUser = displayUser . fromString
+
+> resetUserInput :: PageM ()
+> resetUserInput = PageM $ \state -> ((), state{userInput=""})
+
+View
+====
+
+> showPage :: InteractionState -> IO ()
+> -- TODO gross getting the elem each time
+> -- add it to InteractionState
+> showPage state = renderComponent (pageElem state) (page state)
+
+> page :: InteractionState -> ReactM ()
+> page state = div (ReactAttrs [("className", "page")] []) $ do
+>     proofCtxDisplay (proofCtx state)
+>     div (ReactAttrs [("className", "right-pane")] []) $ do
+>         prompt (toJSStr (userInput state)) (inputHandler state)
+>         interactionLog (outputLog state)
+>     tacticList
+
+> prompt :: JSString -> (TransitionEvent -> IO ()) -> ReactM ()
+> prompt v handle = div (ReactAttrs [("className", "prompt")] []) $
+>     input (ReactAttrs [("className", "prompt-input"), ("value", Str v)]
+>                       [ onChange   (handle <#> handleChange)
+>                       , onKeyPress (handle <#> handleKey)
+>                       ])
+
+> interactionLog :: [ReactM ()] -> ReactM ()
+> interactionLog logs = div
+>     (ReactAttrs [("className", "interaction-log")] [])
+>     (Prelude.sequence_ logs)
+
+> proofCtxDisplay :: Bwd ProofContext -> ReactM ()
+> proofCtxDisplay (_ :< ctx) = div
+>     (ReactAttrs [("className", "ctx-display")] [])
+>     (pre (ReactAttrs [] []) $ fst $ runProofState prettyProofState ctx)
+
+> tacticList :: ReactM ()
+> tacticList = div
+>     (ReactAttrs [("className", "tactic-list")] [])
+>     (Foldable.forM_ cochonTactics $ \tactic -> div
+>         (ReactAttrs [("className", "tactic-info")] []) (ctHelp tactic)
+>     )
+
+Controller
+==========
+
+We start out here. Main calls `cochon emptyContext`.
+
 > cochon :: ProofContext -> IO ()
-> cochon loc = cochon' (B0 :< loc)
+> cochon loc = do
+>     Just e <- elemById "inject"
+>     let pc = B0 :< loc
+>         startState = InteractionState pc "" [] showPrompt e
+>     validateDevelopment pc
+>     showPage startState
 
-> cochon' :: Bwd ProofContext -> IO ()
-> cochon' (locs :< loc) = do
->     -- Safety belt: this *must* type-check!
->     validateDevelopment (locs :< loc)
->     -- Show goal and prompt
->     putStr $ fst $ runProofState showPrompt loc
->     hFlush stdout
->     l <- getLine
->     case parse tokenize l of
->         Left pf -> do
->             putStrLn ("Tokenize failure: " ++ describePFailure pf id)
->             cochon' (locs :< loc)
->         Right ts ->
->           case parse pCochonTactics ts of
->               Left pf -> do
->                   putStrLn ("Parse failure: " ++ describePFailure pf (intercalate " " . map crushToken))
->                   cochon' (locs :< loc)
->               Right cds -> do
->                   locs' <- doCTactics cds (locs :< loc)
->                   cochon' locs'
+PageM = (InteractionState -> (a, InteractionState))
 
+> cochon' :: PageM ()
+> cochon' = do
+>     locs :< loc <- getCtx
+>     pfSt <- getProofState
+>     let (msg, state') = runProofState pfSt loc
+>     tellUser msg
+
+> inputHandler :: InteractionState -> TransitionEvent -> IO ()
+> inputHandler state x@(TransitionChange str) = do
+>     print x
+>     showPage state{userInput=str}
+> inputHandler state (TransitionSpecial Enter) = do
+>     let action = case parseCmd (userInput state) of
+>             Left err -> tellUser err
+>             Right interaction -> do
+>                 interaction
+>                 locs :< loc <- getCtx
+>                 pfSt <- getProofState
+>                 let (msg, maybeCtx) = runProofState pfSt loc
+>                 tellUser msg
+>                 case maybeCtx of
+>                     Just loc' -> do
+>                         setCtx (locs :< loc')
+>                         resetUserInput
+>                     Nothing -> return ()
+>     showPage (unPageM action state)
+
+TODO refactor / rename this
+
+> parseCmd :: String -> Either String (PageM ())
+> parseCmd l = case parse tokenize l of
+>     Left  pf -> Left ("Tokenize failure: " ++ describePFailure pf id)
+>     Right ts -> case parse pCochonTactics ts of
+>         Left pf -> Left $
+>             "Parse failure: " ++
+>             describePFailure pf (intercalate " " . map crushToken)
+>         Right cds -> Right $ doCTactics cds
+
+> (<#>) :: (TransitionEvent -> IO ())
+>       -> (a -> Maybe TransitionEvent)
+>       -> a
+>       -> IO ()
+> effect <#> handler = \a -> case handler a of
+>     Just x -> effect x
+>     Nothing -> return ()
+
+> handleChange :: ChangeEvent -> Maybe TransitionEvent
+> handleChange = Just . TransitionChange . fromJSStr . targetValue
+
+> handleKey :: KeyboardEvent -> Maybe TransitionEvent
+> handleKey evt = case fromJSStr (Rascal.key evt) of
+>     "Enter" -> Just $ TransitionSpecial Enter
+>     _ -> Nothing
 
 > paranoid = False
 > veryParanoid = False
 
+XXX(joel) refactor this whole thing
+  - remove putStrLn
+  - make it PageM
+  - fix line length
+  - surely this can be expressed more compactly
+
 > validateDevelopment :: Bwd ProofContext -> IO ()
 > validateDevelopment locs@(_ :< loc) = if veryParanoid
->     then Data.Foldable.mapM_ validateCtxt locs -- XXX: there must be a better way to do that
+>     then Foldable.mapM_ validateCtxt locs -- XXX: there must be a better way to do that
 >     else if paranoid
 >         then validateCtxt loc
 >         else return ()
->   where validateCtxt loc = do
+>   where validateCtxt loc =
 >             case evalStateT (validateHere `catchError` catchUnprettyErrors) loc of
 >               Left ss -> do
->                          putStrLn "*** Warning: definition failed to type-check! ***"
->                          putStrLn $ renderHouseStyle $ prettyStackError ss
+>                   putStrLn "*** Warning: definition failed to type-check! ***"
+>                   putStrLn $ renderHouseStyle $ prettyStackError ss
 >               _ -> return ()
 
 
 > showPrompt :: ProofState String
 > showPrompt = do
->     mty <- optional getHoleGoal
+>     mty <- optional' getHoleGoal
 >     case mty of
 >         Just (_ :=>: ty)  -> (|(showGoal ty) ++ showInputLine|)
 >         Nothing           -> showInputLine
@@ -132,10 +300,10 @@ Here we have a very basic command-driven interface to the proof state monad.
 >
 >     showInputLine :: ProofState String
 >     showInputLine = do
->         mn <- optional getCurrentName
->         case mn of
->             Just n   -> return $ showName n ++ " > "
->             Nothing  -> return "> "
+>         mn <- optional' getCurrentName
+>         return $ case mn of
+>             Just n   -> showName n ++ " > "
+>             Nothing  -> "> "
 
 
 > describePFailure :: PFailure a -> ([a] -> String) -> String
@@ -146,36 +314,33 @@ Here we have a very basic command-driven interface to the proof state monad.
 >     Expect t     -> "expected " ++ f [t] ++ "."
 >     Fail s       -> s
 >   ) ++ (if length ts > 0
->        then ("\nSuccessfully parsed: ``" ++ f ts ++ "''.")
+>        then "\nSuccessfully parsed: ``" ++ f ts ++ "''."
 >        else "")
 
 
-
-
-A Cochon tactic consinsts of:
+A Cochon tactic consists of:
 \begin{description}
 \item[|ctName|] the name of this tactic
 \item[|ctParse|] a parser that parses the arguments for this tactic
-\item[|ctIO|] an IO action to perform for a given list of arguments and current context
+\item[|ctxTrans|] a state transition to perform for a given list of arguments and current context
 \item[|ctHelp|] the help text for this tactic
 \end{description}
 
 > data CochonTactic =
 >     CochonTactic  {  ctName   :: String
 >                   ,  ctParse  :: Parsley Token (Bwd CochonArg)
->                   ,  ctIO     :: [CochonArg] -> Bwd ProofContext -> IO (Bwd ProofContext)
->                   ,  ctHelp   :: String
+>                   ,  ctxTrans :: [CochonArg] -> PageM ()
+>                   ,  ctHelp   :: ReactM ()
 >                   }
 
 > instance Show CochonTactic where
 >     show = ctName
 
 > instance Eq CochonTactic where
->     ct1 == ct2  =  ctName ct1 == ctName ct2
+>     ct1 == ct2 =  ctName ct1 == ctName ct2
 
 > instance Ord CochonTactic where
->     compare ct1 ct2 = compare (ctName ct1) (ctName ct2)
-
+>     compare = comparing ctName
 
 
 The |tacticsMatching| function identifies Cochon tactics that match the
@@ -194,25 +359,35 @@ Given a proof state command and a context, we can run the command with
 |runProofState| to produce a message (either the response from the command or
 the error message) and |Maybe| a new proof context.
 
-> runProofState :: ProofState String -> ProofContext
+> runProofState
+>     :: ProofState String
+>     -> ProofContext
 >     -> (String, Maybe ProofContext)
 > runProofState m loc =
 >     case runStateT (m `catchError` catchUnprettyErrors) loc of
->         Right (s, loc')  -> (s, Just loc')
->         Left ss          -> (renderHouseStyle $ prettyStackError ss, Nothing)
+>         Right (s, loc') -> (s, Just loc')
+>         Left ss         -> (renderHouseStyle $ prettyStackError ss, Nothing)
 
 
-
-> simpleOutput :: ProofState String -> Bwd ProofContext -> IO (Bwd ProofContext)
-> simpleOutput eval (locs :< loc) = do
+> simpleOutput :: ProofState String -> PageM ()
+> simpleOutput eval = do
+>     locs :< loc <- getCtx
 >     case runProofState (eval <* startScheduler) loc of
 >         (s, Just loc') -> do
->             putStrLn s
->             return (locs :< loc :< loc')
+>             setCtx (locs :< loc :< loc')
+>             tellUser s
 >         (s, Nothing) -> do
->             putStrLn "I'm sorry, Dave. I'm afraid I can't do that."
->             putStrLn s
->             return (locs :< loc)
+>             setCtx (locs :< loc)
+>             tellUser "I'm sorry, Dave. I'm afraid I can't do that."
+>             tellUser s
+
+>     case runProofState (eval <* startScheduler) loc of
+>         (s, Just loc') -> do
+>             setCtx (locs :< loc :< loc')
+>             tellUser s
+>         (s, Nothing) -> do
+>             tellUser s
+>             tellUser "I'm sorry, Dave. I'm afraid I can't do that."
 
 
 We have some shortcuts for building common kinds of tactics:
@@ -225,8 +400,8 @@ unary tactics.
 > simpleCT name parser eval help = CochonTactic
 >     {  ctName = name
 >     ,  ctParse = parser
->     ,  ctIO = (\as -> simpleOutput (eval as))
->     ,  ctHelp = help
+>     ,  ctxTrans = simpleOutput . eval
+>     ,  ctHelp = fromString help
 >     }
 
 > nullaryCT :: String -> ProofState String -> String -> CochonTactic
@@ -257,7 +432,10 @@ unary tactics.
 >     (eval . unDP . argToEx . head)
 >     help
 
-> unaryStringCT :: String -> (String -> ProofState String) -> String -> CochonTactic
+> unaryStringCT :: String
+>               -> (String -> ProofState String)
+>               -> String
+>               -> CochonTactic
 > unaryStringCT name eval help = simpleCT
 >     name
 >     (| (B0 :<) tokenString |)
@@ -299,8 +477,8 @@ Construction tactics:
 >         (| (| (B0 :< ) tokenString |) :< tokenScheme |)
 >         (\ [StrArg x, SchemeArg s] -> do
 >             elabLet (x :<: s)
->             optional problemSimplify
->             optional seekGoal
+>             optional' problemSimplify
+>             optional' seekGoal
 >             return ("Let there be " ++ x ++ "."))
 >         "let <label> <scheme> : <type> - set up a programming problem with a scheme."
 
@@ -353,19 +531,19 @@ Navigation tactics:
 >       "up - moves to the development above the current one."
 >   : nullaryCT "down" (goDown >> return "Going down...")
 >       "down - moves to the development below the current one."
->   : nullaryCT "top" (many goUp >> return "Going to top...")
+>   : nullaryCT "top" (many' goUp >> return "Going to top...")
 >       "top - moves to the top-most development at the current level."
->   : nullaryCT "bottom" (many goDown >> return "Going to bottom...")
+>   : nullaryCT "bottom" (many' goDown >> return "Going to bottom...")
 >       "bottom - moves to the bottom-most development at the current level."
 >   : nullaryCT "previous" (prevGoal >> return "Going to previous goal...")
 >       "previous - searches for the previous goal in the proof state."
->   : nullaryCT "root" (many goOut >> return "Going to root...")
+>   : nullaryCT "root" (many' goOut >> return "Going to root...")
 >       "root - moves to the root of the proof state."
 >   : nullaryCT "next" ( nextGoal >> return "Going to next goal...")
 >       "next - searches for the next goal in the proof state."
->   : nullaryCT "first"  (some prevGoal >> return "Going to first goal...")
+>   : nullaryCT "first"  (some' prevGoal >> return "Going to first goal...")
 >       "first - searches for the first goal in the proof state."
->   : nullaryCT "last"   (some nextGoal >> return "Going to last goal...")
+>   : nullaryCT "last"   (some' nextGoal >> return "Going to last goal...")
 >       "last - searches for the last goal in the proof state."
 
 >   : unaryNameCT "jump" (\ x -> do
@@ -378,79 +556,42 @@ Navigation tactics:
 
 Miscellaneous tactics:
 
->   : CochonTactic
->         {  ctName = "execute"
->         ,  ctParse = (|(B0 :<) tokenString|)
->         ,  ctIO = (\ [StrArg fn] (locs :< loc) -> do
->             exit <- system fn
->             putStrLn $ if (exit == ExitSuccess) then "Success." else "Failure."
->             return (locs :< loc)
->           )
->         ,  ctHelp = "execute <command> - executes the given system command."
->         }
+TODO(joel) - I cut out help for now; my thinking being that there should be
+ample help already available - a high level overview as well as a filtered list
+of available tactics. It wasn't really working because we can only output a
+string to the user but ctHelp is a ReactM ()
 
->     : CochonTactic
->         {  ctName = "help"
->         ,  ctParse = (| (B0 :<) tokenString
->                       | B0
->                       |)
->         ,  ctIO = (\ as locs -> do
->             case as of
->                 [] -> putStrLn ("Tactics available: " ++ tacticNames cochonTactics)
->                 [StrArg s] -> case tacticsMatching s of
->                     [] -> putStrLn "There is no tactic by that name."
->                     cts -> putStrLn (unlines (map ctHelp cts))
->             return locs
->           )
->         ,  ctHelp = "help - displays a list of supported tactics.\n"
->                       ++ "help <tactic> - displays help about <tactic>.\n\n"
->                       ++ "What, you expected 'help help' to produce an amusing response?"
->         }
-
->     : CochonTactic
->         {  ctName = "quit"
->         ,  ctParse = pure B0
->         ,  ctIO = (\ _ _ -> exitSuccess)
->         ,  ctHelp = "quit - terminates the program."
->         }
-
->     : CochonTactic
->         {  ctName = "save"
->         ,  ctParse = (| (B0 :<) tokenString |)
->         ,  ctIO = (\ [StrArg fn] (locs :< loc) -> do
->             let Right s = evalStateT (much goOut >> prettyProofState) loc
->             writeFile fn s
->             putStrLn "Saved."
->             return (locs :< loc)
->           )
->         ,  ctHelp = "save <file> - saves proof state to the given file."
->         }
->
+>      : CochonTactic
+>          {  ctName = "help"
+>          ,  ctParse = (| (B0 :<) tokenString
+>                        | B0
+>                        |)
+>          ,  ctxTrans = (\args ->
+>              case args of
+>                  [] -> tellUser $ "Tactics available: " ++ tacticNames cochonTactics
+>                  [StrArg s] -> case tacticsMatching s of
+>                      [] -> tellUser "There is no tactic by that name."
+>                      cts -> displayUser $ Prelude.mapM_ ctHelp cts
+>            )
+>          ,  ctHelp = fromString $ "help - displays a list of supported tactics.\n"
+>                 ++ "help <tactic> - displays help about <tactic>.\n\n"
+>                 ++ "What, you expected 'help help' to produce an amusing response?"
+>          }
 
 >     : CochonTactic
 >         {  ctName = "undo"
 >         ,  ctParse = pure B0
->         ,  ctIO = (\ _ (locs :< loc) -> case locs of
->             B0  -> putStrLn "Cannot undo."  >> return (locs :< loc)
->             _   -> putStrLn "Undone."       >> return locs
+>         ,  ctxTrans = (\_ -> do
+>                locs :< loc <- getCtx
+>                case locs of
+>                    B0  -> tellUser "Cannot undo."  >> setCtx (locs :< loc)
+>                    _   -> tellUser "Undone."       >> setCtx locs
 >          )
->         ,  ctHelp = "undo - goes back to a previous state."
+>         ,  ctHelp = fromString "undo - goes back to a previous state."
 >         }
 
 >     : nullaryCT "validate" (validateHere >> return "Validated.")
 >         "validate - re-checks the definition at the current location."
-
->     : CochonTactic
->         {  ctName = "load"
->         ,  ctParse = (| (B0 :<) tokenString |)
->         ,  ctIO = (\ [StrArg file] locs -> do
->                    commands <- withFile file ReadMode readCommands
->                                `catchError` \_ -> do
->                                  putStrLn $ "File " ++ file ++ " does not exist. Ignored."
->                                  return []
->                    doCTactics commands locs)
->         ,  ctHelp = "load <f> - load the commands stored in <f>"
->         }
 
 Import more tactics from an aspect:
 
@@ -460,44 +601,23 @@ Import more tactics from an aspect:
 > import <- CochonTacticsCode
 
 
+> doCTacticsAt :: [(Name, [CTData])] -> PageM ()
+> doCTacticsAt [] = return ()
+> doCTacticsAt ((_, []):ncs) = doCTacticsAt ncs
+> doCTacticsAt ((n, cs):ncs) = do
+>     locs :< loc <- getCtx
+>     let Right loc' = execStateT (goTo n) loc
+>     setCtx (locs :< loc :< loc')
+>     doCTactics cs
+>     doCTacticsAt ncs
+
+> doCTactics :: [CTData] -> PageM ()
+> doCTactics = Foldable.mapM_ doCTactic
+>     where doCTactic :: CTData -> PageM ()
+>           doCTactic = uncurry ctxTrans
+
 > pFileName :: Parsley Token String
 > pFileName = ident
-
-
-
-> type CTData = (CochonTactic, [CochonArg])
-
-> readCommands :: Handle -> IO [CTData]
-> readCommands file = do
->   f <- hGetContents file
->   case parse tokenizeCommands f of
->     Left err -> do
->       putStrLn $ "readCommands: failed to tokenize:\n" ++
->                  show err
->       exitFailure
->     Right lines -> do
->          t <- Data.Traversable.sequence $ map readCommand lines
->          return $ Data.List.concat t
-
-> readCommand :: String -> IO [CTData]
-> readCommand command =
->     case parse tokenize command of
->       Left err -> do
->         putStrLn $ "readCommand: failed to tokenize:\n" ++
->                    show err
->         putStrLn $ "Input was: " ++ command
->         exitFailure
->       Right toks -> do
->         case parse pCochonTactics toks of
->           Left err -> do
->             putStrLn $ "readCommand: failed to parse:\n" ++
->                        show err
->             putStrLn $ "Input was: " ++ command
->             exitFailure
->           Right command -> do
->             return command
-
-
 
 
 > tokenizeCommands :: Parsley Char [String]
@@ -527,6 +647,9 @@ Import more tactics from an aspect:
 >                                  |id (% nextToken %)
 >                                      (eatNestedComments i) |)
 
+> pCochonTactics :: Parsley Token [CTData]
+> pCochonTactics = pSepTerminate (keyword KwSemi) pCochonTactic
+
 
 > pCochonTactic :: Parsley Token CTData
 > pCochonTactic  = do
@@ -538,46 +661,5 @@ Import more tactics from an aspect:
 >             args <- ctParse ct
 >             return (ct, trail args)
 >         [] -> fail "unknown tactic name."
->         cts -> fail ("ambiguous tactic name (could be " ++ tacticNames cts ++ ").")
-
-> pCochonTactics :: Parsley Token [CTData]
-> pCochonTactics = pSepTerminate (keyword KwSemi) pCochonTactic
-
-
-> doCTactic :: CTData -> Bwd ProofContext -> IO (Bwd ProofContext)
-> doCTactic (ct, args) (locs :< loc) = ctIO ct args (locs :< loc)
-
-> doCTactics :: [CTData] -> Bwd ProofContext -> IO (Bwd ProofContext)
-> doCTactics [] locs = return locs
-> doCTactics (cd:cds) locs = do
->     locs' <- doCTactic cd locs
->     doCTactics cds locs'
-
-> doCTacticsAt :: [(Name, [CTData])] -> Bwd ProofContext -> IO (Bwd ProofContext)
-> doCTacticsAt [] locs = return locs
-> doCTacticsAt ((_, []):ncs) locs = doCTacticsAt ncs locs
-> doCTacticsAt ((n, cs):ncs) (locs :< loc) = do
->     let Right loc' = execStateT (goTo n) loc
->     locs' <- doCTactics cs (locs :< loc :< loc')
->     doCTacticsAt ncs locs'
-
-
-
-
-> printChanges :: ProofContext -> ProofContext -> IO ()
-> printChanges from to = do
->     let Right as = evalStateT getInScope from
->         Right bs = evalStateT getInScope to
->     let (lost, gained)  = diff (as <>> F0) (bs <>> F0)
->     if lost /= F0
->         then putStrLn ("Left scope: " ++ showEntriesAbs (fmap reverseEntry (NF (fmap Right lost))) )
->         else return ()
->     if gained /= F0
->        then putStrLn ("Entered scope: " ++ showEntriesAbs (fmap reverseEntry (NF (fmap Right gained))))
->        else return ()
-
-> diff :: (Eq a, Show a) => Fwd a -> Fwd a -> (Fwd a, Fwd a)
-> diff (x :> xs) (y :> ys)
->     | x == y     = diff xs ys
->     | otherwise  = (x :> xs, y :> ys)
-> diff xs ys = (xs, ys)
+>         cts -> fail $
+>             "ambiguous tactic name (could be " ++ tacticNames cts ++ ").")

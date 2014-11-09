@@ -8,7 +8,7 @@
 
 > module ProofState.Interface.Module where
 
-> import Control.Monad.Error
+> import Control.Monad.Except
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary

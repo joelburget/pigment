@@ -9,7 +9,7 @@
 
 > import Control.Applicative
 > import Control.Monad.Identity
-> import Control.Monad.Error
+> import Control.Monad.Except
 
 > import Data.Traversable
 
@@ -259,7 +259,7 @@ dawg.}
 >                tokenInTm)
 >               (keyword KwSemi)
 >              return $ B0 :< nom :< pars :< indty :< scs
->         , ctIO = (\ [StrArg nom, pars, indty, cons] -> simpleOutput $
+>         , ctxTrans = (\ [StrArg nom, pars, indty, cons] -> simpleOutput $
 >                     ielabData nom (argList (argPair argToStr argToIn) pars)
 >                      (argToIn indty) (argList (argPair argToStr argToIn) cons)
 >                       >> return "Data'd.")

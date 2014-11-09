@@ -12,7 +12,7 @@
 
 > import Control.Applicative
 > import Control.Monad
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Control.Monad.State
 > import Data.Foldable
 

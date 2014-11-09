@@ -8,7 +8,7 @@
 > module Tactics.Data where
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 > import Control.Monad.Identity
 
 > import Data.Monoid hiding (All)
@@ -253,9 +253,9 @@ equality, so it doesn't catch the wrong |MU|s.
 >                tokenInTm)
 >               (keyword KwSemi)
 >              return $ B0 :< nom :< pars :< scs
->         , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
->                     elabData nom (argList (argPair argToStr argToIn) pars)
->                                  (argList (argPair argToStr argToIn) cons)
->                       >> return "Data'd.")
+>         , ctxTrans = (\[StrArg nom, pars, cons] -> simpleOutput $ do
+>               elabData nom (argList (argPair argToStr argToIn) pars)
+>                            (argList (argPair argToStr argToIn) cons)
+>               return "Data'd.")
 >         ,  ctHelp = "data <name> [<para>]* := [(<con> : <ty>) ;]* - builds a data type for thee."
 >         }

@@ -10,7 +10,7 @@
 > module ProofState.Edition.Navigation where
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 
 > import Data.Traversable
 

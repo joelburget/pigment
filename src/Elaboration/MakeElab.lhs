@@ -9,7 +9,7 @@
 > module Elaboration.MakeElab where
 
 > import Control.Applicative
-> import Control.Monad.Error
+> import Control.Monad.Except
 
 > import NameSupply.NameSupplier
 
