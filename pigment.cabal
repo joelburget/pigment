@@ -1,0 +1,15 @@
+name:           pigment
+version:        0.1
+cabal-version:  >= 1.2
+license:        MIT
+author:         The Epigram Posse
+synopsis:       Interactively program dependent types online.
+build-type:     Simple
+
+executable pigment
+  build-depends:
+      base == 4.6.*,
+      mtl >= 2.2,
+      pretty
+  main-is:        Main.lhs
+  hs-source-dirs: src

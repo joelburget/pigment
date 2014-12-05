@@ -72,9 +72,8 @@
 > import Haste.JSON
 > import Haste.Prim
 #endif
-> import Prelude hiding (div)
-> import Rascal hiding (key)
-> import qualified Rascal
+> import React hiding (key)
+> import qualified React
 
 %endif
 
@@ -83,52 +82,21 @@ Here we have a very basic command-driven interface to the proof state monad.
 Model
 =====
 
-> data InteractionState = InteractionState
->     { proofCtx :: Bwd ProofContext
->     , userInput :: String
->     , outputLog :: [ReactM ()]
->     -- XXX(joel) - should this be ProofState (ReactM ())?
->     , proofState :: ProofState String
->     , pageElem :: Elem
->     }
-
-> data TransitionEvent
->     = TransitionChange String
->     | TransitionSpecial SpecialKey
->     deriving Show
-
 > type CTData = (CochonTactic, [CochonArg])
 
 Controller Helpers
 ==================
 
-PageM
+Should this be part of a transformer stack including Maybe and IO?
 
-> newtype PageM a = PageM
->     (InteractionState -> (a, InteractionState))
+> getProofState :: PageM (ProofState PureReact)
+> getProofState = PageM $ \state -> (_proofState state, state)
 
-> data SpecialKey
->     = Enter
->     deriving Show
-
-> instance Monad PageM where
->     return a = PageM $ \state -> (a, state)
->     (PageM fa) >>= interact = PageM $ \state ->
->         let (a, state') = fa state
->             PageM fb = interact a
->         in fb state'
-
-> unPageM :: PageM a -> InteractionState -> InteractionState
-> unPageM (PageM f) = snd . f
-
-> getProofState :: PageM (ProofState String)
-> getProofState = PageM $ \state -> (proofState state, state)
-
-> setProofState :: ProofState String -> PageM ()
-> setProofState st = PageM $ \state -> ((), state{proofState=st})
+> setProofState :: ProofState PureReact -> PageM ()
+> setProofState pfSt = PageM $ \state -> ((), state{_proofState=pfSt})
 
 > setCtx :: Bwd ProofContext -> PageM ()
-> setCtx ctx = PageM $ \state -> ((), state{proofCtx=ctx})
+> setCtx ctx = PageM $ \state -> ((), state{_proofCtx=ctx})
 
 > getInteractionState :: PageM InteractionState
 > getInteractionState = PageM $ \state -> (state, state)
@@ -137,58 +105,73 @@ PageM
 > setInteractionState state = PageM $ \_ -> ((), state)
 
 > getCtx :: PageM (Bwd ProofContext)
-> getCtx = PageM $ \state -> (proofCtx state, state)
+> getCtx = PageM $ \state -> (_proofCtx state, state)
 
-> displayUser :: ReactM () -> PageM ()
+> displayUser :: PureReact -> PageM ()
 > displayUser react =
->     let elem = div (ReactAttrs [("className", "log-elem")] []) react
->     in PageM $ \state -> ((), state{outputLog=elem:(outputLog state)})
+>     let elem = div_ <! class_ "log-elem" $ react
+>     in PageM $ \state -> ((), state{_outputLog=elem:(_outputLog state)})
 
 > tellUser :: String -> PageM ()
 > tellUser = displayUser . fromString
 
 > resetUserInput :: PageM ()
-> resetUserInput = PageM $ \state -> ((), state{userInput=""})
+> resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
 View
 ====
 
-> showPage :: InteractionState -> IO ()
-> -- TODO gross getting the elem each time
-> -- add it to InteractionState
-> showPage state = renderComponent (pageElem state) (page state)
-
-> page :: InteractionState -> ReactM ()
-> page state = div (ReactAttrs [("className", "page")] []) $ do
->     proofCtxDisplay (proofCtx state)
->     div (ReactAttrs [("className", "right-pane")] []) $ do
->         prompt (toJSStr (userInput state)) (inputHandler state)
->         interactionLog (outputLog state)
+> page :: InteractionReact
+> page = div_ <! class_ "page" $ do
+>     nest proofCtx proofCtxDisplay
+>     div_ <! class_ "right-pane" $ do
+>         prompt
+>         nest outputLog interactionLog
 >     tacticList
 
-> prompt :: JSString -> (TransitionEvent -> IO ()) -> ReactM ()
-> prompt v handle = div (ReactAttrs [("className", "prompt")] []) $
->     input (ReactAttrs [("className", "prompt-input"), ("value", Str v)]
->                       [ onChange   (handle <#> handleChange)
->                       , onKeyPress (handle <#> handleKey)
->                       ])
+> prompt :: InteractionReact
+> prompt = div_ <! class_ "prompt" $ do
+>     InteractionState{_userInput=v} <- getState
+>     input_ <! class_ "prompt-input"
+>            <! value_ (toJSStr v)
+>            <! onChange handleChange
+>            <! onKeyPress handleKey
 
-> interactionLog :: [ReactM ()] -> ReactM ()
-> interactionLog logs = div
->     (ReactAttrs [("className", "interaction-log")] [])
->     (Prelude.sequence_ logs)
+> handleChange :: InteractionState -> ChangeEvent -> InteractionState
+> handleChange state evt = state{_userInput=(fromJSStr (targetValue evt))}
 
-> proofCtxDisplay :: Bwd ProofContext -> ReactM ()
-> proofCtxDisplay (_ :< ctx) = div
->     (ReactAttrs [("className", "ctx-display")] [])
->     (pre (ReactAttrs [] []) $ fst $ runProofState prettyProofState ctx)
+> handleKey :: InteractionState -> KeyboardEvent -> InteractionState
+> handleKey state KeyboardEvent{React.key="Enter"} = do
+>     let action = case parseCmd (_userInput state) of
+>             Left err -> tellUser err
+>             Right interaction -> do
+>                 interaction
+>                 locs :< loc <- getCtx
+>                 pfSt <- getProofState
+>                 let (msg, maybeCtx) = runProofState pfSt loc
+>                 displayUser msg
+>                 case maybeCtx of
+>                     Just loc' -> do
+>                         setCtx (locs :< loc')
+>                         resetUserInput
+>                     Nothing -> return ()
+>     unPageM action state
+> handleKey state _ = state
 
-> tacticList :: ReactM ()
-> tacticList = div
->     (ReactAttrs [("className", "tactic-list")] [])
->     (Foldable.forM_ cochonTactics $ \tactic -> div
->         (ReactAttrs [("className", "tactic-info")] []) (ctHelp tactic)
->     )
+> interactionLog :: StatefulReact [PureReact] ()
+> interactionLog = div_ <! class_ "interaction-log" $ do
+>     logs <- getState
+>     Foldable.forM_ logs pureNest
+
+> proofCtxDisplay :: StatefulReact (Bwd ProofContext) ()
+> proofCtxDisplay = div_ <! class_ "ctx-display" $ do
+>     _ :< ctx <- getState
+>     pureNest $ pre_ $ fst $ runProofState reactProofState ctx
+
+> tacticList :: InteractionReact
+> tacticList = div_ <! class_ "tactic-list" $
+>     Foldable.forM_ cochonTactics $ \tactic ->
+>         div_ <! class_ "tactic-info" $ pureNest $ ctHelp tactic
 
 Controller
 ==========
@@ -199,36 +182,16 @@ We start out here. Main calls `cochon emptyContext`.
 > cochon loc = do
 >     Just e <- elemById "inject"
 >     let pc = B0 :< loc
->         startState = InteractionState pc "" [] showPrompt e
+>         startState = InteractionState pc "" [] showPrompt
 >     validateDevelopment pc
->     showPage startState
-
-PageM = (InteractionState -> (a, InteractionState))
+>     render startState e page
 
 > cochon' :: PageM ()
 > cochon' = do
 >     locs :< loc <- getCtx
 >     pfSt <- getProofState
 >     let (msg, state') = runProofState pfSt loc
->     tellUser msg
-
-> inputHandler :: InteractionState -> TransitionEvent -> IO ()
-> inputHandler state (TransitionChange str) = showPage state{userInput=str}
-> inputHandler state (TransitionSpecial Enter) = do
->     let action = case parseCmd (userInput state) of
->             Left err -> tellUser err
->             Right interaction -> do
->                 interaction
->                 locs :< loc <- getCtx
->                 pfSt <- getProofState
->                 let (msg, maybeCtx) = runProofState pfSt loc
->                 tellUser msg
->                 case maybeCtx of
->                     Just loc' -> do
->                         setCtx (locs :< loc')
->                         resetUserInput
->                     Nothing -> return ()
->     showPage (unPageM action state)
+>     displayUser msg
 
 TODO refactor / rename this
 
@@ -240,22 +203,6 @@ TODO refactor / rename this
 >             "Parse failure: " ++
 >             describePFailure pf (intercalate " " . map crushToken)
 >         Right cds -> Right $ doCTactics cds
-
-> (<#>) :: (TransitionEvent -> IO ())
->       -> (a -> Maybe TransitionEvent)
->       -> a
->       -> IO ()
-> effect <#> handler = \a -> case handler a of
->     Just x -> effect x
->     Nothing -> return ()
-
-> handleChange :: ChangeEvent -> Maybe TransitionEvent
-> handleChange = Just . TransitionChange . fromJSStr . targetValue
-
-> handleKey :: KeyboardEvent -> Maybe TransitionEvent
-> handleKey evt = case fromJSStr (Rascal.key evt) of
->     "Enter" -> Just $ TransitionSpecial Enter
->     _ -> Nothing
 
 > paranoid = False
 > veryParanoid = False
@@ -280,26 +227,26 @@ XXX(joel) refactor this whole thing
 >               _ -> return ()
 
 
-> showPrompt :: ProofState String
+> showPrompt :: ProofState PureReact
 > showPrompt = do
 >     mty <- optional' getHoleGoal
 >     case mty of
->         Just (_ :=>: ty)  -> (|(showGoal ty) ++ showInputLine|)
+>         Just (_ :=>: ty)  -> (|(showGoal ty) >> showInputLine|)
 >         Nothing           -> showInputLine
 >   where
->     showGoal :: TY -> ProofState String
+>     showGoal :: TY -> ProofState PureReact
 >     showGoal ty@(LABEL _ _) = do
 >         h <- infoHypotheses
 >         s <- prettyHere . (SET :>:) =<< bquoteHere ty
->         return $ h ++ "\n" ++ "Programming: " ++ show s ++ "\n"
+>         return $ h >> (fromString ("\nProgramming: " ++ show s ++ "\n"))
 >     showGoal ty = do
 >         s <- prettyHere . (SET :>:) =<< bquoteHere ty
->         return $ "Goal: " ++ show s ++ "\n"
+>         return $ fromString $ "Goal: " ++ show s ++ "\n"
 >
->     showInputLine :: ProofState String
+>     showInputLine :: ProofState PureReact
 >     showInputLine = do
 >         mn <- optional' getCurrentName
->         return $ case mn of
+>         return $ fromString $ case mn of
 >             Just n   -> showName n ++ " > "
 >             Nothing  -> "> "
 
@@ -328,7 +275,7 @@ A Cochon tactic consists of:
 >     CochonTactic  {  ctName   :: String
 >                   ,  ctParse  :: Parsley Token (Bwd CochonArg)
 >                   ,  ctxTrans :: [CochonArg] -> PageM ()
->                   ,  ctHelp   :: ReactM ()
+>                   ,  ctHelp   :: PureReact
 >                   }
 
 > instance Show CochonTactic where
@@ -358,34 +305,34 @@ Given a proof state command and a context, we can run the command with
 the error message) and |Maybe| a new proof context.
 
 > runProofState
->     :: ProofState String
+>     :: ProofState PureReact
 >     -> ProofContext
->     -> (String, Maybe ProofContext)
+>     -> (PureReact, Maybe ProofContext)
 > runProofState m loc =
 >     case runStateT (m `catchError` catchUnprettyErrors) loc of
 >         Right (s, loc') -> (s, Just loc')
->         Left ss         -> (renderHouseStyle $ prettyStackError ss, Nothing)
+>         Left ss         -> (fromString $ renderHouseStyle $ prettyStackError ss, Nothing)
 
 
-> simpleOutput :: ProofState String -> PageM ()
+> simpleOutput :: ProofState PureReact -> PageM ()
 > simpleOutput eval = do
 >     locs :< loc <- getCtx
 >     case runProofState (eval <* startScheduler) loc of
 >         (s, Just loc') -> do
 >             setCtx (locs :< loc :< loc')
->             tellUser s
+>             displayUser s
 >         (s, Nothing) -> do
 >             setCtx (locs :< loc)
->             tellUser "I'm sorry, Dave. I'm afraid I can't do that."
->             tellUser s
+>             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
+>             displayUser s
 
 >     case runProofState (eval <* startScheduler) loc of
 >         (s, Just loc') -> do
 >             setCtx (locs :< loc :< loc')
->             tellUser s
+>             displayUser s
 >         (s, Nothing) -> do
->             tellUser s
->             tellUser "I'm sorry, Dave. I'm afraid I can't do that."
+>             displayUser s
+>             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
 
 
 We have some shortcuts for building common kinds of tactics:
@@ -394,7 +341,7 @@ and there are various specialised versions of it for nullary and
 unary tactics.
 
 > simpleCT :: String -> Parsley Token (Bwd CochonArg)
->     -> ([CochonArg] -> ProofState String) -> String -> CochonTactic
+>     -> ([CochonArg] -> ProofState PureReact) -> String -> CochonTactic
 > simpleCT name parser eval help = CochonTactic
 >     {  ctName = name
 >     ,  ctParse = parser
@@ -402,10 +349,10 @@ unary tactics.
 >     ,  ctHelp = fromString help
 >     }
 
-> nullaryCT :: String -> ProofState String -> String -> CochonTactic
+> nullaryCT :: String -> ProofState PureReact -> String -> CochonTactic
 > nullaryCT name eval help = simpleCT name (pure B0) (const eval) help
 
-> unaryExCT :: String -> (DExTmRN -> ProofState String) -> String -> CochonTactic
+> unaryExCT :: String -> (DExTmRN -> ProofState PureReact) -> String -> CochonTactic
 > unaryExCT name eval help = simpleCT
 >     name
 >     (| (B0 :<) tokenExTm
@@ -413,7 +360,7 @@ unary tactics.
 >     (eval . argToEx . head)
 >     help
 
-> unaryInCT :: String -> (DInTmRN -> ProofState String) -> String -> CochonTactic
+> unaryInCT :: String -> (DInTmRN -> ProofState PureReact) -> String -> CochonTactic
 > unaryInCT name eval help = simpleCT
 >     name
 >     (| (B0 :<) tokenInTm |)
@@ -423,7 +370,7 @@ unary tactics.
 > unDP :: DExTm p x -> x
 > unDP (DP ref ::$ []) = ref
 
-> unaryNameCT :: String -> (RelName -> ProofState String) -> String -> CochonTactic
+> unaryNameCT :: String -> (RelName -> ProofState PureReact) -> String -> CochonTactic
 > unaryNameCT name eval help = simpleCT
 >     name
 >     (| (B0 :<) tokenName |)
@@ -431,7 +378,7 @@ unary tactics.
 >     help
 
 > unaryStringCT :: String
->               -> (String -> ProofState String)
+>               -> (String -> ProofState PureReact)
 >               -> String
 >               -> CochonTactic
 > unaryStringCT name eval help = simpleCT
@@ -477,7 +424,7 @@ Construction tactics:
 >             elabLet (x :<: s)
 >             optional' problemSimplify
 >             optional' seekGoal
->             return ("Let there be " ++ x ++ "."))
+>             return (fromString $ "Let there be " ++ x ++ "."))
 >         "let <label> <scheme> : <type> - set up a programming problem with a scheme."
 
 >   : simpleCT
@@ -547,7 +494,7 @@ Navigation tactics:
 >   : unaryNameCT "jump" (\ x -> do
 >       (n := _) <- resolveDiscard x
 >       goTo n
->       return ("Jumping to " ++ showName n ++ "...")
+>       return $ fromString $ "Jumping to " ++ showName n ++ "..."
 >     )
 >       "jump <name> - moves to the definition of <name>."
 

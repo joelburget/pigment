@@ -3,7 +3,7 @@
 %if False
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators #-}
+> {-# LANGUAGE GADTs, TypeOperators, OverloadedStrings #-}
 
 > module Tactics.Information where
 
@@ -49,17 +49,22 @@
 
 > import Kit.BwdFwd
 
+> import Haste hiding (fromString)
+> import Lens.Family2
+> import React hiding (nest)
+> import Data.String (fromString)
+
 %endif
 
 
-> infoInScope :: ProofState String
+> infoInScope :: ProofState PureReact
 > infoInScope = do
 >     pc <- get
 >     inScope <- getInScope
->     return (showEntries (inBScope pc) inScope)
+>     return (fromString (showEntries (inBScope pc) inScope))
 
-> infoDump :: ProofState String
-> infoDump = gets show
+> infoDump :: ProofState PureReact
+> infoDump = gets (fromString . show)
 
 
 The |infoElaborate| command calls |elabInfer| on the given neutral display term,
@@ -67,23 +72,23 @@ evaluates the resulting term, bquotes it and returns a pretty-printed string
 representation. Note that it works in its own module which it discards at the
 end, so it will not leave any subgoals lying around in the proof state.
 
-> infoElaborate :: DExTmRN -> ProofState String
+> infoElaborate :: DExTmRN -> ProofState PureReact
 > infoElaborate tm = draftModule "__infoElaborate" $ do
 >     (tm' :=>: tmv :<: ty) <- elabInfer' tm
 >     tm'' <- bquoteHere tmv
 >     s <- prettyHere (ty :>: tm'')
->     return (renderHouseStyle s)
+>     return (fromString (renderHouseStyle s))
 
 
 The |infoInfer| command is similar to |infoElaborate|, but it returns a string
 representation of the resulting type.
 
-> infoInfer :: DExTmRN -> ProofState String
+> infoInfer :: DExTmRN -> ProofState PureReact
 > infoInfer tm = draftModule "__infoInfer" $ do
 >     (_ :<: ty) <- elabInfer' tm
 >     ty' <- bquoteHere ty
 >     s <- prettyHere (SET :>: ty')
->     return (renderHouseStyle s)
+>     return (fromString (renderHouseStyle s))
 
 
 The |infoContextual| command displays a distilled list of things in
@@ -93,12 +98,12 @@ argument is True.
 > infoHypotheses  = infoContextual False
 > infoContext     = infoContextual True
 
-> infoContextual :: Bool -> ProofState String
+> infoContextual :: Bool -> ProofState PureReact
 > infoContextual gals = do
 >     inScope <- getInScope
 >     bsc <- gets inBScope
 >     d <- help bsc inScope
->     return (renderHouseStyle d)
+>     return (fromString (renderHouseStyle d))
 >   where
 >     help :: BScopeContext -> Entries -> ProofState Doc
 >     help bsc B0 = return empty
@@ -126,7 +131,7 @@ the state, throws away bits of the context to produce an answer, then restores
 the saved state. We can get rid of it once we are confident that the new version
 (above) produces suitable output.
 
-> infoContextual' :: Bool -> ProofState String
+> infoContextual' :: Bool -> ProofState PureReact
 > infoContextual' gals = do
 >     save <- get
 >     let bsc = inBScope save
@@ -134,7 +139,7 @@ the saved state. We can get rid of it once we are confident that the new version
 >     ds <- many' (hypsHere bsc me <* optional' killBelow <* goOut <* removeEntryAbove)
 >     d <- hypsHere bsc me
 >     put save
->     return (renderHouseStyle (vcat (d:reverse ds)))
+>     return (fromString (renderHouseStyle (vcat (d:reverse ds))))
 >  where
 >    hypsHere :: BScopeContext -> Name -> ProofState Doc
 >    hypsHere bsc me = do
@@ -171,26 +176,26 @@ the saved state. We can get rid of it once we are confident that the new version
 >            (_, es' :< _) -> putEntriesAbove es' >> hyps bsc me
 
 
-> infoScheme :: RelName -> ProofState String
+> infoScheme :: RelName -> ProofState PureReact
 > infoScheme x = do
 >     (_, as, ms) <- resolveHere x
 >     case ms of
 >         Just sch -> do
 >             d <- prettySchemeHere (applyScheme sch as)
->             return (renderHouseStyle d)
->         Nothing -> return (showRelName x ++ " does not have a scheme.")
+>             return (fromString (renderHouseStyle d))
+>         Nothing -> return (fromString (showRelName x ++ " does not have a scheme."))
 
 
 The |infoWhatIs| command displays a term in various representations.
 
-> infoWhatIs :: DExTmRN -> ProofState String
+> infoWhatIs :: DExTmRN -> ProofState PureReact
 > infoWhatIs tmd = draftModule "__infoWhatIs" (do
 >     (tm :=>: tmv :<: tyv) <- elabInfer' tmd
 >     tmq <- bquoteHere tmv
 >     tms :=>: _ <- distillHere (tyv :>: tmq)
 >     ty <- bquoteHere tyv
 >     tys :=>: _ <- distillHere (SET :>: ty)
->     return (unlines
+>     return (fromString $ unlines
 >         [  "Parsed term:", show tmd
 >         ,  "Elaborated term:", show tm
 >         ,  "Quoted term:", show tmq
@@ -207,13 +212,98 @@ The |infoWhatIs| command displays a term in various representations.
 The |prettyProofState| command generates a pretty-printed representation
 of the proof state at the current location.
 
-> prettyProofState :: ProofState String
-> prettyProofState = do
+> type InteractionReact = StatefulReact InteractionState ()
+
+> data InteractionState = InteractionState
+>     { _proofCtx :: Bwd ProofContext
+>     , _userInput :: String
+>     , _outputLog :: [PureReact]
+>     , _proofState :: ProofState PureReact
+>     }
+
+> proofCtx :: Lens' InteractionState (Bwd ProofContext)
+> proofCtx f (InteractionState p u o s) =
+>     (\p' -> InteractionState p' u o s) <$> f p
+
+> userInput :: Lens' InteractionState String
+> userInput f (InteractionState p u o s) =
+>     (\u' -> InteractionState p u' o s) <$> f u
+
+> outputLog :: Lens' InteractionState [PureReact]
+> outputLog f (InteractionState p u o s) =
+>     (\o' -> InteractionState p u o' s) <$> f o
+
+> proofState :: Lens' InteractionState (ProofState PureReact)
+> proofState f (InteractionState p u o s) =
+>     (\s' -> InteractionState p u o s') <$> f s
+
+> data SpecialKey
+>     = Enter
+>     deriving Show
+
+> newtype PageM a = PageM (InteractionState -> (a, InteractionState))
+
+> instance Monad PageM where
+>     return a = PageM $ \state -> (a, state)
+>     (PageM fa) >>= interact = PageM $ \state ->
+>         let (a, state') = fa state
+>             PageM fb = interact a
+>         in fb state'
+
+> unPageM :: PageM a -> InteractionState -> InteractionState
+> unPageM (PageM f) = snd . f
+
+> reactEmpty :: InteractionReact
+> reactEmpty = span_ (return ())
+
+> renderReact :: Entries -> Name -> ProofState InteractionReact
+> renderReact aus me = do
+>     es <- replaceEntriesAbove B0
+>     cs <- putBelowCursor F0
+>     case (es, cs) of
+>         (B0, F0) -> reactEmptyTip
+>         _ -> do
+>             d <- reactEs reactEmpty (es <>> F0)
+>             d' <- case cs of
+>                 F0 -> return d
+>                 _ -> do
+>                     d'' <- reactEs reactEmpty cs
+>                     return (d >> "---" >> d'')
+>             tip <- reactTip
+>             putEntriesAbove es
+>             putBelowCursor cs
+>             return (d' >> tip)
+
+> reactEmptyTip :: ProofState InteractionReact
+> reactEmptyTip = do
+>     tip <- getDevTip
+>     case tip of
+>         Module -> return reactEmpty
+>         _ -> do
+>             tip' <- reactTip
+>             return (reactKword KwDefn >> tip')
+
+> reactKword :: Keyword -> InteractionReact
+> reactKword _ = "TODO(joel) reactKword"
+
+> reactEs :: InteractionReact
+>         -> Fwd (Entry Bwd)
+>         -> ProofState InteractionReact
+> reactEs _ _ = return "TODO(joel) reactEs"
+
+> reactE :: Entry Bwd -> ProofState InteractionReact
+> reactE _ = return "TODO(joel) reactE"
+
+> reactTip :: ProofState InteractionReact
+> reactTip = return "TODO(joel) reactTip"
+
+> reactProofState :: ProofState PureReact
+> reactProofState = do
 >     inScope <- getInScope
 >     me <- getCurrentName
 >     d <- prettyPS inScope me
->     return (renderHouseStyle d)
->
+>     return (fromString (renderHouseStyle d))
+
 > prettyPS :: Entries -> Name -> ProofState Doc
 > prettyPS aus me = do
 >         es <- replaceEntriesAbove B0
@@ -294,7 +384,7 @@ The |elm| Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation of the
 final type-term pair (using a quick hack).
 
-> elmCT :: DExTmRN -> ProofState String
+> elmCT :: DExTmRN -> ProofState PureReact
 > elmCT tm = do
 >     suspend ("elab" :<: sigSetTM :=>: sigSetVAL) (ElabInferProb tm)
 >     startScheduler
@@ -309,7 +399,7 @@ final type-term pair (using a quick hack).
 >   : unaryExCT "infer" infoInfer
 >       "infer <term> - elaborates <term> and infers its type."
 
->   : unaryInCT "parse" (return . show)
+>   : unaryInCT "parse" (return . fromString . show)
 >       "parse <term> - parses <term> and displays the internal display-sytnax representation."
 
 >   : unaryNameCT "scheme" infoScheme

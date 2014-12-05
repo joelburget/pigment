@@ -846,7 +846,7 @@ excluded.
 We make elimination accessible to the user by adding it as a Cochon tactic:
 
 > import -> CochonTacticsCode where
->   elimCTactic :: Maybe RelName -> DExTmRN -> ProofState String
+>   elimCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
 >   elimCTactic c r = do
 >     c' <- traverse resolveDiscard c
 >     (e :=>: _ :<: elimTy) <- elabInferFully r

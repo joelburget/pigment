@@ -58,6 +58,8 @@ function js_set_onKeyUp(cb, attrs) {attrs.onKeyUp = function(e) {B(A(cb,[[0,e],0
 function js_set_onKeyPress(cb, attrs) {attrs.onKeyPress = function(e) {B(A(cb,[[0,e],0]));};}
 function js_set_onKeyDown(cb, attrs) {attrs.onKeyDown = function(e) { B(A(cb,[[0,e],0]));};}
 function js_set_onBlur(cb, attrs) {attrs.onBlur = function(e) {B(A(cb,[[0,e],0]));};}
+function js_set_onMouseEnter(cb, attrs) {attrs.onMouseEnter = function(e) {B(A(cb,[[0,e],0]));};}
+function js_set_onMouseLeave(cb, attrs) {attrs.onMouseLeave = function(e) {B(A(cb,[[0,e],0]));};}
 
 function js_React_DOM(tagName, attrs) {return React.DOM[tagName](attrs);}
 
@@ -190,6 +192,10 @@ function js_React_DOM_style(a,t) {return React.DOM.style(a,t);}
 function js_React_DOM_textarea(a,t) {return React.DOM.textarea(a,t);}
 function js_React_DOM_title(a,t) {return React.DOM.title(a,t);}
 function js_id(a) {return a;}
+
+// custom
+function js_React_DOM_leaf(name, a) { return React.DOM[name](a); }
+function js_React_DOM_parent(name, a, c) { return React.DOM[name](a, c); }
 
 function js_parseChangeEvent(raw) {
     // wrap the string in two constructors - Ptr and JSString

@@ -9,6 +9,7 @@
 > import Prelude hiding (any, foldl)
 
 > import Data.List
+> import Data.String (fromString)
 
 > import Evidences.Tm
 
@@ -21,16 +22,19 @@
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 
+> import React
+
 %endif
 
 \section{Converting Epigram definitions to Haskell}
 
-> dumpHaskell :: INTM :=>: VAL :<: TY -> ProofState String
+> dumpHaskell :: INTM :=>: VAL :<: TY -> ProofState PureReact
 > dumpHaskell (_ :=>: v :<: ty) = do
 >     v'   <- bquoteHere v
 >     ty'  <- bquoteHere ty
->     return $ "    ty   = " ++ showHaskell B0 ty' ++
->                  "\n    def  = " ++ showHaskell B0 v'
+>     return $ fromString $
+>         "    ty   = " ++ showHaskell B0 ty' ++
+>         "\n    def  = " ++ showHaskell B0 v'
 
 
 > class ShowHaskell a where

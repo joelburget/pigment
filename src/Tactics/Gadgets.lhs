@@ -24,7 +24,7 @@
 \subsection{The Define gadget}
 
 > import -> CochonTacticsCode where
->     defineCTactic :: DExTmRN -> DInTmRN -> ProofState String
+>     defineCTactic :: DExTmRN -> DInTmRN -> ProofState PureReact
 >     defineCTactic rl tm = do
 >         relabel rl
 >         elabGiveNext (DLRET tm)
@@ -44,7 +44,7 @@ The By gadget, written |<=|, invokes elimination with a motive, then simplifies
 the methods and moves to the first subgoal remaining.
 
 > import -> CochonTacticsCode where
->     byCTactic :: Maybe RelName -> DExTmRN -> ProofState String
+>     byCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
 >     byCTactic n e = do
 >         elimCTactic n e
 >         optional' problemSimplify           -- simplify first method

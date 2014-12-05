@@ -555,7 +555,7 @@ or simplification will happen automatically (with the |let| and |<=| tactics),
 but this is left for backwards compatibility.
 
 > import -> CochonTacticsCode where
->     propSimplifyTactic :: ProofState String
+>     propSimplifyTactic :: ProofState PureReact
 >     propSimplifyTactic = do
 >         subs <- propSimplifyHere
 >         case subs of
@@ -563,7 +563,7 @@ but this is left for backwards compatibility.
 >             _   -> do
 >                 subStrs <- traverse prettyType subs
 >                 nextGoal
->                 return ("Simplified to:\n" ++
+>                 return $ fromString ("Simplified to:\n" ++
 >                     foldMap (\s -> s ++ "\n") subStrs)
 >       where
 >         prettyType :: INTM -> ProofState String

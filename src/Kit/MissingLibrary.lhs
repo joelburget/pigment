@@ -3,8 +3,7 @@
 %if False
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses #-}
-> {-# LANGUAGE TypeFamilies, TypeOperators, FlexibleContexts, UndecidableInstances, TypeSynonymInstances #-}
+> {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeFamilies, TypeOperators, UndecidableInstances, TypeSynonymInstances #-}
 
 > module Kit.MissingLibrary where
 
