@@ -79,44 +79,7 @@
 
 Here we have a very basic command-driven interface to the proof state monad.
 
-Model
-=====
-
 > type CTData = (CochonTactic, [CochonArg])
-
-Controller Helpers
-==================
-
-Should this be part of a transformer stack including Maybe and IO?
-
-> getProofState :: PageM (ProofState PureReact)
-> getProofState = PageM $ \state -> (_proofState state, state)
-
-> setProofState :: ProofState PureReact -> PageM ()
-> setProofState pfSt = PageM $ \state -> ((), state{_proofState=pfSt})
-
-> setCtx :: Bwd ProofContext -> PageM ()
-> setCtx ctx = PageM $ \state -> ((), state{_proofCtx=ctx})
-
-> getInteractionState :: PageM InteractionState
-> getInteractionState = PageM $ \state -> (state, state)
-
-> setInteractionState :: InteractionState -> PageM ()
-> setInteractionState state = PageM $ \_ -> ((), state)
-
-> getCtx :: PageM (Bwd ProofContext)
-> getCtx = PageM $ \state -> (_proofCtx state, state)
-
-> displayUser :: PureReact -> PageM ()
-> displayUser react =
->     let elem = div_ <! class_ "log-elem" $ react
->     in PageM $ \state -> ((), state{_outputLog=elem:(_outputLog state)})
-
-> tellUser :: String -> PageM ()
-> tellUser = displayUser . fromString
-
-> resetUserInput :: PageM ()
-> resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
 View
 ====
@@ -209,7 +172,6 @@ TODO refactor / rename this
 
 XXX(joel) refactor this whole thing
   - remove putStrLn
-  - make it PageM
   - fix line length
   - surely this can be expressed more compactly
 

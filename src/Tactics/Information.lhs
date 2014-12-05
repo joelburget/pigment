@@ -209,8 +209,8 @@ The |infoWhatIs| command displays a term in various representations.
 >   )
 
 
-The |prettyProofState| command generates a pretty-printed representation
-of the proof state at the current location.
+Model
+=====
 
 > type InteractionReact = StatefulReact InteractionState ()
 
@@ -241,6 +241,11 @@ of the proof state at the current location.
 >     = Enter
 >     deriving Show
 
+Controller Helpers
+==================
+
+Should this be part of a transformer stack including Maybe and IO?
+
 > newtype PageM a = PageM (InteractionState -> (a, InteractionState))
 
 > instance Monad PageM where
@@ -252,6 +257,27 @@ of the proof state at the current location.
 
 > unPageM :: PageM a -> InteractionState -> InteractionState
 > unPageM (PageM f) = snd . f
+
+> getProofState :: PageM (ProofState PureReact)
+> getProofState = PageM $ \state -> (_proofState state, state)
+
+> setCtx :: Bwd ProofContext -> PageM ()
+> setCtx ctx = PageM $ \state -> ((), state{_proofCtx=ctx})
+
+> getCtx :: PageM (Bwd ProofContext)
+> getCtx = PageM $ \state -> (_proofCtx state, state)
+
+> displayUser :: PureReact -> PageM ()
+> displayUser react =
+>     let elem = div_ <! class_ "log-elem" $ react
+>     in PageM $ \state -> ((), state{_outputLog=elem:(_outputLog state)})
+
+> tellUser :: String -> PageM ()
+> tellUser = displayUser . fromString
+
+> resetUserInput :: PageM ()
+> resetUserInput = PageM $ \state -> ((), state{_userInput=""})
+
 
 > reactEmpty :: InteractionReact
 > reactEmpty = span_ (return ())
@@ -296,6 +322,9 @@ of the proof state at the current location.
 
 > reactTip :: ProofState InteractionReact
 > reactTip = return "TODO(joel) reactTip"
+
+The |reactProofState| command generates a reactified representation
+of the proof state at the current location.
 
 > reactProofState :: ProofState PureReact
 > reactProofState = do
@@ -410,7 +439,7 @@ final type-term pair (using a quick hack).
 >         "context"  -> infoContext
 >         "dump"     -> infoDump
 >         "hyps"     -> infoHypotheses
->         "state"    -> prettyProofState
+>         "state"    -> reactProofState
 >         _          -> return "show: please specify exactly what to show."
 >       )
 >       "show <inscope/context/dump/hyps/state> - displays useless information."
