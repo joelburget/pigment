@@ -8,10 +8,6 @@
 
 %endif
 
-> import -> CanConstructors where
->   Nu :: Labelled Id t -> Can t
->   CoIt :: t -> t -> t -> t -> Can t
-
 > import -> CanTraverse where
 >   traverse f (Nu t) = (|Nu (traverse f t)|)
 >   traverse f (CoIt d sty g s) = (|CoIt (f d) (f sty) (f g) (f s)|)

@@ -11,13 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanConstructors where
->     Anchors  ::  Can t
->     Anchor   ::  t -> t -> t -> Can t
->     AllowedBy :: t -> Can t
->     AllowedEpsilon :: Can t
->     AllowedCons :: t -> t -> t -> t -> t -> Can t
-
 > import -> CanTyRules where
 >     canTy chev (Set :>: Anchors) = return Anchors
 >     canTy chev (Anchors :>: Anchor u t ts) = do

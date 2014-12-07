@@ -11,12 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanConstructors where
->   Record  :: Labelled Id t -> Can t
->   REmpty  :: Can t
->   RCons   :: t -> t -> t -> Can t
->   RSig    :: Can t
-
 > import -> CanTyRules where
 >   canTy chev (Set :>: RSig)  = do
 >     return $ RSig

@@ -8,11 +8,6 @@
 
 %endif
 
-> import -> CanConstructors where
->   Monad     :: t -> t -> Can t
->   Return    :: t -> Can t
->   Composite :: t -> Can t
-
 > import -> CanPats where
 >   pattern MONAD d x   = C (Monad d x)
 >   pattern RETURN x    = C (Return x)

@@ -12,9 +12,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanConstructors where
->   Mu     :: Labelled Id t -> Can t
-
 > import -> CanTyRules where
 >   canTy chev (Set :>: Mu (ml :?=: Id x))     = do
 >     mlv <- traverse (chev . (ANCHORS :>:)) ml

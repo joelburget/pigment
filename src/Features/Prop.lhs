@@ -9,17 +9,6 @@
 %endif
 
 
-> import -> CanConstructors where
->   Prop    :: Can t
->   Prf     :: t -> Can t
->   All     :: t -> t -> Can t
->   And     :: t -> t -> Can t
->   Trivial :: Can t
->   Absurd  :: Can t
->   Box     :: Irr t -> Can t
->   Inh     :: t -> Can t
->   Wit     :: t -> Can t
-
 Elim forms inherited from elsewhere
 
 > import -> CanTraverse where

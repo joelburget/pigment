@@ -9,12 +9,6 @@
 %endif
 
 
-> import -> CanConstructors where
->   Unit   :: Can t
->   Void   :: Can t
->   Sigma  :: t -> t -> Can t
->   Pair   :: t -> t -> Can t
-
 > import -> CanPretty where
 >   pretty Unit         = wrapDoc (kword KwSig <+> parens empty) AppSize
 >   pretty Void         = prettyPair DVOID

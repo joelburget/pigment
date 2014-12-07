@@ -50,11 +50,6 @@
 >   ("EnumConstructors", enumConstructorsREF) :
 >   ("EnumBranches", enumBranchesREF) :
 
-> import -> CanConstructors where
->   EnumT  :: t -> Can t
->   Ze     :: Can t
->   Su     :: t -> Can t
-
 > import -> CanPats where
 >   pattern ZE         = C Ze
 >   pattern SU n       = C (Su n)

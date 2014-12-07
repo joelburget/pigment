@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanConstructors where
-
 > import -> CanTyRules where
 
 > import -> CanEtaExpand where

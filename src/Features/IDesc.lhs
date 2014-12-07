@@ -40,9 +40,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanConstructors where
->   IMu     :: Labelled (Id :*: Id) t -> t -> Can t
-
 > import -> CanTyRules where
 >   canTy chev (Set :>: IMu (ml :?=: (Id ii :& Id x)) i)  = do
 >     iiiiv@(ii :=>: iiv) <- chev (SET :>: ii)

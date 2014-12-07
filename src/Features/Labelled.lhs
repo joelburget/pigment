@@ -8,10 +8,6 @@
 
 %endif
 
-> import -> CanConstructors where
->   Label  :: t -> t -> Can t
->   LRet   :: t -> Can t
-
 > import -> ElimConstructors where
 >   Call   :: t -> Elim t
 

@@ -10,9 +10,6 @@
 %endif
 
 
-> import -> CanConstructors where
->   EqBlue :: (t :>: t) -> (t :>: t) -> Can t
-
 > import -> CanPats where
 >   pattern EQBLUE p q = C (EqBlue p q)
 

@@ -9,10 +9,6 @@
 %endif
 
 
-> import -> CanConstructors where
->   UId    :: Can t
->   Tag    :: String -> Can t
-
 > import -> CanPats where
 >   pattern UID    = C UId
 >   pattern TAG s  = C (Tag s)

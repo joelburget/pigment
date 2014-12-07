@@ -11,15 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanConstructors where
->   Prob       :: Can t
->   ProbLabel  :: t -> t -> t -> Can t
->   PatPi      :: t -> t -> t -> Can t
->   Sch        :: Can t
->   SchTy      :: t -> Can t
->   SchExpPi   :: t -> t -> Can t
->   SchImpPi    :: t -> t -> Can t
-
 > import -> CanTyRules where
 >   canTy chev (Set :>: Prob) = return Prob
 >   canTy chev (Prob :>: ProbLabel u s a) = do
