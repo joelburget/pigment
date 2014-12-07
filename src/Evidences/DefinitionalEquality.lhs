@@ -37,7 +37,7 @@ forms.
 
 
 |quote| is a type-directed operation that returns a normal form |INTM|
-by recursively evaluating the value |VAL| of type |TY|. 
+by recursively evaluating the value |VAL| of type |TY|.
 
 > quote :: (TY :>: VAL) -> NameSupply -> INTM
 
@@ -90,9 +90,9 @@ constructor, and returning the fully quoted term. The reason for the
 presence of |Just| is that |canTy| asks for a |MonadError|. Obviously,
 we cannot fail in this code, but we have to be artificially cautious.
 
-> inQuote (C cty :>: C cv) r = either 
->     (error $ 
->         "inQuote: impossible! Type " ++ show (fmap (\_ -> ()) cty) ++ 
+> inQuote (C cty :>: C cv) r = either
+>     (error $
+>         "inQuote: impossible! Type " ++ show (fmap (\_ -> ()) cty) ++
 >         " doesn't admit " ++ show cv)
 >     id $ do
 >          ct <- canTy chev (cty :>: cv)
@@ -101,27 +101,33 @@ we cannot fail in this code, but we have to be artificially cautious.
 >                    let tv = inQuote (t :>: v) r
 >                    return $ tv :=>: v
 >
-> inQuote (x :>: t) r = error $ 
+> inQuote (x :>: t) r = error $
 >     "inQuote: type " ++ show x ++ " doesn't admit " ++ show t
 
 
 \subsection{$\eta$-expansion}
 
-As mentioned above, |\eta|-expansion is the first sensible thing to do
-when quoting. Sometimes it works, especially for closures and features
-for which a |CanEtaExpand| aspect is defined. Quoting a closure is a bit
-tricky: you cannot compute under a binder as you would like to. So, we
-first have to generate a fresh variable |v|. Then, we apply |v| to the
-function |f|, getting a value of type |t v|. At this point, we can
-safely quote the term. The result is a binding of |v| in the quoted
-term.
+As mentioned above, |\eta|-expansion is the first sensible thing to do when
+quoting. Sometimes it works, especially for closures and features for which a
+|etaExpand| is defined. Quoting a closure is a bit tricky: you cannot compute
+under a binder as you would like to. So, we first have to generate a fresh
+variable |v|. Then, we apply |v| to the function |f|, getting a value of type
+|t v|. At this point, we can safely quote the term. The result is a binding of
+|v| in the quoted term.
 
 > etaExpand :: (Can VAL :>: VAL) -> NameSupply -> Maybe INTM
 > etaExpand (Pi s t :>: f) r = Just $
 >   L ("__etaExpandA" :.
->      fresh ("__etaExpandB" :<: s) 
+>      fresh ("__etaExpandB" :<: s)
 >      (\v  -> inQuote (t $$ A v :>: (f $$ A v))) r)
-> import <- CanEtaExpand
+> etaExpand (Prf p :>: x) r = Just (BOX (Irr (inQuote (PRF p :>: x) r)))
+>   etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
+>   etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =
+>       -- XXX: to be implemented
+>       undefined
+> etaExpand (Unit :>: v) r = Just VOID
+> etaExpand (Sigma s t :>: p) r = let x = p $$ Fst in
+>   Just (PAIR (inQuote (s :>: x) r) (inQuote (t $$ (A x) :>: (p $$ Snd)) r))
 > etaExpand _                  _ = Nothing
 
 
@@ -164,7 +170,7 @@ and you get the right De Bruijn index.
 
 If an elimination is stuck, it is because the function is stuck while
 the arguments are ready to go. So, we have to recursively |exQuote|
-the neutral application, while |inQuote|-ing the arguments. 
+the neutral application, while |inQuote|-ing the arguments.
 
 > exQuote (n :$ v)    r = (n' :$ e') :<: ty'
 >     where (n' :<: ty)  = exQuote n r
@@ -182,9 +188,9 @@ passed as an argument needs to be |inQuote|-ed. So it goes. Note that
 the operation itself cannot be stuck: it is a simple fully-applied
 constructor which can always compute.
 
-> exQuote (op :@ vs)  r = (op :@ vals) :<: v 
+> exQuote (op :@ vs)  r = (op :@ vals) :<: v
 >     where (vs',v) = either  (error "exQuote: impossible happened.")
->                             id $ opTy op chev vs 
+>                             id $ opTy op chev vs
 >           vals = map termOf vs'
 >           chev (t :>: x) = do
 >               let tx = inQuote (t :>: x) r

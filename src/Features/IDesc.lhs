@@ -40,8 +40,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanEtaExpand where
-
 > import -> CanPats where
 >   pattern IVARN     = ZE
 >   pattern ICONSTN   = SU ZE

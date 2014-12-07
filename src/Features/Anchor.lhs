@@ -11,9 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanEtaExpand where
->     {- empty -}
-
 > import -> CanPats where
 >     pattern ANCHORS        = C Anchors
 >     pattern ANCHOR u t ts  = C (Anchor u t ts)

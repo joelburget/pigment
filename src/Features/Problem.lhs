@@ -11,8 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanEtaExpand where
-
 > import -> CanPats where
 >   pattern PROB             = C Prob
 >   pattern PROBLABEL u s a  = C (ProbLabel u s a)

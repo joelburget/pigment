@@ -12,8 +12,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanEtaExpand where
-
 > import -> CanPats where
 >   pattern IDN     = ZE
 >   pattern CONSTN  = SU ZE

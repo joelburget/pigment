@@ -12,12 +12,6 @@
 \subsection{Plugging in canonical forms}
 
 
-> import -> CanEtaExpand where
->     etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
->     etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =
->         -- XXX: to be implemented
->         undefined
-
 > import -> CanPats where
 >   pattern RSIG         = C RSig
 >   pattern REMPTY       = C REmpty

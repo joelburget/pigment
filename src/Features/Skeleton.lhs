@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanEtaExpand where
-
 > import -> CanPats where
 
 > import -> CanDisplayPats where
