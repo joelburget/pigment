@@ -128,18 +128,6 @@
 >   halfZip Fst Fst = (|Fst|)
 >   halfZip Snd Snd = (|Snd|)
 
-> import -> CanTyRules where
->   canTy _   (Set :>: Unit) = return Unit
->   canTy chev  (Set :>: Sigma s t) = do
->     ssv@(s :=>: sv) <- chev (SET :>: s)
->     ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
->     return $ Sigma ssv ttv
->   canTy _   (Unit :>: Void) = return Void
->   canTy chev  (Sigma s t :>: Pair x y) =  do
->     xxv@(x :=>: xv) <- chev (s :>: x)
->     yyv@(y :=>: yv) <- chev ((t $$ A xv) :>: y)
->     return $ Pair xxv yyv
-
 > import -> ElimTyRules where
 >   elimTy chev (_ :<: Sigma s t) Fst = return (Fst, s)
 >   elimTy chev (p :<: Sigma s t) Snd = return (Snd, t $$ A (p $$ Fst))

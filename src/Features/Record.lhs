@@ -11,24 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanTyRules where
->   canTy chev (Set :>: RSig)  = do
->     return $ RSig
->   canTy chev (RSig :>: REmpty) = do
->     return $ REmpty
->   canTy chev (RSig :>: RCons sig id ty) = do
->     ssv@(s :=>: sv) <- chev (RSIG :>: sig)
->     iiv@(i :=>: iv) <- chev (UID :>: id)
->     ttv@(t :=>: tv) <- chev (ARR (recordOp @@ [sv]) SET  :>: ty)
->     return $ RCons ssv iiv ttv
->   canTy chev (Set :>: Record (ml :?=: Id r)) = do
->     mlv <- traverse (chev . (SET :>:)) ml
->     rrv@(r :=>: rv) <- chev (RSIG :>: r)
->     return $ Record (mlv :?=: Id rrv)
->   canTy chev (tv@(Record (_ :?=: Id x)) :>: Con y) = do
->     yyv@(y :=>: yv) <- chev (recordOp @@ [x] :>: y)
->     return $ Con yyv
-
 
 > import -> CanEtaExpand where
 >     etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT

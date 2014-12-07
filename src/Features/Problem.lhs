@@ -11,32 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanTyRules where
->   canTy chev (Set :>: Prob) = return Prob
->   canTy chev (Prob :>: ProbLabel u s a) = do
->     uuv <- chev (UID :>: u)
->     ssv@(_ :=>: sv) <- chev (SCH :>: s)
->     aav <- chev (argsOp @@ [sv] :>: a)
->     return $ ProbLabel uuv ssv aav
->   canTy chev (Prob :>: PatPi u s p) = do
->     uuv <- chev (UID :>: u)
->     ssv <- chev (SET :>: s)
->     ppv <- chev (PROB :>: p)
->     return $ PatPi uuv ssv ppv
-
->   canTy chev (Set :>: Sch) = return Sch
->   canTy chev (Sch :>: SchTy s) = do
->     ssv <- chev (SET :>: s)
->     return $ SchTy ssv
->   canTy chev (Sch :>: SchExpPi s t) = do
->     ssv@(_ :=>: sv) <- chev (SCH :>: s)
->     ttv <- chev (ARR (schTypeOp @@ [sv]) SCH :>: t)
->     return $ SchExpPi ssv ttv
->   canTy chev (Sch :>: SchImpPi s t) = do
->     ssv@(_ :=>: sv) <- chev (SET :>: s)
->     ttv <- chev (ARR sv SCH :>: t)
->     return $ SchImpPi ssv ttv
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

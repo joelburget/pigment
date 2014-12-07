@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanTyRules where
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

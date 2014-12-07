@@ -60,15 +60,6 @@
 > import -> ElimCompile where
 >   makeBody (arg, Call l) = makeBody arg
 
-> import -> CanTyRules where
->   canTy chev (Set :>: Label l t) = do
->      ttv@(t :=>: tv) <- chev (SET :>: t)
->      llv@(l :=>: lv) <- chev (tv :>: l)
->      return (Label llv ttv)
->   canTy chev (Label l ty :>: LRet t) = do
->      ttv@(t :=>: tv) <- chev (ty :>: t)
->      return (LRet ttv)
-
 > import -> ElimTyRules where
 >   elimTy chev (_ :<: Label _ t) (Call l) = do
 >      llv@(l :=>: lv) <- chev (t :>: l)

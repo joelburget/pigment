@@ -29,10 +29,6 @@
 >   reactify UId      = reactKword KwUId
 >   reactify (Tag s)  = reactKword KwTag >> fromString s
 
-> import -> CanTyRules where
->   canTy _  (Set :>: UId)    = return UId
->   canTy _  (UId :>: Tag s)  = return (Tag s)
-
 > import -> CanHalfZip where
 >   halfZip UId UId = Just UId
 >   halfZip (Tag s) (Tag s') | s == s' = Just (Tag s)

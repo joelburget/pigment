@@ -12,15 +12,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanTyRules where
->   canTy chev (Set :>: Mu (ml :?=: Id x))     = do
->     mlv <- traverse (chev . (ANCHORS :>:)) ml
->     xxv@(x :=>: xv) <- chev (desc :>: x)
->     return $ Mu (mlv :?=: Id xxv)
->   canTy chev (t@(Mu (_ :?=: Id x)) :>: Con y) = do
->     yyv@(y :=>: yv) <- chev (descOp @@ [x, C t] :>: y)
->     return $ Con yyv
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

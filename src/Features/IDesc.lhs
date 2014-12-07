@@ -40,21 +40,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanTyRules where
->   canTy chev (Set :>: IMu (ml :?=: (Id ii :& Id x)) i)  = do
->     iiiiv@(ii :=>: iiv) <- chev (SET :>: ii)
->     mlv <- traverse (chev . (ARR iiv ANCHORS :>:)) ml
->     xxv@(x :=>: xv) <- chev (ARR iiv (idesc $$ A iiv) :>: x)
->     iiv <- chev (iiv :>: i)
->     return $ IMu (mlv :?=: (Id iiiiv :& Id xxv)) iiv
->   canTy chev (IMu tt@(_ :?=: (Id ii :& Id x)) i :>: Con y) = do
->     yyv <- chev (idescOp @@ [ ii
->                             , x $$ A i
->                             , L $ "i" :. [.i.
->                                 C (IMu (fmap (-$ []) tt) (NV i)) ]
->                             ] :>: y)
->     return $ Con yyv
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

@@ -11,26 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanTyRules where
->     canTy chev (Set :>: Anchors) = return Anchors
->     canTy chev (Anchors :>: Anchor u t ts) = do
->         uuv <- chev (UID :>: u)
->         ttv@(t :=>: tv) <- chev (SET :>: t)
->         tstsv <- chev (ALLOWEDBY tv :>: ts)
->         return $ Anchor uuv ttv tstsv
->     canTy chev (Set :>: AllowedBy t) = do
->         ttv <- chev (SET :>: t)
->         return $ AllowedBy ttv
->     canTy chev (AllowedBy t :>: AllowedEpsilon) = do
->         return $ AllowedEpsilon
->     canTy chev (AllowedBy ty :>: AllowedCons _S _T q s ts) = do
->         _SSv@(_S :=>: _Sv) <- chev (SET :>: _S)
->         _TTv@(_T :=>: _Tv) <- chev (ARR _Sv SET :>: _T)
->         qqv <- chev (PRF (EQBLUE (SET :>: ty) (SET :>: PI _Sv _Tv)) :>: q)
->         ssv@(s :=>: sv) <- chev (_Sv :>: s)
->         tstsv <- chev (ALLOWEDBY (_Tv $$ (A sv)) :>: ts)
->         return $ AllowedCons _SSv _TTv qqv ssv tstsv
-
 > import -> CanEtaExpand where
 >     {- empty -}
 

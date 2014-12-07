@@ -49,18 +49,6 @@
 
 > import -> Reactive where
 
-> import -> CanTyRules where
->   canTy chev (Set :>: Monad d x) = do
->     ddv@(d :=>: dv) <- chev (desc :>: d)
->     xxv@(x :=>: xv) <- chev (SET :>: x)
->     return $ Monad ddv xxv
->   canTy chev (Monad d x :>: Return v) = do
->     vvv@(v :=>: vv) <- chev (x :>: v)
->     return $ Return vvv
->   canTy chev (Monad d x :>: Composite y) = do
->     yyv@(y :=>: yv) <- chev (descOp @@ [d, MONAD d x] :>: y)
->     return $ Composite yyv
-
 > import -> OpCode where
 >   substMonadOp = Op
 >     { opName = "substMonad"

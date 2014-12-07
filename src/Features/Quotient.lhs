@@ -58,17 +58,6 @@ relation over |A|.
 >     where
 >       x =~ y = r -$ [ NV x , NV y ]
 
-> import -> CanTyRules where
->   canTy chev (Set :>: Quotient x r p) = do
->     x@(_ :=>: xv) <- chev (SET :>: x)
->     r@(_ :=>: rv) <- chev (ARR xv (ARR xv PROP) :>: r)
->     p@(_ :=>: _ ) <- chev (PRF (equivalenceRelation xv rv) :>: p)
->     return $ Quotient x r p
->
->   canTy chev (Quotient a r p :>: Con x) = do
->     x <- chev (a :>: x)
->     return $ Con x
-
 > import -> Operators where
 >   qElimOp :
 

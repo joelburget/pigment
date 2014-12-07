@@ -43,21 +43,6 @@
 >       reactify f
 >       reactify s
 
-> import -> CanTyRules where
->   canTy chev (Set :>: Nu (ml :?=: Id x))     = do
->     mlv <- traverse (chev . (SET :>:)) ml
->     xxv@(x :=>: xv) <- chev (desc :>: x)
->     return $ Nu (mlv :?=: Id xxv)
->   canTy chev (t@(Nu (_ :?=: Id x)) :>: Con y) = do
->     yyv <- chev (descOp @@ [x, C t] :>: y)
->     return $ Con yyv
->   canTy chev (Nu (_ :?=: Id x) :>: CoIt d sty f s) = do
->     dv <- chev (desc :>: d)
->     sstyv@(sty :=>: styv) <- chev (SET :>: sty)
->     fv <- chev (ARR styv (descOp @@ [x,styv]) :>: f)
->     sv <- chev (styv :>: s)
->     return (CoIt dv sstyv fv sv)
-
 > import -> ElimTyRules where
 >   elimTy chev (_ :<: t@(Nu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
 

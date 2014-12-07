@@ -106,15 +106,6 @@
 >       reactKword KwPlus
 >       reactify tm
 
-> import -> CanTyRules where
->   canTy chev (Set :>: EnumT e)  = do
->     eev@(e :=>: ev) <- chev (enumU :>: e)
->     return $ EnumT eev
->   canTy _ (EnumT (CON e) :>: Ze)       | CONSN <- e $$ Fst  = return Ze
->   canTy chev (EnumT (CON e) :>: Su n)  | CONSN <- e $$ Fst  = do
->     nnv@(n :=>: nv) <- chev (ENUMT (e $$ Snd $$ Snd $$ Fst) :>: n)
->     return $ Su nnv
-
 > import -> OpCode where
 
 >   type EnumDispatchTable = (VAL, VAL -> VAL -> VAL)

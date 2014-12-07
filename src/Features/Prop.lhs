@@ -115,24 +115,6 @@ Elim forms inherited from elsewhere
 >   reactifyAllMore bs d = bs >> reactKword KwImp >> d
 
 
-> import -> CanTyRules where
->   canTy _   (Set :>: Prop) = return Prop
->   canTy chev  (Set :>: Prf p) = (|Prf (chev (PROP :>: p))|)
->   canTy chev  (Prop :>: All s p) = do
->     ssv@(_ :=>: sv) <- chev (SET :>: s)
->     ppv <- chev (ARR sv PROP :>: p)
->     return $ All ssv ppv
->   canTy chev  (Prop :>: And p q) =
->     (|And (chev (PROP :>: p)) (chev (PROP :>: q))|)
->   canTy _  (Prop :>: Trivial) = return Trivial
->   canTy _   (Prop :>: Absurd) = return Absurd
->   canTy chev  (Prf p :>: Box (Irr x)) = (|(Box . Irr) (chev (PRF p :>: x))|)
->   canTy chev (Prf (AND p q) :>: Pair x y) = do
->     (|Pair (chev (PRF p :>: x)) (chev (PRF q :>: y))|)
->   canTy _   (Prf TRIVIAL :>: Void) = return Void
->   canTy chev (Prop :>: Inh ty) = (|Inh (chev (SET :>: ty))|)
->   canTy chev (Prf (INH ty) :>: Wit t) = (|Wit (chev (ty :>: t))|)
-
 > import -> ElimTyRules where
 >   elimTy chev (f :<: Prf (ALL p q))      (A e)  = do
 >     eev@(e :=>: ev) <- chev (p :>: e)
