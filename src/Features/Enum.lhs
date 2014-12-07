@@ -74,10 +74,6 @@
 >   pattern DZE         = DC Ze
 >   pattern DSU n       = DC (Su n)
 
-> import -> CanCompile where
->   makeBody Ze = CTag 0
->   makeBody (Su x) = STag (makeBody x)
-
 > import -> CanTraverse where
 >   traverse f (EnumT e)    = (|EnumT (f e)|)
 >   traverse f Ze           = (|Ze|)

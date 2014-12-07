@@ -36,9 +36,6 @@
 >     return $ Con yyv
 
 
-> import -> CanCompile where
->     -- XXX: Not yet implemented
-
 > import -> CanEtaExpand where
 >     etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
 >     etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =

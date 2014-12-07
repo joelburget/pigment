@@ -106,10 +106,6 @@
 >   pattern DTIMES x y = DC (DTimes x y)
 
 
-> import -> CanCompile where
->   makeBody (Pair x y) = Tuple [makeBody x, makeBody y]
->   makeBody Void = Tuple []
-
 > import -> ElimComputation where
 >   PAIR x y $$ Fst = x
 >   PAIR x y $$ Snd = y

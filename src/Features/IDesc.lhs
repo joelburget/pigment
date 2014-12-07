@@ -58,8 +58,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >                             ] :>: y)
 >     return $ Con yyv
 
-> import -> CanCompile where
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

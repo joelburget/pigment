@@ -103,9 +103,18 @@ Lots of canonical things are just there for the typechecker, and we don't care
 about them. So we'll just ignore everything that isn't otherwise explained.
 
 > instance CNameable n => MakeBody (Can (Tm {In, p} n)) where
->     import <- CanCompile
+>     makeBody Ze = CTag 0
+>     makeBody (Su x) = STag (makeBody x)
 >     makeBody (Con t)  = makeBody t
 >     makeBody _        = Ignore
+>     makeBody (Return x)    = Tuple [CTag 0, makeBody x]
+>     makeBody (Composite t) = Tuple [CTag 1, makeBody t]
+>     makeBody (Label l t) = makeBody t
+>     makeBody (LRet t)    = makeBody t
+>     makeBody (Nu t) = Ignore
+>     makeBody (CoIt d _ f s) = App (Var "__coit") (map makeBody [d,f,s])
+>     makeBody (Pair x y) = Tuple [makeBody x, makeBody y]
+>     makeBody Void = Tuple []
 
 > instance CNameable n => MakeBody (Tm {Ex, p} n, Elim (Tm {In, p} n)) where
 >     makeBody (f, A arg) = appArgs f [makeBody arg]

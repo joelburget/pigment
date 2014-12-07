@@ -46,8 +46,6 @@
 >     ttv <- chev (ARR sv SCH :>: t)
 >     return $ SchImpPi ssv ttv
 
-> import -> CanCompile where
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

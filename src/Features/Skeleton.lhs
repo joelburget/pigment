@@ -15,8 +15,6 @@
 
 > import -> CanTyRules where
 
-> import -> CanCompile where
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

@@ -24,8 +24,6 @@
 >     yyv@(y :=>: yv) <- chev (descOp @@ [x, C t] :>: y)
 >     return $ Con yyv
 
-> import -> CanCompile where
-
 > import -> CanEtaExpand where
 
 > import -> CanPats where

@@ -38,9 +38,6 @@
 >         tstsv <- chev (ALLOWEDBY (_Tv $$ (A sv)) :>: ts)
 >         return $ AllowedCons _SSv _TTv qqv ssv tstsv
 
-> import -> CanCompile where
->     {- empty -}
-
 > import -> CanEtaExpand where
 >     {- empty -}
 

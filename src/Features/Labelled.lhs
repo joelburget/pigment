@@ -23,10 +23,6 @@
 >   pattern DLABEL l t = DC (Label l t)
 >   pattern DLRET t    = DC (LRet t)
 
-> import -> CanCompile where
->   makeBody (Label l t) = makeBody t
->   makeBody (LRet t)    = makeBody t
-
 > import -> CanTraverse where
 >   traverse f (Label l t) = (| Label (f l) (f t) |)
 >   traverse f (LRet t)    = (| LRet (f t) |)
