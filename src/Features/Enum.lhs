@@ -50,17 +50,6 @@
 >   ("EnumConstructors", enumConstructorsREF) :
 >   ("EnumBranches", enumBranchesREF) :
 
-> import -> CanPats where
->   pattern ZE         = C Ze
->   pattern SU n       = C (Su n)
-
->   pattern NILN       = ZE
->   pattern CONSN      = SU ZE
-
->   pattern ENUMT e    = C (EnumT e)
->   pattern NILE       = CON (PAIR NILN VOID)
->   pattern CONSE t e  = CON (PAIR CONSN (PAIR t (PAIR e VOID)))
-
 
 > import -> CanDisplayPats where
 >   pattern DENUMT e    = DC (EnumT e)

@@ -11,13 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanPats where
->     pattern ANCHORS        = C Anchors
->     pattern ANCHOR u t ts  = C (Anchor u t ts)
->     pattern ALLOWEDBY t    = C (AllowedBy t)
->     pattern ALLOWEDEPSILON = C AllowedEpsilon
->     pattern ALLOWEDCONS _S _T q s ts = C (AllowedCons _S _T q s ts)
-
 > import -> CanDisplayPats where
 >    pattern DANCHOR s args = DAnchor s args
 

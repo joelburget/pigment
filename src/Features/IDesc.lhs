@@ -40,24 +40,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanPats where
->   pattern IVARN     = ZE
->   pattern ICONSTN   = SU ZE
->   pattern IPIN      = SU (SU ZE)
->   pattern IFPIN     = SU (SU (SU ZE))
->   pattern ISIGMAN   = SU (SU (SU (SU ZE)))
->   pattern IFSIGMAN  = SU (SU (SU (SU (SU ZE))))
->   pattern IPRODN    = SU (SU (SU (SU (SU (SU ZE)))))
-
->   pattern IMU l ii x i  = C (IMu (l :?=: (Id ii :& Id x)) i)
->   pattern IVAR i        = CON (PAIR IVARN     (PAIR i VOID))
->   pattern IPI s t       = CON (PAIR IPIN      (PAIR s (PAIR t VOID)))
->   pattern IFPI s t      = CON (PAIR IFPIN     (PAIR s (PAIR t VOID)))
->   pattern ISIGMA s t    = CON (PAIR ISIGMAN   (PAIR s (PAIR t VOID)))
->   pattern IFSIGMA s t   = CON (PAIR IFSIGMAN  (PAIR s (PAIR t VOID)))
->   pattern ICONST p      = CON (PAIR ICONSTN   (PAIR p VOID))
->   pattern IPROD u x y   = CON (PAIR IPRODN    (PAIR u (PAIR x (PAIR y VOID))))
-
 > import -> CanDisplayPats where
 >   pattern DIVARN     = DZE
 >   pattern DICONSTN   = DSU DZE

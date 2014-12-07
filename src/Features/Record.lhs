@@ -12,12 +12,6 @@
 \subsection{Plugging in canonical forms}
 
 
-> import -> CanPats where
->   pattern RSIG         = C RSig
->   pattern REMPTY       = C REmpty
->   pattern RCONS s i t  = C (RCons s i t)
->   pattern RECORD l s   = C (Record (l :?=: Id s))
-
 > import -> CanDisplayPats where
 >   pattern DRSIG         = DC RSig
 >   pattern DREMPTY       = DC REmpty

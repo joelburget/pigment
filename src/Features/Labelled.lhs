@@ -11,10 +11,6 @@
 > import -> ElimConstructors where
 >   Call   :: t -> Elim t
 
-> import -> CanPats where
->   pattern LABEL l t = C (Label l t)
->   pattern LRET t    = C (LRet t)
-
 > import -> CanDisplayPats where
 >   pattern DLABEL l t = DC (Label l t)
 >   pattern DLRET t    = DC (LRet t)

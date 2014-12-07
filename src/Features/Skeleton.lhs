@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanPats where
-
 > import -> CanDisplayPats where
 
 > import -> CanPretty where

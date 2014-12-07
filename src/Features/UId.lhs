@@ -9,10 +9,6 @@
 %endif
 
 
-> import -> CanPats where
->   pattern UID    = C UId
->   pattern TAG s  = C (Tag s)
-
 > import -> CanDisplayPats where
 >   pattern DUID    = DC UId
 >   pattern DTAG s  = DTag s []

@@ -11,15 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanPats where
->   pattern PROB             = C Prob
->   pattern PROBLABEL u s a  = C (ProbLabel u s a)
->   pattern PATPI u s p      = C (PatPi u s p)
->   pattern SCH              = C Sch
->   pattern SCHTY s          = C (SchTy s)
->   pattern SCHEXPPI s t     = C (SchExpPi s t)
->   pattern SCHIMPPI s t     = C (SchImpPi s t)
-
 > import -> CanDisplayPats where
 
 > import -> CanPretty where

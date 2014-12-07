@@ -26,19 +26,6 @@ Elim forms inherited from elsewhere
 >   halfZip  Prop      Prop      = Just Prop
 >   halfZip  (Prf p0)  (Prf p1)  = Just (Prf (p0, p1))
 
-> import -> CanPats where
->   pattern PROP        = C Prop
->   pattern PRF p       = C (Prf p)
->   pattern ALL p q     = C (All p q)
->   pattern IMP p q     = ALL (PRF p) (L (K q))
->   pattern ALLV x s p  = ALL s (LAV x p)
->   pattern AND p q     = C (And p q)
->   pattern TRIVIAL     = C Trivial
->   pattern ABSURD      = C Absurd
->   pattern BOX p       = C (Box p)
->   pattern INH ty      = C (Inh ty)
->   pattern WIT t       = C (Wit t)
-
 > import -> CanDisplayPats where
 >   pattern DPROP        = DC Prop
 >   pattern DPRF p       = DC (Prf p)

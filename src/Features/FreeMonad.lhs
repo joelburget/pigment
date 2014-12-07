@@ -8,11 +8,6 @@
 
 %endif
 
-> import -> CanPats where
->   pattern MONAD d x   = C (Monad d x)
->   pattern RETURN x    = C (Return x)
->   pattern COMPOSITE t = C (Composite t)
-
 > import -> CanDisplayPats where
 >   pattern DMONAD d x = DC (Monad d x)
 >   pattern DRETURN x  = DC (Return x)

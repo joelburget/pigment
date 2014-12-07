@@ -83,14 +83,6 @@
 >   pretty Fst = const (kword KwFst)
 >   pretty Snd = const (kword KwSnd)
 
-> import -> CanPats where
->   pattern SIGMA p q = C (Sigma p q)
->   pattern PAIR  p q = C (Pair p q)
->   pattern UNIT      = C Unit
->   pattern VOID      = C Void
->   pattern Times x y = Sigma x (L (K y))
->   pattern TIMES x y = C (Times x y)
-
 > import -> CanDisplayPats where
 >   pattern DSIGMA p q = DC (Sigma p q)
 >   pattern DPAIR  p q = DC (Pair p q)

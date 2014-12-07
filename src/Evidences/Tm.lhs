@@ -351,7 +351,86 @@ We have some pattern synonyms for common, er, patterns.
 > pattern LAV x t   = L (x :. t)           -- Lambda (with variable)
 > pattern LK t      = L (K t)              -- Lambda (with constant)
 > pattern PIV x s t = PI s (LAV x t)       -- Pi (with variable)
-> import <- CanPats
+> pattern ANCHORS        = C Anchors
+> pattern ANCHOR u t ts  = C (Anchor u t ts)
+> pattern ALLOWEDBY t    = C (AllowedBy t)
+> pattern ALLOWEDEPSILON = C AllowedEpsilon
+> pattern ALLOWEDCONS _S _T q s ts = C (AllowedCons _S _T q s ts)
+> pattern IDN     = ZE
+> pattern CONSTN  = SU ZE
+> pattern SUMN    = SU (SU ZE)
+> pattern PRODN   = SU (SU (SU ZE))
+> pattern SIGMAN  = SU (SU (SU (SU ZE)))
+> pattern PIN     = SU (SU (SU (SU (SU ZE))))
+> pattern MU l x        = C (Mu (l :?=: Id x))
+> pattern IDD           = CON (PAIR IDN     VOID)
+> pattern CONSTD x      = CON (PAIR CONSTN  (PAIR x VOID))
+> pattern SUMD e b      = CON (PAIR SUMN    (PAIR e (PAIR b VOID)))
+> pattern PRODD u d d'  = CON (PAIR PRODN   (PAIR u (PAIR d (PAIR d' VOID))))
+> pattern SIGMAD s t    = CON (PAIR SIGMAN  (PAIR s (PAIR t VOID)))
+> pattern PID s t       = CON (PAIR PIN     (PAIR s (PAIR t VOID)))
+> pattern ZE         = C Ze
+> pattern SU n       = C (Su n)
+> pattern NILN       = ZE
+> pattern CONSN      = SU ZE
+> pattern ENUMT e    = C (EnumT e)
+> pattern NILE       = CON (PAIR NILN VOID)
+> pattern CONSE t e  = CON (PAIR CONSN (PAIR t (PAIR e VOID)))
+> pattern EQBLUE p q = C (EqBlue p q)
+> pattern MONAD d x   = C (Monad d x)
+> pattern RETURN x    = C (Return x)
+> pattern COMPOSITE t = C (Composite t)
+> pattern IVARN     = ZE
+> pattern ICONSTN   = SU ZE
+> pattern IPIN      = SU (SU ZE)
+> pattern IFPIN     = SU (SU (SU ZE))
+> pattern ISIGMAN   = SU (SU (SU (SU ZE)))
+> pattern IFSIGMAN  = SU (SU (SU (SU (SU ZE))))
+> pattern IPRODN    = SU (SU (SU (SU (SU (SU ZE)))))
+> pattern IMU l ii x i  = C (IMu (l :?=: (Id ii :& Id x)) i)
+> pattern IVAR i        = CON (PAIR IVARN     (PAIR i VOID))
+> pattern IPI s t       = CON (PAIR IPIN      (PAIR s (PAIR t VOID)))
+> pattern IFPI s t      = CON (PAIR IFPIN     (PAIR s (PAIR t VOID)))
+> pattern ISIGMA s t    = CON (PAIR ISIGMAN   (PAIR s (PAIR t VOID)))
+> pattern IFSIGMA s t   = CON (PAIR IFSIGMAN  (PAIR s (PAIR t VOID)))
+> pattern ICONST p      = CON (PAIR ICONSTN   (PAIR p VOID))
+> pattern IPROD u x y   = CON (PAIR IPRODN    (PAIR u (PAIR x (PAIR y VOID))))
+> pattern LABEL l t = C (Label l t)
+> pattern LRET t    = C (LRet t)
+> pattern NU l t = C (Nu (l :?=: Id t))
+> pattern COIT d sty f s = C (CoIt d sty f s)
+> pattern PROB             = C Prob
+> pattern PROBLABEL u s a  = C (ProbLabel u s a)
+> pattern PATPI u s p      = C (PatPi u s p)
+> pattern SCH              = C Sch
+> pattern SCHTY s          = C (SchTy s)
+> pattern SCHEXPPI s t     = C (SchExpPi s t)
+> pattern SCHIMPPI s t     = C (SchImpPi s t)
+> pattern PROP        = C Prop
+> pattern PRF p       = C (Prf p)
+> pattern ALL p q     = C (All p q)
+> pattern IMP p q     = ALL (PRF p) (L (K q))
+> pattern ALLV x s p  = ALL s (LAV x p)
+> pattern AND p q     = C (And p q)
+> pattern TRIVIAL     = C Trivial
+> pattern ABSURD      = C Absurd
+> pattern BOX p       = C (Box p)
+> pattern INH ty      = C (Inh ty)
+> pattern WIT t       = C (Wit t)
+> pattern QUOTIENT x r p = C (Quotient x r p)
+> pattern CLASS x        = C (Con x)
+> pattern RSIG         = C RSig
+> pattern REMPTY       = C REmpty
+> pattern RCONS s i t  = C (RCons s i t)
+> pattern RECORD l s   = C (Record (l :?=: Id s))
+> pattern SIGMA p q = C (Sigma p q)
+> pattern PAIR  p q = C (Pair p q)
+> pattern UNIT      = C Unit
+> pattern VOID      = C Void
+> pattern Times x y = Sigma x (L (K y))
+> pattern TIMES x y = C (Times x y)
+> pattern UID    = C UId
+> pattern TAG s  = C (Tag s)
 
 We have some type synonyms for commonly occurring instances of |Tm|.
 

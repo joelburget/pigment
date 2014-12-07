@@ -16,10 +16,6 @@
 
 > import -> Primitives where
 
-> import -> CanPats where
->   pattern QUOTIENT x r p = C (Quotient x r p)
->   pattern CLASS x        = C (Con x)
-
 > import -> CanDisplayPats where
 >   pattern DQUOTIENT x r p = DC (Quotient x r p)
 >   pattern DCLASS x        = DC (Con x)
