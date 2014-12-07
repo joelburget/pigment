@@ -46,7 +46,7 @@
 
 > import -> CanDisplayPats where
 >   pattern DMU l x        = DC (Mu (l :?=: Id x))
->   pattern DIDD           = DCON (DPAIR  DZE 
+>   pattern DIDD           = DCON (DPAIR  DZE
 >                                         DVOID)
 >   pattern DCONSTD x      = DCON (DPAIR  (DSU DZE)
 >                                         (DPAIR x DVOID))
@@ -64,6 +64,10 @@
 >   pretty (Mu (Nothing  :?=: Id t))  = wrapDoc
 >       (kword KwMu <+> pretty t ArgSize)
 >       AppSize
+
+> import -> CanReactive where
+>   reactify (Mu (Just l   :?=: _)) = reactify l
+>   reactify (Mu (Nothing  :?=: Id t)) = reactKword KwMu >> reactify t
 
 > import -> CanTraverse where
 >   traverse f (Mu l) = (|Mu (traverse f l)|)
@@ -104,7 +108,7 @@
 
 > import -> OpCode where
 
->   type DescDispatchTable = (VAL, 
+>   type DescDispatchTable = (VAL,
 >                         VAL -> VAL,
 >                         VAL -> VAL -> VAL,
 >                         VAL -> VAL -> VAL,
@@ -120,7 +124,7 @@ case for sigma.
 >   mkLazyDescDef :: VAL -> DescDispatchTable -> Either NEU VAL
 >   mkLazyDescDef arg (idCase, constCase, prodCase, sigmaCase, piCase) =
 >       let args = arg $$ Snd in
->         case arg $$ Fst of      
+>         case arg $$ Fst of
 >           IDN     -> Right $ idCase
 >           CONSTN  -> Right $ constCase  (args $$ Fst)
 >           SUMN    -> Right $ sigmaCase  (ENUMT (args $$ Fst)) (args $$ Snd $$ Fst)
@@ -143,7 +147,7 @@ case for sigma.
 >                     SIGMA (ENUMT _E) $ L $ "c" :. [.c. N $
 >                        descOp :@ [_D -$ [NV c], _X -$ []]]
 >         , {-PROD-} oTup $ \u _D _D' -> OLam $ \_X -> ORet $
->                     SIGMA (descOp @@ [_D, _X]) 
+>                     SIGMA (descOp @@ [_D, _X])
 >                           (L $ (unTag u) :. (N $ descOp :@ [_D' -$ [], _X -$ []]))
 >         , {-SIGMA-} oTup $ \_S _D -> OLam $ \_X -> ORet $
 >                     SIGMA _S $ L $ (fortran _D) :. [.s. N $
@@ -173,7 +177,7 @@ case for sigma.
 >         , {-SUM-} oTup $ \ () _D -> oLams $ \_X _P -> OPr $ oLams $ \c d ->
 >              ORet $ boxOp @@ [_D $$ A c, _X, _P, d]
 >         , {-PROD-} oTup $ \u _D _D' -> oLams $ \_X _P -> OPr $ oLams $ \d d' ->
->              ORet $ SIGMA (boxOp @@ [_D, _X, _P, d]) (L $ (unTag u ++ "h") :. 
+>              ORet $ SIGMA (boxOp @@ [_D, _X, _P, d]) (L $ (unTag u ++ "h") :.
 >                        (N (boxOp :@ [_D' -$ [], _X -$ [], _P -$ [], d' -$ []])))
 >         , {-SIGMA-} oTup $ \ () _D -> oLams $ \_X _P -> OPr $ oLams $ \s d ->
 >              ORet $ boxOp @@ [_D $$ A s, _X, _P, d]
@@ -212,7 +216,7 @@ case for sigma.
 >       ]
 >     , opSimp = \_ _ -> empty
 >     } where
->       mapBoxOpTy =  
+>       mapBoxOpTy =
 >         "D" :<: desc :-: \ dD ->
 >         "X" :<: SET :-: \ xX ->
 >         "P" :<: ARR xX SET :-: \ pP ->
@@ -241,16 +245,16 @@ case for sigma.
 >       ]
 >     , opSimp  = mapOpSimp
 >     } where
->         mapOpTy = 
->           "dD" :<: desc :-: \dD -> 
+>         mapOpTy =
+>           "dD" :<: desc :-: \dD ->
 >           "xX" :<: SET :-: \xX ->
 >           "yY" :<: SET :-: \yY ->
 >           "f" :<: ARR xX yY :-: \f ->
->           "v" :<: (descOp @@ [dD, xX]) :-: \v -> 
+>           "v" :<: (descOp @@ [dD, xX]) :-: \v ->
 >           Target (descOp @@ [dD, yY])
 >         mapOpSimp :: Alternative m => [VAL] -> NameSupply -> m NEU
 >         mapOpSimp [dD, xX, yY, f, N v] r
->           | equal (SET :>: (xX, yY)) r && 
+>           | equal (SET :>: (xX, yY)) r &&
 >             equal (ARR xX yY :>: (f, identity)) r = pure v
 >           where
 >             identity = L $ "x" :. [.x. NV x]
@@ -262,17 +266,17 @@ case for sigma.
 >         mapOpSimp _ _ = empty
 
 >   inductionOpMethodType = L $ "d" :. [.d.
->                      L $ "P" :. [._P. 
+>                      L $ "P" :. [._P.
 >                      PI (N $ descOp :@ [NV d, MU Nothing (NV d)])
->                         (L $ "x" :. [.x. 
+>                         (L $ "x" :. [.x.
 >                          ARR (N $ boxOp :@ [NV d, MU Nothing (NV d), NV _P, NV x])
 >                              (N (V _P :$ A (CON (NV x)))) ]) ] ]
 
 >   inductionOpLabMethodType = L $ "l" :. [.l.
 >                      L $ "d" :. [.d.
->                      L $ "P" :. [._P. 
+>                      L $ "P" :. [._P.
 >                      PI (N $ descOp :@ [NV d, MU (|(NV l)|) (NV d)])
->                         (L $ "x" :. [.x. 
+>                         (L $ "x" :. [.x.
 >                          ARR (N $ boxOp :@ [NV d, MU (|(NV l)|) (NV d), NV _P, NV x])
 >                              (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
 
@@ -289,14 +293,14 @@ case for sigma.
 >              inductionOp :@ [_D -$ [], NV x, _P -$ [], p -$ []]], v])
 >     , opSimp = \_ _ -> empty
 >     } where
->       inductionOpTy = 
+>       inductionOpTy =
 >         "D" :<: desc :-: \dD ->
 >         "v" :<: MU Nothing dD :-: \v ->
 >         "P" :<: (ARR (MU Nothing dD) SET) :-: \pP ->
 >         "p" :<: (inductionOpMethodType $$ A dD $$ A pP) :-: \p ->
 >         Target (pP $$ A v)
 
->   branchesDOp = Op 
+>   branchesDOp = Op
 >     { opName   = "branchesD"
 >     , opArity  = 1
 >     , opTyTel  = bOpTy
@@ -322,7 +326,7 @@ case for sigma.
 >         OCase (map (\x -> proj x bs) [0..])
 >     , opSimp = \_ _ -> empty
 >     } where
->         sOpTy = 
+>         sOpTy =
 >           "e" :<: enumU :-: \e ->
 >           "b" :<: (branchesDOp @@ [e]) :-: \b ->
 >           "x" :<: ENUMT e :-: \x ->
@@ -344,23 +348,23 @@ case for sigma.
 > import -> Coerce where
 >   coerce (Mu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
 >     let typ = ARR desc (ARR ANCHORS SET)
->         vap = L $ "d" :. [.d. L $ "l" :. [.l. N $  
->                 descOp :@ [NV d,MU (Just $ NV l) (NV d)] ] ] 
->     in Right . CON $ 
->       coe @@ [ descOp @@ [ d0 , MU (Just l0) d0 ] 
+>         vap = L $ "d" :. [.d. L $ "l" :. [.l. N $
+>                 descOp :@ [NV d,MU (Just $ NV l) (NV d)] ] ]
+>     in Right . CON $
+>       coe @@ [ descOp @@ [ d0 , MU (Just l0) d0 ]
 >              , descOp @@ [ d1 , MU (Just l1) d1 ]
->              , CON $ pval refl $$ A typ $$ A vap $$ Out 
+>              , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                                $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
 >                                $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
 >              , x ]
 >   coerce (Mu (Nothing :?=: Id (d0,d1))) q (CON x) =
 >     let typ = ARR desc SET
->         vap = L $ "d" :. [.d. N $   
->                 descOp :@ [NV d,MU Nothing (NV d)] ] 
->     in Right . CON $ 
->       coe @@ [ descOp @@ [ d0 , MU Nothing d0 ] 
+>         vap = L $ "d" :. [.d. N $
+>                 descOp :@ [NV d,MU Nothing (NV d)] ]
+>     in Right . CON $
+>       coe @@ [ descOp @@ [ d0 , MU Nothing d0 ]
 >              , descOp @@ [ d1 , MU Nothing d1 ]
->              , CON $ pval refl $$ A typ $$ A vap $$ Out 
+>              , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                                $$ A d0 $$ A d1 $$ A (CON q)
 >              , x ]
 
@@ -384,7 +388,7 @@ data. This cannot apply in general because it leads to infinite loops when
 elaborating illegal values for some descriptions. Perhaps we should remove it
 for enumerations as well.
 
->     makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" = 
+>     makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" =
 >         makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
 >     makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t) | r == "EnumU" =
 >         makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
@@ -472,17 +476,17 @@ then we can (probably) turn it into a tag applied to some arguments.
 >                             NILE)))))
 
 >   descBranches :: Tm {In, p} x
->   descBranches = (PAIR (CONSTD UNIT) 
+>   descBranches = (PAIR (CONSTD UNIT)
 >                     (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
 >                     (PAIR (SIGMAD enumU (L $ "E" :. [._E.
 >                                       (PRODD (TAG "T") (PID (ENUMT (NV _E)) (LK IDD))
 >                                              (CONSTD UNIT))]))
 >                     (PAIR (SIGMAD UID (L $ "u" :. PRODD (TAG "C") IDD (PRODD (TAG "D") IDD (CONSTD UNIT))))
->                     (PAIR (SIGMAD SET (L $ "S" :. [._S. 
->                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD)) 
+>                     (PAIR (SIGMAD SET (L $ "S" :. [._S.
+>                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD))
 >                                              (CONSTD UNIT))]))
->                     (PAIR (SIGMAD SET (L $ "S" :. [._S. 
->                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD)) 
+>                     (PAIR (SIGMAD SET (L $ "S" :. [._S.
+>                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD))
 >                                              (CONSTD UNIT))]))
 >                      VOID))))))
 

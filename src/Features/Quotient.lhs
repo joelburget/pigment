@@ -34,6 +34,11 @@
 >            ])
 >       ArgSize
 
+> import -> CanReactive where
+>   reactify (Quotient x r p) = do
+>       reactKword KwQuotient
+>       mapM_ reactify [x,r,p]
+
 |equivalenceRelation A R| is the proposition that |R| is an equivalence
 relation over |A|.
 
@@ -43,14 +48,14 @@ relation over |A|.
 >     -- refl
 >     AND (ALL a $ L $ "x" :. [.x. x =~ x ]) $
 >     -- sym
->     AND (ALL a $ L $ "x" :. [.x. 
->           ALL (a -$ []) $ L $ "y" :. [.y. 
+>     AND (ALL a $ L $ "x" :. [.x.
+>           ALL (a -$ []) $ L $ "y" :. [.y.
 >            IMP (x =~ y) (y =~ x) ] ]
 >         ) $
 >     -- trans
->         (ALL a $ L $ "x" :. [.x. 
->           ALL (a -$ []) $ L $ "y" :. [.y. 
->            ALL (a -$ []) $ L $ "z" :. [.z. 
+>         (ALL a $ L $ "x" :. [.x.
+>           ALL (a -$ []) $ L $ "y" :. [.y.
+>            ALL (a -$ []) $ L $ "z" :. [.z.
 >             IMP (x =~ y) (IMP (y =~ z) (x =~ z)) ] ] ]
 >         )
 >     where
@@ -87,10 +92,10 @@ relation over |A|.
 >                 "h" :<: PRF (ALL _X $ L $ "x" :. [.x.
 >                               ALL (_X -$ []) $ L $ "y" :. [.y.
 >                                IMP (_R -$ [ NV x , NV y ])
->                                 (EQBLUE (_P -$ [ CLASS (NV x) ] 
+>                                 (EQBLUE (_P -$ [ CLASS (NV x) ]
 >                                             :>: m -$ [ NV x ])
->                                         (_P -$ [ CLASS (NV y) ] 
->                                             :>: m -$ [ NV y ])) ] ]) 
+>                                         (_P -$ [ CLASS (NV y) ]
+>                                             :>: m -$ [ NV y ])) ] ])
 >                                                         :-: \_ ->
 >                 Target $ _P $$ A z
 >     , opRun = run
@@ -103,7 +108,7 @@ relation over |A|.
 
 > import -> OpRunEqGreen where
 >   opRunEqGreen [QUOTIENT a r _, CLASS x, QUOTIENT b s _, CLASS y] =
->     Right $ ALL b $ L $ "x2" :. [.x2. 
+>     Right $ ALL b $ L $ "x2" :. [.x2.
 >               IMP (EQBLUE ((a -$ []) :>: (x -$ [])) ((b -$ []) :>: NV x2))
 >                   (s -$ [NV x2 , y -$ [] ]) ]
 >   opRunEqGreen [QUOTIENT a r _, N x, QUOTIENT b s _, _]   = Left x

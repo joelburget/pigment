@@ -13,13 +13,19 @@
 >   Unit   :: Can t
 >   Void   :: Can t
 >   Sigma  :: t -> t -> Can t
->   Pair   :: t -> t -> Can t 
+>   Pair   :: t -> t -> Can t
 
 > import -> CanPretty where
 >   pretty Unit         = wrapDoc (kword KwSig <+> parens empty) AppSize
 >   pretty Void         = prettyPair DVOID
 >   pretty (Sigma s t)  = prettySigma empty (DSIGMA s t)
 >   pretty (Pair a b)   = prettyPair (DPAIR a b)
+
+> import -> CanReactive where
+>   reactify Unit         = reactKword KwSig >> "()"
+>   reactify Void         = reactifyPair DVOID
+>   reactify (Sigma s t)  = reactifySigma "" (DSIGMA s t)
+>   reactify (Pair a b)   = reactifyPair (DPAIR a b)
 
 > import -> Pretty where
 >   prettyPair :: DInTmRN -> Size -> Doc
@@ -36,7 +42,7 @@
 >       (d <+> text x <+> kword KwAsc <+> pretty s maxBound <+> kword KwSemi) t
 >   prettySigma d (DSIGMA s (DL (DK t)))     = prettySigma
 >       (d <+> pretty s maxBound <+> kword KwSemi) t
->   prettySigma d (DSIGMA s t) = prettySigmaDone d 
+>   prettySigma d (DSIGMA s t) = prettySigmaDone d
 >       (kword KwSig <+> pretty s minBound <+> pretty t minBound)
 >   prettySigma d t = prettySigmaDone d (pretty t maxBound)
 
@@ -44,6 +50,36 @@
 >   prettySigmaDone s t
 >     | isEmpty s  = wrapDoc t AppSize
 >     | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
+
+> import -> Reactive where
+>   reactifyPair :: DInTmRN -> PureReact
+>   reactifyPair p = "[" >> reactifyPairMore "" p >> "]"
+
+>   reactifyPairMore :: PureReact -> DInTmRN -> PureReact
+>   reactifyPairMore d DVOID        = d
+>   reactifyPairMore d (DPAIR a b)  = reactifyPairMore
+>       (d >> reactify a)
+>       b
+>   reactifyPairMore d t            = d >> reactKword KwComma >> reactify t
+
+>   reactifySigma :: PureReact -> DInTmRN -> PureReact
+>   reactifySigma d DUNIT                      = reactifySigmaDone d ""
+>   reactifySigma d (DSIGMA s (DL (x ::. t)))  = reactifySigma
+>       (d >> fromString x >> reactKword KwAsc >> reactify s >> reactKword KwSemi)
+>       t
+>   reactifySigma d (DSIGMA s (DL (DK t)))     = reactifySigma
+>       (d >> reactify s >> reactKword KwSemi) t
+>   reactifySigma d (DSIGMA s t) = reactifySigmaDone d
+>       (reactKword KwSig >> reactify s >> reactify t)
+>   reactifySigma d t = reactifySigmaDone d (reactify t)
+
+>   reactifySigmaDone :: PureReact -> PureReact -> PureReact
+>   reactifySigmaDone s t = reactKword KwSig >> "(" >> s >> t >> ")"
+
+>   -- reactifySigmaDone :: PureReact -> PureReact -> PureReact
+>   -- reactifySigmaDone s t
+>   --   | isEmpty s  = wrapDoc t AppSize
+>   --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
 > import -> ElimConstructors where
 >   Fst    :: Elim t
@@ -59,7 +95,7 @@
 >   pattern UNIT      = C Unit
 >   pattern VOID      = C Void
 >   pattern Times x y = Sigma x (L (K y))
->   pattern TIMES x y = C (Times x y)  
+>   pattern TIMES x y = C (Times x y)
 
 > import -> CanDisplayPats where
 >   pattern DSIGMA p q = DC (Sigma p q)
@@ -86,7 +122,7 @@
 >   traverse f Unit         = (|Unit|)
 >   traverse f Void         = (|Void|)
 >   traverse f (Sigma s t)  = (|Sigma (f s) (f t)|)
->   traverse f (Pair x y)   = (|Pair (f x) (f y)|) 
+>   traverse f (Pair x y)   = (|Pair (f x) (f y)|)
 
 > import -> CanHalfZip where
 >   halfZip Unit Unit = Just Unit
@@ -120,11 +156,11 @@
 
 > import -> CanEtaExpand where
 >   etaExpand (Unit :>: v) r = Just VOID
->   etaExpand (Sigma s t :>: p) r = let x = p $$ Fst in 
+>   etaExpand (Sigma s t :>: p) r = let x = p $$ Fst in
 >     Just (PAIR (inQuote (s :>: x) r) (inQuote (t $$ (A x) :>: (p $$ Snd)) r))
 
 > import -> OpCompile where
->   ("split", [_,_,y,_,f]) -> App (Var "__split") [f,y] 
+>   ("split", [_,_,y,_,f]) -> App (Var "__split") [f,y]
 
 > import -> OpCode where
 >   splitOp = Op
@@ -134,7 +170,7 @@
 >                  "ab"  :<: SIGMA aA bB                  :-: \ ab ->
 >                  "P"   :<: ARR (SIGMA aA bB) SET        :-: \ pP ->
 >                  "p"   :<: (
->                    PI aA $ L $ "a" :. [.a. 
+>                    PI aA $ L $ "a" :. [.a.
 >                     PI (bB -$ [ NV a ]) $ L $ "b" :. [.b.
 >                      pP -$ [ PAIR (NV a) (NV b) ] ] ])  :-: \ p ->
 >                  Target $ pP $$ A ab
@@ -216,8 +252,8 @@ from a pair.
 >     return $ LK tm :=>: LK tmv
 
 >   makeElab' loc (PI (SIGMA d r) t :>: DCON f) = do
->     let mt =  PI d . L $ (fortran r) :. [.a. 
->               PI (r -$ [NV a]) . L $ (fortran t) :. [.b. 
+>     let mt =  PI d . L $ (fortran r) :. [.a.
+>               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
 >               t -$ [PAIR (NV a) (NV b)] ] ]
 >     mt'  :=>: _    <- eQuote mt
 >     tm   :=>: tmv  <- subElab loc (mt :>: f)

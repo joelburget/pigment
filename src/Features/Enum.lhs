@@ -93,6 +93,11 @@
 >   pretty Ze         = const (int 0)
 >   pretty (Su t)     = prettyEnumIndex 1 t
 
+> import -> CanReactive where
+>   reactify (EnumT t)  = reactKword KwEnum >> reactify t
+>   reactify Ze         = "0"
+>   reactify (Su t)     = reactifyEnumIndex 1 t
+
 > import -> Pretty where
 >   prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
 >   prettyEnumIndex n DZE      = const (int n)
@@ -100,6 +105,15 @@
 >   prettyEnumIndex n tm       = wrapDoc
 >       (int n <+> kword KwPlus <+> pretty tm ArgSize)
 >       AppSize
+
+> import -> Reactive where
+>   reactifyEnumIndex :: Int -> DInTmRN -> PureReact
+>   reactifyEnumIndex n DZE      = fromString $ show n
+>   reactifyEnumIndex n (DSU t)  = reactifyEnumIndex (succ n) t
+>   reactifyEnumIndex n tm       = do
+>       (fromString (show n))
+>       reactKword KwPlus
+>       reactify tm
 
 > import -> CanTyRules where
 >   canTy chev (Set :>: EnumT e)  = do

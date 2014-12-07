@@ -18,7 +18,13 @@
 
 > import Cochon.Cochon
 
+> import DisplayLang.Lexer
+
 %endif
 
 > main :: IO ()
-> main = cochon emptyContext
+> main = do
+>     forM_ (enumFromTo minBound maxBound :: [Keyword]) $ \x -> do
+>         print x
+>         print $ fromEnum x
+>     -- cochon emptyContext

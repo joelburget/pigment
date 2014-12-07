@@ -18,7 +18,7 @@
 
 > import -> CanHalfZip where
 >   halfZip (Nu t0) (Nu t1)  = (| Nu (halfZip t0 t1) |)
->   halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) = 
+>   halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
 >     Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
 
 > import -> CanPats where
@@ -31,12 +31,21 @@
 
 > import -> CanPretty where
 >   pretty (Nu (Just l :?=: _))  = pretty l
->   pretty (Nu (Nothing :?=: Id t))  = 
+>   pretty (Nu (Nothing :?=: Id t))  =
 >     wrapDoc (kword KwNu <+> pretty t ArgSize) ArgSize
 >   pretty (CoIt d sty f s) = wrapDoc
 >       (kword KwCoIt <+> pretty sty ArgSize
 >            <+> pretty f ArgSize <+> pretty s ArgSize)
 >       ArgSize
+
+> import -> CanReactive where
+>   reactify (Nu (Just l :?=: _))  = reactify l
+>   reactify (Nu (Nothing :?=: Id t))  = reactKword KwNu >> reactify t
+>   reactify (CoIt d sty f s) = do
+>       reactKword KwCoIt
+>       reactify sty
+>       reactify f
+>       reactify s
 
 > import -> CanTyRules where
 >   canTy chev (Set :>: Nu (ml :?=: Id x))     = do
@@ -69,23 +78,23 @@
 >   -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 >   coerce (Nu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
 >     let typ = ARR desc (ARR SET SET)
->         vap = L $ "d" :. [.d. L $ "l" :. [.l. N $  
->                 descOp :@ [NV d,NU (Just $ NV l) (NV d)] ] ] 
->     in Right . CON $ 
->       coe @@ [ descOp @@ [ d0 , NU (Just l0) d0 ] 
+>         vap = L $ "d" :. [.d. L $ "l" :. [.l. N $
+>                 descOp :@ [NV d,NU (Just $ NV l) (NV d)] ] ]
+>     in Right . CON $
+>       coe @@ [ descOp @@ [ d0 , NU (Just l0) d0 ]
 >              , descOp @@ [ d1 , NU (Just l1) d1 ]
->              , CON $ pval refl $$ A typ $$ A vap $$ Out 
+>              , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                                $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
 >                                $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
 >              , x ]
 >   coerce (Nu (Nothing :?=: Id (d0,d1))) q (CON x) =
 >     let typ = ARR desc SET
->         vap = L $ "d" :. [.d. N $   
->                 descOp :@ [NV d,NU Nothing (NV d)] ] 
->     in Right . CON $ 
->       coe @@ [ descOp @@ [ d0 , NU Nothing d0 ] 
+>         vap = L $ "d" :. [.d. N $
+>                 descOp :@ [NV d,NU Nothing (NV d)] ]
+>     in Right . CON $
+>       coe @@ [ descOp @@ [ d0 , NU Nothing d0 ]
 >              , descOp @@ [ d1 , NU Nothing d1 ]
->              , CON $ pval refl $$ A typ $$ A vap $$ Out 
+>              , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                                $$ A d0 $$ A d1 $$ A (CON q)
 >              , x ]
 
@@ -93,7 +102,7 @@
 
 > import -> KeywordConstructors where
 >   KwNu    :: Keyword
->   KwCoIt  :: Keyword 
+>   KwCoIt  :: Keyword
 
 > import -> KeywordTable where
 >   key KwNu        = "Nu"
@@ -113,7 +122,7 @@
 >     makeElab' loc (NU l d :>: DPAIR s t) =
 >         makeElab' loc (NU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
 >     makeElab' loc (SET :>: DNU Nothing d) = do
->         lt :=>: lv <- eFaker 
+>         lt :=>: lv <- eFaker
 >         dt :=>: dv <- subElab loc (desc :>: d)
 >         return $ NU (Just (N lt)) dt :=>: NU (Just lv) dv
 >     makeElab' loc (NU l d :>: DCOIT DU sty f s) = do

@@ -25,7 +25,14 @@
 >     where
 >       foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
 >       foo (_    :>: DN x  ) = x
->       foo (xty  :>: x     ) = DType xty ::$ [A x] 
+>       foo (xty  :>: x     ) = DType xty ::$ [A x]
+
+> import -> CanReactive where
+>   reactify (EqBlue pp qq) = reactify (DEqBlue (foo pp) (foo qq))
+>     where
+>       foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
+>       foo (_    :>: DN x  ) = x
+>       foo (xty  :>: x     ) = DType xty ::$ [A x]
 
 > import -> CanTyRules where
 >   canTy chev (Prop :>: EqBlue (y0 :>: t0) (y1 :>: t1)) = do
@@ -116,7 +123,7 @@
 
 > import -> RulesCode where
 >   cohAx = [("Axiom",0),("coh",0)] := (DECL :<: cohType) where
->     cohType = PRF $ 
+>     cohType = PRF $
 >               ALL SET $ L $ "S" :. [._S.
 >               ALL SET $ L $ "T" :. [._T.
 >               ALL (PRF (EQBLUE (SET :>: NV _S) (SET :>: NV _T)))
@@ -190,6 +197,9 @@ to DInTm, along with appropriate elaboration and distillation rules.
 >   pretty (DEqBlue t u) = wrapDoc
 >       (pretty t ArgSize <+> kword KwEqBlue <+> pretty u ArgSize)
 >       ArgSize
+
+> import -> DInTmReactive where
+>   reactify (DEqBlue t u) = reactify t >> kword KwEqBlue >> reactify u
 
 > import -> DInTmTraverse where
 >   traverseDTIN f (DEqBlue t u) =

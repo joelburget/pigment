@@ -76,6 +76,17 @@ Elim forms inherited from elsewhere
 >   pretty (Inh ty)       = wrapDoc (kword KwInh <+> pretty ty ArgSize) AppSize
 >   pretty (Wit t)        = wrapDoc (kword KwWit <+> pretty t ArgSize) AppSize
 
+> import -> CanReactive where
+>   reactify Prop           = reactKword KwProp
+>   reactify (Prf p)        = reactKword KwPrf >> reactify p
+>   reactify (All p q)      = reactifyAll empty (DALL p q)
+>   reactify (And p q)      = reactify p >> reactKword KwAnd >> reactify q
+>   reactify Trivial        = reactKword KwTrivial
+>   reactify Absurd         = reactKword KwAbsurd
+>   reactify (Box (Irr p))  = reactify p
+>   reactify (Inh ty)       = reactKword KwInh >> reactify ty
+>   reactify (Wit t)        = reactKword KwWit >> reactify t
+
 > import -> Pretty where
 >   prettyAll :: Doc -> DInTmRN -> Size -> Doc
 >   prettyAll bs (DALL (DPRF p) (DL (DK q))) = prettyAllMore bs
@@ -92,6 +103,28 @@ Elim forms inherited from elsewhere
 >     | isEmpty bs  = wrapDoc d PiSize
 >     | otherwise   = wrapDoc (bs <+> kword KwImp <+> d) PiSize
 
+> import -> Reactive where
+>   reactifyAll :: PureReact -> DInTmRN -> PureReact
+>   reactifyAll bs (DALL (DPRF p) (DL (DK q))) = reactifyAllMore
+>     bs
+>     (reactify p >> reactKword KwImp >> reactify q)
+>   reactifyAll bs (DALL s (DL (x ::. t))) = reactifyAll
+>       (bs >> parens (fromString x >> reactKword KwAsc >> reactify s))
+>       t
+>   reactifyAll bs (DALL s (DL (DK t))) = reactifyAll bs
+>       (DALL s (DL ("_" ::. t)))
+>   reactifyAll bs (DALL s t) = reactifyAllMore bs
+>     (reactKword KwAll >> reactify s >> reactify t)
+>   reactifyAll bs tm = reactifyAllMore bs (reactify tm)
+>
+>   -- reactifyAllMore :: PureReact -> PureReact -> PureReact
+>   -- reactifyAllMore bs d
+>   --   | isEmpty bs  = wrapDoc d PiSize
+>   --   | otherwise   = wrapDoc (bs <+> kword KwImp <+> d) PiSize
+>
+>   reactifyAllMore :: PureReact -> PureReact -> PureReact
+>   reactifyAllMore bs d = bs >> reactKword KwImp >> d
+
 
 > import -> CanTyRules where
 >   canTy _   (Set :>: Prop) = return Prop
@@ -100,7 +133,7 @@ Elim forms inherited from elsewhere
 >     ssv@(_ :=>: sv) <- chev (SET :>: s)
 >     ppv <- chev (ARR sv PROP :>: p)
 >     return $ All ssv ppv
->   canTy chev  (Prop :>: And p q) = 
+>   canTy chev  (Prop :>: And p q) =
 >     (|And (chev (PROP :>: p)) (chev (PROP :>: q))|)
 >   canTy _  (Prop :>: Trivial) = return Trivial
 >   canTy _   (Prop :>: Absurd) = return Absurd
@@ -131,8 +164,8 @@ Elim forms inherited from elsewhere
 >               , opTyTel = "S" :<: SET :-: \ ty ->
 >                           "p" :<: PRF (INH ty) :-: \ p ->
 >                           "P" :<: IMP (PRF (INH ty)) PROP :-: \ pred ->
->                           "m" :<: PI ty (L $ "s" :. [.t.  
->                                            pred -$ [ WIT (NV t) ] ]) :-: \ _ -> 
+>                           "m" :<: PI ty (L $ "s" :. [.t.
+>                                            pred -$ [ WIT (NV t) ] ]) :-: \ _ ->
 >                           Target (PRF (pred $$ A p))
 >               , opRun = \[_,p,_,m] -> case p of
 >                                         WIT t -> Right $ m $$ A t
@@ -150,7 +183,7 @@ Elim forms inherited from elsewhere
 > import -> Check where
 >   check (PRF (ALL p q) :>: L sc)  = do
 >     freshRef  ("" :<: p)
->               (\ref -> check (  PRF (q $$ A (pval ref)) :>: 
+>               (\ref -> check (  PRF (q $$ A (pval ref)) :>:
 >                                 underScope sc ref))
 >     return $ L sc :=>: (evTm $ L sc)
 

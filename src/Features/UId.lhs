@@ -29,6 +29,10 @@
 >   pretty UId      = const (kword KwUId)
 >   pretty (Tag s)  = const (kword KwTag <> text s)
 
+> import -> CanReactive where
+>   reactify UId      = reactKword KwUId
+>   reactify (Tag s)  = reactKword KwTag >> fromString s
+
 > import -> CanTyRules where
 >   canTy _  (Set :>: UId)    = return UId
 >   canTy _  (UId :>: Tag s)  = return (Tag s)

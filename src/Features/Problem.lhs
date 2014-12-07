@@ -63,6 +63,8 @@
 
 > import -> CanPretty where
 
+> import -> CanReactive where
+
 > import -> CanTraverse where
 >   traverse _ Prob = (| Prob |)
 >   traverse f (ProbLabel u s a) = (|ProbLabel (f u) (f s) (f a)|)
@@ -93,11 +95,13 @@
 
 > import -> ElimPretty where
 
+> import -> ElimReactive where
+
 \subsection{Plugging Operators in}
 
 > import -> Operators where
 >   argsOp :
->   schTypeOp : 
+>   schTypeOp :
 
 > import -> OpCompile where
 
@@ -120,21 +124,21 @@
 
 >   argsOpRun :: VAL -> Either NEU VAL
 >   argsOpRun (SCHTY _)       = Right UNIT
->   argsOpRun (SCHEXPPI s t)  = 
+>   argsOpRun (SCHEXPPI s t)  =
 >     Right $ SIGMA (schTypeOp @@ [s])
 >              (L ("x" :. [.x. N $ argsOp :@ [t -$ [ NV x ]]]))
->   argsOpRun (SCHIMPPI s t)  = 
+>   argsOpRun (SCHIMPPI s t)  =
 >     Right $ SIGMA s
 >              (L ("x" :. [.x. N $ argsOp :@ [t -$ [ NV x ]]]))
 >   argsOpRun (N v)           = Left v
 
 >   schTypeOpRun :: VAL -> Either NEU VAL
 >   schTypeOpRun (SCHTY s)       = Right s
->   schTypeOpRun (SCHEXPPI s t)  = 
+>   schTypeOpRun (SCHEXPPI s t)  =
 >     Right $ PI (schTypeOp @@ [s])
 >              (L ("x" :. [.x. N $ schTypeOp :@ [t -$ [ NV x ]]]))
->   schTypeOpRun (SCHIMPPI s t)  = 
->     Right $ PI s 
+>   schTypeOpRun (SCHIMPPI s t)  =
+>     Right $ PI s
 >              (L ("x" :. [.x. N $ schTypeOp :@ [t -$ [ NV x ]]]))
 >   schTypeOpRun (N v)           = Left v
 
@@ -170,7 +174,7 @@
 >   key KwImpPi      = "ImpPi"
 
 > import -> MakeElabRules where
- 
+
 > import -> DistillRules where
 
 > import -> DInTmConstructors where
@@ -179,7 +183,11 @@
 
 > import -> DInTmPretty where
 
+> import -> DInTmReactive where
+
 > import -> Pretty where
+
+> import -> Reactive where
 
 \subsection{Adding Primitive references in Cochon}
 

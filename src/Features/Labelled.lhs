@@ -47,8 +47,20 @@
 >       <+> kword KwLabelEnd)
 >   pretty (LRet x) = wrapDoc (kword KwRet <+> pretty x ArgSize) ArgSize
 
+> import -> CanReactive where
+>   reactify (Label l t) = do
+>       reactKword KwLabel
+>       reactify l
+>       reactKword KwAsc
+>       reactify t
+>       reactKword KwLabelEnd
+>   reactify (LRet x) = reactKword KwRet >> reactify x
+
 > import -> ElimPretty where
 >   pretty (Call _) = const (kword KwCall)
+
+> import -> ElimReactive where
+>   reactify (Call _) = reactKword KwCall
 
 > import -> ElimComputation where
 >   LRET t $$ Call l = t
@@ -116,7 +128,7 @@ they implement.
 <     { opName = "call"
 <     , opArity = 3
 <     , opTy = callOpTy
-<     , opRun = callOpRun       
+<     , opRun = callOpRun
 <     , opSimp = callOpSimp
 <     } where
 <       callOpTy chev [ty, lbl, tm] = do

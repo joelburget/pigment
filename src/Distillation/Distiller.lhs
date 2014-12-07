@@ -27,6 +27,7 @@
 > import DisplayLang.Scheme
 > import DisplayLang.Name
 > import DisplayLang.PrettyPrint
+> import DisplayLang.Reactify
 
 > import NameSupply.NameSupplier
 
@@ -37,6 +38,8 @@
 > import Evidences.Eval
 > import Evidences.Operators
 > import Evidences.DefinitionalEquality
+
+> import React
 
 %endif
 
@@ -282,5 +285,10 @@ then passes it to the pretty-printer.
 >     dtm :=>: _ <- distillHere tt
 >     return (pretty dtm size)
 
+> reactHere :: (TY :>: INTM) -> ProofState PureReact
+> reactHere = reactHereAt
 
-
+> reactHereAt :: (TY :>: INTM) -> ProofState PureReact
+> reactHereAt tt = do
+>     dtm :=>: _ <- distillHere tt
+>     return (reactify dtm)

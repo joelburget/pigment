@@ -61,14 +61,24 @@
 >   pretty RSig              =  const $ text "RSignature"
 >   pretty REmpty            =  const $ text "empty"
 >   pretty (RCons s i t)     =  const $
->                               pretty s ArgSize <+> char '>' 
->                               <+> pretty i ArgSize <+> colon 
->                               <+> pretty t ArgSize 
+>                               pretty s ArgSize <+> char '>'
+>                               <+> pretty i ArgSize <+> colon
+>                               <+> pretty t ArgSize
+
+> import -> CanReactive where
+>   reactify RSig              =  "RSignature"
+>   reactify REmpty            =  "empty"
+>   reactify (RCons s i t)     = do
+>       reactify s
+>       ">"
+>       reactify i ArgSize
+>       " , "
+>       reactify t ArgSize
 
 > import -> CanTraverse where
 >   traverse f RSig           = (|RSig|)
 >   traverse f REmpty         = (|REmpty|)
->   traverse f (RCons s i t)  = (|RCons (f s) (f i) (f t)|) 
+>   traverse f (RCons s i t)  = (|RCons (f s) (f i) (f t)|)
 
 > import -> CanHalfZip where
 >   halfZip RSig              RSig              = Just RSig
@@ -93,6 +103,9 @@
 > import -> ElimPretty where
 >     -- None
 
+> import -> ElimReactive where
+>     -- None
+
 \subsection{Plugging in operators}
 
 > import -> Operators where
@@ -106,7 +119,7 @@
 >     -- XXX: Not yet implemented
 
 > import -> OpCode where
->   recordOp = Op 
+>   recordOp = Op
 >     { opName   = "Record"
 >     , opArity  = 1
 >     , opTyTel  = recordOpTy
@@ -133,7 +146,7 @@
 >         labelsOpRun [REMPTY]           = Right NILE
 >         labelsOpRun [RCONS sig id ty]  = Right $ CONSE id (labelsOp @@ [sig])
 >         labelsOpRun [N x]              = Left x
->   
+>
 >   typeAtOp = Op
 >     { opName   = "typeAt"
 >     , opArity  = 2
@@ -143,15 +156,15 @@
 >     } where
 >         typeAtOpTy =  "sig" :<: RSIG :-: \sig ->
 >                       "labels" :<: ENUMT (labelsOp @@ [sig]) :-: \_ ->
->                       Target $ SIGMA RSIG  (L $ "S" :. [.s. 
+>                       Target $ SIGMA RSIG  (L $ "S" :. [.s.
 >                                            ARR (N $ recordOp :@ [NV s]) SET])
 >         typeAtOpRun :: [VAL] -> Either NEU VAL
->         typeAtOpRun [REMPTY, _]              = 
+>         typeAtOpRun [REMPTY, _]              =
 >             error "typeAt: impossible call on Empty"
 >         typeAtOpRun [RCONS sig id ty, ZE]    = Right $ PAIR sig ty
 >         typeAtOpRun [RCONS sig id ty, SU n]  = Right $ typeAtOp @@ [ sig, n ]
 >         typeAtOpRun [_,N x]                 = Left x
-> 
+>
 >   fstsOp = Op
 >     { opName   = "fsts"
 >     , opArity  = 3
@@ -164,14 +177,14 @@
 >                     "rec" :<: recordOp @@ [sig] :-: \_ ->
 >                       Target $ recordOp @@ [ typeAtOp @@ [ sig, l ] $$ Fst ]
 >         fstsOpRun :: [VAL] -> Either NEU VAL
->         fstsOpRun [REMPTY, _, _]              = 
+>         fstsOpRun [REMPTY, _, _]              =
 >             error "fsts: impossible call on Empty"
 >         fstsOpRun [RCONS sig id ty, ZE, x]    =
 >             Right $ x $$ Fst
 >         fstsOpRun [RCONS sig id ty, SU n, x]  =
 >             Right $ fstsOp @@ [sig, n, x $$ Fst]
 >         fstsOpRun [_, N x, _]                 = Left x
-> 
+>
 >   atOp = Op
 >     { opName   = "at"
 >     , opArity  = 3
@@ -182,11 +195,11 @@
 >         atOpTy =  "sig" :<: RSIG :-: \sig ->
 >                   "labels" :<: ENUMT (labelsOp @@ [sig]) :-: \l ->
 >                   "rec" :<: recordOp @@ [sig] :-: \rec ->
->                    Target $ typeAtOp @@ [ sig, l ] 
->                               $$ Snd 
+>                    Target $ typeAtOp @@ [ sig, l ]
+>                               $$ Snd
 >                               $$ A (fstsOp @@ [ sig, l, rec])
 >         atOpRun :: [VAL] -> Either NEU VAL
->         atOpRun [REMPTY, _, _]              = 
+>         atOpRun [REMPTY, _, _]              =
 >             error "at: impossible call on Empty"
 >         atOpRun [RCONS sig id ty, ZE, x]    =
 >             Right $ x $$ Snd
@@ -213,7 +226,7 @@
 >     -- None
 
 > import -> Coerce where
->     -- XXX: not yet implemented 
+>     -- XXX: not yet implemented
 
 \subsection{Extending the display language}
 
@@ -226,7 +239,13 @@
 > import -> DInTmPretty where
 >     -- None
 
+> import -> DInTmReactive where
+>     -- None
+
 > import -> Pretty where
+>     -- None
+
+> import -> Reactive where
 >     -- None
 
 \subsection{Extending the concrete syntax}
@@ -264,6 +283,6 @@
 
 > import -> MakeElabRules where
 >     -- Not yet implemented
- 
+
 > import -> DistillRules where
 >     -- Not yet implemented

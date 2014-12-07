@@ -49,7 +49,14 @@
 >       (kword KwCon <+> pretty x ArgSize)
 >       ArgSize
 
+> import -> CanReactive where
+>   reactify (Monad d x)   = reactKword KwMonad >> reactify d >> reactify x
+>   reactify (Return x)    = reactKword KwReturn >> reactify x
+>   reactify (Composite x) = reactKword KwCon >> reactify x
+
 > import -> Pretty where
+
+> import -> Reactive where
 
 > import -> CanTyRules where
 >   canTy chev (Set :>: Monad d x) = do
@@ -110,7 +117,7 @@
 >                  "c" :<: (PI (descOp @@ [dD, MONAD dD xX]) $ L $ "ts" :. [.ts.
 >                            ARR (N (boxOp :@ [  dD -$ []
 >                                             ,  MONAD (dD -$ []) (xX -$ [])
->                                             ,  pP -$ [] , NV ts])) 
+>                                             ,  pP -$ [] , NV ts]))
 >                             (pP -$ [COMPOSITE (NV ts) ])])  :-: \ _ ->
 >                  "v" :<: (PI xX $ L $ "x" :. [.x. pP -$ [ RETURN (NV x) ] ])       :-: \ _ ->
 >                  Target $ pP $$ A t
@@ -118,7 +125,7 @@
 >     , opSimp = \_ _ -> empty
 >     } where
 >       elimMonadOpRun :: [VAL] -> Either NEU VAL
->       elimMonadOpRun [d,x,COMPOSITE ts,bp,mc,mv] = Right $ 
+>       elimMonadOpRun [d,x,COMPOSITE ts,bp,mc,mv] = Right $
 >         mc $$ A ts $$ A (mapBoxOp @@ [d, MONAD d x, bp,
 >           L $ "t" :. [.t. N $ elimMonadOp :@ [  d -$ [], x -$ []
 >                                              ,  NV t , bp -$ []

@@ -25,6 +25,8 @@
 
 > import -> CanPretty where
 
+> import -> CanReactive where
+
 > import -> CanTraverse where
 
 > import -> CanHalfZip where
@@ -40,6 +42,8 @@
 > import -> ElimTraverse where
 
 > import -> ElimPretty where
+
+> import -> ElimReactive where
 
 \subsection{Plugging in operators}
 
@@ -73,7 +77,11 @@
 
 > import -> DInTmPretty where
 
+> import -> DInTmReactive where
+
 > import -> Pretty where
+
+> import -> Reactive where
 
 \subsection{Extending the concrete syntax}
 
@@ -92,5 +100,5 @@
 \subsection{Extending the elaborator and distiller}
 
 > import -> MakeElabRules where
- 
+
 > import -> DistillRules where

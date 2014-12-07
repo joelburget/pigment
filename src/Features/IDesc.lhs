@@ -19,7 +19,7 @@ rule takes care of taking applying the lambda-bound anchor to the
 index of |IMu| to make a fully applied anchor |DIMu|.
 
 > import -> DInTmConstructors where
->   DIMu :: Labelled (Id :*: Id) (DInTm p x) -> DInTm p x  -> DInTm p x 
+>   DIMu :: Labelled (Id :*: Id) (DInTm p x) -> DInTm p x  -> DInTm p x
 
 > import -> DInTmTraverse where
 >   traverseDTIN f (DIMu s i) = (|DIMu (traverse (traverseDTIN f) s) (traverseDTIN f i)|)
@@ -29,6 +29,14 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >   pretty (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = wrapDoc
 >       (kword KwIMu <+> pretty ii ArgSize <+> pretty d ArgSize <+> pretty i ArgSize)
 >       AppSize
+
+> import -> DInTmReactive where
+>   reactify (DIMu (Just s   :?=: _) _)  = reactify s
+>   reactify (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
+>       reactKword KwIMu
+>       reactify ii
+>       reactify d
+>       reactify i
 
 \subsection{Plugging Canonical terms in}
 
@@ -44,8 +52,8 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >     return $ IMu (mlv :?=: (Id iiiiv :& Id xxv)) iiv
 >   canTy chev (IMu tt@(_ :?=: (Id ii :& Id x)) i :>: Con y) = do
 >     yyv <- chev (idescOp @@ [ ii
->                             , x $$ A i 
->                             , L $ "i" :. [.i. 
+>                             , x $$ A i
+>                             , L $ "i" :. [.i.
 >                                 C (IMu (fmap (-$ []) tt) (NV i)) ]
 >                             ] :>: y)
 >     return $ Con yyv
@@ -63,7 +71,7 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >   pattern IFSIGMAN  = SU (SU (SU (SU (SU ZE))))
 >   pattern IPRODN    = SU (SU (SU (SU (SU (SU ZE)))))
 
->   pattern IMU l ii x i  = C (IMu (l :?=: (Id ii :& Id x)) i) 
+>   pattern IMU l ii x i  = C (IMu (l :?=: (Id ii :& Id x)) i)
 >   pattern IVAR i        = CON (PAIR IVARN     (PAIR i VOID))
 >   pattern IPI s t       = CON (PAIR IPIN      (PAIR s (PAIR t VOID)))
 >   pattern IFPI s t      = CON (PAIR IFPIN     (PAIR s (PAIR t VOID)))
@@ -99,6 +107,14 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >       (kword KwIMu <+> pretty ii ArgSize <+> pretty d ArgSize <+> pretty i ArgSize)
 >       AppSize
 
+> import -> CanReactive where
+>   reactify (IMu (Just l   :?=: _) i)  = reactify l >> reactify i
+>   reactify (IMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
+>       reactKword KwIMu
+>       reactify ii
+>       reactify d
+>       reactify i
+
 > import -> CanTraverse where
 >   traverse f (IMu l i)     = (|IMu (traverse f l) (f i)|)
 
@@ -107,38 +123,38 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 > import -> Coerce where
 >   -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
->   coerce (IMu (Just (l0,l1) :?=: 
->               (Id (iI0,iI1) :& Id (d0,d1))) (i0,i1)) q (CON x) = 
+>   coerce (IMu (Just (l0,l1) :?=:
+>               (Id (iI0,iI1) :& Id (d0,d1))) (i0,i1)) q (CON x) =
 >     let ql  = CON $ q $$ Fst
 >         qiI = CON $ q $$ Snd $$ Fst
 >         qi  = CON $ q $$ Snd $$ Snd $$ Snd
 >         qd = CON $ q $$ Snd $$ Snd $$ Fst
->         typ = 
+>         typ =
 >           PI SET $ L $ "iI" :. [.iI.
->            ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $  
->             ARR (NV iI) $  
+>            ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
+>             ARR (NV iI) $
 >              ARR (ARR (NV iI) ANCHORS) SET ]
 >         vap =
 >           L $ "iI" :. [.iI.
->            L $ "d" :. [.d. 
->             L $ "i" :. [.i. 
->              L $ "l" :. [.l. N $ 
+>            L $ "d" :. [.d.
+>             L $ "i" :. [.i.
+>              L $ "l" :. [.l. N $
 >               idescOp :@ [ NV iI , N (V d :$ A (NV i))
->                          , L $ "j" :. [.j. 
+>                          , L $ "j" :. [.j.
 >                             IMU (|(NV l)|) (NV iI) (NV d) (NV j)]
 >                          ] ] ] ] ]
->     in Right . CON $ 
->       coe @@ [ idescOp @@ [  iI0, d0 $$ A i0 
->                           ,  L $ "i" :. [.i. 
+>     in Right . CON $
+>       coe @@ [ idescOp @@ [  iI0, d0 $$ A i0
+>                           ,  L $ "i" :. [.i.
 >                               IMU (|(l0 -$ [])|) (iI0 -$ []) (d0 -$ []) (NV i)
->                              ] 
->                           ] 
->              , idescOp @@ [  iI1, d1 $$ A i1 
->                           ,  L $ "i" :. [.i. 
+>                              ]
+>                           ]
+>              , idescOp @@ [  iI1, d1 $$ A i1
+>                           ,  L $ "i" :. [.i.
 >                               IMU (|(l1 -$ [])|) (iI1 -$ []) (d1 -$ []) (NV i)
 >                              ]
->                           ] 
->              , CON $ pval refl $$ A typ $$ A vap $$ Out 
+>                           ]
+>              , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                                $$ A iI0 $$ A iI1 $$ A qiI
 >                                $$ A d0 $$ A d1 $$ A qd
 >                                $$ A i0 $$ A i1 $$ A qi
@@ -148,26 +164,26 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >     let qiI = CON $ q $$ Fst
 >         qi  = CON $ q $$ Snd $$ Snd
 >         qd = CON $ q $$ Snd $$ Fst
->         typ = 
+>         typ =
 >           PI SET $ L $ "iI" :. [.iI.
->            ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $  
+>            ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
 >             ARR (NV iI) SET ]
 >         vap =
 >           L $ "iI" :. [.iI.
->            L $ "d" :. [.d. 
->             L $ "i" :. [.i. N $ 
+>            L $ "d" :. [.d.
+>             L $ "i" :. [.i. N $
 >               idescOp :@ [ NV iI , N (V d :$ A (NV i))
->                          , L $ "j" :. [.j. 
+>                          , L $ "j" :. [.j.
 >                             IMU Nothing (NV iI) (NV d) (NV j)]
->                          ] ] ] ] 
->     in Right . CON $ 
+>                          ] ] ] ]
+>     in Right . CON $
 >       coe @@ [ idescOp @@ [ iI0 , d0 $$ A i0
->                           , L $ "i" :. [.i. 
->                               IMU Nothing (iI0 -$ []) (d0 -$ []) (NV i) ] ] 
+>                           , L $ "i" :. [.i.
+>                               IMU Nothing (iI0 -$ []) (d0 -$ []) (NV i) ] ]
 >              , idescOp @@ [ iI1 , d1 $$ A i1
->                           , L $ "i" :. [.i. 
->                               IMU Nothing (iI1 -$ []) (d1 -$ []) (NV i) ] ] 
->              , CON $ pval refl $$ A typ $$ A vap $$ Out 
+>                           , L $ "i" :. [.i.
+>                               IMU Nothing (iI1 -$ []) (d1 -$ []) (NV i) ] ]
+>              , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                                $$ A iI0 $$ A iI1 $$ A qiI
 >                                $$ A d0 $$ A d1 $$ A qd
 >                                $$ A i0 $$ A i1 $$ A qi
@@ -177,9 +193,9 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 \subsection{Plugging Eliminators in}
 
 > import -> ElimTyRules where
->   elimTy chev (_ :<: (IMu tt@(_ :?=: (Id ii :& Id x)) i)) Out = 
->     return (Out, 
->       idescOp @@ [  ii , x $$ A i 
+>   elimTy chev (_ :<: (IMu tt@(_ :?=: (Id ii :& Id x)) i)) Out =
+>     return (Out,
+>       idescOp @@ [  ii , x $$ A i
 >                  ,  L $ "i" :. [.i. C (IMu (fmap (-$ []) tt) (NV i)) ] ])
 
 > import -> ElimComputation where
@@ -189,6 +205,8 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 > import -> ElimTraverse where
 
 > import -> ElimPretty where
+
+> import -> ElimReactive where
 
 \subsection{Plugging Operators in}
 
@@ -218,36 +236,36 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >         [ {-VAR-} oTup $ \i -> OLam $ \_P -> ORet $ _P $$ A i
 >         , {-CONST-} oTup $ \_A -> OLam $ \_P -> ORet _A
 >         , {-PI-} oTup $ \_S _T -> OLam $ \_P -> ORet $
->                    PI _S $ L $ "s" :. [.s. N $ 
->                      idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ]]   
->         , {-FPI-} oTup $ \_E _Df -> OLam $ \_P -> ORet $ 
->                     branchesOp @@  
->                       [  _E 
->                       ,  (L $ "e" :. [.e. N $  
+>                    PI _S $ L $ "s" :. [.s. N $
+>                      idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ]]
+>         , {-FPI-} oTup $ \_E _Df -> OLam $ \_P -> ORet $
+>                     branchesOp @@
+>                       [  _E
+>                       ,  (L $ "e" :. [.e. N $
 >                             idescOp :@  [  _I -$ []
 >                                         ,  _Df -$ [NV e]
->                                         ,  _P -$ [] 
->                                         ]]) 
+>                                         ,  _P -$ []
+>                                         ]])
 >                       ]
 >         , {-SIGMA-} oTup $ \_S _T -> OLam $ \_P -> ORet $
->                       SIGMA _S $ L $ (fortran _T) :. [.s. N $ 
->                         idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ]]  
+>                       SIGMA _S $ L $ (fortran _T) :. [.s. N $
+>                         idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ]]
 >         , {-FSIGMA-} oTup $ \_E _Ds -> OLam $ \_P -> ORet $
 >                        SIGMA (ENUMT _E) (L $ (fortran _Ds) :. [.s. N $
 >                          idescOp :@ [ _I -$ []
->                                     , N $ switchOp :@ 
+>                                     , N $ switchOp :@
 >                                             [ _E -$ []
 >                                             , NV s
 >                                             , LK (idesc -$ [ _I -$ []])
 >                                             , _Ds -$ [] ]
 >                                     , _P -$ [] ] ])
 >         , {-PROD-} oTup $ \u _D _D' -> OLam $ \_P -> ORet $
->                      SIGMA (idescOp @@ [_I, _D, _P]) $ L $ (unTag u) :. 
+>                      SIGMA (idescOp @@ [_I, _D, _P]) $ L $ (unTag u) :.
 >                         (N (idescOp :@ [_I -$ [], _D' -$ [], _P -$ []]))
 >         ]
 >     , opSimp = \_ _ -> empty
 >     } where
->       idOpTy = 
+>       idOpTy =
 >        "I" :<: SET :-: \iI ->
 >        "d" :<: (idesc $$ A iI) :-: \d ->
 >        "X" :<: ARR iI SET :-: \x ->
@@ -259,7 +277,7 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >     , opArity = 4
 >     , opTyTel = iboxOpTy
 >     , opRun = runOpTree $ OLam $ \_I -> oData  {- iboxOpRun -}
->         [ {-VAR-} oTup $ \i -> oLams $ \() v -> ORet $ 
+>         [ {-VAR-} oTup $ \i -> oLams $ \() v -> ORet $
 >                     IVAR (PAIR i v)
 >         , {-CONST-} oTup $ \() -> oLams $ \() () -> ORet $
 >                        ICONST (PRF TRIVIAL)
@@ -267,12 +285,12 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >                    IPI _S (L $ "s" :. [.s. N $
 >                      iboxOp :@  [  _I -$ [], _T -$ [NV s]
 >                                 ,  _P -$ [], f -$ [NV s]] ])
->         , {-FPI-} oTup $ \_E _Df -> oLams $ \_P v -> ORet $ 
->                     IFPI _E (L $ "e" :. [.e. N $ 
+>         , {-FPI-} oTup $ \_E _Df -> oLams $ \_P v -> ORet $
+>                     IFPI _E (L $ "e" :. [.e. N $
 >                       iboxOp :@  [  _I -$ [] , _Df -$ [NV e], _P -$ []
->                                  ,  N $ switchOp :@ 
->                                           [  _E -$ [] , NV e  
->                                           ,  L $ "f" :. [.f. N $  
+>                                  ,  N $ switchOp :@
+>                                           [  _E -$ [] , NV e
+>                                           ,  L $ "f" :. [.f. N $
 >                                                idescOp :@  [  _I -$ []
 >                                                            ,  _Df -$ [NV f]
 >                                                            , _P -$ [] ] ]
@@ -285,7 +303,7 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >                                     , e
 >                                     , LK (idesc $$ A _I)
 >                                     , _Ds ]
->                       , _P 
+>                       , _P
 >                       , d ]
 >         , {-PROD-} oTup $ \u _D _D' -> OLam $ \_P -> OPr $ oLams $ \d d' -> ORet $
 >             IPROD  (TAG (unTag u ++ "h")) (iboxOp @@ [_I, _D, _P, d])
@@ -293,13 +311,13 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >         ]
 >     , opSimp = \_ _ -> empty
 >     } where
->       iboxOpTy = 
+>       iboxOpTy =
 >         "I" :<: SET                        :-: \ _I ->
 >         "D" :<: (idesc $$ A _I)  :-: \ _D ->
 >         "P" :<: ARR _I SET                 :-: \ _P ->
 >         "v" :<: idescOp @@ [_I,_D,_P]      :-: \v ->
 >         Target $ idesc $$ A (SIGMA _I (L $ "i" :. [.i. _P -$ [NV i]]))
-          
+
 >   imapBoxOp :: Op
 >   imapBoxOp = Op
 >     { opName = "imapBox"
@@ -309,47 +327,47 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >         [ {-VAR-} oTup $ \i -> oLams $ \() () p v -> ORet $ p $$ A (PAIR i v)
 >         , {-CONST-} oTup $ \() -> oLams $ \() () () () -> ORet $ VOID
 >         , {-PI-} oTup $ \() _T -> oLams $ \_X _P p f -> ORet $
->             L $ "s" :. [.s. N $ 
+>             L $ "s" :. [.s. N $
 >               imapBoxOp :@  [  _I -$ [], _T -$ [NV s]
 >                             ,  _X -$ [] ,_P -$ [], p -$ [], f -$ [NV s] ] ]
->         , {-FPI-} oTup $ \() _Df -> oLams $ \_X _P p v -> ORet $ 
->             L $ "s" :. [.s. N $ 
+>         , {-FPI-} oTup $ \() _Df -> oLams $ \_X _P p v -> ORet $
+>             L $ "s" :. [.s. N $
 >               imapBoxOp :@  [  _I -$ [], _Df -$ [NV s]
 >                             ,  _X -$ [] ,_P -$ [], p -$ [], v -$ [NV s] ] ]
 >         , {-SIGMA-} oTup $ \() _T -> oLams $ \_X _P p -> OPr $ oLams $ \s d -> ORet $
 >             imapBoxOp @@ [  _I, _T $$ A s, _X, _P, p, d]
 >         , {-FSIGMA-} oTup $ \_E _Ds -> oLams $ \_X _P p -> OPr $ oLams $ \e d -> ORet $
 >             imapBoxOp @@ [  _I
->                          ,  switchOp @@ [  _E, e 
+>                          ,  switchOp @@ [  _E, e
 >                                         ,  LK (idesc $$ A _I)
 >                                         ,  _Ds
 >                                         ]
 >                          ,  _X, _P, p, d ]
 >         , {-PROD-} oTup $ \() _D _D' -> oLams $ \_X _P p -> OPr $ oLams $ \d d' -> ORet $
->             PAIR (imapBoxOp @@ [_I, _D, _X, _P, p, d]) 
+>             PAIR (imapBoxOp @@ [_I, _D, _X, _P, p, d])
 >                   (imapBoxOp @@ [_I, _D', _X, _P, p, d'])
 >         ]
 >     , opSimp = \_ _ -> empty
 >     } where
 >       imapBoxOpTy =
->         "I" :<: SET :-: \_I ->  
+>         "I" :<: SET :-: \_I ->
 >         "D" :<: (idesc $$ A _I) :-: \ _D ->
->         "X" :<: ARR _I SET :-: \ _X -> 
+>         "X" :<: ARR _I SET :-: \ _X ->
 >         let _IX = SIGMA _I (L $ "i" :. [.i. _X -$ [NV i] ]) in
 >         "P" :<: ARR _IX SET :-: \ _P ->
 >         "p" :<: (PI _IX $ L $ "ix" :. [.ix. _P -$ [ NV ix ] ] ) :-: \ _ ->
 >         "v" :<: (idescOp @@ [_I,_D,_X]) :-: \v ->
 >          Target (idescOp @@ [_IX, iboxOp @@ [_I,_D,_X,v], _P])
 
->   iinductionOpMethodType _I _D _P =  
+>   iinductionOpMethodType _I _D _P =
 >       PI _I $ L $ "i" :. [.i.
 >        let _It = _I -$ []
->            mud = L $ "j" :. [.j. IMU Nothing _It (_D -$ []) (NV j) ] 
+>            mud = L $ "j" :. [.j. IMU Nothing _It (_D -$ []) (NV j) ]
 >        in PI (N (idescOp :@ [ _It, _D -$ [ NV i ], mud])) $ L $ "x" :. [.x.
 >            ARR (N (idescOp :@ [ SIGMA _It mud
 >                               , N (iboxOp :@ [_It, _D -$ [ NV i ], mud, NV x])
 >                               , _P -$ [] ]))
->             (_P -$ [ PAIR (NV i) (CON (NV x)) ]) ] ] 
+>             (_P -$ [ PAIR (NV i) (CON (NV x)) ]) ] ]
 
 >   iinductionOp :: Op
 >   iinductionOp = Op
@@ -357,25 +375,25 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >     , opArity = 6
 >     , opTyTel = iinductionOpTy
 >     , opRun = runOpTree $ oLams $ \_I _D i -> OCon $ oLams $ \v _P p -> ORet $
->         p $$ A i $$ A v 
->           $$ A (imapBoxOp @@ [ _I, _D $$ A i 
->                              , (L $ "i" :. [.i.   
+>         p $$ A i $$ A v
+>           $$ A (imapBoxOp @@ [ _I, _D $$ A i
+>                              , (L $ "i" :. [.i.
 >                                  IMU Nothing (_I -$ []) (_D -$ []) (NV i)])
 >                              , _P
->                              , L $ "ix" :. [.ix. N $  
->                                 iinductionOp :@ 
+>                              , L $ "ix" :. [.ix. N $
+>                                 iinductionOp :@
 >                                   [ _I -$ [], _D -$ []
 >                                   , N (V ix :$ Fst), N (V ix :$ Snd)
 >                                   , _P -$ [], p -$ [] ] ]
->                              , v]) 
+>                              , v])
 >     , opSimp = \_ _ -> empty
 >     } where
->       iinductionOpTy = 
+>       iinductionOpTy =
 >         "I" :<: SET :-: \_I ->
 >         "D" :<: ARR _I (idesc $$ A _I) :-: \_D ->
 >         "i" :<: _I :-: \i ->
 >         "v" :<: IMU Nothing _I _D i :-: \v ->
->         "P" :<: (ARR (SIGMA _I (L $ "i" :. [.i.  
+>         "P" :<: (ARR (SIGMA _I (L $ "i" :. [.i.
 >                   IMU Nothing (_I -$ []) (_D -$ []) (NV i) ])) SET) :-: \_P ->
 >         "p" :<: (iinductionOpMethodType _I _D _P) :-: \p ->
 >         Target (_P $$ A (PAIR i v))
@@ -402,13 +420,13 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 > import -> DistillRules where
 
->     distill es (IMU l _I s i :>: CON (PAIR t x)) 
+>     distill es (IMU l _I s i :>: CON (PAIR t x))
 >       | Just (e, f) <- sumilike _I (s $$ A i) = do
 >         m   :=>: tv  <- distill es (ENUMT e :>: t)
->         as  :=>: xv  <- 
+>         as  :=>: xv  <-
 >           distill es (idescOp @@ [  _I,f tv
->                                  ,  L $ "i" :. [.i. 
->                                       IMU (fmap (-$ []) l) 
+>                                  ,  L $ "i" :. [.i.
+>                                       IMU (fmap (-$ []) l)
 >                                           (_I -$ []) (s -$ []) (NV i)]
 >                                  ] :>: x)
 >         case m of
@@ -436,7 +454,11 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 > import -> DInTmPretty where
 
+> import -> DInTmReactive where
+
 > import -> Pretty where
+
+> import -> Reactive where
 
 \subsection{Adding Primitive references in Cochon}
 
@@ -457,21 +479,21 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >                   (CONSE (TAG "fpiD")
 >                    (CONSE (TAG "sigmaD")
 >                     (CONSE (TAG "fsigmaD")
->                      (CONSE (TAG "prodD") 
+>                      (CONSE (TAG "prodD")
 >                       NILE)))))))
 
 >   cases :: INTM -> INTM
->   cases _I = 
->    {- varD: -}    (PAIR (ISIGMA _I (LK $ ICONST UNIT)) 
+>   cases _I =
+>    {- varD: -}    (PAIR (ISIGMA _I (LK $ ICONST UNIT))
 >    {- constD: -}  (PAIR (ISIGMA SET (LK $ ICONST UNIT))
->    {- piD: -}     (PAIR (ISIGMA SET (L $ "S" :. [._S.  
->                     (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID)) 
+>    {- piD: -}     (PAIR (ISIGMA SET (L $ "S" :. [._S.
+>                     (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID))
 >                            (ICONST UNIT))]))
 >    {- fpiD: -}    (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. [._E.
 >                     (IPROD (TAG "T") (IPI (ENUMT (NV _E)) (LK $ IVAR VOID))
 >                            (ICONST UNIT))]))
->    {- sigmaD: -}  (PAIR (ISIGMA SET (L $ "S" :. [._S.  
->                     (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID)) 
+>    {- sigmaD: -}  (PAIR (ISIGMA SET (L $ "S" :. [._S.
+>                     (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID))
 >                            (ICONST UNIT))]))
 >    {- fsigmaD: -} (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. [._E.
 >                     (IPROD (TAG "T") (IFPI (NV _E) (LK $ IVAR VOID))
@@ -480,26 +502,26 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >                     VOID)))))))
 
 >   idescFakeREF :: REF
->   idescFakeREF = [("Primitive", 0), ("IDesc", 0)] 
+>   idescFakeREF = [("Primitive", 0), ("IDesc", 0)]
 >                    := (FAKE :<: ARR SET (ARR UNIT SET))
 >   idesc :: VAL
->   idesc = L $ "I" :. [._I. 
->             IMU (Just (L $ "i" :. [.i. ANCHOR  (TAG "IDesc") 
+>   idesc = L $ "I" :. [._I.
+>             IMU (Just (L $ "i" :. [.i. ANCHOR  (TAG "IDesc")
 >                                                (ARR SET SET)
->                                                (ALLOWEDCONS  SET 
+>                                                (ALLOWEDCONS  SET
 >                                                              (LK SET)
 >                                                              (N (P refl :$ A SET :$ A (ARR SET SET)))
->                                                              (NV _I) 
+>                                                              (NV _I)
 >                                                              ALLOWEDEPSILON)]))
 >                  UNIT (inIDesc -$ [ NV _I]) VOID ]
 >
 >   idescREF :: REF
->   idescREF = [("Primitive", 0), ("IDesc", 0)] 
+>   idescREF = [("Primitive", 0), ("IDesc", 0)]
 >                := (DEFN idesc :<: ARR SET SET)
 >
 >   idescDREF :: REF
->   idescDREF = [("Primitive", 0), ("IDescD", 0)] 
->                 := (DEFN inIDesc 
+>   idescDREF = [("Primitive", 0), ("IDescD", 0)]
+>                 := (DEFN inIDesc
 >                      :<: ARR SET (ARR UNIT (idesc $$ A UNIT)))
 
 >   idescConstREF :: REF
@@ -509,12 +531,12 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >   idescBranchesREF :: REF
 >   idescBranchesREF = [("Primitive", 0), ("IDescBranches", 0)]
 >                       := (DEFN (L $ "I" :. [._I. cases (NV _I)])) :<:
->                            PI SET (L $ "I" :. [._I. 
->                              N $ branchesOp :@ [ constructors, 
+>                            PI SET (L $ "I" :. [._I.
+>                              N $ branchesOp :@ [ constructors,
 >                                                  LK $ N (P idescREF :$ A UNIT)]])
 
 >   sumilike :: VAL -> VAL -> Maybe (VAL, VAL -> VAL)
->   sumilike _I (IFSIGMA e b)  = 
+>   sumilike _I (IFSIGMA e b)  =
 >       Just (e, \t -> switchOp @@ [ e , t , LK (idesc $$ A _I), b ])
 >   sumilike _ _               = Nothing
 

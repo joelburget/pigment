@@ -51,7 +51,7 @@
 
 > import Haste hiding (fromString)
 > import Lens.Family2
-> import React hiding (nest)
+> import React hiding (nest, key)
 > import Data.String (fromString)
 
 %endif
@@ -208,7 +208,6 @@ The |infoWhatIs| command displays a term in various representations.
 >         ])
 >   )
 
-
 Model
 =====
 
@@ -279,48 +278,74 @@ Should this be part of a transformer stack including Maybe and IO?
 > resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
 
-> reactEmpty :: InteractionReact
-> reactEmpty = span_ (return ())
-
-> renderReact :: Entries -> Name -> ProofState InteractionReact
+> renderReact :: Entries -> Name -> ProofState PureReact
 > renderReact aus me = do
 >     es <- replaceEntriesAbove B0
 >     cs <- putBelowCursor F0
 >     case (es, cs) of
 >         (B0, F0) -> reactEmptyTip
 >         _ -> do
->             d <- reactEs reactEmpty (es <>> F0)
+>             d <- reactEs "" (es <>> F0)
 >             d' <- case cs of
 >                 F0 -> return d
 >                 _ -> do
->                     d'' <- reactEs reactEmpty cs
+>                     d'' <- reactEs "" cs
 >                     return (d >> "---" >> d'')
 >             tip <- reactTip
 >             putEntriesAbove es
 >             putBelowCursor cs
 >             return (d' >> tip)
 
-> reactEmptyTip :: ProofState InteractionReact
+> reactEmptyTip :: ProofState PureReact
 > reactEmptyTip = do
 >     tip <- getDevTip
 >     case tip of
->         Module -> return reactEmpty
+>         Module -> return ""
 >         _ -> do
 >             tip' <- reactTip
 >             return (reactKword KwDefn >> tip')
 
-> reactKword :: Keyword -> InteractionReact
-> reactKword _ = "TODO(joel) reactKword"
+> reactKword :: Keyword -> PureReact
+> reactKword = fromString . key
 
-> reactEs :: InteractionReact
+> reactEs :: PureReact
 >         -> Fwd (Entry Bwd)
->         -> ProofState InteractionReact
-> reactEs _ _ = return "TODO(joel) reactEs"
+>         -> ProofState PureReact
+> reactEs d F0 = return d
+> reactEs d (e :> es) = do
+>     putEntryAbove e
+>     ed <- reactE e
+>     reactEs (d >> ed) es
 
-> reactE :: Entry Bwd -> ProofState InteractionReact
-> reactE _ = return "TODO(joel) reactE"
+The |reactBKind| function reactifies a |ParamKind| if supplied
+with an element representing its name and type.
 
-> reactTip :: ProofState InteractionReact
+> reactBKind :: ParamKind -> PureReact -> PureReact
+> reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
+> reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
+> reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
+
+> reactE :: Entry Bwd -> ProofState PureReact
+> reactE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
+>     ty' <- bquoteHere ty
+>     tyd <- reactHereAt (SET :>: ty')
+>     return $ reactBKind k $ do
+>         fromString x
+>         maybe "" (\x -> "[[" >> fromString x >> "]]") anchor
+>         reactKword KwAsc
+>         tyd
+
+
+> reactE e = do
+>     goIn
+>     -- d <- reactPS aus me XXX
+>     goOut
+>     return $ do
+>         fromString (fst (entryLastName e))
+>         maybe "" (\x -> "[[" >> fromString x >> "]]") $ entryAnchor e
+>         reactKword KwSemi
+
+> reactTip :: ProofState PureReact
 > reactTip = return "TODO(joel) reactTip"
 
 The |reactProofState| command generates a reactified representation

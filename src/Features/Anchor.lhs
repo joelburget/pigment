@@ -49,7 +49,7 @@
 >     pattern ANCHOR u t ts  = C (Anchor u t ts)
 >     pattern ALLOWEDBY t    = C (AllowedBy t)
 >     pattern ALLOWEDEPSILON = C AllowedEpsilon
->     pattern ALLOWEDCONS _S _T q s ts = C (AllowedCons _S _T q s ts) 
+>     pattern ALLOWEDCONS _S _T q s ts = C (AllowedCons _S _T q s ts)
 
 > import -> CanDisplayPats where
 >    pattern DANCHOR s args = DAnchor s args
@@ -58,6 +58,12 @@
 >     pretty (Anchor (DTAG u) t ts) = wrapDoc (text u <+> pretty ts ArgSize) ArgSize
 >     pretty AllowedEpsilon = const empty
 >     pretty (AllowedCons _ _ _ s ts) = wrapDoc (pretty s ArgSize <+> pretty ts ArgSize) ArgSize
+>     {- Not yet implemented -}
+
+> import -> CanReactive where
+>     reactify (Anchor (DTAG u) t ts) = text_ u >> reactive ts
+>     reactify AllowedEpsilon = ""
+>     reactify (AllowedCons _ _ _ s ts) = reactive s >> reactive ts
 >     {- Not yet implemented -}
 
 > import -> CanTraverse where
@@ -123,7 +129,7 @@
 \subsection{Extending the display language}
 
 > import -> DInTmConstructors where
->   DAnchor :: String -> DInTm p x -> DInTm p x 
+>   DAnchor :: String -> DInTm p x -> DInTm p x
 
 > import -> DInTmTraverse where
 >   traverseDTIN f (DAnchor s args) = (|(DAnchor s) (traverseDTIN f args)|)
@@ -150,7 +156,7 @@
 \subsection{Extending the elaborator and distiller}
 
 > import -> MakeElabRules where
- 
+
 > import -> DistillRules where
 >   distill es (ANCHORS :>: x@(ANCHOR (TAG u) t ts)) = do
 >     (displayTs :=>: _) <- distill es (ALLOWEDBY (evTm t) :>: ts)
