@@ -262,7 +262,9 @@ eliminators for types with \(\eta\)-laws go here.
 > data Elim :: * -> * where
 >   A     :: t -> Elim t                             -- application
 >   Out   :: Elim t                                  -- unpacks Con
->   import <- ElimConstructors
+>   Call   :: t -> Elim t
+>   Fst    :: Elim t
+>   Snd    :: Elim t
 >   deriving (Show, Eq)
 
 Just as |Con| was packing things up, we define here |Out| to unpack

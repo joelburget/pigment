@@ -63,10 +63,6 @@
 >   --   | isEmpty s  = wrapDoc t AppSize
 >   --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
-> import -> ElimConstructors where
->   Fst    :: Elim t
->   Snd    :: Elim t
-
 > import -> ElimPretty where
 >   pretty Fst = const (kword KwFst)
 >   pretty Snd = const (kword KwSnd)

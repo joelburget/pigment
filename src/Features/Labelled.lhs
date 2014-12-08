@@ -8,9 +8,6 @@
 
 %endif
 
-> import -> ElimConstructors where
->   Call   :: t -> Elim t
-
 > import -> ElimPretty where
 >   pretty (Call _) = const (kword KwCall)
 
