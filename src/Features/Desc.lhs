@@ -12,37 +12,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanPats where
->   pattern IDN     = ZE
->   pattern CONSTN  = SU ZE
->   pattern SUMN    = SU (SU ZE)
->   pattern PRODN   = SU (SU (SU ZE))
->   pattern SIGMAN  = SU (SU (SU (SU ZE)))
->   pattern PIN     = SU (SU (SU (SU (SU ZE))))
-
->   pattern MU l x        = C (Mu (l :?=: Id x))
->   pattern IDD           = CON (PAIR IDN     VOID)
->   pattern CONSTD x      = CON (PAIR CONSTN  (PAIR x VOID))
->   pattern SUMD e b      = CON (PAIR SUMN    (PAIR e (PAIR b VOID)))
->   pattern PRODD u d d'  = CON (PAIR PRODN   (PAIR u (PAIR d (PAIR d' VOID))))
->   pattern SIGMAD s t    = CON (PAIR SIGMAN  (PAIR s (PAIR t VOID)))
->   pattern PID s t       = CON (PAIR PIN     (PAIR s (PAIR t VOID)))
-
-> import -> CanDisplayPats where
->   pattern DMU l x        = DC (Mu (l :?=: Id x))
->   pattern DIDD           = DCON (DPAIR  DZE
->                                         DVOID)
->   pattern DCONSTD x      = DCON (DPAIR  (DSU DZE)
->                                         (DPAIR x DVOID))
->   pattern DSUMD e b      = DCON (DPAIR  (DSU (DSU DZE))
->                                         (DPAIR e (DPAIR b DVOID)))
->   pattern DPRODD u d d'  = DCON (DPAIR  (DSU (DSU (DSU DZE)))
->                                         (DPAIR u (DPAIR d (DPAIR d' DVOID))))
->   pattern DSIGMAD s t    = DCON (DPAIR  (DSU (DSU (DSU (DSU DZE))))
->                                         (DPAIR s (DPAIR t DVOID)))
->   pattern DPID s t       = DCON (DPAIR  (DSU (DSU (DSU (DSU (DSU DZE)))))
->                                         (DPAIR s (DPAIR t DVOID)))
-
 > import -> CanPretty where
 >   pretty (Mu (Just l   :?=: _)) = pretty l
 >   pretty (Mu (Nothing  :?=: Id t))  = wrapDoc

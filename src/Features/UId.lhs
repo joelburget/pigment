@@ -9,10 +9,6 @@
 %endif
 
 
-> import -> CanDisplayPats where
->   pattern DUID    = DC UId
->   pattern DTAG s  = DTag s []
-
 > import -> CanTraverse where
 >   traverse f UId          = (|UId|)
 >   traverse f (Tag s)      = (|(Tag s)|)

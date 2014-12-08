@@ -26,19 +26,6 @@ Elim forms inherited from elsewhere
 >   halfZip  Prop      Prop      = Just Prop
 >   halfZip  (Prf p0)  (Prf p1)  = Just (Prf (p0, p1))
 
-> import -> CanDisplayPats where
->   pattern DPROP        = DC Prop
->   pattern DPRF p       = DC (Prf p)
->   pattern DALL p q     = DC (All p q)
->   pattern DIMP p q     = DALL (DPRF p) (DL (DK q))
->   pattern DALLV x s p  = DALL s (DLAV x p)
->   pattern DAND p q     = DC (And p q)
->   pattern DTRIVIAL     = DC Trivial
->   pattern DABSURD      = DC Absurd
->   pattern DBOX p       = DC (Box p)
->   pattern DINH ty      = DC (Inh ty)
->   pattern DWIT t       = DC (Wit t)
-
 > import -> CanPretty where
 >   pretty Prop           = const (kword KwProp)
 >   pretty (Prf p)        = wrapDoc (kword KwPrf <+> pretty p AndSize) AppSize

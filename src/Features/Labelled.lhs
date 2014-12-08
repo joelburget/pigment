@@ -11,10 +11,6 @@
 > import -> ElimConstructors where
 >   Call   :: t -> Elim t
 
-> import -> CanDisplayPats where
->   pattern DLABEL l t = DC (Label l t)
->   pattern DLRET t    = DC (LRet t)
-
 > import -> CanTraverse where
 >   traverse f (Label l t) = (| Label (f l) (f t) |)
 >   traverse f (LRet t)    = (| LRet (f t) |)

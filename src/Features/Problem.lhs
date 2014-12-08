@@ -11,8 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanDisplayPats where
-
 > import -> CanPretty where
 
 > import -> CanReactive where

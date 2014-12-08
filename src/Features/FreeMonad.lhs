@@ -8,11 +8,6 @@
 
 %endif
 
-> import -> CanDisplayPats where
->   pattern DMONAD d x = DC (Monad d x)
->   pattern DRETURN x  = DC (Return x)
->   pattern DCOMPOSITE t = DC (Composite t)
-
 
 > import -> CanTraverse where
 >   traverse f (Monad d x)   = (| Monad (f d) (f x) |)

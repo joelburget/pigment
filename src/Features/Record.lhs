@@ -12,12 +12,6 @@
 \subsection{Plugging in canonical forms}
 
 
-> import -> CanDisplayPats where
->   pattern DRSIG         = DC RSig
->   pattern DREMPTY       = DC REmpty
->   pattern DRCONS s i t  = DC (RCons s i t)
->   pattern DRECORD l s   = DC (Record (l :?=: Id s))
-
 > import -> CanPretty where
 >   pretty RSig              =  const $ text "RSignature"
 >   pretty REmpty            =  const $ text "empty"

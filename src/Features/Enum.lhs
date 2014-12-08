@@ -50,14 +50,6 @@
 >   ("EnumConstructors", enumConstructorsREF) :
 >   ("EnumBranches", enumBranchesREF) :
 
-
-> import -> CanDisplayPats where
->   pattern DENUMT e    = DC (EnumT e)
->   pattern DNILE       = DCON (DPAIR {-(DTAG "nil")-} DZE DVOID)
->   pattern DCONSE t e  = DCON (DPAIR {- (DTAG "cons") -} (DSU DZE) (DPAIR t (DPAIR e DVOID)))
->   pattern DZE         = DC Ze
->   pattern DSU n       = DC (Su n)
-
 > import -> CanTraverse where
 >   traverse f (EnumT e)    = (|EnumT (f e)|)
 >   traverse f Ze           = (|Ze|)

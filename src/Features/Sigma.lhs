@@ -83,14 +83,6 @@
 >   pretty Fst = const (kword KwFst)
 >   pretty Snd = const (kword KwSnd)
 
-> import -> CanDisplayPats where
->   pattern DSIGMA p q = DC (Sigma p q)
->   pattern DPAIR  p q = DC (Pair p q)
->   pattern DUNIT      = DC Unit
->   pattern DVOID      = DC Void
->   pattern DTimes x y = Sigma x (DL (DK y))
->   pattern DTIMES x y = DC (DTimes x y)
-
 
 > import -> ElimComputation where
 >   PAIR x y $$ Fst = x

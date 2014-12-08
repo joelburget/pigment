@@ -209,7 +209,72 @@ places.
 > pattern DPIV x s t  = DPI s (DLAV x t)
 > pattern DLK t       = DL (DK t)
 > pattern DTY ty tm   = DType ty ::$ [A tm]
-> import <- CanDisplayPats
+> pattern DANCHOR s args = DAnchor s args
+> pattern DMU l x        = DC (Mu (l :?=: Id x))
+> pattern DIDD           = DCON (DPAIR  DZE
+>                                       DVOID)
+> pattern DCONSTD x      = DCON (DPAIR  (DSU DZE)
+>                                       (DPAIR x DVOID))
+> pattern DSUMD e b      = DCON (DPAIR  (DSU (DSU DZE))
+>                                       (DPAIR e (DPAIR b DVOID)))
+> pattern DPRODD u d d'  = DCON (DPAIR  (DSU (DSU (DSU DZE)))
+>                                       (DPAIR u (DPAIR d (DPAIR d' DVOID))))
+> pattern DSIGMAD s t    = DCON (DPAIR  (DSU (DSU (DSU (DSU DZE))))
+>                                       (DPAIR s (DPAIR t DVOID)))
+> pattern DPID s t       = DCON (DPAIR  (DSU (DSU (DSU (DSU (DSU DZE)))))
+>                                       (DPAIR s (DPAIR t DVOID)))
+> pattern DENUMT e    = DC (EnumT e)
+> pattern DNILE       = DCON (DPAIR {-(DTAG "nil")-} DZE DVOID)
+> pattern DCONSE t e  = DCON (DPAIR {- (DTAG "cons") -} (DSU DZE) (DPAIR t (DPAIR e DVOID)))
+> pattern DZE         = DC Ze
+> pattern DSU n       = DC (Su n)
+> pattern DMONAD d x = DC (Monad d x)
+> pattern DRETURN x  = DC (Return x)
+> pattern DCOMPOSITE t = DC (Composite t)
+> pattern DIVARN     = DZE
+> pattern DICONSTN   = DSU DZE
+> pattern DIPIN      = DSU (DSU DZE)
+> pattern DIFPIN     = DSU (DSU (DSU DZE))
+> pattern DISIGMAN   = DSU (DSU (DSU (DSU DZE)))
+> pattern DIFSIGMAN  = DSU (DSU (DSU (DSU (DSU DZE))))
+> pattern DIPRODN    = DSU (DSU (DSU (DSU (DSU (DSU DZE)))))
+> pattern DIMU l ii x i  = DIMu (l :?=: (Id ii :& Id x)) i
+> pattern DIVAR i        = DCON (DPAIR DIVARN     (DPAIR i DVOID))
+> pattern DIPI s t       = DCON (DPAIR DIPIN      (DPAIR s (DPAIR t DVOID)))
+> pattern DIFPI s t      = DCON (DPAIR DIFPIN     (DPAIR s (DPAIR t DVOID)))
+> pattern DISIGMA s t    = DCON (DPAIR DISIGMAN   (DPAIR s (DPAIR t DVOID)))
+> pattern DIFSIGMA s t   = DCON (DPAIR DIFSIGMAN  (DPAIR s (DPAIR t DVOID)))
+> pattern DICONST p      = DCON (DPAIR DICONSTN   (DPAIR p DVOID))
+> pattern DIPROD u x y   = DCON (DPAIR DIPRODN    (DPAIR u (DPAIR x (DPAIR y DVOID))))
+> pattern DLABEL l t = DC (Label l t)
+> pattern DLRET t    = DC (LRet t)
+> pattern DNU l t = DC (Nu (l :?=: Id t))
+> pattern DCOIT d sty f s = DC (CoIt d sty f s)
+> pattern DPROP        = DC Prop
+> pattern DPRF p       = DC (Prf p)
+> pattern DALL p q     = DC (All p q)
+> pattern DIMP p q     = DALL (DPRF p) (DL (DK q))
+> pattern DALLV x s p  = DALL s (DLAV x p)
+> pattern DAND p q     = DC (And p q)
+> pattern DTRIVIAL     = DC Trivial
+> pattern DABSURD      = DC Absurd
+> pattern DBOX p       = DC (Box p)
+> pattern DINH ty      = DC (Inh ty)
+> pattern DWIT t       = DC (Wit t)
+> pattern DQUOTIENT x r p = DC (Quotient x r p)
+> pattern DCLASS x        = DC (Con x)
+> pattern DRSIG         = DC RSig
+> pattern DREMPTY       = DC REmpty
+> pattern DRCONS s i t  = DC (RCons s i t)
+> pattern DRECORD l s   = DC (Record (l :?=: Id s))
+> pattern DSIGMA p q = DC (Sigma p q)
+> pattern DPAIR  p q = DC (Pair p q)
+> pattern DUNIT      = DC Unit
+> pattern DVOID      = DC Void
+> pattern DTimes x y = Sigma x (DL (DK y))
+> pattern DTIMES x y = DC (DTimes x y)
+> pattern DUID    = DC UId
+> pattern DTAG s  = DTag s []
 
 
 \subsection{Sizes}

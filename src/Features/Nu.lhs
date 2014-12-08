@@ -17,10 +17,6 @@
 >   halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
 >     Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
 
-> import -> CanDisplayPats where
->   pattern DNU l t = DC (Nu (l :?=: Id t))
->   pattern DCOIT d sty f s = DC (CoIt d sty f s)
-
 > import -> CanPretty where
 >   pretty (Nu (Just l :?=: _))  = pretty l
 >   pretty (Nu (Nothing :?=: Id t))  =

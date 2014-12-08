@@ -40,24 +40,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanDisplayPats where
->   pattern DIVARN     = DZE
->   pattern DICONSTN   = DSU DZE
->   pattern DIPIN      = DSU (DSU DZE)
->   pattern DIFPIN     = DSU (DSU (DSU DZE))
->   pattern DISIGMAN   = DSU (DSU (DSU (DSU DZE)))
->   pattern DIFSIGMAN  = DSU (DSU (DSU (DSU (DSU DZE))))
->   pattern DIPRODN    = DSU (DSU (DSU (DSU (DSU (DSU DZE)))))
-
->   pattern DIMU l ii x i  = DIMu (l :?=: (Id ii :& Id x)) i
->   pattern DIVAR i        = DCON (DPAIR DIVARN     (DPAIR i DVOID))
->   pattern DIPI s t       = DCON (DPAIR DIPIN      (DPAIR s (DPAIR t DVOID)))
->   pattern DIFPI s t      = DCON (DPAIR DIFPIN     (DPAIR s (DPAIR t DVOID)))
->   pattern DISIGMA s t    = DCON (DPAIR DISIGMAN   (DPAIR s (DPAIR t DVOID)))
->   pattern DIFSIGMA s t   = DCON (DPAIR DIFSIGMAN  (DPAIR s (DPAIR t DVOID)))
->   pattern DICONST p      = DCON (DPAIR DICONSTN   (DPAIR p DVOID))
->   pattern DIPROD u x y   = DCON (DPAIR DIPRODN    (DPAIR u (DPAIR x (DPAIR y DVOID))))
-
 
 > import -> CanPretty where
 >   pretty (IMu (Just l   :?=: _) i)  = wrapDoc

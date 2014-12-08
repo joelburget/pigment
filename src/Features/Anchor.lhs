@@ -11,9 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanDisplayPats where
->    pattern DANCHOR s args = DAnchor s args
-
 > import -> CanPretty where
 >     pretty (Anchor (DTAG u) t ts) = wrapDoc (text u <+> pretty ts ArgSize) ArgSize
 >     pretty AllowedEpsilon = const empty
