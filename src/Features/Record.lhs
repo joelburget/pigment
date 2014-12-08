@@ -9,15 +9,6 @@
 %endif
 
 
-\subsection{Plugging in operators}
-
-> import -> Operators where
->   recordOp :
->   labelsOp :
->   typeAtOp :
->   fstsOp :
->   atOp :
-
 > import -> OpCode where
 >   recordOp = Op
 >     { opName   = "Record"

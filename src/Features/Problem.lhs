@@ -9,16 +9,6 @@
 %endif
 
 
-\subsection{Plugging Canonical terms in}
-
-\subsection{Plugging Eliminators in}
-
-\subsection{Plugging Operators in}
-
-> import -> Operators where
->   argsOp :
->   schTypeOp :
-
 > import -> OpCode where
 >   argsOp = Op
 >     {  opName = "args"

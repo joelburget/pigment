@@ -30,9 +30,6 @@ relation over |A|.
 >     where
 >       x =~ y = r -$ [ NV x , NV y ]
 
-> import -> Operators where
->   qElimOp :
-
 > import -> OpCompile where
 >   ("elimQuotient", [_, _, _, z, _, m, _]) -> App m [z]
 

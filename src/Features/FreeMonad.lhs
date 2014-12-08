@@ -73,10 +73,6 @@
 >       elimMonadOpRun [d,x,RETURN z,bp,mc,mv] = Right $ mv $$ A z
 >       elimMonadOpRun [_,_,N n,_,_,_] = Left n
 
-> import -> Operators where
->   substMonadOp :
->   elimMonadOp :
-
 > import -> OpCompile where
 >   ("substMonad", [d, x, y, f, t]) -> App (Var "__substMonad") [d, f, t]
 >   ("elimMonad", [d, x, v, p, mc, mv]) -> App (Var "__elimMonad") [d, mv, mc, v]

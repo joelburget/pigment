@@ -110,14 +110,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >              , x ]
 
 
-\subsection{Plugging Operators in}
-
-> import -> Operators where
->   idescOp :
->   iboxOp :
->   imapBoxOp :
->   iinductionOp :
-
 > import -> OpCompile where
 
 %if False

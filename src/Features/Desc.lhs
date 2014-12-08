@@ -10,15 +10,6 @@
 %endif
 
 
-> import -> Operators where
->   descOp :
->   boxOp :
->   mapBoxOp :
->   mapOp :
->   inductionOp :
->   branchesDOp :
->   switchDOp :
-
 > import -> OpCompile where
 >   ("induction", [d,v,bp,p]) -> App (Var "__induction") [d, p, v]
 >   ("mapBox", [x,d,bp,p,v]) -> App (Var "__mapBox") [x, p, v]

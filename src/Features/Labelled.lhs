@@ -70,9 +70,6 @@ they implement.
 <       callOpSimp :: Alternative m => [VAL] -> NameSupply -> m NEU
 <       callOpSimp _ _ = empty
 
-< import -> Operators where
-<   callOp :
-
 < import -> OpCompile where
 <   ("call", [ty, l, t]) -> l
 

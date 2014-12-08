@@ -84,9 +84,6 @@
 >     , opSimp = \_ _ -> empty
 >     }
 
-> import -> Operators where
->   splitOp :
-
 > import -> OpRunEqGreen where
 >   opRunEqGreen [UNIT,_,UNIT,_] = Right TRIVIAL
 >   opRunEqGreen [SIGMA s1 t1,p1,SIGMA s2 t2,p2] = Right $

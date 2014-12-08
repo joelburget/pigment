@@ -34,14 +34,43 @@ inside @Rules.lhs@ the |operators| defined by feature files,
 along with any auxiliary code.
 
 > operators :: [Op]
-> operators = (
->   import <- Operators
->   [])
+> operators = [
+>   descOp,
+>   boxOp,
+>   mapBoxOp,
+>   mapOp,
+>   inductionOp,
+>   branchesDOp,
+>   switchDOp,
+>   branchesOp,
+>   switchOp,
+>   enumInductionOp,
+>   eqGreen,
+>   coe,
+>   coh,
+>   substMonadOp,
+>   elimMonadOp,
+>   idescOp,
+>   iboxOp :
+>   imapBoxOp,
+>   iinductionOp,
+>   argsOp,
+>   schTypeOp,
+>   nEOp,
+>   inhEOp,
+>   qElimOp,
+>   recordOp,
+>   labelsOp,
+>   typeAtOp,
+>   fstsOp,
+>   atOp,
+>   splitOp
+>   ]
 
 > import <- OpCode
 > import <- RulesCode
 
-The list of |primitives| includes axioms and fundamental definitions provided 
+The list of |primitives| includes axioms and fundamental definitions provided
 by the |Primitives| aspect, plus a reference corresponding to each operator.
 
 > primitives :: [(String, REF)]
@@ -52,7 +81,7 @@ by the |Primitives| aspect, plus a reference corresponding to each operator.
 >     mkRef :: Op -> REF
 >     mkRef op = [("Operators",0),(opName op,0)] := (DEFN opEta :<: opTy)
 >       where
->         opTy = pity (opTyTel op) (((B0 :<  ("Operators",0) :< 
+>         opTy = pity (opTyTel op) (((B0 :<  ("Operators",0) :<
 >                                            (opName op,0) :<
 >                                            ("opTy",0)), 0) :: NameSupply)
 >         ari = opArity op

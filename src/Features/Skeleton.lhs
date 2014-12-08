@@ -11,8 +11,6 @@
 
 \subsection{Plugging in operators}
 
-> import -> Operators where
-
 > import -> OpCompile where
 
 > import -> OpCode where

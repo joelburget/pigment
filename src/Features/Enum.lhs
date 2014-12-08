@@ -157,11 +157,6 @@
 >   coerce (EnumT (CONSE _ _,   NILE))           q  x = Right $
 >     nEOp @@ [q, ENUMT NILE]
 
-> import -> Operators where
->   branchesOp :
->   switchOp :
->   enumInductionOp :
-
 > import -> OpCompile where
 >     ("branches", _) -> Ignore
 >     ("switch", [e, x, p, b]) -> App (Var "__switch") [Ignore, x, Ignore, b]

@@ -72,10 +72,6 @@ Elim forms inherited from elsewhere
 >               , opSimp = \_ _ -> empty
 >               }
 
-> import -> Operators where
->   nEOp :
->   inhEOp :
-
 > import -> Check where
 >   check (PRF (ALL p q) :>: L sc)  = do
 >     freshRef  ("" :<: p)
