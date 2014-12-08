@@ -9,10 +9,6 @@
 %endif
 
 
-> import -> Pretty where
-
-> import -> Reactive where
-
 > import -> OpCode where
 >   substMonadOp = Op
 >     { opName = "substMonad"

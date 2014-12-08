@@ -13,19 +13,11 @@
 
 \subsection{Plugging Eliminators in}
 
-> import -> ElimCompile where
-
-> import -> ElimPretty where
-
-> import -> ElimReactive where
-
 \subsection{Plugging Operators in}
 
 > import -> Operators where
 >   argsOp :
 >   schTypeOp :
-
-> import -> OpCompile where
 
 > import -> OpCode where
 >   argsOp = Op
@@ -65,16 +57,6 @@
 >   schTypeOpRun (N v)           = Left v
 
 
-\subsection{Extending the type-checker}
-
-> import -> Check where
-
-\subsection{Extending the equality}
-
-> import -> OpRunEqGreen where
-
-> import -> Coerce where
-
 \subsection{Extending the Display Language}
 
 > import -> KeywordConstructors where
@@ -94,23 +76,3 @@
 >   key KwSchTy      = "SchTy"
 >   key KwExpPi      = "ExpPi"
 >   key KwImpPi      = "ImpPi"
-
-> import -> MakeElabRules where
-
-> import -> DistillRules where
-
-> import -> DInTmConstructors where
-
-> import -> DInTmTraverse where
-
-> import -> DInTmPretty where
-
-> import -> DInTmReactive where
-
-> import -> Pretty where
-
-> import -> Reactive where
-
-\subsection{Adding Primitive references in Cochon}
-
-> import -> Primitives where

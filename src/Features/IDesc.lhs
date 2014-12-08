@@ -110,14 +110,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >              , x ]
 
 
-\subsection{Plugging Eliminators in}
-
-> import -> ElimCompile where
-
-> import -> ElimPretty where
-
-> import -> ElimReactive where
-
 \subsection{Plugging Operators in}
 
 > import -> Operators where
@@ -359,16 +351,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >       it :=>: iv           <- distill es (_Iv :>: i)
 >       return $ (DIMU (Just labDisplay) _It st it :=>: evTm tm)
 
-
-> import -> DInTmConstructors where
-
-> import -> DInTmPretty where
-
-> import -> DInTmReactive where
-
-> import -> Pretty where
-
-> import -> Reactive where
 
 \subsection{Adding Primitive references in Cochon}
 

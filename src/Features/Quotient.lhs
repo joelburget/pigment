@@ -8,8 +8,6 @@
 
 %endif
 
-> import -> Primitives where
-
 |equivalenceRelation A R| is the proposition that |R| is an equivalence
 relation over |A|.
 

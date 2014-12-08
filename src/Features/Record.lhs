@@ -9,20 +9,6 @@
 %endif
 
 
-\subsection{Plugging in canonical forms}
-
-
-\subsection{Plugging in eliminators}
-
-> import -> ElimCompile where
->     -- None
-
-> import -> ElimPretty where
->     -- None
-
-> import -> ElimReactive where
->     -- None
-
 \subsection{Plugging in operators}
 
 > import -> Operators where
@@ -31,9 +17,6 @@
 >   typeAtOp :
 >   fstsOp :
 >   atOp :
-
-> import -> OpCompile where
->     -- XXX: Not yet implemented
 
 > import -> OpCode where
 >   recordOp = Op
@@ -124,47 +107,6 @@
 >             Right $ atOp @@ [sig, n, x $$ Fst]
 >         atOpRun [_, N x, _]                 = Left x
 
-\subsection{Plugging in axioms and primitives}
-
-> import -> RulesCode where
->     -- None
-
-> import -> Primitives where
->     -- None
-
-\subsection{Extending the type-checker}
-
-> import -> Check where
->     -- None
-
-\subsection{Extending the equality}
-
-> import -> OpRunEqGreen where
->     -- None
-
-> import -> Coerce where
->     -- XXX: not yet implemented
-
-\subsection{Extending the display language}
-
-> import -> DInTmConstructors where
->     -- None
-
-> import -> DInTmTraverse where
->     -- None
-
-> import -> DInTmPretty where
->     -- None
-
-> import -> DInTmReactive where
->     -- None
-
-> import -> Pretty where
->     -- None
-
-> import -> Reactive where
->     -- None
-
 \subsection{Extending the concrete syntax}
 
 > import -> KeywordConstructors where
@@ -180,26 +122,8 @@
 >   key KwRCons         = "RCons"
 
 
-> import -> ElimParsers where
->     -- None
-
 > import -> DInTmParsersSpecial where
 >   (AndSize, (|(DRECORD Nothing) (%keyword KwRecord%) (sizedDInTm ArgSize)|)) :
 >   (ArgSize, (|(DRSIG) (%keyword KwRSig%) |)) :
 >   (ArgSize, (|(DREMPTY) (%keyword KwREmpty%)|)) :
 >   (ArgSize, (|(DRCONS) (%keyword KwRCons%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
-
-
-> import -> DInTmParsersMore where
->     -- None
-
-> import -> ParserCode where
->     -- None
-
-\subsection{Extending the elaborator and distiller}
-
-> import -> MakeElabRules where
->     -- Not yet implemented
-
-> import -> DistillRules where
->     -- Not yet implemented

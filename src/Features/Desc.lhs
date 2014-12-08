@@ -10,16 +10,6 @@
 %endif
 
 
-\subsection{Plugging Canonical terms in}
-
-\subsection{Plugging Eliminators in}
-
-> import -> ElimCompile where
-
-> import -> ElimPretty where
-
-\subsection{Plugging Operators in}
-
 > import -> Operators where
 >   descOp :
 >   boxOp :
@@ -265,15 +255,6 @@ case for sigma.
 >         proj i bs = (proj (i - 1) (bs $$ Snd))
 
 
-
-\subsection{Extending the type-checker}
-
-> import -> Check where
-
-
-\subsection{Extending the equality}
-
-> import -> OpRunEqGreen where
 
 > import -> Coerce where
 >   coerce (Mu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
