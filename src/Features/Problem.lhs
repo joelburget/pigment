@@ -11,15 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanTraverse where
->   traverse _ Prob = (| Prob |)
->   traverse f (ProbLabel u s a) = (|ProbLabel (f u) (f s) (f a)|)
->   traverse f (PatPi u s p) = (|PatPi (f u) (f s) (f p)|)
->   traverse _ Sch = (| Sch |)
->   traverse f (SchTy t)      = (|SchTy (f t)|)
->   traverse f (SchExpPi s t) = (|SchExpPi (f s) (f t)|)
->   traverse f (SchImpPi s t) = (|SchImpPi (f s) (f t)|)
-
 > import -> CanHalfZip where
 >   halfZip Prob Prob = Just Prob
 >   halfZip (ProbLabel u1 s1 a1) (ProbLabel u2 s2 a2) = Just $ ProbLabel (u1, u2) (s1, s2) (a1, a2)

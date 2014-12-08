@@ -9,10 +9,6 @@
 %endif
 
 
-> import -> CanTraverse where
->   traverse f UId          = (|UId|)
->   traverse f (Tag s)      = (|(Tag s)|)
-
 > import -> CanHalfZip where
 >   halfZip UId UId = Just UId
 >   halfZip (Tag s) (Tag s') | s == s' = Just (Tag s)

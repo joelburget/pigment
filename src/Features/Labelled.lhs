@@ -11,10 +11,6 @@
 > import -> ElimConstructors where
 >   Call   :: t -> Elim t
 
-> import -> CanTraverse where
->   traverse f (Label l t) = (| Label (f l) (f t) |)
->   traverse f (LRet t)    = (| LRet (f t) |)
-
 > import -> ElimTraverse where
 >   traverse f (Call l) = (| Call (f l) |)
 

@@ -9,11 +9,6 @@
 %endif
 
 
-> import -> CanTraverse where
->   traverse f (Monad d x)   = (| Monad (f d) (f x) |)
->   traverse f (Return x)    = (| Return (f x) |)
->   traverse f (Composite x) = (| Composite (f x) |)
-
 > import -> CanHalfZip where
 >   halfZip (Monad d1 x1) (Monad d2 x2) = Just (Monad (d1, d2) (x1, x2))
 >   halfZip (Return x) (Return y) = Just (Return (x, y))

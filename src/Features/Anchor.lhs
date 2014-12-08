@@ -11,13 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanTraverse where
->     traverse _ Anchors = (| Anchors |)
->     traverse f (Anchor u t ts) = (|Anchor (f u) (f t) (f ts)|)
->     traverse f (AllowedBy t) = (|AllowedBy (f t)|)
->     traverse f AllowedEpsilon = (|AllowedEpsilon|)
->     traverse f (AllowedCons _S _T q s ts) = (|AllowedCons (f _S) (f _T) (f q) (f s) (f ts)|)
-
 > import -> CanHalfZip where
 >     halfZip Anchors Anchors = Just Anchors
 >     halfZip (Anchor u1 t1 ts1) (Anchor u2 t2 ts2) = Just $ Anchor (u1, u2) (t1, t2) (ts1, ts2)

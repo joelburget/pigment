@@ -11,17 +11,6 @@
 
 Elim forms inherited from elsewhere
 
-> import -> CanTraverse where
->   traverse _ Prop      = (|Prop|)
->   traverse f (Prf p)   = (|Prf (f p)|)
->   traverse f (All p q) = (|All (f p) (f q)|)
->   traverse f (And p q) = (|And (f p) (f q)|)
->   traverse _ Trivial   = (|Trivial|)
->   traverse _ Absurd    = (|Absurd|)
->   traverse f (Box p)   = (|Box (traverse f p)|)
->   traverse f (Inh ty)  = (|Inh (f ty)|)
->   traverse f (Wit t)   = (|Wit (f t)|)
-
 > import -> CanHalfZip where
 >   halfZip  Prop      Prop      = Just Prop
 >   halfZip  (Prf p0)  (Prf p1)  = Just (Prf (p0, p1))

@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanTraverse where
-
 > import -> CanHalfZip where
 
 \subsection{Plugging in eliminators}

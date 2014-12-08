@@ -8,9 +8,6 @@
 
 %endif
 
-> import -> CanTraverse where
->   traverse f (Quotient x r p) = (| Quotient (f x) (f r) (f p) |)
-
 > import -> CanHalfZip where
 >   halfZip (Quotient x r p) (Quotient y s q) = Just (Quotient (x, y) (r, s) (p, q))
 

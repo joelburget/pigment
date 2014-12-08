@@ -80,12 +80,6 @@
 >   makeBody (arg, Fst) = Proj (makeBody arg) 0
 >   makeBody (arg, Snd) = Proj (makeBody arg) 1
 
-> import -> CanTraverse where
->   traverse f Unit         = (|Unit|)
->   traverse f Void         = (|Void|)
->   traverse f (Sigma s t)  = (|Sigma (f s) (f t)|)
->   traverse f (Pair x y)   = (|Pair (f x) (f y)|)
-
 > import -> CanHalfZip where
 >   halfZip Unit Unit = Just Unit
 >   halfZip (Sigma s0 t0) (Sigma s1 t1) = Just (Sigma (s0,s1) (t0,t1))

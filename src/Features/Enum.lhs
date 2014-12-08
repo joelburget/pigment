@@ -50,11 +50,6 @@
 >   ("EnumConstructors", enumConstructorsREF) :
 >   ("EnumBranches", enumBranchesREF) :
 
-> import -> CanTraverse where
->   traverse f (EnumT e)    = (|EnumT (f e)|)
->   traverse f Ze           = (|Ze|)
->   traverse f (Su n)       = (|Su (f n)|)
-
 > import -> CanHalfZip where
 >   halfZip (EnumT t0) (EnumT t1) = Just (EnumT (t0,t1))
 >   halfZip Ze Ze = Just Ze

@@ -12,11 +12,6 @@
 \subsection{Plugging in canonical forms}
 
 
-> import -> CanTraverse where
->   traverse f RSig           = (|RSig|)
->   traverse f REmpty         = (|REmpty|)
->   traverse f (RCons s i t)  = (|RCons (f s) (f i) (f t)|)
-
 > import -> CanHalfZip where
 >   halfZip RSig              RSig              = Just RSig
 >   halfZip REmpty            REmpty            = Just REmpty

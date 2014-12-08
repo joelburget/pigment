@@ -10,10 +10,6 @@
 %endif
 
 
-> import -> CanTraverse where
->   traverse f (EqBlue (pty :>: p) (qty :>: q)) =
->     (|EqBlue (|(:>:) (f pty) (f p)|) (|(:>:) (f qty) (f q)|)|)
-
 > import -> ElimTyRules where
 >   elimTy chev (_ :<: Prf (EQBLUE (t0 :>: x0) (t1 :>: x1))) Out =
 >     return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
