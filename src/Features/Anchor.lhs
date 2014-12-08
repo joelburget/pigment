@@ -22,9 +22,6 @@
 > import -> ElimCompile where
 >     {- empty -}
 
-> import -> ElimTraverse where
->     {- empty -}
-
 > import -> ElimPretty where
 >     {- empty -}
 

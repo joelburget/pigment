@@ -920,7 +920,9 @@ TODO(joel) rename to throwErrorTm
 > instance Traversable Elim where
 >   traverse f (A s)  = (|A (f s)|)
 >   traverse _ Out    = (|Out|)
->   import <- ElimTraverse
+>   traverse f (Call l) = (| Call (f l) |)
+>   traverse f Fst  = (|Fst|)
+>   traverse f Snd  = (|Snd|)
 
 > instance HalfZip Elim where
 >   halfZip (A s) (A t)  = Just $ A (s, t)

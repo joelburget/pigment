@@ -80,10 +80,6 @@
 >   makeBody (arg, Fst) = Proj (makeBody arg) 0
 >   makeBody (arg, Snd) = Proj (makeBody arg) 1
 
-> import -> ElimTraverse where
->   traverse f Fst  = (|Fst|)
->   traverse f Snd  = (|Snd|)
-
 > import -> ElimTyRules where
 >   elimTy chev (_ :<: Sigma s t) Fst = return (Fst, s)
 >   elimTy chev (p :<: Sigma s t) Snd = return (Snd, t $$ A (p $$ Fst))

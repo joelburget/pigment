@@ -11,9 +11,6 @@
 > import -> ElimConstructors where
 >   Call   :: t -> Elim t
 
-> import -> ElimTraverse where
->   traverse f (Call l) = (| Call (f l) |)
-
 > import -> ElimPretty where
 >   pretty (Call _) = const (kword KwCall)
 

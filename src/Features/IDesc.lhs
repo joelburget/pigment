@@ -122,8 +122,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 > import -> ElimCompile where
 
-> import -> ElimTraverse where
-
 > import -> ElimPretty where
 
 > import -> ElimReactive where

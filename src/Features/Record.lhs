@@ -23,9 +23,6 @@
 > import -> ElimCompile where
 >     -- None
 
-> import -> ElimTraverse where
->     -- None
-
 > import -> ElimPretty where
 >     -- None
 

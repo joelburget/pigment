@@ -19,8 +19,6 @@
 
 > import -> ElimCompile where
 
-> import -> ElimTraverse where
-
 > import -> ElimPretty where
 
 > import -> ElimReactive where

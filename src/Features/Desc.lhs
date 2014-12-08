@@ -21,8 +21,6 @@
 
 > import -> ElimCompile where
 
-> import -> ElimTraverse where
-
 > import -> ElimPretty where
 
 \subsection{Plugging Operators in}
