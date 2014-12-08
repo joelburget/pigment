@@ -164,7 +164,9 @@ The |Elim| functor is straightforward.
 > instance Pretty (Elim DInTmRN) where
 >     pretty (A t)  = pretty t
 >     pretty Out    = const (kword KwOut)
->     import <- ElimPretty
+>     pretty (Call _) = const (kword KwCall)
+>     pretty Fst = const (kword KwFst)
+>     pretty Snd = const (kword KwSnd)
 >     pretty elim   = const (quotes . text . show $ elim)
 
 

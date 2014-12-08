@@ -8,9 +8,6 @@
 
 %endif
 
-> import -> ElimPretty where
->   pretty (Call _) = const (kword KwCall)
-
 > import -> ElimReactive where
 >   reactify (Call _) = reactKword KwCall
 

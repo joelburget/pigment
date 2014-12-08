@@ -63,10 +63,6 @@
 >   --   | isEmpty s  = wrapDoc t AppSize
 >   --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
-> import -> ElimPretty where
->   pretty Fst = const (kword KwFst)
->   pretty Snd = const (kword KwSnd)
-
 
 > import -> OpCompile where
 >   ("split", [_,_,y,_,f]) -> App (Var "__split") [f,y]
