@@ -190,5 +190,5 @@ The |Elim| functor is straightforward.
 > instance Reactive (Elim DInTmRN) where
 >     reactify (A t)  = reactify t
 >     reactify Out    = reactKword KwOut)
->     import <- ElimReactive
+>     reactify (Call _) = reactKword KwCall
 >     reactify elim   = fromString $ show $ elim

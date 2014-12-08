@@ -8,9 +8,6 @@
 
 %endif
 
-> import -> ElimReactive where
->   reactify (Call _) = reactKword KwCall
-
 > import -> Coerce where
 >   coerce (Label (l1, l2) (t1, t2)) q (LRET t) =
 >       Right $ LRET $ coe @@ [t1, t2, CON (q $$ Snd), t]

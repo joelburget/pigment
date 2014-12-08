@@ -9,12 +9,6 @@
 %endif
 
 
-\subsection{Plugging in canonical forms}
-
-\subsection{Plugging in eliminators}
-
-> import -> ElimReactive where
-
 \subsection{Plugging in operators}
 
 > import -> Operators where
