@@ -12,16 +12,6 @@
 \subsection{Plugging in canonical forms}
 
 
-> import -> CanReactive where
->   reactify RSig              =  "RSignature"
->   reactify REmpty            =  "empty"
->   reactify (RCons s i t)     = do
->       reactify s
->       ">"
->       reactify i ArgSize
->       " , "
->       reactify t ArgSize
-
 > import -> CanTraverse where
 >   traverse f RSig           = (|RSig|)
 >   traverse f REmpty         = (|REmpty|)

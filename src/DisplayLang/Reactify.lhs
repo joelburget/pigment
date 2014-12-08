@@ -49,7 +49,68 @@ The |Reactive| class describes things that can be made into React elements.
 >     reactify Set       = reactKword KwSet
 >     reactify (Pi s t)  = reactPi "" (DPI s t)
 >     reactify (Con x)   = reactKword KwCon >> reactify x
->     import <- CanReactive
+>     reactify (Anchor (DTAG u) t ts) = text_ u >> reactive ts
+>     reactify AllowedEpsilon = ""
+>     reactify (AllowedCons _ _ _ s ts) = reactive s >> reactive ts
+>     reactify (Mu (Just l   :?=: _)) = reactify l
+>     reactify (Mu (Nothing  :?=: Id t)) = reactKword KwMu >> reactify t
+>     reactify (EnumT t)  = reactKword KwEnum >> reactify t
+>     reactify Ze         = "0"
+>     reactify (Su t)     = reactifyEnumIndex 1 t
+>     reactify (EqBlue pp qq) = reactify (DEqBlue (foo pp) (foo qq))
+>       where
+>         foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
+>         foo (_    :>: DN x  ) = x
+>         foo (xty  :>: x     ) = DType xty ::$ [A x]
+>     reactify (Monad d x)   = reactKword KwMonad >> reactify d >> reactify x
+>     reactify (Return x)    = reactKword KwReturn >> reactify x
+>     reactify (Composite x) = reactKword KwCon >> reactify x
+>     reactify (IMu (Just l   :?=: _) i)  = reactify l >> reactify i
+>     reactify (IMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
+>         reactKword KwIMu
+>         reactify ii
+>         reactify d
+>         reactify i
+>     reactify (Label l t) = do
+>         reactKword KwLabel
+>         reactify l
+>         reactKword KwAsc
+>         reactify t
+>         reactKword KwLabelEnd
+>     reactify (LRet x) = reactKword KwRet >> reactify x
+>     reactify (Nu (Just l :?=: _))  = reactify l
+>     reactify (Nu (Nothing :?=: Id t))  = reactKword KwNu >> reactify t
+>     reactify (CoIt d sty f s) = do
+>         reactKword KwCoIt
+>         reactify sty
+>         reactify f
+>         reactify s
+>     reactify Prop           = reactKword KwProp
+>     reactify (Prf p)        = reactKword KwPrf >> reactify p
+>     reactify (All p q)      = reactifyAll empty (DALL p q)
+>     reactify (And p q)      = reactify p >> reactKword KwAnd >> reactify q
+>     reactify Trivial        = reactKword KwTrivial
+>     reactify Absurd         = reactKword KwAbsurd
+>     reactify (Box (Irr p))  = reactify p
+>     reactify (Inh ty)       = reactKword KwInh >> reactify ty
+>     reactify (Wit t)        = reactKword KwWit >> reactify t
+>     reactify (Quotient x r p) = do
+>         reactKword KwQuotient
+>         mapM_ reactify [x,r,p]
+>     reactify RSig              =  "RSignature"
+>     reactify REmpty            =  "empty"
+>     reactify (RCons s i t)     = do
+>         reactify s
+>         ">"
+>         reactify i ArgSize
+>         " , "
+>         reactify t ArgSize
+>     reactify Unit         = reactKword KwSig >> "()"
+>     reactify Void         = reactifyPair DVOID
+>     reactify (Sigma s t)  = reactifySigma "" (DSIGMA s t)
+>     reactify (Pair a b)   = reactifyPair (DPAIR a b)
+>     reactify UId      = reactKword KwUId
+>     reactify (Tag s)  = reactKword KwTag >> fromString s
 >     reactify can       = fromString . show $ can
 
 The |reactPi| function takes a term and the current size. It accumulates

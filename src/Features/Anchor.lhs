@@ -11,12 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanReactive where
->     reactify (Anchor (DTAG u) t ts) = text_ u >> reactive ts
->     reactify AllowedEpsilon = ""
->     reactify (AllowedCons _ _ _ s ts) = reactive s >> reactive ts
->     {- Not yet implemented -}
-
 > import -> CanTraverse where
 >     traverse _ Anchors = (| Anchors |)
 >     traverse f (Anchor u t ts) = (|Anchor (f u) (f t) (f ts)|)

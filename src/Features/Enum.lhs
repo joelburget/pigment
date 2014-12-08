@@ -60,11 +60,6 @@
 >   halfZip Ze Ze = Just Ze
 >   halfZip (Su t0) (Su t1) = Just (Su (t0,t1))
 
-> import -> CanReactive where
->   reactify (EnumT t)  = reactKword KwEnum >> reactify t
->   reactify Ze         = "0"
->   reactify (Su t)     = reactifyEnumIndex 1 t
-
 > import -> Pretty where
 >   prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
 >   prettyEnumIndex n DZE      = const (int n)

@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanReactive where
-
 > import -> CanTraverse where
 
 > import -> CanHalfZip where

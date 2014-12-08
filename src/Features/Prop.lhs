@@ -26,17 +26,6 @@ Elim forms inherited from elsewhere
 >   halfZip  Prop      Prop      = Just Prop
 >   halfZip  (Prf p0)  (Prf p1)  = Just (Prf (p0, p1))
 
-> import -> CanReactive where
->   reactify Prop           = reactKword KwProp
->   reactify (Prf p)        = reactKword KwPrf >> reactify p
->   reactify (All p q)      = reactifyAll empty (DALL p q)
->   reactify (And p q)      = reactify p >> reactKword KwAnd >> reactify q
->   reactify Trivial        = reactKword KwTrivial
->   reactify Absurd         = reactKword KwAbsurd
->   reactify (Box (Irr p))  = reactify p
->   reactify (Inh ty)       = reactKword KwInh >> reactify ty
->   reactify (Wit t)        = reactKword KwWit >> reactify t
-
 > import -> Pretty where
 >   prettyAll :: Doc -> DInTmRN -> Size -> Doc
 >   prettyAll bs (DALL (DPRF p) (DL (DK q))) = prettyAllMore bs

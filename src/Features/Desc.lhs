@@ -12,10 +12,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanReactive where
->   reactify (Mu (Just l   :?=: _)) = reactify l
->   reactify (Mu (Nothing  :?=: Id t)) = reactKword KwMu >> reactify t
-
 > import -> CanTraverse where
 >   traverse f (Mu l) = (|Mu (traverse f l)|)
 

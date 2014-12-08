@@ -13,10 +13,6 @@
 >   traverse f UId          = (|UId|)
 >   traverse f (Tag s)      = (|(Tag s)|)
 
-> import -> CanReactive where
->   reactify UId      = reactKword KwUId
->   reactify (Tag s)  = reactKword KwTag >> fromString s
-
 > import -> CanHalfZip where
 >   halfZip UId UId = Just UId
 >   halfZip (Tag s) (Tag s') | s == s' = Just (Tag s)

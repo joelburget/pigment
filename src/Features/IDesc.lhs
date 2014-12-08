@@ -41,14 +41,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 \subsection{Plugging Canonical terms in}
 
 
-> import -> CanReactive where
->   reactify (IMu (Just l   :?=: _) i)  = reactify l >> reactify i
->   reactify (IMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
->       reactKword KwIMu
->       reactify ii
->       reactify d
->       reactify i
-
 > import -> CanTraverse where
 >   traverse f (IMu l i)     = (|IMu (traverse f l) (f i)|)
 

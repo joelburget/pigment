@@ -16,11 +16,6 @@
 
 > import -> Primitives where
 
-> import -> CanReactive where
->   reactify (Quotient x r p) = do
->       reactKword KwQuotient
->       mapM_ reactify [x,r,p]
-
 |equivalenceRelation A R| is the proposition that |R| is an equivalence
 relation over |A|.
 

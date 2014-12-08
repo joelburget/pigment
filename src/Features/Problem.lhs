@@ -11,8 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanReactive where
-
 > import -> CanTraverse where
 >   traverse _ Prob = (| Prob |)
 >   traverse f (ProbLabel u s a) = (|ProbLabel (f u) (f s) (f a)|)

@@ -25,15 +25,6 @@
 > import -> ElimHalfZip where
 >   halfZip (Call t1) (Call t2) = Just (Call (t1, t2))
 
-> import -> CanReactive where
->   reactify (Label l t) = do
->       reactKword KwLabel
->       reactify l
->       reactKword KwAsc
->       reactify t
->       reactKword KwLabelEnd
->   reactify (LRet x) = reactKword KwRet >> reactify x
-
 > import -> ElimPretty where
 >   pretty (Call _) = const (kword KwCall)
 

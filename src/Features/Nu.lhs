@@ -17,15 +17,6 @@
 >   halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
 >     Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
 
-> import -> CanReactive where
->   reactify (Nu (Just l :?=: _))  = reactify l
->   reactify (Nu (Nothing :?=: Id t))  = reactKword KwNu >> reactify t
->   reactify (CoIt d sty f s) = do
->       reactKword KwCoIt
->       reactify sty
->       reactify f
->       reactify s
-
 > import -> ElimTyRules where
 >   elimTy chev (_ :<: t@(Nu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
 

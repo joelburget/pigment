@@ -9,12 +9,6 @@
 %endif
 
 
-> import -> CanReactive where
->   reactify Unit         = reactKword KwSig >> "()"
->   reactify Void         = reactifyPair DVOID
->   reactify (Sigma s t)  = reactifySigma "" (DSIGMA s t)
->   reactify (Pair a b)   = reactifyPair (DPAIR a b)
-
 > import -> Pretty where
 >   prettyPair :: DInTmRN -> Size -> Doc
 >   prettyPair p = const (brackets (prettyPairMore empty p))
