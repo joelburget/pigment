@@ -1,7 +1,7 @@
 \section{OpDef}
 
 Gadgets for building operators so that they will evaluate and compile
-coherently. 
+coherently.
 
 
 %if False
@@ -26,7 +26,7 @@ coherently.
 
 > data OpBody  =  OpCase OpBody [OpBody]
 >              |  IsZero OpBody OpBody OpBody
->              |  Val VAL 
+>              |  Val VAL
 >              |  Dec VAL (VAL -> OpBody)
 
 > makeOpRun :: String -> OpDef -> [VAL] -> Either NEU VAL
@@ -40,7 +40,7 @@ coherently.
 >         case makeOpBody v of
 >           Right i@(C _) -> if (num i < length vs) then
 >                                makeOpBody (vs!!num i)
->                               else error $ "Missing case in " ++ name ++ ": " ++ 
+>                               else error $ "Missing case in " ++ name ++ ": " ++
 >                                            show i ++ ", " ++ show (length vs)
 >           Right (N t) -> Left t
 >           Left t -> Left t
@@ -60,15 +60,12 @@ coherently.
 > makeOpRun name _ vs = error $ name ++ " stuck at " ++ show vs
 
 Operator descriptionss currently need to go here, with a signature in
-the .lhs-boot. 
+the .lhs-boot.
 
 The operator should also be added to OpCompile and OpGenerate. e.g.
 
 < import -> OpCompile where
 <     ("switch", [e, x, p, b]) -> App (Var "__switch") [Ignore, x, Ignore, b]
-
-< import -> OpGenerate where
-<     ("switch", switchTest) :
 
 The the version to evaluate can be generated with 'makeOpRun':
 
@@ -89,13 +86,13 @@ This is obviously not the neatest way of doing this. It would be better if
 all of this could be captured in the definition of Op.
 
 > switchTest :: OpDef
-> switchTest = 
->       ConArg (\arg -> ConArg (\n -> 
+> switchTest =
+>       ConArg (\arg -> ConArg (\n ->
 >       Arg (\p -> Arg (\ps ->
->          Body (IsZero (Val n) 
+>          Body (IsZero (Val n)
 >            (Val (ps $$ Fst))
 >            (Dec n (\k ->
->               Val (switchOp @@ [arg $$ Snd $$ Fst, 
+>               Val (switchOp @@ [arg $$ Snd $$ Fst,
 >                                 k,
 >                                 L $ "x" :. [.x.  p -$ [ SU (NV x) ] ],
 >                                 ps $$ Snd]))))

@@ -373,9 +373,7 @@ Generating operator definitions from descriptions
 > argNames = map (\i -> ("x",i)) [1..]
 
 > opList :: [(String, OpDef)]
-> opList = (
->   import <- OpGenerate
->   [])
+> opList = [("switch", switchTest)]
 
 > opGen :: [(CName, CompileFn)]
 > opGen = map (\ (n, def) -> ("__"++n, makeOpCompile n def)) opList

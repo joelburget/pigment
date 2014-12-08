@@ -39,9 +39,6 @@
 >   coerce (EnumT (CONSE _ _,   NILE))           q  x = Right $
 >     nEOp @@ [q, ENUMT NILE]
 
-> import -> OpGenerate where
->     ("switch", switchTest) :
-
 > import -> KeywordConstructors where
 >   KwEnum  :: Keyword
 >   KwPlus  :: Keyword
