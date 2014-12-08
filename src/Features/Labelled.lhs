@@ -14,13 +14,6 @@
 > import -> ElimTraverse where
 >   traverse f (Call l) = (| Call (f l) |)
 
-> import -> CanHalfZip where
->   halfZip (Label l1 t1) (Label l2 t2) = Just (Label (l1,l2) (t1,t2))
->   halfZip (LRet x) (LRet y)           = Just (LRet (x,y))
-
-> import -> ElimHalfZip where
->   halfZip (Call t1) (Call t2) = Just (Call (t1, t2))
-
 > import -> ElimPretty where
 >   pretty (Call _) = const (kword KwCall)
 

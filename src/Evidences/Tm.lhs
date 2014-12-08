@@ -924,8 +924,10 @@ TODO(joel) rename to throwErrorTm
 
 > instance HalfZip Elim where
 >   halfZip (A s) (A t)  = Just $ A (s, t)
->   import <- ElimHalfZip
+>   halfZip (Call t1) (Call t2) = Just (Call (t1, t2))
 >   halfZip _ _          = Nothing
+>   halfZip Fst Fst = (|Fst|)
+>   halfZip Snd Snd = (|Snd|)
 
 > instance Traversable Irr where
 >   traverse f (Irr x) = (|Irr (f x)|)
