@@ -122,7 +122,9 @@ about them. So we'll just ignore everything that isn't otherwise explained.
 >              appArgs (f :$ (A a)) acc = appArgs f (makeBody a:acc)
 >              appArgs f acc = App (makeBody f) acc
 >     makeBody (f, Out) = makeBody f
->     import <- ElimCompile
+>     makeBody (arg, Call l) = makeBody arg
+>     makeBody (arg, Fst) = Proj (makeBody arg) 0
+>     makeBody (arg, Snd) = Proj (makeBody arg) 1
 
 Operators will, in many cases, just compile to an application of a function we
 write by hand in the Epic support file @epic/support.e@.

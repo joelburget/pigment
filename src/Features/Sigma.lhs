@@ -68,10 +68,6 @@
 >   pretty Snd = const (kword KwSnd)
 
 
-> import -> ElimCompile where
->   makeBody (arg, Fst) = Proj (makeBody arg) 0
->   makeBody (arg, Snd) = Proj (makeBody arg) 1
-
 > import -> OpCompile where
 >   ("split", [_,_,y,_,f]) -> App (Var "__split") [f,y]
 
