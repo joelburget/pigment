@@ -33,32 +33,6 @@ relation over |A|.
 > import -> OpCompile where
 >   ("elimQuotient", [_, _, _, z, _, m, _]) -> App m [z]
 
-> import -> OpCode where
->   qElimOp = Op
->     { opName  = "elimQuotient"
->     , opArity = 7
->     , opTyTel = "X" :<: SET                             :-: \_X ->
->                 "R" :<: ARR _X (ARR _X PROP)            :-: \_R ->
->                 "p" :<: PRF (equivalenceRelation _X _R) :-: \p ->
->                 "z" :<: QUOTIENT _X _R p                :-: \z ->
->                 "P" :<: ARR (QUOTIENT _X _R p) SET      :-: \_P ->
->                 "m" :<: (PI _X $ L $ "x" :. [.x. _P -$ [ CLASS (NV x) ] ])
->                                                         :-: \m ->
->                 "h" :<: PRF (ALL _X $ L $ "x" :. [.x.
->                               ALL (_X -$ []) $ L $ "y" :. [.y.
->                                IMP (_R -$ [ NV x , NV y ])
->                                 (EQBLUE (_P -$ [ CLASS (NV x) ]
->                                             :>: m -$ [ NV x ])
->                                         (_P -$ [ CLASS (NV y) ]
->                                             :>: m -$ [ NV y ])) ] ])
->                                                         :-: \_ ->
->                 Target $ _P $$ A z
->     , opRun = run
->     , opSimp = \_ _ -> empty
->     } where
->       run :: [VAL] -> Either NEU VAL
->       run [_, _, _, CLASS x, _, m, _] = Right (m $$ A x)
->       run [_, _, _, N n, _, _, _]     = Left n
 
 
 > import -> OpRunEqGreen where

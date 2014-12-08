@@ -13,8 +13,6 @@
 
 > import -> OpCompile where
 
-> import -> OpCode where
-
 \subsection{Plugging in axioms and primitives}
 
 > import -> RulesCode where

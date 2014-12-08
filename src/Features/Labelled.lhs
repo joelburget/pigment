@@ -49,26 +49,6 @@ they implement.
 <      tmtv@(tm :=>: tmv) <- chev (LABEL cv ty :>: tm)
 <      return (Call ccv tmtv)
 
-< import -> OpCode where
-<   callOp = Op
-<     { opName = "call"
-<     , opArity = 3
-<     , opTy = callOpTy
-<     , opRun = callOpRun
-<     , opSimp = callOpSimp
-<     } where
-<       callOpTy chev [ty, lbl, tm] = do
-<            tytv@(ty :=>: tyv) <- chev (SET :>: ty)
-<            lbltv@(lbl :=>: lblv) <- chev (tytv :>: lbl)
-<            tmtv@(tm :=>: tmv) <- chev (LABEL lbltv tytv :>: tm)
-<            return ([tytv, lbltv, tmtv], tyv)
-
-<       callOpRun :: [VAL] -> Either NEU VAL
-<       callOpRun [ty, lbl, LRET t] = Right t
-<       callOpRun [ty, lbl, N t] = Left t
-
-<       callOpSimp :: Alternative m => [VAL] -> NameSupply -> m NEU
-<       callOpSimp _ _ = empty
 
 < import -> OpCompile where
 <   ("call", [ty, l, t]) -> l

@@ -17,14 +17,6 @@
 >   ("branchesD", _) -> Ignore
 
 
-> import -> OpCode where
-
->   type DescDispatchTable = (VAL,
->                         VAL -> VAL,
->                         VAL -> VAL -> VAL,
->                         VAL -> VAL -> VAL,
->                         VAL -> VAL -> VAL)
-
 
 The |mkLazyDescDef| function lazily eliminates a desc value (i.e. |d| such that
 |desc :>: CON d|. If the tag is canonical, it calls the corresponding case in

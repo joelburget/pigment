@@ -50,27 +50,6 @@ Elim forms inherited from elsewhere
 >   reactifyAllMore bs d = bs >> reactKword KwImp >> d
 
 
-> import -> OpCode where
->   nEOp = Op { opName = "naughtE"
->             , opArity = 2
->             , opTyTel =  "z" :<: PRF ABSURD :-: \ _ ->
->                          "X" :<: SET :-: \ xX -> Target xX
->             , opRun = runOpTree $ OCon $ OBarf
->             , opSimp = \_ _ -> empty
->             }
->   inhEOp = Op { opName = "inh"
->               , opArity = 4
->               , opTyTel = "S" :<: SET :-: \ ty ->
->                           "p" :<: PRF (INH ty) :-: \ p ->
->                           "P" :<: IMP (PRF (INH ty)) PROP :-: \ pred ->
->                           "m" :<: PI ty (L $ "s" :. [.t.
->                                            pred -$ [ WIT (NV t) ] ]) :-: \ _ ->
->                           Target (PRF (pred $$ A p))
->               , opRun = \[_,p,_,m] -> case p of
->                                         WIT t -> Right $ m $$ A t
->                                         N n   -> Left n
->               , opSimp = \_ _ -> empty
->               }
 
 > import -> Check where
 >   check (PRF (ALL p q) :>: L sc)  = do
