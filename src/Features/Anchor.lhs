@@ -11,12 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanPretty where
->     pretty (Anchor (DTAG u) t ts) = wrapDoc (text u <+> pretty ts ArgSize) ArgSize
->     pretty AllowedEpsilon = const empty
->     pretty (AllowedCons _ _ _ s ts) = wrapDoc (pretty s ArgSize <+> pretty ts ArgSize) ArgSize
->     {- Not yet implemented -}
-
 > import -> CanReactive where
 >     reactify (Anchor (DTAG u) t ts) = text_ u >> reactive ts
 >     reactify AllowedEpsilon = ""

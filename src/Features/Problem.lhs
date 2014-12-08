@@ -11,8 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanPretty where
-
 > import -> CanReactive where
 
 > import -> CanTraverse where

@@ -17,15 +17,6 @@
 >   halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
 >     Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
 
-> import -> CanPretty where
->   pretty (Nu (Just l :?=: _))  = pretty l
->   pretty (Nu (Nothing :?=: Id t))  =
->     wrapDoc (kword KwNu <+> pretty t ArgSize) ArgSize
->   pretty (CoIt d sty f s) = wrapDoc
->       (kword KwCoIt <+> pretty sty ArgSize
->            <+> pretty f ArgSize <+> pretty s ArgSize)
->       ArgSize
-
 > import -> CanReactive where
 >   reactify (Nu (Just l :?=: _))  = reactify l
 >   reactify (Nu (Nothing :?=: Id t))  = reactKword KwNu >> reactify t

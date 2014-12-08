@@ -19,17 +19,6 @@
 >   halfZip (Return x) (Return y) = Just (Return (x, y))
 >   halfZip (Composite x) (Composite y) = Just (Composite (x, y))
 
-> import -> CanPretty where
->   pretty (Monad d x)   = wrapDoc
->       (kword KwMonad <+> pretty d ArgSize <+> pretty x ArgSize)
->       ArgSize
->   pretty (Return x)    = wrapDoc
->       (kword KwReturn <+> pretty x ArgSize)
->       ArgSize
->   pretty (Composite x) = wrapDoc
->       (kword KwCon <+> pretty x ArgSize)
->       ArgSize
-
 > import -> CanReactive where
 >   reactify (Monad d x)   = reactKword KwMonad >> reactify d >> reactify x
 >   reactify (Return x)    = reactKword KwReturn >> reactify x

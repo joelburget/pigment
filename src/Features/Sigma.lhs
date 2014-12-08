@@ -9,12 +9,6 @@
 %endif
 
 
-> import -> CanPretty where
->   pretty Unit         = wrapDoc (kword KwSig <+> parens empty) AppSize
->   pretty Void         = prettyPair DVOID
->   pretty (Sigma s t)  = prettySigma empty (DSIGMA s t)
->   pretty (Pair a b)   = prettyPair (DPAIR a b)
-
 > import -> CanReactive where
 >   reactify Unit         = reactKword KwSig >> "()"
 >   reactify Void         = reactifyPair DVOID

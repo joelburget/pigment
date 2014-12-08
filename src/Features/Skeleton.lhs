@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanPretty where
-
 > import -> CanReactive where
 
 > import -> CanTraverse where

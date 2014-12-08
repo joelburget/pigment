@@ -60,11 +60,6 @@
 >   halfZip Ze Ze = Just Ze
 >   halfZip (Su t0) (Su t1) = Just (Su (t0,t1))
 
-> import -> CanPretty where
->   pretty (EnumT t)  = wrapDoc (kword KwEnum <+> pretty t ArgSize) AppSize
->   pretty Ze         = const (int 0)
->   pretty (Su t)     = prettyEnumIndex 1 t
-
 > import -> CanReactive where
 >   reactify (EnumT t)  = reactKword KwEnum >> reactify t
 >   reactify Ze         = "0"

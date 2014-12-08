@@ -13,10 +13,6 @@
 >   traverse f UId          = (|UId|)
 >   traverse f (Tag s)      = (|(Tag s)|)
 
-> import -> CanPretty where
->   pretty UId      = const (kword KwUId)
->   pretty (Tag s)  = const (kword KwTag <> text s)
-
 > import -> CanReactive where
 >   reactify UId      = reactKword KwUId
 >   reactify (Tag s)  = reactKword KwTag >> fromString s

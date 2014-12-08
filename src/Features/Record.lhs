@@ -12,14 +12,6 @@
 \subsection{Plugging in canonical forms}
 
 
-> import -> CanPretty where
->   pretty RSig              =  const $ text "RSignature"
->   pretty REmpty            =  const $ text "empty"
->   pretty (RCons s i t)     =  const $
->                               pretty s ArgSize <+> char '>'
->                               <+> pretty i ArgSize <+> colon
->                               <+> pretty t ArgSize
-
 > import -> CanReactive where
 >   reactify RSig              =  "RSignature"
 >   reactify REmpty            =  "empty"

@@ -25,12 +25,6 @@
 > import -> ElimHalfZip where
 >   halfZip (Call t1) (Call t2) = Just (Call (t1, t2))
 
-> import -> CanPretty where
->   pretty (Label l t) = const (kword KwLabel <+>
->       pretty l maxBound <+> kword KwAsc <+> pretty t maxBound
->       <+> kword KwLabelEnd)
->   pretty (LRet x) = wrapDoc (kword KwRet <+> pretty x ArgSize) ArgSize
-
 > import -> CanReactive where
 >   reactify (Label l t) = do
 >       reactKword KwLabel

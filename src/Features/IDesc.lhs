@@ -41,14 +41,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 \subsection{Plugging Canonical terms in}
 
 
-> import -> CanPretty where
->   pretty (IMu (Just l   :?=: _) i)  = wrapDoc
->       (pretty l AppSize <+> pretty i ArgSize)
->       AppSize
->   pretty (IMu (Nothing  :?=: (Id ii :& Id d)) i)  = wrapDoc
->       (kword KwIMu <+> pretty ii ArgSize <+> pretty d ArgSize <+> pretty i ArgSize)
->       AppSize
-
 > import -> CanReactive where
 >   reactify (IMu (Just l   :?=: _) i)  = reactify l >> reactify i
 >   reactify (IMu (Nothing  :?=: (Id ii :& Id d)) i)  = do

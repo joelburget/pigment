@@ -26,19 +26,6 @@ Elim forms inherited from elsewhere
 >   halfZip  Prop      Prop      = Just Prop
 >   halfZip  (Prf p0)  (Prf p1)  = Just (Prf (p0, p1))
 
-> import -> CanPretty where
->   pretty Prop           = const (kword KwProp)
->   pretty (Prf p)        = wrapDoc (kword KwPrf <+> pretty p AndSize) AppSize
->   pretty (All p q)      = prettyAll empty (DALL p q)
->   pretty (And p q)      = wrapDoc
->       (pretty p (pred AndSize) <+> kword KwAnd <+> pretty q AndSize)
->       AndSize
->   pretty Trivial        = const (kword KwTrivial)
->   pretty Absurd         = const (kword KwAbsurd)
->   pretty (Box (Irr p))  = pretty p
->   pretty (Inh ty)       = wrapDoc (kword KwInh <+> pretty ty ArgSize) AppSize
->   pretty (Wit t)        = wrapDoc (kword KwWit <+> pretty t ArgSize) AppSize
-
 > import -> CanReactive where
 >   reactify Prop           = reactKword KwProp
 >   reactify (Prf p)        = reactKword KwPrf >> reactify p

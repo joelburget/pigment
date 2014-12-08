@@ -16,13 +16,6 @@
 
 > import -> Primitives where
 
-> import -> CanPretty where
->   pretty (Quotient x r p) = wrapDoc
->       (sep [ kword KwQuotient
->            , nest 2 $ fsep $ map (flip pretty ArgSize) [x,r,p]
->            ])
->       ArgSize
-
 > import -> CanReactive where
 >   reactify (Quotient x r p) = do
 >       reactKword KwQuotient

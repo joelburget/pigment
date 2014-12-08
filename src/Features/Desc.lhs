@@ -12,12 +12,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanPretty where
->   pretty (Mu (Just l   :?=: _)) = pretty l
->   pretty (Mu (Nothing  :?=: Id t))  = wrapDoc
->       (kword KwMu <+> pretty t ArgSize)
->       AppSize
-
 > import -> CanReactive where
 >   reactify (Mu (Just l   :?=: _)) = reactify l
 >   reactify (Mu (Nothing  :?=: Id t)) = reactKword KwMu >> reactify t

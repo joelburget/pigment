@@ -14,13 +14,6 @@
 >   traverse f (EqBlue (pty :>: p) (qty :>: q)) =
 >     (|EqBlue (|(:>:) (f pty) (f p)|) (|(:>:) (f qty) (f q)|)|)
 
-> import -> CanPretty where
->   pretty (EqBlue pp qq) = pretty (DEqBlue (foo pp) (foo qq))
->     where
->       foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
->       foo (_    :>: DN x  ) = x
->       foo (xty  :>: x     ) = DType xty ::$ [A x]
-
 > import -> CanReactive where
 >   reactify (EqBlue pp qq) = reactify (DEqBlue (foo pp) (foo qq))
 >     where
