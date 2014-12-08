@@ -8,9 +8,6 @@
 
 %endif
 
-> import -> ElimTyRules where
->   elimTy chev (_ :<: t@(Nu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
-
 > import -> ElimComputation where
 >   COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
 >     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],

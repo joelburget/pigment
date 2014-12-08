@@ -50,13 +50,6 @@ Elim forms inherited from elsewhere
 >   reactifyAllMore bs d = bs >> reactKword KwImp >> d
 
 
-> import -> ElimTyRules where
->   elimTy chev (f :<: Prf (ALL p q))      (A e)  = do
->     eev@(e :=>: ev) <- chev (p :>: e)
->     return $ (A eev, PRF (q $$ A ev))
->   elimTy chev (_ :<: Prf (AND p q))      Fst    = return (Fst, PRF p)
->   elimTy chev (_ :<: Prf (AND p q))      Snd    = return (Snd, PRF q)
-
 > import -> OpCode where
 >   nEOp = Op { opName = "naughtE"
 >             , opArity = 2

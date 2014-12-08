@@ -273,7 +273,24 @@ elimTy ::  (TY :>: t -> Check s (s :=>: VAL)) ->
 > elimTy chev (f :<: Pi s t) (A e) = do
 >   eev@(e :=>: ev) <- chev (s :>: e)
 >   return $ (A eev, t $$ A ev)
-> import <- ElimTyRules
+> elimTy chev (_ :<: t@(Mu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
+> elimTy chev (_ :<: Prf (EQBLUE (t0 :>: x0) (t1 :>: x1))) Out =
+>   return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
+> elimTy chev (_ :<: (IMu tt@(_ :?=: (Id ii :& Id x)) i)) Out =
+>   return (Out,
+>     idescOp @@ [  ii , x $$ A i
+>                ,  L $ "i" :. [.i. C (IMu (fmap (-$ []) tt) (NV i)) ] ])
+> elimTy chev (_ :<: Label _ t) (Call l) = do
+>    llv@(l :=>: lv) <- chev (t :>: l)
+>    return (Call llv, t)
+> elimTy chev (_ :<: t@(Nu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
+> elimTy chev (f :<: Prf (ALL p q))      (A e)  = do
+>   eev@(e :=>: ev) <- chev (p :>: e)
+>   return $ (A eev, PRF (q $$ A ev))
+> elimTy chev (_ :<: Prf (AND p q))      Fst    = return (Fst, PRF p)
+> elimTy chev (_ :<: Prf (AND p q))      Snd    = return (Snd, PRF q)
+> elimTy chev (_ :<: Sigma s t) Fst = return (Fst, s)
+> elimTy chev (p :<: Sigma s t) Snd = return (Snd, t $$ A (p $$ Fst))
 > elimTy _  (v :<: t) e = throwError $ StackError
 >     [ err "elimTy: failed to eliminate"
 >     , errTyVal (v :<: (C t))

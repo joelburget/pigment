@@ -112,12 +112,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Plugging Eliminators in}
 
-> import -> ElimTyRules where
->   elimTy chev (_ :<: (IMu tt@(_ :?=: (Id ii :& Id x)) i)) Out =
->     return (Out,
->       idescOp @@ [  ii , x $$ A i
->                  ,  L $ "i" :. [.i. C (IMu (fmap (-$ []) tt) (NV i)) ] ])
-
 > import -> ElimComputation where
 
 > import -> ElimCompile where

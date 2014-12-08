@@ -13,9 +13,6 @@
 
 \subsection{Plugging in eliminators}
 
-> import -> ElimTyRules where
->     {- empty -}
-
 > import -> ElimComputation where
 >     {- empty -}
 

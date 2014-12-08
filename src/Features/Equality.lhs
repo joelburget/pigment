@@ -10,10 +10,6 @@
 %endif
 
 
-> import -> ElimTyRules where
->   elimTy chev (_ :<: Prf (EQBLUE (t0 :>: x0) (t1 :>: x1))) Out =
->     return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
-
 > import -> OpCode where
 >   eqGreen = Op { opName = "eqGreen"
 >                , opArity = 4

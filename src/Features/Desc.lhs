@@ -14,9 +14,6 @@
 
 \subsection{Plugging Eliminators in}
 
-> import -> ElimTyRules where
->   elimTy chev (_ :<: t@(Mu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
-
 > import -> ElimComputation where
 
 > import -> ElimCompile where

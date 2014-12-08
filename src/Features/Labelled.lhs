@@ -20,11 +20,6 @@
 > import -> ElimCompile where
 >   makeBody (arg, Call l) = makeBody arg
 
-> import -> ElimTyRules where
->   elimTy chev (_ :<: Label _ t) (Call l) = do
->      llv@(l :=>: lv) <- chev (t :>: l)
->      return (Call llv, t)
-
 > import -> Coerce where
 >   coerce (Label (l1, l2) (t1, t2)) q (LRET t) =
 >       Right $ LRET $ coe @@ [t1, t2, CON (q $$ Snd), t]
