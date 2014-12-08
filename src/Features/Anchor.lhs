@@ -11,13 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanHalfZip where
->     halfZip Anchors Anchors = Just Anchors
->     halfZip (Anchor u1 t1 ts1) (Anchor u2 t2 ts2) = Just $ Anchor (u1, u2) (t1, t2) (ts1, ts2)
->     halfZip (AllowedBy t1) (AllowedBy t2) = Just $ AllowedBy (t1, t2)
->     halfZip AllowedEpsilon AllowedEpsilon = Just $ AllowedEpsilon
->     halfZip (AllowedCons _S1 _T1 q1 s1 ts1) (AllowedCons _S2 _T2 q2 s2 ts2) = Just $ AllowedCons (_S1, _S2) (_T1, _T2) (q1, q2) (s1, s2) (ts1, ts2)
-
 \subsection{Plugging in eliminators}
 
 > import -> ElimTyRules where

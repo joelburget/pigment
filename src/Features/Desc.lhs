@@ -12,9 +12,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanHalfZip where
->   halfZip (Mu t0) (Mu t1) = (| Mu (halfZip t0 t1) |)
-
 \subsection{Plugging Eliminators in}
 
 > import -> ElimTyRules where

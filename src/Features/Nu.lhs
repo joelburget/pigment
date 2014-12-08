@@ -8,15 +8,6 @@
 
 %endif
 
-> import -> CanTraverse where
->   traverse f (Nu t) = (|Nu (traverse f t)|)
->   traverse f (CoIt d sty g s) = (|CoIt (f d) (f sty) (f g) (f s)|)
-
-> import -> CanHalfZip where
->   halfZip (Nu t0) (Nu t1)  = (| Nu (halfZip t0 t1) |)
->   halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
->     Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
-
 > import -> ElimTyRules where
 >   elimTy chev (_ :<: t@(Nu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
 

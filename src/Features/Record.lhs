@@ -12,12 +12,6 @@
 \subsection{Plugging in canonical forms}
 
 
-> import -> CanHalfZip where
->   halfZip RSig              RSig              = Just RSig
->   halfZip REmpty            REmpty            = Just REmpty
->   halfZip (RCons s0 i0 t0)  (RCons s1 i1 t1)  =
->     Just (RCons (s0,s1) (i0,i1) (t0,t1))
-
 \subsection{Plugging in eliminators}
 
 > import -> ElimTyRules where

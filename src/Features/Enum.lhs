@@ -50,11 +50,6 @@
 >   ("EnumConstructors", enumConstructorsREF) :
 >   ("EnumBranches", enumBranchesREF) :
 
-> import -> CanHalfZip where
->   halfZip (EnumT t0) (EnumT t1) = Just (EnumT (t0,t1))
->   halfZip Ze Ze = Just Ze
->   halfZip (Su t0) (Su t1) = Just (Su (t0,t1))
-
 > import -> Pretty where
 >   prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
 >   prettyEnumIndex n DZE      = const (int n)

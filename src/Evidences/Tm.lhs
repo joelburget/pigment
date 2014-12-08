@@ -874,11 +874,48 @@ TODO(joel) rename to throwErrorTm
 
 
 > instance HalfZip Can where
->    halfZip Set        Set        = Just Set
->    halfZip (Pi s1 t1) (Pi s2 t2) = Just $ Pi (s1,s2) (t1,t2)
->    halfZip (Con t1)   (Con t2)   = Just $ Con (t1,t2)
->    import <- CanHalfZip
->    halfZip _          _          = Nothing
+>     halfZip Set        Set        = Just Set
+>     halfZip (Pi s1 t1) (Pi s2 t2) = Just $ Pi (s1,s2) (t1,t2)
+>     halfZip (Con t1)   (Con t2)   = Just $ Con (t1,t2)
+>     halfZip Anchors Anchors = Just Anchors
+>     halfZip (Anchor u1 t1 ts1) (Anchor u2 t2 ts2) = Just $ Anchor (u1, u2) (t1, t2) (ts1, ts2)
+>     halfZip (AllowedBy t1) (AllowedBy t2) = Just $ AllowedBy (t1, t2)
+>     halfZip AllowedEpsilon AllowedEpsilon = Just $ AllowedEpsilon
+>     halfZip (AllowedCons _S1 _T1 q1 s1 ts1) (AllowedCons _S2 _T2 q2 s2 ts2) = Just $ AllowedCons (_S1, _S2) (_T1, _T2) (q1, q2) (s1, s2) (ts1, ts2)
+>     halfZip (Mu t0) (Mu t1) = (| Mu (halfZip t0 t1) |)
+>     halfZip _          _          = Nothing
+>     halfZip (EnumT t0) (EnumT t1) = Just (EnumT (t0,t1))
+>     halfZip Ze Ze = Just Ze
+>     halfZip (Su t0) (Su t1) = Just (Su (t0,t1))
+>     halfZip (Monad d1 x1) (Monad d2 x2) = Just (Monad (d1, d2) (x1, x2))
+>     halfZip (Return x) (Return y) = Just (Return (x, y))
+>     halfZip (Composite x) (Composite y) = Just (Composite (x, y))
+>     halfZip (IMu l0 i0) (IMu l1 i1) = (|(\p -> IMu p (i0,i1)) (halfZip l0 l1)|)
+>     halfZip (Label l1 t1) (Label l2 t2) = Just (Label (l1,l2) (t1,t2))
+>     halfZip (LRet x) (LRet y)           = Just (LRet (x,y))
+>     halfZip (Nu t0) (Nu t1)  = (| Nu (halfZip t0 t1) |)
+>     halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
+>       Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
+>     halfZip Prob Prob = Just Prob
+>     halfZip (ProbLabel u1 s1 a1) (ProbLabel u2 s2 a2) = Just $ ProbLabel (u1, u2) (s1, s2) (a1, a2)
+>     halfZip (PatPi u1 s1 p1) (PatPi u2 s2 p2) = Just $ PatPi (u1, u2) (s1, s2) (p1, p2)
+>     halfZip Sch Sch = Just Sch
+>     halfZip (SchTy s1) (SchTy s2) = Just $ SchTy (s1, s2)
+>     halfZip (SchExpPi s1 t1) (SchExpPi s2 t2) = Just $ SchExpPi (s1, s2) (t1, t2)
+>     halfZip (SchImpPi s1 t1) (SchImpPi s2 t2) = Just $ SchImpPi (s1, s2) (t1, t2)
+>     halfZip  Prop      Prop      = Just Prop
+>     halfZip  (Prf p0)  (Prf p1)  = Just (Prf (p0, p1))
+>     halfZip (Quotient x r p) (Quotient y s q) = Just (Quotient (x, y) (r, s) (p, q))
+>     halfZip RSig              RSig              = Just RSig
+>     halfZip REmpty            REmpty            = Just REmpty
+>     halfZip (RCons s0 i0 t0)  (RCons s1 i1 t1)  =
+>       Just (RCons (s0,s1) (i0,i1) (t0,t1))
+>     halfZip Unit Unit = Just Unit
+>     halfZip (Sigma s0 t0) (Sigma s1 t1) = Just (Sigma (s0,s1) (t0,t1))
+>     halfZip Void Void = Just Void
+>     halfZip (Pair s0 t0) (Pair s1 t1) = Just (Pair (s0,s1) (t0,t1))
+>     halfZip UId UId = Just UId
+>     halfZip (Tag s) (Tag s') | s == s' = Just (Tag s)
 
 > instance Traversable Elim where
 >   traverse f (A s)  = (|A (f s)|)

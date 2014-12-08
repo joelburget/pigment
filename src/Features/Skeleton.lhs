@@ -11,8 +11,6 @@
 
 \subsection{Plugging in canonical forms}
 
-> import -> CanHalfZip where
-
 \subsection{Plugging in eliminators}
 
 > import -> ElimTyRules where

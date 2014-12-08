@@ -11,10 +11,6 @@
 
 Elim forms inherited from elsewhere
 
-> import -> CanHalfZip where
->   halfZip  Prop      Prop      = Just Prop
->   halfZip  (Prf p0)  (Prf p1)  = Just (Prf (p0, p1))
-
 > import -> Pretty where
 >   prettyAll :: Doc -> DInTmRN -> Size -> Doc
 >   prettyAll bs (DALL (DPRF p) (DL (DK q))) = prettyAllMore bs

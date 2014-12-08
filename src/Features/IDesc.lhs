@@ -41,9 +41,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 \subsection{Plugging Canonical terms in}
 
 
-> import -> CanHalfZip where
->   halfZip (IMu l0 i0) (IMu l1 i1) = (|(\p -> IMu p (i0,i1)) (halfZip l0 l1)|)
-
 > import -> Coerce where
 >   -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 >   coerce (IMu (Just (l0,l1) :?=:

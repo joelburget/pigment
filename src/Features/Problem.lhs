@@ -11,15 +11,6 @@
 
 \subsection{Plugging Canonical terms in}
 
-> import -> CanHalfZip where
->   halfZip Prob Prob = Just Prob
->   halfZip (ProbLabel u1 s1 a1) (ProbLabel u2 s2 a2) = Just $ ProbLabel (u1, u2) (s1, s2) (a1, a2)
->   halfZip (PatPi u1 s1 p1) (PatPi u2 s2 p2) = Just $ PatPi (u1, u2) (s1, s2) (p1, p2)
->   halfZip Sch Sch = Just Sch
->   halfZip (SchTy s1) (SchTy s2) = Just $ SchTy (s1, s2)
->   halfZip (SchExpPi s1 t1) (SchExpPi s2 t2) = Just $ SchExpPi (s1, s2) (t1, t2)
->   halfZip (SchImpPi s1 t1) (SchImpPi s2 t2) = Just $ SchImpPi (s1, s2) (t1, t2)
-
 \subsection{Plugging Eliminators in}
 
 > import -> ElimTyRules where
