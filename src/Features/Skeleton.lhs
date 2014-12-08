@@ -13,10 +13,6 @@
 
 > import -> OpCompile where
 
-\subsection{Plugging in axioms and primitives}
-
-> import -> Primitives where
-
 \subsection{Extending the type-checker}
 
 > import -> Check where

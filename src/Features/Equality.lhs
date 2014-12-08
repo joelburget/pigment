@@ -10,15 +10,6 @@
 %endif
 
 
-
-
-> import -> Primitives where
->   ("cohAx", cohAx) :
->   ("refl", refl) :
->   ("substEq", substEq) :
->   ("symEq", symEq) :
-
-
 In the display syntax, a blue equality can be between arbitrary DExTms,
 rather than ascriptions. To allow this, we add a suitable constructor |DEqBlue|
 to DInTm, along with appropriate elaboration and distillation rules.

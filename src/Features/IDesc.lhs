@@ -174,10 +174,4 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Adding Primitive references in Cochon}
 
-> import -> Primitives where
->   ("IDesc", idescREF) :
->   ("IDescD", idescDREF) :
->   ("IDescConstructors", idescConstREF) :
->   ("IDescBranches", idescBranchesREF) :
-
 

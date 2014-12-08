@@ -10,13 +10,6 @@
 %endif
 
 
-
-> import -> Primitives where
->   ("EnumU", enumREF)   :
->   ("EnumD", enumDREF)  :
->   ("EnumConstructors", enumConstructorsREF) :
->   ("EnumBranches", enumBranchesREF) :
-
 > import -> Pretty where
 >   prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
 >   prettyEnumIndex n DZE      = const (int n)

@@ -884,9 +884,24 @@ The list of |primitives| includes axioms and fundamental definitions provided
 by the |Primitives| aspect, plus a reference corresponding to each operator.
 
 > primitives :: [(String, REF)]
-> primitives = map (\op -> (opName op, mkRef op)) operators ++ (
->     import <- Primitives
->     [])
+> primitives = map (\op -> (opName op, mkRef op)) operators ++ [
+>     ("Desc", descREF),
+>     ("DescD", descDREF),
+>     ("DescConstructors", descConstructorsREF),
+>     ("DescBranches", descBranchesREF),
+>     ("EnumU", enumREF),
+>     ("EnumD", enumDREF),
+>     ("EnumConstructors", enumConstructorsREF),
+>     ("EnumBranches", enumBranchesREF),
+>     ("cohAx", cohAx),
+>     ("refl", refl),
+>     ("substEq", substEq),
+>     ("symEq", symEq),
+>     ("IDesc", idescREF),
+>     ("IDescD", idescDREF),
+>     ("IDescConstructors", idescConstREF),
+>     ("IDescBranches", idescBranchesREF)
+>     ]
 >   where
 >     mkRef :: Op -> REF
 >     mkRef op = [("Operators",0),(opName op,0)] := (DEFN opEta :<: opTy)

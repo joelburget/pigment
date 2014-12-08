@@ -346,19 +346,6 @@ then we can (probably) turn it into a tag applied to some arguments.
 >         unfold (DPAIR s t)  = s : unfold t
 >         unfold t            = [t]
 
-
-\subsection{Adding Primitive references in Cochon}
-
-> import -> Primitives where
->   ("Desc", descREF) :
->   ("DescD", descDREF) :
->   ("DescConstructors", descConstructorsREF) :
->   ("DescBranches", descBranchesREF) :
-
-
-\subsection{Bootstrapping}
-
-
 The |sumlike| function determines whether a value representing a description
 is a sum or a sigma from an enumerate. If so, it returns |Just| the enumeration
 and a function from the enumeration to descriptions.
