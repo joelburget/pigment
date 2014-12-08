@@ -39,10 +39,6 @@
 >   coerce (EnumT (CONSE _ _,   NILE))           q  x = Right $
 >     nEOp @@ [q, ENUMT NILE]
 
-> import -> OpCompile where
->     ("branches", _) -> Ignore
->     ("switch", [e, x, p, b]) -> App (Var "__switch") [Ignore, x, Ignore, b]
-
 > import -> OpGenerate where
 >     ("switch", switchTest) :
 

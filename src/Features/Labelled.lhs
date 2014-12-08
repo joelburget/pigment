@@ -50,6 +50,3 @@ they implement.
 <      return (Call ccv tmtv)
 
 
-< import -> OpCompile where
-<   ("call", [ty, l, t]) -> l
-

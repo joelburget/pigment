@@ -8,12 +8,6 @@
 
 %endif
 
-
-
-> import -> OpCompile where
->   ("substMonad", [d, x, y, f, t]) -> App (Var "__substMonad") [d, f, t]
->   ("elimMonad", [d, x, v, p, mc, mv]) -> App (Var "__elimMonad") [d, mv, mc, v]
-
 \question{What should the coercion rule be for |COMPOSITE|?}
 
 > import -> Coerce where

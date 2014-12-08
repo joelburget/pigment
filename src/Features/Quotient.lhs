@@ -11,12 +11,6 @@
 |equivalenceRelation A R| is the proposition that |R| is an equivalence
 relation over |A|.
 
-
-> import -> OpCompile where
->   ("elimQuotient", [_, _, _, z, _, m, _]) -> App m [z]
-
-
-
 > import -> OpRunEqGreen where
 >   opRunEqGreen [QUOTIENT a r _, CLASS x, QUOTIENT b s _, CLASS y] =
 >     Right $ ALL b $ L $ "x2" :. [.x2.

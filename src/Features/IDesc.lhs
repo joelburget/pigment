@@ -110,8 +110,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 >              , x ]
 
 
-> import -> OpCompile where
-
 %if False
 
 <  ("iinduction", [iI,d,i,v,bp,p]) -> App (Var "__iinduction") [d, p, i, v]

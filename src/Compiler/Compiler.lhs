@@ -133,7 +133,17 @@ write by hand in the Epic support file @epic/support.e@.
 > instance CNameable n => MakeBody (Op, [Tm {In, p} n]) where
 >     makeBody (Op name arity _ _ _, args)
 >          = case (name, map makeBody args) of
->                import <- OpCompile
+>                ("induction", [d,v,bp,p]) -> App (Var "__induction") [d, p, v]
+>                ("mapBox", [x,d,bp,p,v]) -> App (Var "__mapBox") [x, p, v]
+>                ("switchD", [e,b,x]) -> App (Var "__switch") [x, b]
+>                ("branchesD", _) -> Ignore
+>                ("branches", _) -> Ignore
+>                ("switch", [e, x, p, b]) -> App (Var "__switch") [Ignore, x, Ignore, b]
+>                ("substMonad", [d, x, y, f, t]) -> App (Var "__substMonad") [d, f, t]
+>                ("elimMonad", [d, x, v, p, mc, mv]) -> App (Var "__elimMonad") [d, mv, mc, v]
+>                -- ("call", [ty, l, t]) -> l
+>                ("elimQuotient", [_, _, _, z, _, m, _]) -> App m [z]
+>                ("split", [_,_,y,_,f]) -> App (Var "__split") [f,y]
 >                _ -> Lazy (Error ("Unknown operator" ++ show name))
 >                     -- |error ("Unknown operator" ++ show name)|
 

@@ -63,11 +63,6 @@
 >   --   | isEmpty s  = wrapDoc t AppSize
 >   --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
-
-> import -> OpCompile where
->   ("split", [_,_,y,_,f]) -> App (Var "__split") [f,y]
-
-
 > import -> OpRunEqGreen where
 >   opRunEqGreen [UNIT,_,UNIT,_] = Right TRIVIAL
 >   opRunEqGreen [SIGMA s1 t1,p1,SIGMA s2 t2,p2] = Right $
