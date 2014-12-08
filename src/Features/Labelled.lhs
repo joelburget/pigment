@@ -14,9 +14,6 @@
 > import -> ElimReactive where
 >   reactify (Call _) = reactKword KwCall
 
-> import -> ElimComputation where
->   LRET t $$ Call l = t
-
 > import -> ElimCompile where
 >   makeBody (arg, Call l) = makeBody arg
 

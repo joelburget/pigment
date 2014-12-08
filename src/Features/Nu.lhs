@@ -8,11 +8,6 @@
 
 %endif
 
-> import -> ElimComputation where
->   COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
->     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
->     f $$ A s]
-
 > import -> Coerce where
 >   -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 >   coerce (Nu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =

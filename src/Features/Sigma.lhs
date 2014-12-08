@@ -68,10 +68,6 @@
 >   pretty Snd = const (kword KwSnd)
 
 
-> import -> ElimComputation where
->   PAIR x y $$ Fst = x
->   PAIR x y $$ Snd = y
-
 > import -> ElimCompile where
 >   makeBody (arg, Fst) = Proj (makeBody arg) 0
 >   makeBody (arg, Snd) = Proj (makeBody arg) 1

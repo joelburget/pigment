@@ -112,8 +112,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 \subsection{Plugging Eliminators in}
 
-> import -> ElimComputation where
-
 > import -> ElimCompile where
 
 > import -> ElimPretty where

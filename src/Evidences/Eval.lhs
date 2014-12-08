@@ -47,13 +47,13 @@ Formally, the computation rules of the featureless language are the
 following:
 
 \begin{eqnarray}
-(\lambda \_ . v) u & \mapsto & v                            
+(\lambda \_ . v) u & \mapsto & v
     \label{eqn:Evidences.Rules.elim-cstt} \\
-(\lambda x . t) v  & \mapsto & \mbox{eval } t[x \mapsto v]  
+(\lambda x . t) v  & \mapsto & \mbox{eval } t[x \mapsto v]
     \label{eqn:Evidences.Rules.elim-bind} \\
-\mbox{unpack}(Con\ t) & \mapsto & t                         
+\mbox{unpack}(Con\ t) & \mapsto & t
     \label{eqn:Evidences.Rules.elim-con}  \\
-(N n) \$\$ ee      & \mapsto & N (n \:\$ e)                 
+(N n) \$\$ ee      & \mapsto & N (n \:\$ e)
     \label{eqn:Evidences.Rules.elim-stuck}
 \end{eqnarray}
 
@@ -76,8 +76,21 @@ This translates into the following code:
 >   = eval t (B0 :< v, naming x v [])    -- By \ref{eqn:Evidences.Rules.elim-bind}
 > C (Con t)    $$ Out  = t               -- By \ref{eqn:Evidences.Rules.elim-con}
 > import <- ElimComputation              -- Extensions
+
+> import -> ElimComputation where
+>   LRET t $$ Call l = t
+
+> import -> ElimComputation where
+>   COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
+>     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
+>     f $$ A s]
+
+> import -> ElimComputation where
+>   PAIR x y $$ Fst = x
+>   PAIR x y $$ Snd = y
+
 > N n          $$ e    = N (n :$ e)      -- By \ref{eqn:Evidences.Rules.elim-stuck}
-> f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++ 
+> f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
 >                                  "\nwith eliminator\n" ++ show e
 
 The |naming| operation amends the current naming scheme, taking account
@@ -103,7 +116,7 @@ term consisting of the operation applied to its arguments. On the
 right, we have gone down to a value, so we simply return it.
 
 > (@@) :: Op -> [VAL] -> VAL
-> op @@ vs = either (\_ -> N (op :@ vs)) id (opRun op vs) 
+> op @@ vs = either (\_ -> N (op :@ vs)) id (opRun op vs)
 
 Note that we respect the invariant on |N| values: we have an |:@|
 that, for sure, is applying at least one stuck term to an operator
@@ -148,7 +161,7 @@ right thing. Hence, we evaluate under lambdas by calling |body|
 (a). We reduce canonical term by evaluating under the constructor
 (b). We drop off bidirectional annotations from Ex to In, just
 reducing the inner term |n| (c). Similarly for type ascriptions, we
-ignore the type and just evaluate the term (d). 
+ignore the type and just evaluate the term (d).
 
 If we reach a parameter, either it is already defined or it is still
 not binded. In both case, |pval| is the right tool: if the parameter is
@@ -184,7 +197,7 @@ interpreter defined above with the empty environment.
 \subsection{Alpha-conversion on the fly}
 
 Here's a bit of a dirty trick which sometimes results in better name choices.
-We firstly need the notion of a textual substitution from Tm.lhs. 
+We firstly need the notion of a textual substitution from Tm.lhs.
 
 < type TXTSUB = [(Char, String)]   -- renaming plan
 
@@ -209,7 +222,7 @@ give good names to the variables bound in its methods, if we're lucky and
 well prepared.
 
 > naming :: String -> VAL -> TXTSUB -> TXTSUB
-> naming x (N (P y)) rho 
+> naming x (N (P y)) rho
 >   = mkMap (reverse x) (reverse (refNameAdvice y)) rho where
 >     mkMap ""        _         rho  = rho
 >     mkMap _         ""        rho  = rho

@@ -14,8 +14,6 @@
 
 \subsection{Plugging Eliminators in}
 
-> import -> ElimComputation where
-
 > import -> ElimCompile where
 
 > import -> ElimPretty where

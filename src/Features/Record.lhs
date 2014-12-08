@@ -14,9 +14,6 @@
 
 \subsection{Plugging in eliminators}
 
-> import -> ElimComputation where
->     -- None
-
 > import -> ElimCompile where
 >     -- None
 

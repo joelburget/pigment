@@ -13,8 +13,6 @@
 
 \subsection{Plugging in eliminators}
 
-> import -> ElimComputation where
-
 > import -> ElimCompile where
 
 > import -> ElimPretty where
