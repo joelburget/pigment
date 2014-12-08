@@ -358,53 +358,6 @@ then we can (probably) turn it into a tag applied to some arguments.
 
 \subsection{Bootstrapping}
 
-> import -> RulesCode where
-
->   descConstructors :: Tm {In, p} x
->   descConstructors =  CONSE (TAG "idD")
->                            (CONSE (TAG "constD")
->                            (CONSE (TAG "sumD")
->                            (CONSE (TAG "prodD")
->                            (CONSE (TAG "sigmaD")
->                            (CONSE (TAG "piD")
->                             NILE)))))
-
->   descBranches :: Tm {In, p} x
->   descBranches = (PAIR (CONSTD UNIT)
->                     (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
->                     (PAIR (SIGMAD enumU (L $ "E" :. [._E.
->                                       (PRODD (TAG "T") (PID (ENUMT (NV _E)) (LK IDD))
->                                              (CONSTD UNIT))]))
->                     (PAIR (SIGMAD UID (L $ "u" :. PRODD (TAG "C") IDD (PRODD (TAG "D") IDD (CONSTD UNIT))))
->                     (PAIR (SIGMAD SET (L $ "S" :. [._S.
->                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD))
->                                              (CONSTD UNIT))]))
->                     (PAIR (SIGMAD SET (L $ "S" :. [._S.
->                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD))
->                                              (CONSTD UNIT))]))
->                      VOID))))))
-
->   descD :: Tm {In, p} x
->   descD = SUMD descConstructors
->                (L $ "c" :. [.c. N $
->                    switchDOp :@ [ descConstructors , descBranches , NV c] ])
-
->   desc :: Tm {In, p} x
->   desc = MU (Just (ANCHOR (TAG "Desc") SET ALLOWEDEPSILON)) descD
->
->   descREF :: REF
->   descREF = [("Primitive", 0), ("Desc", 0)] := DEFN desc :<: SET
->
->   descDREF :: REF
->   descDREF = [("Primitive", 0), ("DescD", 0)] := DEFN descD :<: desc
-
->   descConstructorsREF :: REF
->   descConstructorsREF = [("Primitive", 0), ("DescConstructors", 0)] :=
->       DEFN descConstructors :<: enumU
-
->   descBranchesREF :: REF
->   descBranchesREF = [("Primitive", 0), ("DescBranches", 0)] :=
->       DEFN descBranches :<: branchesOp @@ [descConstructors, LK desc]
 
 The |sumlike| function determines whether a value representing a description
 is a sum or a sigma from an enumerate. If so, it returns |Just| the enumeration

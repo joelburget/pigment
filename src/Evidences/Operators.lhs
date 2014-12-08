@@ -657,7 +657,228 @@ along with any auxiliary code.
 >     , opSimp = \_ _ -> empty
 >     }
 
-> import <- RulesCode
+>   descConstructors :: Tm {In, p} x
+>   descConstructors =  CONSE (TAG "idD")
+>                            (CONSE (TAG "constD")
+>                            (CONSE (TAG "sumD")
+>                            (CONSE (TAG "prodD")
+>                            (CONSE (TAG "sigmaD")
+>                            (CONSE (TAG "piD")
+>                             NILE)))))
+
+>   descBranches :: Tm {In, p} x
+>   descBranches = (PAIR (CONSTD UNIT)
+>                     (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
+>                     (PAIR (SIGMAD enumU (L $ "E" :. [._E.
+>                                       (PRODD (TAG "T") (PID (ENUMT (NV _E)) (LK IDD))
+>                                              (CONSTD UNIT))]))
+>                     (PAIR (SIGMAD UID (L $ "u" :. PRODD (TAG "C") IDD (PRODD (TAG "D") IDD (CONSTD UNIT))))
+>                     (PAIR (SIGMAD SET (L $ "S" :. [._S.
+>                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD))
+>                                              (CONSTD UNIT))]))
+>                     (PAIR (SIGMAD SET (L $ "S" :. [._S.
+>                                       (PRODD (TAG "T") (PID (NV _S) (LK IDD))
+>                                              (CONSTD UNIT))]))
+>                      VOID))))))
+
+>   descD :: Tm {In, p} x
+>   descD = SUMD descConstructors
+>                (L $ "c" :. [.c. N $
+>                    switchDOp :@ [ descConstructors , descBranches , NV c] ])
+
+>   desc :: Tm {In, p} x
+>   desc = MU (Just (ANCHOR (TAG "Desc") SET ALLOWEDEPSILON)) descD
+>
+>   descREF :: REF
+>   descREF = [("Primitive", 0), ("Desc", 0)] := DEFN desc :<: SET
+>
+>   descDREF :: REF
+>   descDREF = [("Primitive", 0), ("DescD", 0)] := DEFN descD :<: desc
+
+>   descConstructorsREF :: REF
+>   descConstructorsREF = [("Primitive", 0), ("DescConstructors", 0)] :=
+>       DEFN descConstructors :<: enumU
+
+>   descBranchesREF :: REF
+>   descBranchesREF = [("Primitive", 0), ("DescBranches", 0)] :=
+>       DEFN descBranches :<: branchesOp @@ [descConstructors, LK desc]
+
+>   enumConstructors :: Tm {In, p} x
+>   enumConstructors = CONSE (TAG "nil") (CONSE (TAG "cons") NILE)
+
+>   enumBranches :: Tm {In, p} x
+>   enumBranches =
+>       PAIR (CONSTD UNIT)
+>           (PAIR (SIGMAD UID (L $ "t" :. (PRODD (TAG "E") IDD (CONSTD UNIT))))
+>               VOID)
+
+>   enumD :: Tm {In, p} x
+>   enumD = SIGMAD  (ENUMT enumConstructors)
+>                     (L $ "c" :. [.c. N $
+>                         switchDOp :@ [ enumConstructors , enumBranches , NV c] ])
+
+>   enumU :: Tm {In, p} x
+>   enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
+
+>   enumREF :: REF
+>   enumREF = [("Primitive", 0), ("EnumU", 0)] := DEFN enumU :<: SET
+
+>   enumDREF :: REF
+>   enumDREF = [("Primitive", 0), ("EnumD", 0)] := DEFN enumD :<: desc
+
+>   enumConstructorsREF :: REF
+>   enumConstructorsREF = [("Primitive", 0), ("EnumConstructors", 0)] :=
+>       DEFN enumConstructors :<: enumU
+
+>   enumBranchesREF :: REF
+>   enumBranchesREF = [("Primitive", 0), ("EnumBranches", 0)] :=
+>       DEFN enumBranches :<:
+>           branchesOp @@ [enumConstructors, LK desc]
+
+>   cohAx = [("Axiom",0),("coh",0)] := (DECL :<: cohType) where
+>     cohType = PRF $
+>               ALL SET $ L $ "S" :. [._S.
+>               ALL SET $ L $ "T" :. [._T.
+>               ALL (PRF (EQBLUE (SET :>: NV _S) (SET :>: NV _T)))
+>                  $ L $ "Q" :. [._Q.
+>               ALL (NV _S) $ L $ "s" :. [.s.
+>               EQBLUE (NV _S :>: NV s)
+>                      (NV _T :>: N (coe :@ [NV _S, NV _T, NV _Q, NV s]))
+>               ]]]]
+>   refl = [("Axiom",0),("refl",0)] := (DECL :<: reflType) where
+>     reflType = PRF $  ALL SET $ L $ "S" :. [._S.
+>                       ALL (NV _S) $ L $ "s" :. [.s.
+>                       EQBLUE (NV _S :>: NV s) (NV _S :>: NV s) ]]
+
+>   substEq = [("Primitive", 0), ("substEq", 0)] := DEFN seDef :<: seTy where
+>     seTy = PI SET $ L $ "X" :. [._X.
+>                PI (NV _X) $ L $ "x" :. [.x.
+>                PI (NV _X) $ L $ "y" :. [.y.
+>                PI (PRF (EQBLUE (NV _X :>: NV x) (NV _X :>: NV y))) $ L $ "q" :. [.q.
+>                PI (ARR (NV _X) SET) $ L $ "P" :. [._P.
+>                ARR (N (V _P :$ A (NV x))) (N (V _P :$ A (NV y)))
+>                ]]]]]
+>     seDef = L $ "X" :. [._X.
+>               L $ "x" :. [.x.
+>               L $ "y" :. [.y.
+>               L $ "q" :. [.q.
+>               L $ "P" :. [._P.
+>               L $ "px" :. [.px.
+>               N (coe :@ [N (V _P :$ A (NV x)), N (V _P :$ A (NV y)),
+>                   CON (N (P refl :$ A (ARR (NV _X) SET) :$ A (NV _P) :$ Out
+>                             :$ A (NV x) :$ A (NV y) :$ A (NV q))),
+>                   NV px])
+>               ]]]]]]
+
+>   symEq = [("Primitive", 0), ("symEq", 0)] := DEFN def :<: ty where
+>     ty = PRF $ ALL SET $ L $ "X" :. [._X.
+>                    ALL (NV _X) $ L $ "x" :. [.x.
+>                    ALL (NV _X) $ L $ "y" :. [.y.
+>                    IMP (EQBLUE (NV _X :>: NV x) (NV _X :>: NV y))
+>                    (EQBLUE (NV _X :>: NV y) (NV _X :>: NV x))
+>                ]]]
+>     def = L $ "X" :. [._X.
+>           L $ "x" :. [.x.
+>           L $ "y" :. [.y.
+>           L $ "q" :. [.q.
+>           N (P refl :$ A (ARR (NV _X) SET)
+>               :$ A (L $ "z" :. [.z.
+>                   PRF (EQBLUE (NV _X :>: NV z) (NV _X :>: NV x))])
+>               :$ Out
+>               :$ A (NV x)
+>               :$ A (NV y)
+>               :$ A (NV q)
+>               :$ Fst
+>               :$ A (N (P refl :$ A (NV _X) :$ A (NV x))))
+>           ]]]]
+
+>   inIDesc :: VAL
+>   inIDesc = L $ "I" :. [._I. LK $ IFSIGMA constructors (cases (NV _I)) ]
+
+>   constructors = (CONSE (TAG "varD")
+>                  (CONSE (TAG "constD")
+>                  (CONSE (TAG "piD")
+>                   (CONSE (TAG "fpiD")
+>                    (CONSE (TAG "sigmaD")
+>                     (CONSE (TAG "fsigmaD")
+>                      (CONSE (TAG "prodD")
+>                       NILE)))))))
+
+>   cases :: INTM -> INTM
+>   cases _I =
+>    {- varD: -}    (PAIR (ISIGMA _I (LK $ ICONST UNIT))
+>    {- constD: -}  (PAIR (ISIGMA SET (LK $ ICONST UNIT))
+>    {- piD: -}     (PAIR (ISIGMA SET (L $ "S" :. [._S.
+>                     (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID))
+>                            (ICONST UNIT))]))
+>    {- fpiD: -}    (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. [._E.
+>                     (IPROD (TAG "T") (IPI (ENUMT (NV _E)) (LK $ IVAR VOID))
+>                            (ICONST UNIT))]))
+>    {- sigmaD: -}  (PAIR (ISIGMA SET (L $ "S" :. [._S.
+>                     (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID))
+>                            (ICONST UNIT))]))
+>    {- fsigmaD: -} (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. [._E.
+>                     (IPROD (TAG "T") (IFPI (NV _E) (LK $ IVAR VOID))
+>                            (ICONST UNIT))]))
+>    {- prodD: -}   (PAIR (ISIGMA UID (L $ "u" :. (IPROD (TAG "C") (IVAR VOID) (IPROD (TAG "D") (IVAR VOID) (ICONST UNIT)))))
+>                     VOID)))))))
+
+>   idescFakeREF :: REF
+>   idescFakeREF = [("Primitive", 0), ("IDesc", 0)]
+>                    := (FAKE :<: ARR SET (ARR UNIT SET))
+>   idesc :: VAL
+>   idesc = L $ "I" :. [._I.
+>             IMU (Just (L $ "i" :. [.i. ANCHOR  (TAG "IDesc")
+>                                                (ARR SET SET)
+>                                                (ALLOWEDCONS  SET
+>                                                              (LK SET)
+>                                                              (N (P refl :$ A SET :$ A (ARR SET SET)))
+>                                                              (NV _I)
+>                                                              ALLOWEDEPSILON)]))
+>                  UNIT (inIDesc -$ [ NV _I]) VOID ]
+>
+>   idescREF :: REF
+>   idescREF = [("Primitive", 0), ("IDesc", 0)]
+>                := (DEFN idesc :<: ARR SET SET)
+>
+>   idescDREF :: REF
+>   idescDREF = [("Primitive", 0), ("IDescD", 0)]
+>                 := (DEFN inIDesc
+>                      :<: ARR SET (ARR UNIT (idesc $$ A UNIT)))
+
+>   idescConstREF :: REF
+>   idescConstREF = [("Primitive", 0), ("IDescConstructors", 0)]
+>                    := (DEFN constructors :<: enumU)
+>
+>   idescBranchesREF :: REF
+>   idescBranchesREF = [("Primitive", 0), ("IDescBranches", 0)]
+>                       := (DEFN (L $ "I" :. [._I. cases (NV _I)])) :<:
+>                            PI SET (L $ "I" :. [._I.
+>                              N $ branchesOp :@ [ constructors,
+>                                                  LK $ N (P idescREF :$ A UNIT)]])
+
+>   sumilike :: VAL -> VAL -> Maybe (VAL, VAL -> VAL)
+>   sumilike _I (IFSIGMA e b)  =
+>       Just (e, \t -> switchOp @@ [ e , t , LK (idesc $$ A _I), b ])
+>   sumilike _ _               = Nothing
+
+>   equivalenceRelation :: VAL -> VAL -> VAL
+>   equivalenceRelation a r =
+>     -- refl
+>     AND (ALL a $ L $ "x" :. [.x. x =~ x ]) $
+>     -- sym
+>     AND (ALL a $ L $ "x" :. [.x.
+>           ALL (a -$ []) $ L $ "y" :. [.y.
+>            IMP (x =~ y) (y =~ x) ] ]
+>         ) $
+>     -- trans
+>         (ALL a $ L $ "x" :. [.x.
+>           ALL (a -$ []) $ L $ "y" :. [.y.
+>            ALL (a -$ []) $ L $ "z" :. [.z.
+>             IMP (x =~ y) (IMP (y =~ z) (x =~ z)) ] ] ]
+>         )
+>     where
+>       x =~ y = r -$ [ NV x , NV y ]
 
 The list of |primitives| includes axioms and fundamental definitions provided
 by the |Primitives| aspect, plus a reference corresponding to each operator.

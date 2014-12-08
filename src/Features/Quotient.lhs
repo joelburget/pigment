@@ -11,24 +11,6 @@
 |equivalenceRelation A R| is the proposition that |R| is an equivalence
 relation over |A|.
 
-> import -> RulesCode where
->   equivalenceRelation :: VAL -> VAL -> VAL
->   equivalenceRelation a r =
->     -- refl
->     AND (ALL a $ L $ "x" :. [.x. x =~ x ]) $
->     -- sym
->     AND (ALL a $ L $ "x" :. [.x.
->           ALL (a -$ []) $ L $ "y" :. [.y.
->            IMP (x =~ y) (y =~ x) ] ]
->         ) $
->     -- trans
->         (ALL a $ L $ "x" :. [.x.
->           ALL (a -$ []) $ L $ "y" :. [.y.
->            ALL (a -$ []) $ L $ "z" :. [.z.
->             IMP (x =~ y) (IMP (y =~ z) (x =~ z)) ] ] ]
->         )
->     where
->       x =~ y = r -$ [ NV x , NV y ]
 
 > import -> OpCompile where
 >   ("elimQuotient", [_, _, _, z, _, m, _]) -> App m [z]

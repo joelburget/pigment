@@ -10,39 +10,6 @@
 %endif
 
 
-> import -> RulesCode where
-
->   enumConstructors :: Tm {In, p} x
->   enumConstructors = CONSE (TAG "nil") (CONSE (TAG "cons") NILE)
-
->   enumBranches :: Tm {In, p} x
->   enumBranches =
->       PAIR (CONSTD UNIT)
->           (PAIR (SIGMAD UID (L $ "t" :. (PRODD (TAG "E") IDD (CONSTD UNIT))))
->               VOID)
-
->   enumD :: Tm {In, p} x
->   enumD = SIGMAD  (ENUMT enumConstructors)
->                     (L $ "c" :. [.c. N $
->                         switchDOp :@ [ enumConstructors , enumBranches , NV c] ])
-
->   enumU :: Tm {In, p} x
->   enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
-
->   enumREF :: REF
->   enumREF = [("Primitive", 0), ("EnumU", 0)] := DEFN enumU :<: SET
-
->   enumDREF :: REF
->   enumDREF = [("Primitive", 0), ("EnumD", 0)] := DEFN enumD :<: desc
-
->   enumConstructorsREF :: REF
->   enumConstructorsREF = [("Primitive", 0), ("EnumConstructors", 0)] :=
->       DEFN enumConstructors :<: enumU
-
->   enumBranchesREF :: REF
->   enumBranchesREF = [("Primitive", 0), ("EnumBranches", 0)] :=
->       DEFN enumBranches :<:
->           branchesOp @@ [enumConstructors, LK desc]
 
 > import -> Primitives where
 >   ("EnumU", enumREF)   :

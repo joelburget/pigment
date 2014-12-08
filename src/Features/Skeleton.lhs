@@ -15,8 +15,6 @@
 
 \subsection{Plugging in axioms and primitives}
 
-> import -> RulesCode where
-
 > import -> Primitives where
 
 \subsection{Extending the type-checker}
