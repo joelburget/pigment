@@ -237,40 +237,6 @@ case for sigma.
 \subsection{Extending the Display Language}
 
 
-> import -> MakeElabRules where
-
-We elaborate list-like syntax for enumerations into the corresponding inductive
-data. This cannot apply in general because it leads to infinite loops when
-elaborating illegal values for some descriptions. Perhaps we should remove it
-for enumerations as well.
-
->     makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" =
->         makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
->     makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t) | r == "EnumU" =
->         makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
-
-More usefully, we elaborate a tag with a bunch of arguments by converting it
-into the corresponding inductive data structure. This depends on the description
-having a certain standard format, so it does not work in general.
-\question{Can we make it more robust by looking at the description?}
-
->     makeElab' loc (MU l d :>: DTag s xs) =
->         makeElab' loc (MU l d :>: DCON (foldr DPAIR DVOID (DTAG s : xs)))
-
-
-The following case exists only for backwards compatibility (gah). It allows
-functions on inductive types to be constructed by writing |con| in the right places.
-It can disappear as soon as someone bothers to update the test suite.
-
->     makeElab' loc (PI (MU l d) t :>: DCON f) = do
->         d'  :=>: _    <- eQuote d
->         t'  :=>: _    <- eQuote t
->         tm  :=>: tmv  <- subElab loc $ case l of
->             Nothing  -> inductionOpMethodType $$ A d $$ A t :>: f
->             Just l   -> inductionOpLabMethodType $$ A l $$ A d $$ A t :>: f
->         x <- eLambda (fortran t)
->         return $ N (  inductionOp :@  [d',  NP x, t',  tm   ])
->                :=>:   inductionOp @@  [d,   NP x, t,   tmv  ]
 
 
 

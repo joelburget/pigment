@@ -30,16 +30,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 %endif
 
 
-> import -> MakeElabRules where
-
->   makeElab' loc (SET :>: DIMU Nothing iI d i) = do
->       iI  :=>: iIv  <- subElab loc (SET :>: iI)
->       d   :=>: dv   <- subElab loc (ARR iIv (idesc $$ A iIv) :>: d)
->       i   :=>: iv   <- subElab loc (iIv :>: i)
->       return $ IMU Nothing iI d i :=>: IMU Nothing iIv dv iv
-
->   makeElab' loc (ty@(IMU _ _ _ _) :>: DTag s xs) =
->       makeElab' loc (ty :>: DCON (DPAIR (DTAG s) (foldr DPAIR DU xs)))
 
 > import -> DistillRules where
 

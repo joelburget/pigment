@@ -148,7 +148,129 @@ we abstract it out. Thus |makeElab'| actually implements elaboration.
 
 > makeElab' :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
 
-> import <- MakeElabRules
+We elaborate list-like syntax for enumerations into the corresponding inductive
+data. This cannot apply in general because it leads to infinite loops when
+elaborating illegal values for some descriptions. Perhaps we should remove it
+for enumerations as well.
+
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" =
+>     makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t) | r == "EnumU" =
+>     makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
+
+More usefully, we elaborate a tag with a bunch of arguments by converting it
+into the corresponding inductive data structure. This depends on the description
+having a certain standard format, so it does not work in general.
+\question{Can we make it more robust by looking at the description?}
+
+> makeElab' loc (MU l d :>: DTag s xs) =
+>     makeElab' loc (MU l d :>: DCON (foldr DPAIR DVOID (DTAG s : xs)))
+
+
+The following case exists only for backwards compatibility (gah). It allows
+functions on inductive types to be constructed by writing |con| in the right places.
+It can disappear as soon as someone bothers to update the test suite.
+
+> makeElab' loc (PI (MU l d) t :>: DCON f) = do
+>     d'  :=>: _    <- eQuote d
+>     t'  :=>: _    <- eQuote t
+>     tm  :=>: tmv  <- subElab loc $ case l of
+>         Nothing  -> inductionOpMethodType $$ A d $$ A t :>: f
+>         Just l   -> inductionOpLabMethodType $$ A l $$ A d $$ A t :>: f
+>     x <- eLambda (fortran t)
+>     return $ N (  inductionOp :@  [d',  NP x, t',  tm   ])
+>            :=>:   inductionOp @@  [d,   NP x, t,   tmv  ]
+
+A function from an enumeration is equivalent to a list, so the elaborator can
+turn lists into functions like this:
+
+> makeElab' loc (PI (ENUMT e) t :>: m) | isTuply m = do
+>     t' :=>: _ <- eQuote t
+>     e' :=>: _ <- eQuote e
+>     tm :=>: tmv <- subElab loc (branchesOp @@ [e, t] :>: m)
+>     x <- eLambda (fortran t)
+>     return $ N (switchOp :@ [e', NP x, t', tm])
+>                    :=>: switchOp @@ [e, NP x, t, tmv]
+>   where
+>     isTuply :: DInTmRN -> Bool
+>     isTuply DVOID        = True
+>     isTuply (DPAIR _ _)  = True
+>     isTuply _            = False
+
+
+To elaborate a tag with an enumeration as its type, we search for the
+tag in the enumeration to determine the appropriate index.
+
+> makeElab' loc (ENUMT t :>: DTAG a) = findTag a t 0
+>   where
+>     findTag :: String -> TY -> Int -> Elab (INTM :=>: VAL)
+>     findTag a (CONSE (TAG b) t) n
+>       | a == b        = return (toNum n :=>: toNum n)
+>       | otherwise     = findTag a t (succ n)
+>     findTag a _ n  = throwError . sErr $ "elaborate: tag `"
+>                                           ++ a
+>                                           ++ " not found in enumeration."
+>
+>     toNum :: Int -> Tm {In, p} x
+>     toNum 0  = ZE
+>     toNum n  = SU (toNum (n-1))
+
+> makeElab' loc (PROP :>: DEqBlue t u) = do
+>     ttt <- subElabInfer loc t
+>     utt <- subElabInfer loc u
+>     let ttm :=>: tv :<: tty :=>: ttyv = extractNeutral ttt
+>     let utm :=>: uv :<: uty :=>: utyv = extractNeutral utt
+>     return $  EQBLUE (tty   :>: ttm)  (uty   :>: utm)
+>         :=>:  EQBLUE (ttyv  :>: tv)   (utyv  :>: uv)
+
+> makeElab' loc (SET :>: DIMU Nothing iI d i) = do
+>     iI  :=>: iIv  <- subElab loc (SET :>: iI)
+>     d   :=>: dv   <- subElab loc (ARR iIv (idesc $$ A iIv) :>: d)
+>     i   :=>: iv   <- subElab loc (iIv :>: i)
+>     return $ IMU Nothing iI d i :=>: IMU Nothing iIv dv iv
+
+> makeElab' loc (ty@(IMU _ _ _ _) :>: DTag s xs) =
+>     makeElab' loc (ty :>: DCON (DPAIR (DTAG s) (foldr DPAIR DU xs)))
+
+> makeElab' loc (NU l d :>: DVOID) =
+>     makeElab' loc (NU l d :>: DCON (DPAIR DZE DVOID))
+> makeElab' loc (NU l d :>: DPAIR s t) =
+>     makeElab' loc (NU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
+> makeElab' loc (SET :>: DNU Nothing d) = do
+>     lt :=>: lv <- eFaker
+>     dt :=>: dv <- subElab loc (desc :>: d)
+>     return $ NU (Just (N lt)) dt :=>: NU (Just lv) dv
+> makeElab' loc (NU l d :>: DCOIT DU sty f s) = do
+>     d' :=>: _ <- eQuote d
+>     makeElab' loc (NU l d :>: DCOIT (DTIN d') sty f s)
+
+As a bit of syntactic sugar, we elaborate |con| as |COMPOSITE| and |[x]| as
+|CLASS x|. \question{Why not just use |CON| rather than |COMPOSITE| everywhere?}
+
+> makeElab' loc (MONAD d x :>: DCON t) =
+>     makeElab' loc (MONAD d x :>: DCOMPOSITE t)
+> makeElab' loc (QUOTIENT a r p :>: DPAIR x DVOID) =
+>     makeElab' loc (QUOTIENT a r p :>: DCLASS x)
+
+In order to make programs as cryptic as possible, you can use |con| in the
+display language to generate a constant function from unit or curry a function
+from a pair.
+
+> makeElab' loc (PI UNIT t :>: DCON f) = do
+>     tm :=>: tmv <- subElab loc (t $$ A VOID :>: f)
+>     return $ LK tm :=>: LK tmv
+
+> makeElab' loc (PI (SIGMA d r) t :>: DCON f) = do
+>     let mt =  PI d . L $ (fortran r) :. [.a.
+>               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
+>               t -$ [PAIR (NV a) (NV b)] ] ]
+>     mt'  :=>: _    <- eQuote mt
+>     tm   :=>: tmv  <- subElab loc (mt :>: f)
+>     x <- eLambda (fortran t)
+>     return $ N ((tm :? mt') :$ A (N (P x :$ Fst)) :$ A (N (P x :$ Snd)))
+>                     :=>: tmv $$ A (NP x $$ Fst) $$ A (NP x $$ Snd)
+
+> makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s
 
 
 We use underscores |DU| in elaboration to mean "figure this out yourself", while

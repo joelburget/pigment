@@ -11,6 +11,4 @@
 
 \subsection{Extending the elaborator and distiller}
 
-> import -> MakeElabRules where
-
 > import -> DistillRules where

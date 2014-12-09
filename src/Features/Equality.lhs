@@ -16,14 +16,6 @@ to DInTm, along with appropriate elaboration and distillation rules.
 
 
 
-> import -> MakeElabRules where
->   makeElab' loc (PROP :>: DEqBlue t u) = do
->       ttt <- subElabInfer loc t
->       utt <- subElabInfer loc u
->       let ttm :=>: tv :<: tty :=>: ttyv = extractNeutral ttt
->       let utm :=>: uv :<: uty :=>: utyv = extractNeutral utt
->       return $  EQBLUE (tty   :>: ttm)  (uty   :>: utm)
->           :=>:  EQBLUE (ttyv  :>: tv)   (utyv  :>: uv)
 
 > import -> DistillRules where
 >   distill es (PROP :>: tm@(EQBLUE (tty :>: t) (uty :>: u))) = do

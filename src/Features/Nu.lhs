@@ -13,19 +13,6 @@
 
 
 
-> import -> MakeElabRules where
->     makeElab' loc (NU l d :>: DVOID) =
->         makeElab' loc (NU l d :>: DCON (DPAIR DZE DVOID))
->     makeElab' loc (NU l d :>: DPAIR s t) =
->         makeElab' loc (NU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
->     makeElab' loc (SET :>: DNU Nothing d) = do
->         lt :=>: lv <- eFaker
->         dt :=>: dv <- subElab loc (desc :>: d)
->         return $ NU (Just (N lt)) dt :=>: NU (Just lv) dv
->     makeElab' loc (NU l d :>: DCOIT DU sty f s) = do
->       d' :=>: _ <- eQuote d
->       makeElab' loc (NU l d :>: DCOIT (DTIN d') sty f s)
-
 
 
 To avoid an infinite loop when distilling, we have to be a little cleverer
