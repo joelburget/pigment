@@ -45,23 +45,36 @@ We define the computational behaviour of the |eqGreen| operator as follows,
 
 > opRunEqGreen :: [VAL] -> Either NEU VAL
 
-> import <- OpRunEqGreen
+> opRunEqGreen [PROP,t1,PROP,t2] = Right $ AND (IMP t1 t2) (IMP t2 t1)
+> opRunEqGreen [PRF _,_,PRF _,_] = Right TRIVIAL
+> opRunEqGreen [UNIT,_,UNIT,_] = Right TRIVIAL
+> opRunEqGreen [SIGMA s1 t1,p1,SIGMA s2 t2,p2] = Right $
+>   AND (eqGreen @@ [s1,p1 $$ Fst,s2,p2 $$ Fst])
+>       (eqGreen @@ [t1 $$ A (p1 $$ Fst),p1 $$ Snd,t2 $$ A (p2 $$ Fst),p2 $$ Snd])
+> opRunEqGreen [QUOTIENT a r _, CLASS x, QUOTIENT b s _, CLASS y] =
+>   Right $ ALL b $ L $ "x2" :. [.x2.
+>             IMP (EQBLUE ((a -$ []) :>: (x -$ [])) ((b -$ []) :>: NV x2))
+>                 (s -$ [NV x2 , y -$ [] ]) ]
+> opRunEqGreen [QUOTIENT a r _, N x, QUOTIENT b s _, _]   = Left x
+> opRunEqGreen [QUOTIENT a r _, _,   QUOTIENT b s _, N y] = Left y
+> opRunEqGreen [UID,TAG s1,UID,TAG s2] | s1 == s2 = Right $ TRIVIAL
+> opRunEqGreen [UID,TAG _,UID,TAG _] = Right $ ABSURD
 
-> opRunEqGreen [C (Pi sS1 tT1), f1, C (Pi sS2 tT2), f2] = Right $ 
->   ALL sS1 $ L $ "s1" :.  [.s1. 
->    ALL (sS2 -$ []) $ L $ "s2" :. [.s2. 
+> opRunEqGreen [C (Pi sS1 tT1), f1, C (Pi sS2 tT2), f2] = Right $
+>   ALL sS1 $ L $ "s1" :.  [.s1.
+>    ALL (sS2 -$ []) $ L $ "s2" :. [.s2.
 >     IMP  (EQBLUE ((sS1 -$ []) :>: NV s1) ((sS2 -$ []) :>: NV s2)) $
->      (tT1 -$ [ NV s1 ] :>: f1 -$ [ NV s1 ]) 
->        <:-:> (tT2 -$ [ NV s2 ] :>: f2 -$ [ NV s2 ]) ] ] 
+>      (tT1 -$ [ NV s1 ] :>: f1 -$ [ NV s1 ])
+>        <:-:> (tT2 -$ [ NV s2 ] :>: f2 -$ [ NV s2 ]) ] ]
 
 > opRunEqGreen [SET, PI sS1 tT1, SET, PI sS2 tT2] = Right $
 >    AND  ((SET :>: sS2) <-> (SET :>: sS1)) $
->          ALL sS2 $ L $ "s2" :. [.s2.  
->           ALL (sS1 -$ []) $ L $ "s1" :. [.s1.  
+>          ALL sS2 $ L $ "s2" :. [.s2.
+>           ALL (sS1 -$ []) $ L $ "s1" :. [.s1.
 >            IMP  (EQBLUE ((sS2 -$ []) :>: NV s2) ((sS1 -$ []) :>: NV s1)) $
 >             (SET :>: (tT1 -$ [ NV s1 ])) <:-:> (SET :>: (tT2 -$ [ NV s2 ])) ] ]
 
-> opRunEqGreen [SET, C (Mu (_ :?=: Id t0)), SET, C (Mu (_ :?=: Id t1))] = 
+> opRunEqGreen [SET, C (Mu (_ :?=: Id t0)), SET, C (Mu (_ :?=: Id t1))] =
 >     opRunEqGreen [desc, t0, desc, t1]
 
 Unless overridden by a feature or preceding case, we determine equality
@@ -71,7 +84,7 @@ constructors are identical) and requiring that the subterms are equal.
 
 > opRunEqGreen [C ty0, C t0, C ty1, C t1] =
 >     case halfZip (fmap termOf t0') (fmap termOf t1') of
->         Nothing  -> Right ABSURD 
+>         Nothing  -> Right ABSURD
 >         Just x   -> Right $ mkEqConj (trail x)
 >   where
 >     Right t0'  = canTy (\tx@(t :>: x) -> Right (tx :=>: x)) (ty0 :>: t0)
@@ -87,7 +100,7 @@ If one of the arguments is neutral, we blame it for being unable to compute.
 
 > opRunEqGreen [C _,   N t0,  C _,   _     ] = Left t0
 > opRunEqGreen [C _,   _,     C _,   N t1  ] = Left t1
-> opRunEqGreen [N y0,  _,     _,     _     ] = Left y0 
+> opRunEqGreen [N y0,  _,     _,     _     ] = Left y0
 > opRunEqGreen [_,     _,     N y1,  _     ] = Left y1
 
 Otherwise, something has gone horribly wrong.
@@ -137,8 +150,8 @@ between incompatible sets.
 
 > coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > coerce Set q x = Right x
-> coerce (Pi (sS1, sS2) (tT1, tT2)) q f1 = 
->   Right . L $ (fortran tT2) :. [.s2. N $ 
+> coerce (Pi (sS1, sS2) (tT1, tT2)) q f1 =
+>   Right . L $ (fortran tT2) :. [.s2. N $
 >     let  (s1, sq) = coehin sS2 sS1 (CON $ q $$ Fst) (NV s2)
 >          t1 = f1 -$ [ s1 ]
 >     in   coe :@ [  tT1 -$ [ s1 ], tT2 -$ [ NV s2 ]

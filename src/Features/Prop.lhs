@@ -51,10 +51,6 @@ Elim forms inherited from elsewhere
 
 
 
-> import -> OpRunEqGreen where
->   opRunEqGreen [PROP,t1,PROP,t2] = Right $ AND (IMP t1 t2) (IMP t2 t1)
->   opRunEqGreen [PRF _,_,PRF _,_] = Right TRIVIAL
-
 > import -> Coerce where
 >   coerce Prop              q pP  = Right pP
 >   coerce (Prf (pP1, pP2))  q p   = Right $ q $$ Fst $$ A p

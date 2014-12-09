@@ -11,8 +11,6 @@
 
 \subsection{Extending the equality}
 
-> import -> OpRunEqGreen where
-
 > import -> Coerce where
 
 \subsection{Extending the display language}

@@ -63,12 +63,6 @@
 >   --   | isEmpty s  = wrapDoc t AppSize
 >   --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
-> import -> OpRunEqGreen where
->   opRunEqGreen [UNIT,_,UNIT,_] = Right TRIVIAL
->   opRunEqGreen [SIGMA s1 t1,p1,SIGMA s2 t2,p2] = Right $
->     AND (eqGreen @@ [s1,p1 $$ Fst,s2,p2 $$ Fst])
->         (eqGreen @@ [t1 $$ A (p1 $$ Fst),p1 $$ Snd,t2 $$ A (p2 $$ Fst),p2 $$ Snd])
-
 > import -> Coerce where
 >   coerce (Sigma (sS1, sS2) (tT1, tT2)) q p = Right . PAIR s2 $
 >     coe @@ [  tT1 $$ A s1, tT2 $$ A s2
