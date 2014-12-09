@@ -420,7 +420,11 @@ This translates naturally into the following code:
 Finally, we can extend the checker with the |Check| aspect. If no rule
 has matched, then we have to give up.
 
-> import <- Check
+> check (PRF (ALL p q) :>: L sc)  = do
+>     freshRef  ("" :<: p)
+>               (\ref -> check (  PRF (q $$ A (pval ref)) :>:
+>                                 underScope sc ref))
+>     return $ L sc :=>: (evTm $ L sc)
 > check (ty :>: tm) = throwError $ StackError
 >     [ err "check: type mismatch: type"
 >     , errTyVal (ty :<: SET)

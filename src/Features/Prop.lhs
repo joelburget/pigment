@@ -51,13 +51,6 @@ Elim forms inherited from elsewhere
 
 
 
-> import -> Check where
->   check (PRF (ALL p q) :>: L sc)  = do
->     freshRef  ("" :<: p)
->               (\ref -> check (  PRF (q $$ A (pval ref)) :>:
->                                 underScope sc ref))
->     return $ L sc :=>: (evTm $ L sc)
-
 > import -> OpRunEqGreen where
 >   opRunEqGreen [PROP,t1,PROP,t2] = Right $ AND (IMP t1 t2) (IMP t2 t1)
 >   opRunEqGreen [PRF _,_,PRF _,_] = Right TRIVIAL

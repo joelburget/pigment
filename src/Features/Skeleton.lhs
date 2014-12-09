@@ -9,14 +9,6 @@
 %endif
 
 
-\subsection{Plugging in operators}
-
-> import -> OpCompile where
-
-\subsection{Extending the type-checker}
-
-> import -> Check where
-
 \subsection{Extending the equality}
 
 > import -> OpRunEqGreen where
