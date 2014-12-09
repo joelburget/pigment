@@ -642,6 +642,10 @@ or eliminates with a motive.
 >   : unaryExCT "whatis" infoWhatIs
 >       "whatis <term> - prints the various representations of <term>."
 
+For testing purposes, we define a @match@ tactic that takes a telescope of
+parameters to solve for, a neutral term for which those parameters are in scope,
+and another term of the same type. It prints out the resulting substitution.
+
 >   : (simpleCT
 >     "match"
 >     (do
@@ -687,24 +691,65 @@ or eliminates with a motive.
 >   : unaryExCT "haskell" (\ t -> elabInfer' t >>= dumpHaskell)
 >       "haskell - renders an Epigram term as a Haskell definition."
 
-> import <- CochonTacticsCode
+The |propSimplify| tactic attempts to simplify the type of the current goal,
+which should be propositional. Usually one will want to use |simplify| instead,
+or simplification will happen automatically (with the |let| and |<=| tactics),
+but this is left for backwards compatibility.
 
-> import -> CochonTacticsCode where
->     defineCTactic :: DExTmRN -> DInTmRN -> ProofState PureReact
->     defineCTactic rl tm = do
->         relabel rl
->         elabGiveNext (DLRET tm)
->         return "Hurrah!"
+>   : nullaryCT "propsimplify" propSimplifyTactic
+>       "propsimplify - applies propositional simplification to the current goal."
 
-> import -> CochonTacticsCode where
->     byCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
->     byCTactic n e = do
->         elimCTactic n e
->         optional' problemSimplify           -- simplify first method
->         many' (goDown >> problemSimplify)   -- simplify other methods
->         many' goUp                          -- go back up to motive
->         optional' seekGoal                  -- jump to goal
->         return "Eliminated and simplified."
+> elimCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
+> elimCTactic c r = do
+>     c' <- traverse resolveDiscard c
+>     (e :=>: _ :<: elimTy) <- elabInferFully r
+>     elim c' (elimTy :>: e)
+>     toFirstMethod
+>     return "Eliminated. Subgoals awaiting work..."
+
+> matchCTactic :: [(String, DInTmRN)] -> DExTmRN -> DInTmRN -> ProofState PureReact
+> matchCTactic xs a b = draftModule "__match" $ do
+>     rs <- traverse matchHyp xs
+>     (_ :=>: av :<: ty) <- elabInfer' a
+>     cursorTop
+>     (_ :=>: bv) <- elaborate' (ty :>: b)
+>     rs' <- runStateT (matchValue B0 (ty :>: (av, bv))) (bwdList rs)
+>     return (fromString (show rs'))
+>   where
+>     matchHyp :: (String, DInTmRN) -> ProofState (REF, Maybe VAL)
+>     matchHyp (s, t) = do
+>         tt  <- elaborate' (SET :>: t)
+>         r   <- assumeParam (s :<: tt)
+>         return (r, Nothing)
+
+> propSimplifyTactic :: ProofState PureReact
+> propSimplifyTactic = do
+>     subs <- propSimplifyHere
+>     case subs of
+>         B0  -> return "Solved."
+>         _   -> do
+>             subStrs <- traverse prettyType subs
+>             nextGoal
+>             return $ fromString ("Simplified to:\n" ++
+>                 foldMap (\s -> s ++ "\n") subStrs)
+>   where
+>     prettyType :: INTM -> ProofState String
+>     prettyType ty = prettyHere (SET :>: ty) >>= return . renderHouseStyle
+
+> defineCTactic :: DExTmRN -> DInTmRN -> ProofState PureReact
+> defineCTactic rl tm = do
+>     relabel rl
+>     elabGiveNext (DLRET tm)
+>     return "Hurrah!"
+
+> byCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
+> byCTactic n e = do
+>     elimCTactic n e
+>     optional' problemSimplify           -- simplify first method
+>     many' (goDown >> problemSimplify)   -- simplify other methods
+>     many' goUp                          -- go back up to motive
+>     optional' seekGoal                  -- jump to goal
+>     return "Eliminated and simplified."
 
 
 > doCTacticsAt :: [(Name, [CTData])] -> PageM ()

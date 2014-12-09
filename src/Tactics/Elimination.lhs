@@ -842,12 +842,3 @@ excluded.
 
 
 
-
-> import -> CochonTacticsCode where
->   elimCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
->   elimCTactic c r = do
->     c' <- traverse resolveDiscard c
->     (e :=>: _ :<: elimTy) <- elabInferFully r
->     elim c' (elimTy :>: e)
->     toFirstMethod
->     return "Eliminated. Subgoals awaiting work..."

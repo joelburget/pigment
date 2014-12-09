@@ -165,23 +165,3 @@ error if any of the references occur in the value.
 > checkSafe zs t  | any (`elem` t) zs  = throwError $ sErr "checkSafe: unsafe!"
 >                 | otherwise          = return ()
 
-
-For testing purposes, we define a @match@ tactic that takes a telescope of
-parameters to solve for, a neutral term for which those parameters are in scope,
-and another term of the same type. It prints out the resulting substitution.
-
-> import -> CochonTacticsCode where
->     matchCTactic :: [(String, DInTmRN)] -> DExTmRN -> DInTmRN -> ProofState PureReact
->     matchCTactic xs a b = draftModule "__match" $ do
->         rs <- traverse matchHyp xs
->         (_ :=>: av :<: ty) <- elabInfer' a
->         cursorTop
->         (_ :=>: bv) <- elaborate' (ty :>: b)
->         rs' <- runStateT (matchValue B0 (ty :>: (av, bv))) (bwdList rs)
->         return (fromString (show rs'))
->       where
->         matchHyp :: (String, DInTmRN) -> ProofState (REF, Maybe VAL)
->         matchHyp (s, t) = do
->             tt  <- elaborate' (SET :>: t)
->             r   <- assumeParam (s :<: tt)
->             return (r, Nothing)

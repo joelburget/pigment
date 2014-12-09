@@ -548,27 +548,3 @@ of the given reference, and returns its term representation.
 >         t :=>: _  <- make (x :<: q')
 >         return (N t)
 
-
-The |propSimplify| tactic attempts to simplify the type of the current goal,
-which should be propositional. Usually one will want to use |simplify| instead,
-or simplification will happen automatically (with the |let| and |<=| tactics),
-but this is left for backwards compatibility.
-
-> import -> CochonTacticsCode where
->     propSimplifyTactic :: ProofState PureReact
->     propSimplifyTactic = do
->         subs <- propSimplifyHere
->         case subs of
->             B0  -> return "Solved."
->             _   -> do
->                 subStrs <- traverse prettyType subs
->                 nextGoal
->                 return $ fromString ("Simplified to:\n" ++
->                     foldMap (\s -> s ++ "\n") subStrs)
->       where
->         prettyType :: INTM -> ProofState String
->         prettyType ty = prettyHere (SET :>: ty) >>= return . renderHouseStyle
-
-> import -> CochonTactics where
->   : nullaryCT "propsimplify" propSimplifyTactic
->       "propsimplify - applies propositional simplification to the current goal."
