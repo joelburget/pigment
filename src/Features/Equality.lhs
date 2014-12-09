@@ -14,9 +14,6 @@ In the display syntax, a blue equality can be between arbitrary DExTms,
 rather than ascriptions. To allow this, we add a suitable constructor |DEqBlue|
 to DInTm, along with appropriate elaboration and distillation rules.
 
-> import -> DInTmConstructors where
->   DEqBlue :: DExTm p x -> DExTm p x -> DInTm p x
-
 > import -> DInTmPretty where
 >   pretty (DEqBlue t u) = wrapDoc
 >       (pretty t ArgSize <+> kword KwEqBlue <+> pretty u ArgSize)

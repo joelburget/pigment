@@ -9,9 +9,6 @@
 %endif
 
 
-> import -> DInTmConstructors where
->   DAnchor :: String -> DInTm p x -> DInTm p x
-
 > import -> DInTmTraverse where
 >   traverseDTIN f (DAnchor s args) = (|(DAnchor s) (traverseDTIN f args)|)
 

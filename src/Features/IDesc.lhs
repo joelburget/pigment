@@ -18,9 +18,6 @@ it. Therefore, a |DIMu| takes an anchor directly. The distillation
 rule takes care of taking applying the lambda-bound anchor to the
 index of |IMu| to make a fully applied anchor |DIMu|.
 
-> import -> DInTmConstructors where
->   DIMu :: Labelled (Id :*: Id) (DInTm p x) -> DInTm p x  -> DInTm p x
-
 > import -> DInTmTraverse where
 >   traverseDTIN f (DIMu s i) = (|DIMu (traverse (traverseDTIN f) s) (traverseDTIN f i)|)
 

@@ -23,9 +23,6 @@
 >   (ArgSize, (|DTAG (%keyword KwTag%) ident|)) :
 >   (AppSize, (|DTag (%keyword KwTag%) ident (many (sizedDInTm ArgSize))|)) :
 
-> import -> DInTmConstructors where
->   DTag :: String -> [DInTm p x] -> DInTm p x
-
 > import -> DInTmPretty where
 >   pretty (DTAG s)     = const (kword KwTag <> text s)
 >   pretty (DTag s xs)  = wrapDoc (kword KwTag <> text s

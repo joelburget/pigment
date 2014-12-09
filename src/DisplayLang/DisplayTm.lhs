@@ -66,7 +66,11 @@ parameter. Thanks to this hack, we can use |deriving Traversable|.
 >     DQ     :: String           ->  DInTm p x -- hole
 >     DU     ::                      DInTm p x -- underscore
 >     DT     :: InTmWrap p x     ->  DInTm p x -- embedding
->     import <- DInTmConstructors
+>     DAnchor :: String -> DInTm p x -> DInTm p x
+>     DEqBlue :: DExTm p x -> DExTm p x -> DInTm p x
+>     DIMu :: Labelled (Id :*: Id) (DInTm p x) -> DInTm p x  -> DInTm p x
+>     DTag :: String -> [DInTm p x] -> DInTm p x
+
 >  deriving (Functor, Foldable, Traversable, Show)
 >
 > data DExTm p x = DHead p x ::$ DSpine p x
