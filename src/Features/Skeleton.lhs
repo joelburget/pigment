@@ -8,7 +8,3 @@
 
 %endif
 
-
-\subsection{Extending the elaborator and distiller}
-
-> import -> DistillRules where

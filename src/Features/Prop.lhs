@@ -15,6 +15,3 @@ Elim forms inherited from elsewhere
 
 
 
-
-> import -> DistillRules where
->   distill es (PRF TRIVIAL :>: _) = return (DU :=>: VOID)

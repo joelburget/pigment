@@ -31,36 +31,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 
 
 
-> import -> DistillRules where
-
->     distill es (IMU l _I s i :>: CON (PAIR t x))
->       | Just (e, f) <- sumilike _I (s $$ A i) = do
->         m   :=>: tv  <- distill es (ENUMT e :>: t)
->         as  :=>: xv  <-
->           distill es (idescOp @@ [  _I,f tv
->                                  ,  L $ "i" :. [.i.
->                                       IMU (fmap (-$ []) l)
->                                           (_I -$ []) (s -$ []) (NV i)]
->                                  ] :>: x)
->         case m of
->             DTAG s   -> return $ DTag s (unfold as)  :=>: CON (PAIR tv xv)
->             _        -> return $ DCON (DPAIR m as)   :=>: CON (PAIR tv xv)
->       where
->         unfold :: DInTmRN -> [DInTmRN]
->         unfold DVOID        = []
->         unfold DU        = []
->         unfold (DPAIR s t)  = s : unfold t
->         unfold t            = [t]
-
-
->     distill es (SET :>: tm@(C (IMu ltm@(Just l :?=: (Id _I :& Id s)) i))) = do
->       let lab = evTm ((l :? ARR _I ANCHORS) :$ A i)
->       labTm                <- bquoteHere lab
->       (labDisplay :=>: _)  <- distill es (ANCHORS :>: labTm)
->       _It :=>: _Iv         <- distill es (SET :>: _I)
->       st :=>: sv           <- distill es (ARR _Iv (idesc $$ A _Iv) :>: s)
->       it :=>: iv           <- distill es (_Iv :>: i)
->       return $ (DIMU (Just labDisplay) _It st it :=>: evTm tm)
 
 
 \subsection{Adding Primitive references in Cochon}

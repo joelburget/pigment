@@ -14,6 +14,3 @@
 
 
 
-
-> import -> DistillRules where
->   distill es (UNIT :>: _) = return $ DVOID :=>: VOID
