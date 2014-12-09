@@ -9,9 +9,6 @@
 %endif
 
 
-> import -> ElimParsers where
->   (AppSize, (| Call (%keyword KwCall%) ~DU |)) :
-
 > import -> DInTmParsersSpecial where
 >   (ArgSize, (|DLABEL (%keyword KwLabel%) (sizedDInTm AppSize) (%keyword KwAsc%) (sizedDInTm ArgSize) (%keyword KwLabelEnd%)|)) :
 >   (ArgSize, (|DLRET (%keyword KwRet%) (sizedDInTm ArgSize)|)) :

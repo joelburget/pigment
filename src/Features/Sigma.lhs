@@ -11,10 +11,6 @@
 
 
 
-> import -> ElimParsers where
->   (AppSize, (| Fst (%keyword KwFst%) |)) :
->   (AppSize, (| Snd (%keyword KwSnd%) |)) :
-
 > import -> DInTmParsersSpecial where
 >   (ArgSize, (|id (bracket Square tuple)|)) :
 >   (ArgSize, (|id (%keyword KwSig%) (bracket Round sigma)|)) :

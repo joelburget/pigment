@@ -152,21 +152,22 @@ syntax. Note that each list has a corresponding aspect so features can extend
 the parser.
 
 > headParsers :: SizedParserList DHEAD
-> headParsers = arrange $ 
+> headParsers = arrange $
 >    (ArgSize, (| DType (bracket Round (keyword KwAsc *> pDInTm))|)) :
 >    (ArgSize, (| DP nameParse |)) :
 >    []
 
 > elimParsers :: SizedParserList (Elim DInTmRN)
-> elimParsers = arrange $ 
->     import <- ElimParsers
->   
->     (AppSize, (| Out (%keyword KwOut%) |)) :
->     (AppSize, (| A (sizedDInTm ArgSize) |)) :
->     []
-      
+> elimParsers = arrange [
+>     (AppSize, (| Call (%keyword KwCall%) ~DU |)),
+>     (AppSize, (| Fst (%keyword KwFst%) |)),
+>     (AppSize, (| Snd (%keyword KwSnd%) |)),
+>     (AppSize, (| Out (%keyword KwOut%) |)),
+>     (AppSize, (| A (sizedDInTm ArgSize) |))
+>     ]
+
 > inDTmParsersSpecial :: SizedParserList DInTmRN
-> inDTmParsersSpecial = arrange $ 
+> inDTmParsersSpecial = arrange $
 >     import <- DInTmParsersSpecial
 >
 >     (ArgSize, (|DSET (%keyword KwSet%)|)) :
@@ -175,8 +176,8 @@ the parser.
 >     (ArgSize, (|DCON (%keyword KwCon%) (sizedDInTm ArgSize)|)) :
 >     (ArgSize, (|(iter mkDLAV) (%keyword KwLambda%) (some (ident <|> underscore)) (%keyword KwArr%) pDInTm|)) :
 >     (AndSize, (|DPI (%keyword KwPi%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
->     (PiSize, (|(flip iter)  
->                   (some (bracket Round 
+>     (PiSize, (|(flip iter)
+>                   (some (bracket Round
 >                        (|(ident <|> underscore) , (%keyword KwAsc%) pDInTm|)))
 >                   (| (uncurry mkDPIV) (%keyword KwArr%)
 >                    | (uncurry mkDALLV) (%keyword KwImp%) |)
@@ -184,7 +185,7 @@ the parser.
 >     []
 
 > inDTmParsersMore :: ParamParserList DInTmRN DInTmRN
-> inDTmParsersMore = arrange $ 
+> inDTmParsersMore = arrange $
 >     import <- DInTmParsersMore
 
 >     (ArrSize, \ s -> (| (DARR s) (%keyword KwArr%) (sizedDInTm PiSize) |)) :
@@ -223,7 +224,7 @@ the parser.
 >     pSchemeBit :: Parsley Token (String, Either (Scheme DInTmRN) DInTmRN)
 >     pSchemeBit = bracket Round (| ident , (%keyword KwAsc%) (| (Left . SchType) pDInTm |) |)
 >                  <|> bracket Curly (| ident , (%keyword KwAsc%) (| Right pDInTm |) |)
->     
+>
 >     mkScheme :: [(String, Either (Scheme DInTmRN) DInTmRN)] -> DInTmRN -> Scheme DInTmRN
 >     mkScheme [] ty = SchType ty
 >     mkScheme ((x, Left   s) : bits) ty = SchExplicitPi  (x :<: s) (mkScheme bits ty)
