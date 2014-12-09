@@ -11,10 +11,6 @@
 
 \subsection{Extending the display language}
 
-> import -> DInTmPretty where
-
-> import -> DInTmReactive where
-
 > import -> Pretty where
 
 > import -> Reactive where

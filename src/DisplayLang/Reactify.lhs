@@ -162,7 +162,14 @@ than a $\lambda$-term is reached.
 >     reactify (DN n)          = reactify n
 >     reactify (DQ x)          = fromString $ '?':x
 >     reactify DU              = reactKword KwUnderscore
->     import <- DInTmReactive
+>     reactify (DEqBlue t u) = reactify t >> kword KwEqBlue >> reactify u
+>     reactify (DIMu (Just s   :?=: _) _)  = reactify s
+>     reactify (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
+>         reactKword KwIMu
+>         reactify ii
+>         reactify d
+>         reactify i
+
 >     reactify indtm           = fromString $ show $ indtm
 
 
