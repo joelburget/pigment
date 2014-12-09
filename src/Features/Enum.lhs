@@ -12,12 +12,6 @@
 
 
 
-> import -> ParserCode where
->     mkNum :: Int -> Maybe DInTmRN -> DInTmRN
->     mkNum 0 Nothing = DZE
->     mkNum 0 (Just t) = t
->     mkNum n t = DSU (mkNum (n-1) t)
-
 A function from an enumeration is equivalent to a list, so the elaborator can
 turn lists into functions like this:
 

@@ -15,11 +15,6 @@ rather than ascriptions. To allow this, we add a suitable constructor |DEqBlue|
 to DInTm, along with appropriate elaboration and distillation rules.
 
 
-> import -> ParserCode where
->   isEx :: DInTmRN -> Maybe DExTmRN
->   isEx (DN tm)  = Just tm
->   isEx _        = Nothing
-
 
 > import -> MakeElabRules where
 >   makeElab' loc (PROP :>: DEqBlue t u) = do

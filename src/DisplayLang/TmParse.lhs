@@ -237,7 +237,36 @@ the parser.
 
 \subsection{Parser support code}
 
-> import <- ParserCode
+> mkNum :: Int -> Maybe DInTmRN -> DInTmRN
+> mkNum 0 Nothing = DZE
+> mkNum 0 (Just t) = t
+> mkNum n t = DSU (mkNum (n-1) t)
+
+> isEx :: DInTmRN -> Maybe DExTmRN
+> isEx (DN tm)  = Just tm
+> isEx _        = Nothing
+
+> tuple :: Parsley Token DInTmRN
+> tuple =
+>     (|DPAIR (sizedDInTm ArgSize) (| id (%keyword KwComma%) pDInTm
+>                                   | id tuple |)
+>      |DVOID (% pEndOfStream %)
+>      |)
+
+> sigma :: Parsley Token DInTmRN
+> sigma = (|mkSigma (optional (ident <* keyword KwAsc)) pDInTm sigmaMore
+>          |DUNIT (% pEndOfStream %)
+>          |)
+
+> sigmaMore :: Parsley Token DInTmRN
+> sigmaMore = (|id (% keyword KwSemi %) (sigma <|> pDInTm)
+>              |(\p s -> mkSigma Nothing (DPRF p) s) (% keyword KwPrf %) pDInTm sigmaMore
+>              |(\x -> DPRF x) (% keyword KwPrf %) pDInTm
+>              |)
+
+> mkSigma :: Maybe String -> DInTmRN -> DInTmRN -> DInTmRN
+> mkSigma Nothing s t = DSIGMA s (DL (DK t))
+> mkSigma (Just x) s t = DSIGMA s (DL (x ::. t))
 
 > questionFilter :: String -> Maybe String
 > questionFilter ('?':s)  = Just s

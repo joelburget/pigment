@@ -9,10 +9,6 @@
 %endif
 
 
-\subsection{Extending the concrete syntax}
-
-> import -> ParserCode where
-
 \subsection{Extending the elaborator and distiller}
 
 > import -> MakeElabRules where
