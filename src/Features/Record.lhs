@@ -12,12 +12,6 @@
 
 \subsection{Extending the concrete syntax}
 
-> import -> KeywordTable where
->   key KwRecord        = "Rec"
->   key KwRSig          = "RSig"
->   key KwREmpty        = "REmpty"
->   key KwRCons         = "RCons"
-
 
 > import -> DInTmParsersSpecial where
 >   (AndSize, (|(DRECORD Nothing) (%keyword KwRecord%) (sizedDInTm ArgSize)|)) :

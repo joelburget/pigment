@@ -228,7 +228,58 @@ things...
 
 > key :: Keyword -> String
 
-> import <- KeywordTable
+> key KwMu        = "Mu"
+
+> key KwEnum      = "Enum"
+> key KwPlus      = "+"
+
+> key KwEqBlue = "=="
+
+> key KwMonad     = "Monad"
+> key KwReturn    = "`"  -- rename me
+
+> key KwIMu      = "IMu"
+
+> key KwCall      = "call"
+> key KwLabel     = "<"
+> key KwLabelEnd  = ">"
+> key KwRet       = "return"  -- rename me
+
+> key KwNu        = "Nu"
+> key KwCoIt      = "CoIt"
+
+> key KwProb       = "Prob"
+> key KwProbLabel  = "ProbLabel"
+> key KwPatPi      = "PatPi"
+> key KwSch        = "Sch"
+> key KwSchTy      = "SchTy"
+> key KwExpPi      = "ExpPi"
+> key KwImpPi      = "ImpPi"
+
+> key KwProp      = "Prop"
+> key KwAbsurd    = "FF"
+> key KwTrivial   = "TT"
+> key KwPrf       = ":-"
+> key KwAnd       = "&&"
+> key KwArr       = "->"
+> key KwImp       = "=>"
+> key KwAll       = "All"
+> key KwInh       = "Inh"
+> key KwWit       = "wit"
+
+> key KwQuotient  = "Quotient"
+
+> key KwRecord        = "Rec"
+> key KwRSig          = "RSig"
+> key KwREmpty        = "REmpty"
+> key KwRCons         = "RCons"
+
+> key KwFst       = "!"
+> key KwSnd       = "-"
+> key KwSig       = "Sig"
+
+> key KwUId       = "UId"
+> key KwTag       = "'"
 
 > key KwAsc         = ":"
 > key KwComma       = ","

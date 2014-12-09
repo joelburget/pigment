@@ -14,18 +14,6 @@ Elim forms inherited from elsewhere
 
 
 
-> import -> KeywordTable where
->   key KwProp      = "Prop"
->   key KwAbsurd    = "FF"
->   key KwTrivial   = "TT"
->   key KwPrf       = ":-"
->   key KwAnd       = "&&"
->   key KwArr       = "->"
->   key KwImp       = "=>"
->   key KwAll       = "All"
->   key KwInh       = "Inh"
->   key KwWit       = "wit"
-
 > import -> DInTmParsersSpecial where
 >   (ArgSize, (|DPROP     (%keyword KwProp%)|)) :
 >   (ArgSize, (|DABSURD   (%keyword KwAbsurd%)|)) :

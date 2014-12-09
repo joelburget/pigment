@@ -11,10 +11,6 @@
 \question{What should the coercion rule be for |COMPOSITE|?}
 
 
-> import -> KeywordTable where
->   key KwMonad     = "Monad"
->   key KwReturn    = "`"  -- rename me
-
 > import -> DInTmParsersSpecial where
 >   (ArgSize, (|DRETURN (%keyword KwReturn%) (sizedDInTm ArgSize)|)) :
 >   (AndSize, (|DMONAD (%keyword KwMonad%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :

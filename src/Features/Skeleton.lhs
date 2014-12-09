@@ -11,8 +11,6 @@
 
 \subsection{Extending the concrete syntax}
 
-> import -> KeywordTable where
-
 > import -> ElimParsers where
 
 > import -> DInTmParsersSpecial where

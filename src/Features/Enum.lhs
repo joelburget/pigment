@@ -12,10 +12,6 @@
 
 
 
-> import -> KeywordTable where
->   key KwEnum      = "Enum"
->   key KwPlus      = "+"
-
 > import -> DInTmParsersSpecial where
 >   (ArgSize, (|mkNum (|read digits|) (optional $ (keyword KwPlus) *> sizedDInTm ArgSize)|)) :
 >   (AndSize, (|DENUMT (%keyword KwEnum%) (sizedDInTm ArgSize)|)) :

@@ -12,9 +12,6 @@
 relation over |A|.
 
 
-> import -> KeywordTable where
->   key KwQuotient  = "Quotient"
-
 > import -> DInTmParsersSpecial where
 >   (AndSize, (|DQUOTIENT (%keyword KwQuotient%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
 

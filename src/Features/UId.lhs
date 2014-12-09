@@ -10,10 +10,6 @@
 
 
 
-> import -> KeywordTable where
->   key KwUId       = "UId"
->   key KwTag       = "'"
-
 > import -> DInTmParsersSpecial where
 >   (ArgSize, (|DUID (%keyword KwUId%)|)) :
 >   (ArgSize, (|DTAG (%keyword KwTag%) ident|)) :

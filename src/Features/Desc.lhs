@@ -236,9 +236,6 @@ case for sigma.
 
 \subsection{Extending the Display Language}
 
-> import -> KeywordTable where
->   key KwMu        = "Mu"
-
 > import -> DInTmParsersSpecial where
 >   (AndSize, (|(DMU Nothing) (%keyword KwMu%) (sizedDInTm ArgSize)|)) :
 

@@ -9,12 +9,6 @@
 %endif
 
 
-> import -> KeywordTable where
->   key KwCall      = "call"
->   key KwLabel     = "<"
->   key KwLabelEnd  = ">"
->   key KwRet       = "return"  -- rename me
-
 > import -> ElimParsers where
 >   (AppSize, (| Call (%keyword KwCall%) ~DU |)) :
 

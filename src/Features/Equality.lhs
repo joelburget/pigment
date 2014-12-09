@@ -15,9 +15,6 @@ rather than ascriptions. To allow this, we add a suitable constructor |DEqBlue|
 to DInTm, along with appropriate elaboration and distillation rules.
 
 
-> import -> KeywordTable where
->   key KwEqBlue = "=="
-
 > import -> DInTmParsersMore where
 >   (EqSize, \ t -> (| DEqBlue  (pFilter isEx (pure t)) (%keyword KwEqBlue%)
 >                               (pFilter isEx (sizedDInTm (pred EqSize))) |)) :

@@ -30,9 +30,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 %endif
 
 
-> import -> KeywordTable where
->   key KwIMu      = "IMu"
-
 > import -> DInTmParsersSpecial where
 >   (AndSize, (|(DIMU Nothing) (%keyword KwIMu%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
 

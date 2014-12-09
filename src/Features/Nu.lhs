@@ -10,10 +10,6 @@
 
 
 
-> import -> KeywordTable where
->   key KwNu        = "Nu"
->   key KwCoIt      = "CoIt"
-
 > import -> DInTmParsersSpecial where
 >   (AndSize, (|(DNU Nothing) (%keyword KwNu%) (sizedDInTm ArgSize)|)) :
 >   (AndSize, (|(DCOIT DU) (%keyword KwCoIt%)

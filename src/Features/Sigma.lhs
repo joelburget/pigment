@@ -11,11 +11,6 @@
 
 
 
-> import -> KeywordTable where
->   key KwFst       = "!"
->   key KwSnd       = "-"
->   key KwSig       = "Sig"
-
 > import -> ElimParsers where
 >   (AppSize, (| Fst (%keyword KwFst%) |)) :
 >   (AppSize, (| Snd (%keyword KwSnd%) |)) :
