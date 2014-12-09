@@ -173,7 +173,11 @@ argument, as well as its second.
 > traverseDTIN f (DQ s) = (|(DQ s)|)
 > traverseDTIN f DU     = (|DU|)
 > traverseDTIN f (DTIN tm) = (|DTIN (traverse f tm)|)
-> import <- DInTmTraverse
+> traverseDTIN f (DAnchor s args) = (|(DAnchor s) (traverseDTIN f args)|)
+> traverseDTIN f (DEqBlue t u) =
+>   (| DEqBlue (traverseDTEX f t) (traverseDTEX f u) |)
+> traverseDTIN f (DIMu s i) = (|DIMu (traverse (traverseDTIN f) s) (traverseDTIN f i)|)
+> traverseDTIN f (DTag s xs) = (|(DTag s) (traverse (traverseDTIN f) xs)|)
 
 > traverseDTEX :: Applicative f => (p -> f q) -> DExTm p x -> f (DExTm q x)
 > traverseDTEX f (h ::$ as) = (|(traverseDHead f h) ::$ (traverse (traverse (traverseDTIN f)) as)|)

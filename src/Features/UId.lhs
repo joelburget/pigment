@@ -28,8 +28,5 @@
 >   pretty (DTag s xs)  = wrapDoc (kword KwTag <> text s
 >       <+> hsep (map (flip pretty ArgSize) xs)) AppSize
 
-> import -> DInTmTraverse where
->   traverseDTIN f (DTag s xs) = (|(DTag s) (traverse (traverseDTIN f) xs)|)
-
 > import -> MakeElabRules where
 >   makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s

@@ -9,9 +9,6 @@
 %endif
 
 
-> import -> DInTmTraverse where
->   traverseDTIN f (DAnchor s args) = (|(DAnchor s) (traverseDTIN f args)|)
-
 > import -> DInTmPretty where
 >   pretty (DANCHOR s args)  = wrapDoc (text s <+> pretty args ArgSize) ArgSize
 

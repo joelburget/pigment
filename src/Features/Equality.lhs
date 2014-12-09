@@ -22,10 +22,6 @@ to DInTm, along with appropriate elaboration and distillation rules.
 > import -> DInTmReactive where
 >   reactify (DEqBlue t u) = reactify t >> kword KwEqBlue >> reactify u
 
-> import -> DInTmTraverse where
->   traverseDTIN f (DEqBlue t u) =
->     (| DEqBlue (traverseDTEX f t) (traverseDTEX f u) |)
-
 
 > import -> KeywordConstructors where
 >   KwEqBlue :: Keyword
