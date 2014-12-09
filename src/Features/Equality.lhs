@@ -15,10 +15,6 @@ rather than ascriptions. To allow this, we add a suitable constructor |DEqBlue|
 to DInTm, along with appropriate elaboration and distillation rules.
 
 
-> import -> DInTmParsersMore where
->   (EqSize, \ t -> (| DEqBlue  (pFilter isEx (pure t)) (%keyword KwEqBlue%)
->                               (pFilter isEx (sizedDInTm (pred EqSize))) |)) :
-
 > import -> ParserCode where
 >   isEx :: DInTmRN -> Maybe DExTmRN
 >   isEx (DN tm)  = Just tm

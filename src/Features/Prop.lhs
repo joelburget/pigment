@@ -14,10 +14,6 @@ Elim forms inherited from elsewhere
 
 
 
-> import -> DInTmParsersMore where
->   (AndSize, \ s -> (| (DAND s) (%keyword KwAnd%) (sizedDInTm AndSize)  |)) :
->   (ArrSize, \ s -> (| (DIMP s) (%keyword KwImp%) (sizedDInTm PiSize)   |)) :
-
 
 
 > import -> DistillRules where

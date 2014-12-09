@@ -11,8 +11,6 @@
 
 \subsection{Extending the concrete syntax}
 
-> import -> DInTmParsersMore where
-
 > import -> ParserCode where
 
 \subsection{Extending the elaborator and distiller}
