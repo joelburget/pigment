@@ -12,9 +12,6 @@
 relation over |A|.
 
 
-> import -> DInTmParsersSpecial where
->   (AndSize, (|DQUOTIENT (%keyword KwQuotient%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
-
 
 As a bit of syntactic sugar, we elaborate |con| as |COMPOSITE| and |[x]| as
 |CLASS x|. \question{Why not just use |CON| rather than |COMPOSITE| everywhere?}

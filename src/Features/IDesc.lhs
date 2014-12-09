@@ -30,9 +30,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 %endif
 
 
-> import -> DInTmParsersSpecial where
->   (AndSize, (|(DIMU Nothing) (%keyword KwIMu%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
-
 > import -> MakeElabRules where
 
 >   makeElab' loc (SET :>: DIMU Nothing iI d i) = do

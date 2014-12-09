@@ -9,10 +9,6 @@
 %endif
 
 
-> import -> DInTmParsersSpecial where
->   (ArgSize, (|DLABEL (%keyword KwLabel%) (sizedDInTm AppSize) (%keyword KwAsc%) (sizedDInTm ArgSize) (%keyword KwLabelEnd%)|)) :
->   (ArgSize, (|DLRET (%keyword KwRet%) (sizedDInTm ArgSize)|)) :
-
 
 If we spot a neutral term being called when distilling, we distill the label
 instead, thereby replacing horrible stuck inductions with the pretty functions

@@ -167,22 +167,61 @@ the parser.
 >     ]
 
 > inDTmParsersSpecial :: SizedParserList DInTmRN
-> inDTmParsersSpecial = arrange $
->     import <- DInTmParsersSpecial
+> inDTmParsersSpecial = arrange [
+>   (AndSize, (|(DMU Nothing) (%keyword KwMu%) (sizedDInTm ArgSize)|)),
+
+>   (ArgSize, (|mkNum (|read digits|) (optional $ (keyword KwPlus) *> sizedDInTm ArgSize)|)),
+>   (AndSize, (|DENUMT (%keyword KwEnum%) (sizedDInTm ArgSize)|)),
+
+>   (ArgSize, (|DRETURN (%keyword KwReturn%) (sizedDInTm ArgSize)|)),
+>   (AndSize, (|DMONAD (%keyword KwMonad%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
+
+>   (AndSize, (|(DIMU Nothing) (%keyword KwIMu%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
+
+>   (ArgSize, (|DLABEL (%keyword KwLabel%) (sizedDInTm AppSize) (%keyword KwAsc%) (sizedDInTm ArgSize) (%keyword KwLabelEnd%)|)),
+>   (ArgSize, (|DLRET (%keyword KwRet%) (sizedDInTm ArgSize)|)),
+
+>   (AndSize, (|(DNU Nothing) (%keyword KwNu%) (sizedDInTm ArgSize)|)),
+>   (AndSize, (|(DCOIT DU) (%keyword KwCoIt%)
+>       (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
+
+>   (ArgSize, (|DPROP     (%keyword KwProp%)|)),
+>   (ArgSize, (|DABSURD   (%keyword KwAbsurd%)|)),
+>   (ArgSize, (|DTRIVIAL  (%keyword KwTrivial%)|)),
+>   (AndSize, (|DPRF      (%keyword KwPrf%) (sizedDInTm AndSize)|)),
+>   (AndSize, (|DINH      (%keyword KwInh%) (sizedDInTm ArgSize)|)),
+>   (AndSize, (|DWIT      (%keyword KwWit%) (sizedDInTm ArgSize)|)),
+>   (AndSize, (|DALL      (%keyword KwAll%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
+
+>   (AndSize, (|DQUOTIENT (%keyword KwQuotient%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
+
+>   (AndSize, (|(DRECORD Nothing) (%keyword KwRecord%) (sizedDInTm ArgSize)|)),
+>   (ArgSize, (|(DRSIG) (%keyword KwRSig%) |)),
+>   (ArgSize, (|(DREMPTY) (%keyword KwREmpty%)|)),
+>   (ArgSize, (|(DRCONS) (%keyword KwRCons%) (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
+
+>   (ArgSize, (|id (bracket Square tuple)|)),
+>   (ArgSize, (|id (%keyword KwSig%) (bracket Round sigma)|)),
+>   (ArgSize, (|DSIGMA (%keyword KwSig%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
+
+>   (ArgSize, (|DUID (%keyword KwUId%)|)),
+>   (ArgSize, (|DTAG (%keyword KwTag%) ident|)),
+>   (AppSize, (|DTag (%keyword KwTag%) ident (many (sizedDInTm ArgSize))|)),
+
 >
->     (ArgSize, (|DSET (%keyword KwSet%)|)) :
->     (ArgSize, (|DQ (pFilter questionFilter ident)|)) :
->     (ArgSize, (|DU (%keyword KwUnderscore%)|)) :
->     (ArgSize, (|DCON (%keyword KwCon%) (sizedDInTm ArgSize)|)) :
->     (ArgSize, (|(iter mkDLAV) (%keyword KwLambda%) (some (ident <|> underscore)) (%keyword KwArr%) pDInTm|)) :
->     (AndSize, (|DPI (%keyword KwPi%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
+>     (ArgSize, (|DSET (%keyword KwSet%)|)),
+>     (ArgSize, (|DQ (pFilter questionFilter ident)|)),
+>     (ArgSize, (|DU (%keyword KwUnderscore%)|)),
+>     (ArgSize, (|DCON (%keyword KwCon%) (sizedDInTm ArgSize)|)),
+>     (ArgSize, (|(iter mkDLAV) (%keyword KwLambda%) (some (ident <|> underscore)) (%keyword KwArr%) pDInTm|)),
+>     (AndSize, (|DPI (%keyword KwPi%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)),
 >     (PiSize, (|(flip iter)
 >                   (some (bracket Round
 >                        (|(ident <|> underscore) , (%keyword KwAsc%) pDInTm|)))
 >                   (| (uncurry mkDPIV) (%keyword KwArr%)
 >                    | (uncurry mkDALLV) (%keyword KwImp%) |)
->                   pDInTm |)) :
->     []
+>                   pDInTm |))
+>     ]
 
 > inDTmParsersMore :: ParamParserList DInTmRN DInTmRN
 > inDTmParsersMore = arrange $

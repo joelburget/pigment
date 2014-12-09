@@ -10,11 +10,6 @@
 
 
 
-> import -> DInTmParsersSpecial where
->   (AndSize, (|(DNU Nothing) (%keyword KwNu%) (sizedDInTm ArgSize)|)) :
->   (AndSize, (|(DCOIT DU) (%keyword KwCoIt%)
->       (sizedDInTm ArgSize) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
-
 
 
 

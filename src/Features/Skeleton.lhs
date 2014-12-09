@@ -11,8 +11,6 @@
 
 \subsection{Extending the concrete syntax}
 
-> import -> DInTmParsersSpecial where
-
 > import -> DInTmParsersMore where
 
 > import -> ParserCode where

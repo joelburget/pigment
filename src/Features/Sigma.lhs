@@ -11,11 +11,6 @@
 
 
 
-> import -> DInTmParsersSpecial where
->   (ArgSize, (|id (bracket Square tuple)|)) :
->   (ArgSize, (|id (%keyword KwSig%) (bracket Round sigma)|)) :
->   (ArgSize, (|DSIGMA (%keyword KwSig%) (sizedDInTm ArgSize) (sizedDInTm ArgSize)|)) :
-
 > import -> ParserCode where
 >     tuple :: Parsley Token DInTmRN
 >     tuple =

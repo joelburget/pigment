@@ -12,10 +12,6 @@
 
 
 
-> import -> DInTmParsersSpecial where
->   (ArgSize, (|mkNum (|read digits|) (optional $ (keyword KwPlus) *> sizedDInTm ArgSize)|)) :
->   (AndSize, (|DENUMT (%keyword KwEnum%) (sizedDInTm ArgSize)|)) :
-
 > import -> ParserCode where
 >     mkNum :: Int -> Maybe DInTmRN -> DInTmRN
 >     mkNum 0 Nothing = DZE
