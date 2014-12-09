@@ -221,7 +221,3 @@ Nothing else matches? We had better give up.
 >     , errTyVal (v :<: ty)
 >     ]
 
-
-> import -> CochonTactics where
->   : unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
->       "relabel <pattern> - changes names of arguments in label to pattern"

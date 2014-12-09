@@ -123,7 +123,3 @@
 
 > instance (ShowHaskell a, ShowHaskell b) => ShowHaskell (a :>: b) where
 >     showHaskell bs (ty :>: t) = "(" ++ showHaskell bs ty ++ " :>: " ++ showHaskell bs t ++ ")"
-
-> import -> CochonTactics where
->   : unaryExCT "haskell" (\ t -> elabInfer' t >>= dumpHaskell)
->       "haskell - renders an Epigram term as a Haskell definition."

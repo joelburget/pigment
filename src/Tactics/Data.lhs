@@ -235,27 +235,3 @@ equality, so it doesn't catch the wrong |MU|s.
 > setLabelN l (f :$ a) = setLabelN l f :$ fmap (setLabel l) a
 > setLabelN l (t :? ty) = setLabel l t :? setLabel l ty
 
-
-> import -> CochonTactics where
->   : CochonTactic
->         {  ctName = "data"
->         ,  ctParse = do
->              nom <- tokenString
->              pars <- tokenListArgs (bracket Round $ tokenPairArgs
->                tokenString
->                (keyword KwAsc)
->                tokenInTm) (|()|)
->              keyword KwDefn
->              scs <- tokenListArgs (bracket Round $ tokenPairArgs
->                (|id (%keyword KwTag%)
->                     tokenString |)
->                (keyword KwAsc)
->                tokenInTm)
->               (keyword KwSemi)
->              return $ B0 :< nom :< pars :< scs
->         , ctxTrans = (\[StrArg nom, pars, cons] -> simpleOutput $ do
->               elabData nom (argList (argPair argToStr argToIn) pars)
->                            (argList (argPair argToStr argToIn) cons)
->               return "Data'd.")
->         ,  ctHelp = "data <name> [<para>]* := [(<con> : <ty>) ;]* - builds a data type for thee."
->         }

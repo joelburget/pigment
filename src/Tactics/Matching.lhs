@@ -185,22 +185,3 @@ and another term of the same type. It prints out the resulting substitution.
 >             tt  <- elaborate' (SET :>: t)
 >             r   <- assumeParam (s :<: tt)
 >             return (r, Nothing)
-
-> import -> CochonTactics where
->   : (simpleCT
->     "match"
->     (do
->         pars <- tokenListArgs (bracket Round $ tokenPairArgs
->                                       tokenString
->                                       (keyword KwAsc)
->                                       tokenInTm) (| () |)
->         keyword KwSemi
->         tm1 <- tokenExTm
->         keyword KwSemi
->         tm2 <- tokenInTm
->         return (B0 :< pars :< tm1 :< tm2)
->      )
->      (\ [pars, ExArg a, InArg b] ->
->          matchCTactic (argList (argPair argToStr argToIn) pars) a b)
->      "match [<para>]* ; <term> ; <term> - match parameters in first term against second."
->    )

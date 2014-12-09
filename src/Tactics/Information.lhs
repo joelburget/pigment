@@ -444,30 +444,3 @@ final type-term pair (using a quick hack).
 >     startScheduler
 >     infoElaborate (DP [("elab", Rel 0)] ::$ [])
 
-
-> import -> CochonTactics where
->   : unaryExCT "elm" elmCT "elm <term> - elaborate <term>, stabilise and print type-term pair."
-
->   : unaryExCT "elaborate" infoElaborate
->       "elaborate <term> - elaborates, evaluates, quotes, distills and pretty-prints <term>."
->   : unaryExCT "infer" infoInfer
->       "infer <term> - elaborates <term> and infers its type."
-
->   : unaryInCT "parse" (return . fromString . show)
->       "parse <term> - parses <term> and displays the internal display-sytnax representation."
-
->   : unaryNameCT "scheme" infoScheme
->       "scheme <name> - looks up the scheme on the definition <name>."
-
->   : unaryStringCT "show" (\s -> case s of
->         "inscope"  -> infoInScope
->         "context"  -> infoContext
->         "dump"     -> infoDump
->         "hyps"     -> infoHypotheses
->         "state"    -> reactProofState
->         _          -> return "show: please specify exactly what to show."
->       )
->       "show <inscope/context/dump/hyps/state> - displays useless information."
-
->   : unaryExCT "whatis" infoWhatIs
->       "whatis <term> - prints the various representations of <term>."

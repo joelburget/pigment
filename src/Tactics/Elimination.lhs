@@ -843,8 +843,6 @@ excluded.
 
 
 
-We make elimination accessible to the user by adding it as a Cochon tactic:
-
 > import -> CochonTacticsCode where
 >   elimCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
 >   elimCTactic c r = do
@@ -853,11 +851,3 @@ We make elimination accessible to the user by adding it as a Cochon tactic:
 >     elim c' (elimTy :>: e)
 >     toFirstMethod
 >     return "Eliminated. Subgoals awaiting work..."
-
-> import -> CochonTactics where
->   : (simpleCT
->     "eliminate"
->     (|(|(B0 :<) (tokenOption tokenName)|) :< (|id tokenExTm
->                                               |id tokenAscription |)|)
->     (\[n,e] -> elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
->     "eliminate [<comma>] <eliminator> - eliminates with a motive.")

@@ -325,7 +325,3 @@ methods, then returns to the original goal.
 >         _   -> cursorUp >> cursorAboveLambdas
 
 
-
-> import -> CochonTactics where
->   : nullaryCT "simplify" (problemSimplify >> optional' seekGoal >> return "Simplified.")
->       "simplify - simplifies the current problem."

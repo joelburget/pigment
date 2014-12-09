@@ -329,22 +329,6 @@ mainDef :: CName -> String
 mainDef m = "main () -> Unit = __dumpData(" ++ m ++ "())"
 
 
-We add a Cochon tactic to invoke the compiler.
-
-import -> CochonTactics where
-  : CochonTactic
-        {  ctName = "compile"
-        ,  ctParse = (|(|(B0 :<) tokenName|) :< tokenString|)
-        ,  ctxTrans = (\ [ExArg (DP r ::$ []), StrArg fn] -> InteractionM () $ \(InteractionState{proofCtx=(locs :< loc)} -> do
-            let  Right dev = evalStateT getAboveCursor loc
-                 Right (n := _) = evalStateT (resolveDiscard r) loc
-            b <- compileCommand n (reverseDev dev) fn
-            putStrLn (if b then "Compiled." else "EPIC FAIL")
-            return (locs :< loc)
-          )
-        ,  ctHelp = "compile <name> <file> - compiles the proof state with <name> as the main term to be evalauted, producing a binary called <file>."
-        }
-
 
 \subsection{Operator definitions}
 

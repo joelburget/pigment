@@ -237,31 +237,3 @@ dawg.}
 > isetLabelN l (f :$ a) = isetLabelN l f :$ fmap (isetLabel l) a
 > isetLabelN l (t :? ty) = isetLabel l t :? isetLabel l ty
 
-
-> import -> CochonTactics where
->   : CochonTactic
->         {  ctName = "idata"
->         ,  ctParse = do
->              nom <- tokenString
->              pars <- tokenListArgs (bracket Round $ tokenPairArgs
->                tokenString
->                (keyword KwAsc)
->                tokenInTm) (|()|)
->              keyword KwAsc
->              indty <- tokenAppInTm
->              keyword KwArr
->              keyword KwSet
->              keyword KwDefn
->              scs <- tokenListArgs (bracket Round $ tokenPairArgs
->                (|id (%keyword KwTag%)
->                     tokenString |)
->                (keyword KwAsc)
->                tokenInTm)
->               (keyword KwSemi)
->              return $ B0 :< nom :< pars :< indty :< scs
->         , ctxTrans = (\ [StrArg nom, pars, indty, cons] -> simpleOutput $
->                     ielabData nom (argList (argPair argToStr argToIn) pars)
->                      (argToIn indty) (argList (argPair argToStr argToIn) cons)
->                       >> return "Data'd.")
->         ,  ctHelp = "idata <name> [<para>]* : <inx> -> Set  := [(<con> : <ty>) ;]* - builds a data type for thee."
->         }

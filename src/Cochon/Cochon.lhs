@@ -497,10 +497,214 @@ Miscellaneous tactics:
 
 Import more tactics from an aspect:
 
->     import <- CochonTactics
+  : CochonTactic
+        {  ctName = "compile"
+        ,  ctParse = (|(|(B0 :<) tokenName|) :< tokenString|)
+        ,  ctxTrans = (\ [ExArg (DP r ::$ []), StrArg fn] -> InteractionM () $ \(InteractionState{proofCtx=(locs :< loc)} -> do
+            let  Right dev = evalStateT getAboveCursor loc
+                 Right (n := _) = evalStateT (resolveDiscard r) loc
+            b <- compileCommand n (reverseDev dev) fn
+            putStrLn (if b then "Compiled." else "EPIC FAIL")
+            return (locs :< loc)
+          )
+        ,  ctHelp = "compile <name> <file> - compiles the proof state with <name> as the main term to be evalauted, producing a binary called <file>."
+        }
 >     : [] )
 
+>   : CochonTactic
+>         {  ctName = "data"
+>         ,  ctParse = do
+>              nom <- tokenString
+>              pars <- tokenListArgs (bracket Round $ tokenPairArgs
+>                tokenString
+>                (keyword KwAsc)
+>                tokenInTm) (|()|)
+>              keyword KwDefn
+>              scs <- tokenListArgs (bracket Round $ tokenPairArgs
+>                (|id (%keyword KwTag%)
+>                     tokenString |)
+>                (keyword KwAsc)
+>                tokenInTm)
+>               (keyword KwSemi)
+>              return $ B0 :< nom :< pars :< scs
+>         , ctxTrans = (\[StrArg nom, pars, cons] -> simpleOutput $ do
+>               elabData nom (argList (argPair argToStr argToIn) pars)
+>                            (argList (argPair argToStr argToIn) cons)
+>               return "Data'd.")
+>         ,  ctHelp = "data <name> [<para>]* := [(<con> : <ty>) ;]* - builds a data type for thee."
+>         }
+
+>   : (simpleCT
+>     "eliminate"
+>     (|(|(B0 :<) (tokenOption tokenName)|) :< (|id tokenExTm
+>                                               |id tokenAscription |)|)
+>     (\[n,e] -> elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
+>     "eliminate [<comma>] <eliminator> - eliminates with a motive.")
+
+>   : unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Ta.")
+>       "= <term> - solves the programming problem by returning <term>."
+
+>   : (simpleCT
+>      "define"
+>      (| (| (B0 :<) tokenExTm |) :< (%keyword KwDefn%) tokenInTm |)
+>      (\ [ExArg rl, InArg tm] -> defineCTactic rl tm)
+>      "define <prob> := <term> - relabels and solves <prob> with <term>.")
+
+The By gadget, written |<=|, invokes elimination with a motive, then simplifies
+the methods and moves to the first subgoal remaining.
+
+>   : (simpleCT
+>     "<="
+>     (|(|(B0 :<) (tokenOption tokenName)|) :< (|id tokenExTm
+>                                               |id tokenAscription |)|)
+>     (\ [n,e] -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
+>     "<= [<comma>] <eliminator> - eliminates with a motive.")
+
+The Refine gadget relabels the programming problem, then either defines it
+or eliminates with a motive.
+
+>   : (simpleCT
+>     "refine"
+>     (|(|(B0 :<) tokenExTm|) :< (|id (%keyword KwEq%) tokenInTm
+>                                 |id (%keyword KwBy%) tokenExTm
+>                                 |id (%keyword KwBy%) tokenAscription
+>                                 |)
+>      |)
+>     (\ [ExArg rl, arg] -> case arg of
+>         InArg tm -> defineCTactic rl tm
+>         ExArg tm -> relabel rl >> byCTactic Nothing tm)
+>     ("refine <prob> =  <term> - relabels and solves <prob> with <term>.\n" ++
+>      "refine <prob> <= <eliminator> - relabels and eliminates with a motive."))
+
+>     : simpleCT
+>         "solve"
+>         (| (| (B0 :<) tokenName |) :< tokenInTm |)
+>         (\ [ExArg (DP rn ::$ []), InArg tm] -> do
+>             (ref, spine, _) <- resolveHere rn
+>             _ :<: ty <- inferHere (P ref $:$ toSpine spine)
+>             _ :=>: tv <- elaborate' (ty :>: tm)
+>             tm' <- bquoteHere tv -- force definitional expansion
+>             solveHole ref tm'
+>             return "Solved."
+>           )
+>         "solve <name> <term> - solves the hole <name> with <term>."
+
+>   : CochonTactic
+>         {  ctName = "idata"
+>         ,  ctParse = do
+>              nom <- tokenString
+>              pars <- tokenListArgs (bracket Round $ tokenPairArgs
+>                tokenString
+>                (keyword KwAsc)
+>                tokenInTm) (|()|)
+>              keyword KwAsc
+>              indty <- tokenAppInTm
+>              keyword KwArr
+>              keyword KwSet
+>              keyword KwDefn
+>              scs <- tokenListArgs (bracket Round $ tokenPairArgs
+>                (|id (%keyword KwTag%)
+>                     tokenString |)
+>                (keyword KwAsc)
+>                tokenInTm)
+>               (keyword KwSemi)
+>              return $ B0 :< nom :< pars :< indty :< scs
+>         , ctxTrans = (\ [StrArg nom, pars, indty, cons] -> simpleOutput $
+>                     ielabData nom (argList (argPair argToStr argToIn) pars)
+>                      (argToIn indty) (argList (argPair argToStr argToIn) cons)
+>                       >> return "Data'd.")
+>         ,  ctHelp = "idata <name> [<para>]* : <inx> -> Set  := [(<con> : <ty>) ;]* - builds a data type for thee."
+>         }
+
+>   : unaryExCT "elm" elmCT "elm <term> - elaborate <term>, stabilise and print type-term pair."
+
+>   : unaryExCT "elaborate" infoElaborate
+>       "elaborate <term> - elaborates, evaluates, quotes, distills and pretty-prints <term>."
+>   : unaryExCT "infer" infoInfer
+>       "infer <term> - elaborates <term> and infers its type."
+
+>   : unaryInCT "parse" (return . fromString . show)
+>       "parse <term> - parses <term> and displays the internal display-sytnax representation."
+
+>   : unaryNameCT "scheme" infoScheme
+>       "scheme <name> - looks up the scheme on the definition <name>."
+
+>   : unaryStringCT "show" (\s -> case s of
+>         "inscope"  -> infoInScope
+>         "context"  -> infoContext
+>         "dump"     -> infoDump
+>         "hyps"     -> infoHypotheses
+>         "state"    -> reactProofState
+>         _          -> return "show: please specify exactly what to show."
+>       )
+>       "show <inscope/context/dump/hyps/state> - displays useless information."
+
+>   : unaryExCT "whatis" infoWhatIs
+>       "whatis <term> - prints the various representations of <term>."
+
+>   : (simpleCT
+>     "match"
+>     (do
+>         pars <- tokenListArgs (bracket Round $ tokenPairArgs
+>                                       tokenString
+>                                       (keyword KwAsc)
+>                                       tokenInTm) (| () |)
+>         keyword KwSemi
+>         tm1 <- tokenExTm
+>         keyword KwSemi
+>         tm2 <- tokenInTm
+>         return (B0 :< pars :< tm1 :< tm2)
+>      )
+>      (\ [pars, ExArg a, InArg b] ->
+>          matchCTactic (argList (argPair argToStr argToIn) pars) a b)
+>      "match [<para>]* ; <term> ; <term> - match parameters in first term against second."
+>    )
+
+>   : nullaryCT "simplify" (problemSimplify >> optional' seekGoal >> return "Simplified.")
+>       "simplify - simplifies the current problem."
+
+>   : CochonTactic
+>         {  ctName = "record"
+>         ,  ctParse = do
+>              nom <- tokenString
+>              keyword KwDefn
+>              scs <- tokenListArgs (bracket Round $ tokenPairArgs
+>                tokenString
+>                (keyword KwAsc)
+>                tokenInTm)
+>               (keyword KwSemi)
+>              return $ B0 :< nom :< pars :< scs
+>         , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
+>                     elabRecord nom (argList (argPair argToStr argToIn) pars)
+>                                    (argList (argPair argToStr argToIn) cons)
+>                       >> return "Record'd.")
+>         ,  ctHelp = "record <name> [<para>]* := [(<label> : <ty>) ;]* - builds a record type."
+>         }
+
+>   : unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
+>       "relabel <pattern> - changes names of arguments in label to pattern"
+
+>   : unaryExCT "haskell" (\ t -> elabInfer' t >>= dumpHaskell)
+>       "haskell - renders an Epigram term as a Haskell definition."
+
 > import <- CochonTacticsCode
+
+> import -> CochonTacticsCode where
+>     defineCTactic :: DExTmRN -> DInTmRN -> ProofState PureReact
+>     defineCTactic rl tm = do
+>         relabel rl
+>         elabGiveNext (DLRET tm)
+>         return "Hurrah!"
+
+> import -> CochonTacticsCode where
+>     byCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
+>     byCTactic n e = do
+>         elimCTactic n e
+>         optional' problemSimplify           -- simplify first method
+>         many' (goDown >> problemSimplify)   -- simplify other methods
+>         many' goUp                          -- go back up to motive
+>         optional' seekGoal                  -- jump to goal
+>         return "Eliminated and simplified."
 
 
 > doCTacticsAt :: [(Name, [CTData])] -> PageM ()
