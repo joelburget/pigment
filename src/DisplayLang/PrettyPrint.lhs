@@ -190,7 +190,18 @@ than a $\lambda$-term is reached.
 >     pretty (DN n)          = pretty n
 >     pretty (DQ x)          = const (char '?' <> text x)
 >     pretty DU              = const (kword KwUnderscore)
->     import <- DInTmPretty
+>     pretty (DANCHOR s args)  = wrapDoc (text s <+> pretty args ArgSize) ArgSize
+>     pretty (DEqBlue t u) = wrapDoc
+>         (pretty t ArgSize <+> kword KwEqBlue <+> pretty u ArgSize)
+>         ArgSize
+>     pretty (DIMu (Just s   :?=: _) _)  = pretty s
+>     pretty (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = wrapDoc
+>         (kword KwIMu <+> pretty ii ArgSize <+> pretty d ArgSize <+> pretty i ArgSize)
+>         AppSize
+>     pretty (DTAG s)     = const (kword KwTag <> text s)
+>     pretty (DTag s xs)  = wrapDoc (kword KwTag <> text s
+>         <+> hsep (map (flip pretty ArgSize) xs)) AppSize
+
 >     pretty indtm           = const (quotes . text . show $ indtm)
 
 

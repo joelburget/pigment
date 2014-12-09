@@ -9,9 +9,6 @@
 %endif
 
 
-> import -> DInTmPretty where
->   pretty (DANCHOR s args)  = wrapDoc (text s <+> pretty args ArgSize) ArgSize
-
 > import -> DistillRules where
 >   distill es (ANCHORS :>: x@(ANCHOR (TAG u) t ts)) = do
 >     (displayTs :=>: _) <- distill es (ALLOWEDBY (evTm t) :>: ts)

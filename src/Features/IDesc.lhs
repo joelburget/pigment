@@ -18,12 +18,6 @@ it. Therefore, a |DIMu| takes an anchor directly. The distillation
 rule takes care of taking applying the lambda-bound anchor to the
 index of |IMu| to make a fully applied anchor |DIMu|.
 
-> import -> DInTmPretty where
->   pretty (DIMu (Just s   :?=: _) _)  = pretty s
->   pretty (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = wrapDoc
->       (kword KwIMu <+> pretty ii ArgSize <+> pretty d ArgSize <+> pretty i ArgSize)
->       AppSize
-
 > import -> DInTmReactive where
 >   reactify (DIMu (Just s   :?=: _) _)  = reactify s
 >   reactify (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = do

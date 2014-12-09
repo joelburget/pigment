@@ -23,10 +23,5 @@
 >   (ArgSize, (|DTAG (%keyword KwTag%) ident|)) :
 >   (AppSize, (|DTag (%keyword KwTag%) ident (many (sizedDInTm ArgSize))|)) :
 
-> import -> DInTmPretty where
->   pretty (DTAG s)     = const (kword KwTag <> text s)
->   pretty (DTag s xs)  = wrapDoc (kword KwTag <> text s
->       <+> hsep (map (flip pretty ArgSize) xs)) AppSize
-
 > import -> MakeElabRules where
 >   makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s
