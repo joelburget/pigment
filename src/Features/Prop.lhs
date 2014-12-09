@@ -11,28 +11,6 @@
 
 Elim forms inherited from elsewhere
 
-> import -> Reactive where
->   reactifyAll :: PureReact -> DInTmRN -> PureReact
->   reactifyAll bs (DALL (DPRF p) (DL (DK q))) = reactifyAllMore
->     bs
->     (reactify p >> reactKword KwImp >> reactify q)
->   reactifyAll bs (DALL s (DL (x ::. t))) = reactifyAll
->       (bs >> parens (fromString x >> reactKword KwAsc >> reactify s))
->       t
->   reactifyAll bs (DALL s (DL (DK t))) = reactifyAll bs
->       (DALL s (DL ("_" ::. t)))
->   reactifyAll bs (DALL s t) = reactifyAllMore bs
->     (reactKword KwAll >> reactify s >> reactify t)
->   reactifyAll bs tm = reactifyAllMore bs (reactify tm)
->
->   -- reactifyAllMore :: PureReact -> PureReact -> PureReact
->   -- reactifyAllMore bs d
->   --   | isEmpty bs  = wrapDoc d PiSize
->   --   | otherwise   = wrapDoc (bs <+> kword KwImp <+> d) PiSize
->
->   reactifyAllMore :: PureReact -> PureReact -> PureReact
->   reactifyAllMore bs d = bs >> reactKword KwImp >> d
-
 
 
 

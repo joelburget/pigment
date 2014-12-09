@@ -10,15 +10,6 @@
 %endif
 
 
-> import -> Reactive where
->   reactifyEnumIndex :: Int -> DInTmRN -> PureReact
->   reactifyEnumIndex n DZE      = fromString $ show n
->   reactifyEnumIndex n (DSU t)  = reactifyEnumIndex (succ n) t
->   reactifyEnumIndex n tm       = do
->       (fromString (show n))
->       reactKword KwPlus
->       reactify tm
-
 
 
 > import -> KeywordConstructors where

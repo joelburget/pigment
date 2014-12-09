@@ -190,7 +190,63 @@ than a $\lambda$-term is reached.
 >         "[" >> fromString x >> reactKword KwAsc >> reactify s >> "]"
 >         reactify schT
 
-> import <- Reactive
+> reactifyEnumIndex :: Int -> DInTmRN -> PureReact
+> reactifyEnumIndex n DZE      = fromString $ show n
+> reactifyEnumIndex n (DSU t)  = reactifyEnumIndex (succ n) t
+> reactifyEnumIndex n tm       = do
+>     (fromString (show n))
+>     reactKword KwPlus
+>     reactify tm
+
+> reactifyAll :: PureReact -> DInTmRN -> PureReact
+> reactifyAll bs (DALL (DPRF p) (DL (DK q))) = reactifyAllMore
+>   bs
+>   (reactify p >> reactKword KwImp >> reactify q)
+> reactifyAll bs (DALL s (DL (x ::. t))) = reactifyAll
+>     (bs >> parens (fromString x >> reactKword KwAsc >> reactify s))
+>     t
+> reactifyAll bs (DALL s (DL (DK t))) = reactifyAll bs
+>     (DALL s (DL ("_" ::. t)))
+> reactifyAll bs (DALL s t) = reactifyAllMore bs
+>   (reactKword KwAll >> reactify s >> reactify t)
+> reactifyAll bs tm = reactifyAllMore bs (reactify tm)
+>
+> -- reactifyAllMore :: PureReact -> PureReact -> PureReact
+> -- reactifyAllMore bs d
+> --   | isEmpty bs  = wrapDoc d PiSize
+> --   | otherwise   = wrapDoc (bs <+> kword KwImp <+> d) PiSize
+>
+> reactifyAllMore :: PureReact -> PureReact -> PureReact
+> reactifyAllMore bs d = bs >> reactKword KwImp >> d
+
+> reactifyPair :: DInTmRN -> PureReact
+> reactifyPair p = "[" >> reactifyPairMore "" p >> "]"
+
+> reactifyPairMore :: PureReact -> DInTmRN -> PureReact
+> reactifyPairMore d DVOID        = d
+> reactifyPairMore d (DPAIR a b)  = reactifyPairMore
+>     (d >> reactify a)
+>     b
+> reactifyPairMore d t            = d >> reactKword KwComma >> reactify t
+
+> reactifySigma :: PureReact -> DInTmRN -> PureReact
+> reactifySigma d DUNIT                      = reactifySigmaDone d ""
+> reactifySigma d (DSIGMA s (DL (x ::. t)))  = reactifySigma
+>     (d >> fromString x >> reactKword KwAsc >> reactify s >> reactKword KwSemi)
+>     t
+> reactifySigma d (DSIGMA s (DL (DK t)))     = reactifySigma
+>     (d >> reactify s >> reactKword KwSemi) t
+> reactifySigma d (DSIGMA s t) = reactifySigmaDone d
+>     (reactKword KwSig >> reactify s >> reactify t)
+> reactifySigma d t = reactifySigmaDone d (reactify t)
+
+> reactifySigmaDone :: PureReact -> PureReact -> PureReact
+> reactifySigmaDone s t = reactKword KwSig >> "(" >> s >> t >> ")"
+
+> -- reactifySigmaDone :: PureReact -> PureReact -> PureReact
+> -- reactifySigmaDone s t
+> --   | isEmpty s  = wrapDoc t AppSize
+> --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
 The |Elim| functor is straightforward.
 

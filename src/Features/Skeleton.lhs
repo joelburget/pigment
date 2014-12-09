@@ -9,10 +9,6 @@
 %endif
 
 
-\subsection{Extending the display language}
-
-> import -> Reactive where
-
 \subsection{Extending the concrete syntax}
 
 > import -> KeywordConstructors where

@@ -9,35 +9,6 @@
 %endif
 
 
-> import -> Reactive where
->   reactifyPair :: DInTmRN -> PureReact
->   reactifyPair p = "[" >> reactifyPairMore "" p >> "]"
-
->   reactifyPairMore :: PureReact -> DInTmRN -> PureReact
->   reactifyPairMore d DVOID        = d
->   reactifyPairMore d (DPAIR a b)  = reactifyPairMore
->       (d >> reactify a)
->       b
->   reactifyPairMore d t            = d >> reactKword KwComma >> reactify t
-
->   reactifySigma :: PureReact -> DInTmRN -> PureReact
->   reactifySigma d DUNIT                      = reactifySigmaDone d ""
->   reactifySigma d (DSIGMA s (DL (x ::. t)))  = reactifySigma
->       (d >> fromString x >> reactKword KwAsc >> reactify s >> reactKword KwSemi)
->       t
->   reactifySigma d (DSIGMA s (DL (DK t)))     = reactifySigma
->       (d >> reactify s >> reactKword KwSemi) t
->   reactifySigma d (DSIGMA s t) = reactifySigmaDone d
->       (reactKword KwSig >> reactify s >> reactify t)
->   reactifySigma d t = reactifySigmaDone d (reactify t)
-
->   reactifySigmaDone :: PureReact -> PureReact -> PureReact
->   reactifySigmaDone s t = reactKword KwSig >> "(" >> s >> t >> ")"
-
->   -- reactifySigmaDone :: PureReact -> PureReact -> PureReact
->   -- reactifySigmaDone s t
->   --   | isEmpty s  = wrapDoc t AppSize
->   --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
 
 > import -> KeywordConstructors where
