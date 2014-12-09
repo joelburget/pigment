@@ -9,9 +9,6 @@
 %endif
 
 
-> import -> Coerce where
->   coerce UId _ u = Right u
-
 
 > import -> KeywordConstructors where
 >   KwUId  :: Keyword

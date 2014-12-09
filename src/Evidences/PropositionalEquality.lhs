@@ -156,7 +156,147 @@ between incompatible sets.
 >          t1 = f1 -$ [ s1 ]
 >     in   coe :@ [  tT1 -$ [ s1 ], tT2 -$ [ NV s2 ]
 >                 ,  CON $ (q $$ Snd) -$ [ NV s2 , s1 , sq ] , t1 ] ]
-> import <- Coerce
+> coerce (Mu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
+>   let typ = ARR desc (ARR ANCHORS SET)
+>       vap = L $ "d" :. [.d. L $ "l" :. [.l. N $
+>               descOp :@ [NV d,MU (Just $ NV l) (NV d)] ] ]
+>   in Right . CON $
+>     coe @@ [ descOp @@ [ d0 , MU (Just l0) d0 ]
+>            , descOp @@ [ d1 , MU (Just l1) d1 ]
+>            , CON $ pval refl $$ A typ $$ A vap $$ Out
+>                              $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
+>                              $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
+>            , x ]
+> coerce (Mu (Nothing :?=: Id (d0,d1))) q (CON x) =
+>   let typ = ARR desc SET
+>       vap = L $ "d" :. [.d. N $
+>               descOp :@ [NV d,MU Nothing (NV d)] ]
+>   in Right . CON $
+>     coe @@ [ descOp @@ [ d0 , MU Nothing d0 ]
+>            , descOp @@ [ d1 , MU Nothing d1 ]
+>            , CON $ pval refl $$ A typ $$ A vap $$ Out
+>                              $$ A d0 $$ A d1 $$ A (CON q)
+>            , x ]
+> coerce (EnumT (CONSE _ _,   CONSE _ _))      _  ZE = Right ZE
+> coerce (EnumT (CONSE _ e1,  CONSE _ e2))     q  (SU x) = Right . SU $
+>   coe @@ [ENUMT e1, ENUMT e2, CON $ q $$ Snd $$ Snd $$ Fst, x]  -- |CONSE| tails
+> coerce (EnumT (NILE,        NILE))           q  x = Right x
+> coerce (EnumT (NILE,        t@(CONSE _ _)))  q  x = Right $
+>   nEOp @@ [q, ENUMT t]
+> coerce (EnumT (CONSE _ _,   NILE))           q  x = Right $
+>   nEOp @@ [q, ENUMT NILE]
+> coerce (Monad (d1, d2) (x1, x2)) q (RETURN v) =
+>   Right . RETURN $ coe @@ [x1, x2, CON (q $$ Snd), v]
+> coerce (Monad (d1, d2) (x1, x2)) q (COMPOSITE y) =
+>   Right . COMPOSITE $ coe @@ [
+>       descOp @@ [d1, MONAD d1 x1],
+>       descOp @@ [d2, MONAD d2 x2],
+>       error "FreeMonad.coerce: missing equality proof",
+>       y
+>     ]
+> -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
+> coerce (IMu (Just (l0,l1) :?=:
+>             (Id (iI0,iI1) :& Id (d0,d1))) (i0,i1)) q (CON x) =
+>   let ql  = CON $ q $$ Fst
+>       qiI = CON $ q $$ Snd $$ Fst
+>       qi  = CON $ q $$ Snd $$ Snd $$ Snd
+>       qd = CON $ q $$ Snd $$ Snd $$ Fst
+>       typ =
+>         PI SET $ L $ "iI" :. [.iI.
+>          ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
+>           ARR (NV iI) $
+>            ARR (ARR (NV iI) ANCHORS) SET ]
+>       vap =
+>         L $ "iI" :. [.iI.
+>          L $ "d" :. [.d.
+>           L $ "i" :. [.i.
+>            L $ "l" :. [.l. N $
+>             idescOp :@ [ NV iI , N (V d :$ A (NV i))
+>                        , L $ "j" :. [.j.
+>                           IMU (|(NV l)|) (NV iI) (NV d) (NV j)]
+>                        ] ] ] ] ]
+>   in Right . CON $
+>     coe @@ [ idescOp @@ [  iI0, d0 $$ A i0
+>                         ,  L $ "i" :. [.i.
+>                             IMU (|(l0 -$ [])|) (iI0 -$ []) (d0 -$ []) (NV i)
+>                            ]
+>                         ]
+>            , idescOp @@ [  iI1, d1 $$ A i1
+>                         ,  L $ "i" :. [.i.
+>                             IMU (|(l1 -$ [])|) (iI1 -$ []) (d1 -$ []) (NV i)
+>                            ]
+>                         ]
+>            , CON $ pval refl $$ A typ $$ A vap $$ Out
+>                              $$ A iI0 $$ A iI1 $$ A qiI
+>                              $$ A d0 $$ A d1 $$ A qd
+>                              $$ A i0 $$ A i1 $$ A qi
+>                              $$ A l0 $$ A l1 $$ A ql
+>            , x ]
+> coerce (IMu (Nothing :?=: (Id (iI0,iI1) :& Id (d0,d1))) (i0,i1)) q (CON x) =
+>   let qiI = CON $ q $$ Fst
+>       qi  = CON $ q $$ Snd $$ Snd
+>       qd = CON $ q $$ Snd $$ Fst
+>       typ =
+>         PI SET $ L $ "iI" :. [.iI.
+>          ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
+>           ARR (NV iI) SET ]
+>       vap =
+>         L $ "iI" :. [.iI.
+>          L $ "d" :. [.d.
+>           L $ "i" :. [.i. N $
+>             idescOp :@ [ NV iI , N (V d :$ A (NV i))
+>                        , L $ "j" :. [.j.
+>                           IMU Nothing (NV iI) (NV d) (NV j)]
+>                        ] ] ] ]
+>   in Right . CON $
+>     coe @@ [ idescOp @@ [ iI0 , d0 $$ A i0
+>                         , L $ "i" :. [.i.
+>                             IMU Nothing (iI0 -$ []) (d0 -$ []) (NV i) ] ]
+>            , idescOp @@ [ iI1 , d1 $$ A i1
+>                         , L $ "i" :. [.i.
+>                             IMU Nothing (iI1 -$ []) (d1 -$ []) (NV i) ] ]
+>            , CON $ pval refl $$ A typ $$ A vap $$ Out
+>                              $$ A iI0 $$ A iI1 $$ A qiI
+>                              $$ A d0 $$ A d1 $$ A qd
+>                              $$ A i0 $$ A i1 $$ A qi
+>            , x ]
+> coerce (Label (l1, l2) (t1, t2)) q (LRET t) =
+>     Right $ LRET $ coe @@ [t1, t2, CON (q $$ Snd), t]
+> -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
+> coerce (Nu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
+>   let typ = ARR desc (ARR SET SET)
+>       vap = L $ "d" :. [.d. L $ "l" :. [.l. N $
+>               descOp :@ [NV d,NU (Just $ NV l) (NV d)] ] ]
+>   in Right . CON $
+>     coe @@ [ descOp @@ [ d0 , NU (Just l0) d0 ]
+>            , descOp @@ [ d1 , NU (Just l1) d1 ]
+>            , CON $ pval refl $$ A typ $$ A vap $$ Out
+>                              $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
+>                              $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
+>            , x ]
+> coerce (Nu (Nothing :?=: Id (d0,d1))) q (CON x) =
+>   let typ = ARR desc SET
+>       vap = L $ "d" :. [.d. N $
+>               descOp :@ [NV d,NU Nothing (NV d)] ]
+>   in Right . CON $
+>     coe @@ [ descOp @@ [ d0 , NU Nothing d0 ]
+>            , descOp @@ [ d1 , NU Nothing d1 ]
+>            , CON $ pval refl $$ A typ $$ A vap $$ Out
+>                              $$ A d0 $$ A d1 $$ A (CON q)
+>            , x ]
+> coerce Prop              q pP  = Right pP
+> coerce (Prf (pP1, pP2))  q p   = Right $ q $$ Fst $$ A p
+> coerce (Quotient (_X, _Y) _ _) q (CLASS x) = Right $
+>   CLASS (coe @@ [_X, _Y, CON $ q $$ Fst, x])
+> coerce (Sigma (sS1, sS2) (tT1, tT2)) q p = Right . PAIR s2 $
+>   coe @@ [  tT1 $$ A s1, tT2 $$ A s2
+>          ,  CON $ q $$ Snd $$ A s1 $$ A s2 $$ A sq
+>          ,  p $$ Snd] where
+>     s1 = p $$ Fst
+>     (s2, sq) = coeh sS1 sS2 (CON $ q $$ Fst) s1
+> coerce Unit q s = Right s
+> coerce UId _ u = Right u
+
 > coerce _    q  (N x)  = Left x
 > coerce cvv  q  r      = error $ unlines ["coerce: can't cope with sets",
 >                             show cvv, "and proof", show q, "and value", show r]

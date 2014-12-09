@@ -11,10 +11,6 @@
 |equivalenceRelation A R| is the proposition that |R| is an equivalence
 relation over |A|.
 
-> import -> Coerce where
->   coerce (Quotient (_X, _Y) _ _) q (CLASS x) = Right $
->     CLASS (coe @@ [_X, _Y, CON $ q $$ Fst, x])
-
 
 > import -> KeywordConstructors where
 >   KwQuotient  :: Keyword

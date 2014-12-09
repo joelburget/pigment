@@ -233,29 +233,6 @@ case for sigma.
 
 
 
-> import -> Coerce where
->   coerce (Mu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
->     let typ = ARR desc (ARR ANCHORS SET)
->         vap = L $ "d" :. [.d. L $ "l" :. [.l. N $
->                 descOp :@ [NV d,MU (Just $ NV l) (NV d)] ] ]
->     in Right . CON $
->       coe @@ [ descOp @@ [ d0 , MU (Just l0) d0 ]
->              , descOp @@ [ d1 , MU (Just l1) d1 ]
->              , CON $ pval refl $$ A typ $$ A vap $$ Out
->                                $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
->                                $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
->              , x ]
->   coerce (Mu (Nothing :?=: Id (d0,d1))) q (CON x) =
->     let typ = ARR desc SET
->         vap = L $ "d" :. [.d. N $
->                 descOp :@ [NV d,MU Nothing (NV d)] ]
->     in Right . CON $
->       coe @@ [ descOp @@ [ d0 , MU Nothing d0 ]
->              , descOp @@ [ d1 , MU Nothing d1 ]
->              , CON $ pval refl $$ A typ $$ A vap $$ Out
->                                $$ A d0 $$ A d1 $$ A (CON q)
->              , x ]
-
 
 \subsection{Extending the Display Language}
 

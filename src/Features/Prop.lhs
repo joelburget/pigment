@@ -51,10 +51,6 @@ Elim forms inherited from elsewhere
 
 
 
-> import -> Coerce where
->   coerce Prop              q pP  = Right pP
->   coerce (Prf (pP1, pP2))  q p   = Right $ q $$ Fst $$ A p
-
 
 > import -> KeywordConstructors where
 >    KwProp     :: Keyword
