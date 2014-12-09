@@ -40,8 +40,7 @@ a given term in an empty environment.
 
 The |$$| function applies an elimination principle to a value. Note
 that this is open to further extension as we add new constructs and
-elimination principles to the language. Extensions are added through
-the |ElimComputation| aspect.
+elimination principles to the language.
 
 Formally, the computation rules of the featureless language are the
 following:
@@ -75,19 +74,15 @@ This translates into the following code:
 > L (x :. t)   $$ A v
 >   = eval t (B0 :< v, naming x v [])    -- By \ref{eqn:Evidences.Rules.elim-bind}
 > C (Con t)    $$ Out  = t               -- By \ref{eqn:Evidences.Rules.elim-con}
-> import <- ElimComputation              -- Extensions
 
-> import -> ElimComputation where
->   LRET t $$ Call l = t
+> LRET t $$ Call l = t
 
-> import -> ElimComputation where
->   COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
+> COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
 >     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
 >     f $$ A s]
 
-> import -> ElimComputation where
->   PAIR x y $$ Fst = x
->   PAIR x y $$ Snd = y
+> PAIR x y $$ Fst = x
+> PAIR x y $$ Snd = y
 
 > N n          $$ e    = N (n :$ e)      -- By \ref{eqn:Evidences.Rules.elim-stuck}
 > f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
