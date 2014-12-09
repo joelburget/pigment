@@ -9,30 +9,6 @@
 %endif
 
 
-> import -> Pretty where
->   prettyPair :: DInTmRN -> Size -> Doc
->   prettyPair p = const (brackets (prettyPairMore empty p))
-
->   prettyPairMore :: Doc -> DInTmRN -> Doc
->   prettyPairMore d DVOID        = d
->   prettyPairMore d (DPAIR a b)  = prettyPairMore (d <+> pretty a minBound) b
->   prettyPairMore d t            = d <+> kword KwComma <+> pretty t maxBound
-
->   prettySigma :: Doc -> DInTmRN -> Size -> Doc
->   prettySigma d DUNIT                      = prettySigmaDone d empty
->   prettySigma d (DSIGMA s (DL (x ::. t)))  = prettySigma
->       (d <+> text x <+> kword KwAsc <+> pretty s maxBound <+> kword KwSemi) t
->   prettySigma d (DSIGMA s (DL (DK t)))     = prettySigma
->       (d <+> pretty s maxBound <+> kword KwSemi) t
->   prettySigma d (DSIGMA s t) = prettySigmaDone d
->       (kword KwSig <+> pretty s minBound <+> pretty t minBound)
->   prettySigma d t = prettySigmaDone d (pretty t maxBound)
-
->   prettySigmaDone :: Doc -> Doc -> Size -> Doc
->   prettySigmaDone s t
->     | isEmpty s  = wrapDoc t AppSize
->     | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
-
 > import -> Reactive where
 >   reactifyPair :: DInTmRN -> PureReact
 >   reactifyPair p = "[" >> reactifyPairMore "" p >> "]"

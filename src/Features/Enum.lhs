@@ -10,14 +10,6 @@
 %endif
 
 
-> import -> Pretty where
->   prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
->   prettyEnumIndex n DZE      = const (int n)
->   prettyEnumIndex n (DSU t)  = prettyEnumIndex (succ n) t
->   prettyEnumIndex n tm       = wrapDoc
->       (int n <+> kword KwPlus <+> pretty tm ArgSize)
->       AppSize
-
 > import -> Reactive where
 >   reactifyEnumIndex :: Int -> DInTmRN -> PureReact
 >   reactifyEnumIndex n DZE      = fromString $ show n

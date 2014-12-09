@@ -227,7 +227,50 @@ than a $\lambda$-term is reached.
 >             <+> pretty schT maxBound
 >         ) ArrSize
 
-> import <- Pretty
+> prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
+> prettyEnumIndex n DZE      = const (int n)
+> prettyEnumIndex n (DSU t)  = prettyEnumIndex (succ n) t
+> prettyEnumIndex n tm       = wrapDoc
+>     (int n <+> kword KwPlus <+> pretty tm ArgSize)
+>     AppSize
+
+> prettyAll :: Doc -> DInTmRN -> Size -> Doc
+> prettyAll bs (DALL (DPRF p) (DL (DK q))) = prettyAllMore bs
+>   (pretty p (pred PiSize) <+> kword KwImp <+> pretty q PiSize)
+> prettyAll bs (DALL s (DL (x ::. t))) =
+>   prettyAll (bs <> parens (text x <+> kword KwAsc <+> pretty s maxBound)) t
+> prettyAll bs (DALL s (DL (DK t))) = prettyAll bs (DALL s (DL ("_" ::. t)))
+> prettyAll bs (DALL s t) = prettyAllMore bs
+>   (kword KwAll <+> pretty s minBound <+> pretty t minBound)
+> prettyAll bs tm = prettyAllMore bs (pretty tm PiSize)
+>
+> prettyAllMore :: Doc -> Doc -> Size -> Doc
+> prettyAllMore bs d
+>   | isEmpty bs  = wrapDoc d PiSize
+>   | otherwise   = wrapDoc (bs <+> kword KwImp <+> d) PiSize
+
+> prettyPair :: DInTmRN -> Size -> Doc
+> prettyPair p = const (brackets (prettyPairMore empty p))
+
+> prettyPairMore :: Doc -> DInTmRN -> Doc
+> prettyPairMore d DVOID        = d
+> prettyPairMore d (DPAIR a b)  = prettyPairMore (d <+> pretty a minBound) b
+> prettyPairMore d t            = d <+> kword KwComma <+> pretty t maxBound
+
+> prettySigma :: Doc -> DInTmRN -> Size -> Doc
+> prettySigma d DUNIT                      = prettySigmaDone d empty
+> prettySigma d (DSIGMA s (DL (x ::. t)))  = prettySigma
+>     (d <+> text x <+> kword KwAsc <+> pretty s maxBound <+> kword KwSemi) t
+> prettySigma d (DSIGMA s (DL (DK t)))     = prettySigma
+>     (d <+> pretty s maxBound <+> kword KwSemi) t
+> prettySigma d (DSIGMA s t) = prettySigmaDone d
+>     (kword KwSig <+> pretty s minBound <+> pretty t minBound)
+> prettySigma d t = prettySigmaDone d (pretty t maxBound)
+
+> prettySigmaDone :: Doc -> Doc -> Size -> Doc
+> prettySigmaDone s t
+>   | isEmpty s  = wrapDoc t AppSize
+>   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
 
 The |prettyBKind| function pretty-prints a |ParamKind| if supplied

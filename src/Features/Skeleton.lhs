@@ -11,8 +11,6 @@
 
 \subsection{Extending the display language}
 
-> import -> Pretty where
-
 > import -> Reactive where
 
 \subsection{Extending the concrete syntax}

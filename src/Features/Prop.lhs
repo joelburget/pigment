@@ -11,22 +11,6 @@
 
 Elim forms inherited from elsewhere
 
-> import -> Pretty where
->   prettyAll :: Doc -> DInTmRN -> Size -> Doc
->   prettyAll bs (DALL (DPRF p) (DL (DK q))) = prettyAllMore bs
->     (pretty p (pred PiSize) <+> kword KwImp <+> pretty q PiSize)
->   prettyAll bs (DALL s (DL (x ::. t))) =
->     prettyAll (bs <> parens (text x <+> kword KwAsc <+> pretty s maxBound)) t
->   prettyAll bs (DALL s (DL (DK t))) = prettyAll bs (DALL s (DL ("_" ::. t)))
->   prettyAll bs (DALL s t) = prettyAllMore bs
->     (kword KwAll <+> pretty s minBound <+> pretty t minBound)
->   prettyAll bs tm = prettyAllMore bs (pretty tm PiSize)
->
->   prettyAllMore :: Doc -> Doc -> Size -> Doc
->   prettyAllMore bs d
->     | isEmpty bs  = wrapDoc d PiSize
->     | otherwise   = wrapDoc (bs <+> kword KwImp <+> d) PiSize
-
 > import -> Reactive where
 >   reactifyAll :: PureReact -> DInTmRN -> PureReact
 >   reactifyAll bs (DALL (DPRF p) (DL (DK q))) = reactifyAllMore
