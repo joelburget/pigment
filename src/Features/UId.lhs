@@ -9,6 +9,3 @@
 %endif
 
 
-
-> import -> MakeElabRules where
->   makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s

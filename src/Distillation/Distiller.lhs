@@ -268,8 +268,12 @@ subsection~\ref{subsec:ProofState.Interface.NameResolution.christening}).
 
 > distillInfer ::  Entries -> EXTM -> Spine {TT} REF ->
 >                  ProofStateT INTM (DExTmRN :<: TY)
->
-> import <- DistillInferRules
+
+If we spot a neutral term being called when distilling, we distill the label
+instead, thereby replacing horrible stuck inductions with the pretty functions
+they implement.
+
+> distillInfer es (t :$ Call (N l)) as = distillInfer es l as
 
 To distill a parameter with a spine of eliminators, we use |unresolve|
 to determine a relative name for the reference, the number of shared

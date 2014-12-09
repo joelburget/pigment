@@ -10,13 +10,6 @@
 
 
 
-If we spot a neutral term being called when distilling, we distill the label
-instead, thereby replacing horrible stuck inductions with the pretty functions
-they implement.
-
-> import -> DistillInferRules where
->   distillInfer es (t :$ Call (N l)) as = distillInfer es l as
-
 
 \question{The following is all commented out. Is it detritus?}
 
