@@ -12,12 +12,6 @@
 
 \subsection{Extending the concrete syntax}
 
-> import -> KeywordConstructors where
->     KwRecord :: Keyword
->     KwRSig :: Keyword
->     KwREmpty :: Keyword
->     KwRCons :: Keyword
-
 > import -> KeywordTable where
 >   key KwRecord        = "Rec"
 >   key KwRSig          = "RSig"

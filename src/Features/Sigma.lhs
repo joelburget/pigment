@@ -11,11 +11,6 @@
 
 
 
-> import -> KeywordConstructors where
->   KwFst  :: Keyword
->   KwSnd  :: Keyword
->   KwSig  :: Keyword
-
 > import -> KeywordTable where
 >   key KwFst       = "!"
 >   key KwSnd       = "-"

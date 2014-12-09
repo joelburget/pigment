@@ -30,9 +30,6 @@ index of |IMu| to make a fully applied anchor |DIMu|.
 %endif
 
 
-> import -> KeywordConstructors where
->   KwIMu :: Keyword
-
 > import -> KeywordTable where
 >   key KwIMu      = "IMu"
 

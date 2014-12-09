@@ -15,9 +15,6 @@ rather than ascriptions. To allow this, we add a suitable constructor |DEqBlue|
 to DInTm, along with appropriate elaboration and distillation rules.
 
 
-> import -> KeywordConstructors where
->   KwEqBlue :: Keyword
-
 > import -> KeywordTable where
 >   key KwEqBlue = "=="
 

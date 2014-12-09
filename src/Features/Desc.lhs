@@ -236,9 +236,6 @@ case for sigma.
 
 \subsection{Extending the Display Language}
 
-> import -> KeywordConstructors where
->   KwMu :: Keyword
-
 > import -> KeywordTable where
 >   key KwMu        = "Mu"
 

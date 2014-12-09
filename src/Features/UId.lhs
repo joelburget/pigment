@@ -10,10 +10,6 @@
 
 
 
-> import -> KeywordConstructors where
->   KwUId  :: Keyword
->   KwTag  :: Keyword
-
 > import -> KeywordTable where
 >   key KwUId       = "UId"
 >   key KwTag       = "'"

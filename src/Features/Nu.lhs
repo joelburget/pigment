@@ -10,10 +10,6 @@
 
 
 
-> import -> KeywordConstructors where
->   KwNu    :: Keyword
->   KwCoIt  :: Keyword
-
 > import -> KeywordTable where
 >   key KwNu        = "Nu"
 >   key KwCoIt      = "CoIt"

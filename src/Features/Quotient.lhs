@@ -12,9 +12,6 @@
 relation over |A|.
 
 
-> import -> KeywordConstructors where
->   KwQuotient  :: Keyword
-
 > import -> KeywordTable where
 >   key KwQuotient  = "Quotient"
 

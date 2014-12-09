@@ -9,12 +9,6 @@
 %endif
 
 
-> import -> KeywordConstructors where
->   KwCall      :: Keyword
->   KwLabel     :: Keyword
->   KwLabelEnd  :: Keyword
->   KwRet       :: Keyword
-
 > import -> KeywordTable where
 >   key KwCall      = "call"
 >   key KwLabel     = "<"

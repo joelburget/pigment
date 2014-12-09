@@ -12,10 +12,6 @@
 
 
 
-> import -> KeywordConstructors where
->   KwEnum  :: Keyword
->   KwPlus  :: Keyword
-
 > import -> KeywordTable where
 >   key KwEnum      = "Enum"
 >   key KwPlus      = "+"

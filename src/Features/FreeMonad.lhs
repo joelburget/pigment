@@ -11,10 +11,6 @@
 \question{What should the coercion rule be for |COMPOSITE|?}
 
 
-> import -> KeywordConstructors where
->   KwMonad   :: Keyword
->   KwReturn  :: Keyword
-
 > import -> KeywordTable where
 >   key KwMonad     = "Monad"
 >   key KwReturn    = "`"  -- rename me

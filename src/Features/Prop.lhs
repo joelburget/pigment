@@ -14,18 +14,6 @@ Elim forms inherited from elsewhere
 
 
 
-> import -> KeywordConstructors where
->    KwProp     :: Keyword
->    KwAbsurd   :: Keyword
->    KwTrivial  :: Keyword
->    KwPrf      :: Keyword
->    KwAnd      :: Keyword
->    KwArr      :: Keyword
->    KwImp      :: Keyword
->    KwAll      :: Keyword
->    KwInh      :: Keyword
->    KwWit      :: Keyword
-
 > import -> KeywordTable where
 >   key KwProp      = "Prop"
 >   key KwAbsurd    = "FF"

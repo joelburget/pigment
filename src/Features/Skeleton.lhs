@@ -11,8 +11,6 @@
 
 \subsection{Extending the concrete syntax}
 
-> import -> KeywordConstructors where
-
 > import -> KeywordTable where
 
 > import -> ElimParsers where

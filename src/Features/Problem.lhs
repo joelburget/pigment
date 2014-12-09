@@ -9,54 +9,7 @@
 %endif
 
 
-> import -> OpCode where
->   argsOp = Op
->     {  opName = "args"
->     ,  opArity = 1
->     ,  opTyTel = "s" :<: SCH :-: \ _ -> Target SET
->     ,  opRun = \ [s] -> argsOpRun s
->     ,  opSimp = \ _ _ -> empty
->     }
 
->   schTypeOp = Op
->     {  opName = "schType"
->     ,  opArity = 1
->     ,  opTyTel = "s" :<: SCH :-: \ _ -> Target SET
->     ,  opRun = \ [s] -> schTypeOpRun s
->     ,  opSimp = \ _ _ -> empty
->     }
-
->   argsOpRun :: VAL -> Either NEU VAL
->   argsOpRun (SCHTY _)       = Right UNIT
->   argsOpRun (SCHEXPPI s t)  =
->     Right $ SIGMA (schTypeOp @@ [s])
->              (L ("x" :. [.x. N $ argsOp :@ [t -$ [ NV x ]]]))
->   argsOpRun (SCHIMPPI s t)  =
->     Right $ SIGMA s
->              (L ("x" :. [.x. N $ argsOp :@ [t -$ [ NV x ]]]))
->   argsOpRun (N v)           = Left v
-
->   schTypeOpRun :: VAL -> Either NEU VAL
->   schTypeOpRun (SCHTY s)       = Right s
->   schTypeOpRun (SCHEXPPI s t)  =
->     Right $ PI (schTypeOp @@ [s])
->              (L ("x" :. [.x. N $ schTypeOp :@ [t -$ [ NV x ]]]))
->   schTypeOpRun (SCHIMPPI s t)  =
->     Right $ PI s
->              (L ("x" :. [.x. N $ schTypeOp :@ [t -$ [ NV x ]]]))
->   schTypeOpRun (N v)           = Left v
-
-
-\subsection{Extending the Display Language}
-
-> import -> KeywordConstructors where
->   KwProb       :: Keyword
->   KwProbLabel  :: Keyword
->   KwPatPi      :: Keyword
->   KwSch        :: Keyword
->   KwSchTy      :: Keyword
->   KwExpPi      :: Keyword
->   KwImpPi      :: Keyword
 
 > import -> KeywordTable where
 >   key KwProb       = "Prob"
