@@ -19,8 +19,6 @@
 
 > import NameSupply.NameSupplier
 
-> import Features.Features ()
-
 %endif
 
 
@@ -42,7 +40,7 @@ discharge a bunch of assumptions inside a term.
 
 \end{danger}
 
-Apart from that, this is a standard $\beta$-quotation: 
+Apart from that, this is a standard $\beta$-quotation:
 
 > bquote :: NameSupplier m => Bwd REF -> Tm {d,VV} REF -> m (Tm {d,TT} REF)
 
@@ -51,7 +49,7 @@ right lambda. We don't do anything otherwise.
 
 > bquote  refs (P x) =
 >     case x `elemIndex` refs of
->       Just i -> pure $ V i 
+>       Just i -> pure $ V i
 >       Nothing -> pure $ P x
 
 Constant lambdas are painlessly structural.
@@ -59,7 +57,7 @@ Constant lambdas are painlessly structural.
 > bquote refs (L (K t))   = (| LK (bquote refs t) |)
 
 When we see a syntactic lambda value, we are very happy, because
-quotation is just renaming. 
+quotation is just renaming.
 
 \pierre{This is part of Conor's experiment on Term
 representations. The following line could be de-commented and that
@@ -74,10 +72,10 @@ For all other lambdas, it's the usual story: we create a fresh variable,
 evaluate the applied term, quote the result, and bring everyone under
 a binder.
 
-> bquote refs f@(L _) = 
+> bquote refs f@(L _) =
 >     (|(L . (x :.))
->       (freshRef  (x :<: error "bquote: type undefined") 
->                  (\x -> bquote  (refs :< x) 
+>       (freshRef  (x :<: error "bquote: type undefined")
+>                  (\x -> bquote  (refs :< x)
 >                                 (f $$ A (pval x))))|)
 >     where x = fortran f
 

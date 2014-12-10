@@ -19,8 +19,6 @@
 > import DisplayLang.Scheme
 > import DisplayLang.Lexer
 
-> import Features.Features ()
-
 > import Evidences.Tm
 
 > import Kit.BwdFwd

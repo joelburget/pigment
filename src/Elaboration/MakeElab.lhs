@@ -21,8 +21,6 @@
 > import Evidences.DefinitionalEquality
 > import Evidences.Utilities
 
-> import Features.Features ()
-
 > import ProofState.Edition.ProofState
 
 > import DisplayLang.DisplayTm

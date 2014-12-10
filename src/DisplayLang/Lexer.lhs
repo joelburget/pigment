@@ -28,8 +28,6 @@ identifiers unless they're keywords.
 > import Data.List
 > import Data.Char
 
-> import Features.Features
-
 > import Kit.Parsley
 
 %endif

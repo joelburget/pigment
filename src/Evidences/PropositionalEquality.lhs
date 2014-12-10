@@ -17,8 +17,6 @@
 > import Evidences.Operators
 > import Evidences.TypeChecker
 
-> import Features.Features ()
-
 %endif
 
 Let's have some observational equality, now!

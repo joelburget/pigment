@@ -28,8 +28,6 @@ generate an executable from a collection of supercombinator definitions.
 
 > import ProofState.Structure.Developments
 
-> import Features.Features ()
-
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 

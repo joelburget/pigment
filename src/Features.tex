@@ -1,0 +1,70 @@
+\section{Features}
+
+This module should import all the feature modules. This module
+should be imported by all the functionality modules. This module
+thus functions as exactly the list of features included in the
+current version of the system.
+
+\section{A universe of descriptions: |Desc|}
+
+The |mkLazyDescDef| function lazily eliminates a desc value (i.e. |d| such that
+|desc :>: CON d|. If the tag is canonical, it calls the corresponding case in
+the dispatch table with the relevant arguments; otherwise, it cannot compute,
+so it returns a term on the |Left|. Note that finite sums are handled using the
+case for sigma.
+
+<   mkLazyDescDef :: VAL -> DescDispatchTable -> Either NEU VAL
+<   mkLazyDescDef arg (idCase, constCase, prodCase, sigmaCase, piCase) =
+<       let args = arg $$ Snd in
+<         case arg $$ Fst of
+<           IDN     -> Right $ idCase
+<           CONSTN  -> Right $ constCase  (args $$ Fst)
+<           SUMN    -> Right $ sigmaCase  (ENUMT (args $$ Fst)) (args $$ Snd $$ Fst)
+<           PRODN   -> Right $ prodCase   (args $$ Fst) (args $$ Snd $$ Fst)
+<           SIGMAN  -> Right $ sigmaCase  (args $$ Fst) (args $$ Snd $$ Fst)
+
+<           PIN     -> Right $ piCase     (args $$ Fst) (args $$ Snd $$ Fst)
+<           N t     -> Left t
+<           _       -> error "mkLazyDescDef: invalid constructor!"
+
+\section{Equality}
+
+In the display syntax, a blue equality can be between arbitrary DExTms,
+rather than ascriptions. To allow this, we add a suitable constructor |DEqBlue|
+to DInTm, along with appropriate elaboration and distillation rules.
+
+\section{FreeMonad}
+
+\question{What should the coercion rule be for |COMPOSITE|?}
+
+\section{IDesc}
+
+\subsection{Extending the display language}
+
+We introduce a special DIMu for display purposes. While its definition
+is the same than |IMu|, its "typing" is not: the label of an |IMu| is
+presented as a lambda-bound anchor. When we are displaying a
+particular |IMu|, we precisely know at which index we are considering
+it. Therefore, a |DIMu| takes an anchor directly. The distillation
+rule takes care of taking applying the lambda-bound anchor to the
+index of |IMu| to make a fully applied anchor |DIMu|.
+
+\subsection{Plugging Canonical terms in}
+
+<  ("iinduction", [iI,d,i,v,bp,p]) -> App (Var "__iinduction") [d, p, i, v]
+<  ("imapBox", [iI,d,x,bp,p,v]) -> App (Var "__imapBox") [d, p, v]
+
+\section{Labelled Types}
+
+\question{The following is all commented out. Is it detritus?}
+
+<   canTy chev (ty :>: Call c tm) = do
+<      tytv@(ty :=>: tyv) <- chev (SET :>: ty)
+<      ccv@(c :=>: cv) <- chev (ty :>: c)
+<      tmtv@(tm :=>: tmv) <- chev (LABEL cv ty :>: tm)
+<      return (Call ccv tmtv)
+
+\section{Quotients}
+
+|equivalenceRelation A R| is the proposition that |R| is an equivalence
+relation over |A|.

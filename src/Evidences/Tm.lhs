@@ -24,8 +24,6 @@
 > import Kit.MissingLibrary
 > import Kit.BwdFwd
 
-> import Features.Features ()
-
 > import NameSupply.NameSupply
 
 %endif

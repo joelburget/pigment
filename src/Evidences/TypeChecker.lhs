@@ -27,8 +27,6 @@
 
 > import NameSupply.NameSupplier
 
-> import Features.Features ()
-
 %endif
 
 

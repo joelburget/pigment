@@ -14,8 +14,6 @@
 > import Data.Foldable hiding (foldl)
 > import Data.Traversable
 
-> import Features.Features ()
-
 > import Evidences.Tm
 
 > import Kit.MissingLibrary

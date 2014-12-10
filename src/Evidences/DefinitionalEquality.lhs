@@ -21,8 +21,6 @@
 > import NameSupply.NameSupply
 > import NameSupply.NameSupplier
 
-> import Features.Features ()
-
 %endif
 
 Testing for equality is a direct application of normalization by
