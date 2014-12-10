@@ -294,7 +294,7 @@ of the proof state at the current location.
 >     cs <- putBelowCursor F0
 >     case (es, cs) of
 >         (B0, F0) -> reactEmptyTip
->         _ -> div_ <! className "tip" $ do
+>         _ -> do
 >             d <- reactEs "" (es <>> F0)
 >             d' <- case cs of
 >                 F0 -> return d
@@ -304,17 +304,18 @@ of the proof state at the current location.
 >             tip <- reactTip
 >             putEntriesAbove es
 >             putBelowCursor cs
->             return (d' >> tip)
+>             return $ div_ <! className "proof-state" $ d' >> tip
 >     where
 
 >         reactEmptyTip :: ProofState PureReact
->         reactEmptyTip = div_ <! className "empty-tip" $ do
+>         reactEmptyTip = do
 >             tip <- getDevTip
 >             case tip of
 >                 Module -> return ""
 >                 _ -> do
 >                     tip' <- reactTip
->                     return (reactKword KwDefn >> tip')
+>                     return $ div_ <! className "empty-tip" $
+>                         reactKword KwDefn >> tip'
 
 >         reactKword :: Keyword -> PureReact
 >         reactKword = fromString . key
@@ -360,20 +361,25 @@ with an element representing its name and type.
 > reactTip = do
 >     tip <- getDevTip
 >     case tip of
->         Module -> return ""
+>         Module -> return $ div_ <! className "tip" $ ""
 >         Unknown (ty :=>: _) -> do
 >             hk <- getHoleKind
 >             tyd <- reactHere (SET :>: ty)
->             return (reactHKind hk >> reactKword KwAsc >> tyd)
+>             return $ div_ <! className "tip" $
+>                 reactHKind hk >> reactKword KwAsc >> tyd
 >         Suspended (ty :=>: _) prob -> do
 >             hk <- getHoleKind
 >             tyd <- reactHere (SET :>: ty)
->             return (fromString ("(SUSPENDED: " ++ show prob ++ ")")
->                         >> reactHKind hk >> reactKword KwAsc >> tyd)
+>             return $ div_ <! className "tip" $ do
+>                 fromString $ "(SUSPENDED: " ++ show prob ++ ")"
+>                 reactHKind hk
+>                 reactKword KwAsc
+>                 tyd
 >         Defined tm (ty :=>: tyv) -> do
 >             tyd <- reactHere (SET :>: ty)
 >             tmd <- reactHereAt (tyv :>: tm)
->             return (tmd >> reactKword KwAsc >> tyd)
+>             return $ div_ <! className "tip" $
+>                 (tmd >> reactKword KwAsc >> tyd)
 
 > reactHKind :: HKind -> PureReact
 > reactHKind Waiting     = "?"
