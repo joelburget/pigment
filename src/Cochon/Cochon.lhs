@@ -149,13 +149,6 @@ We start out here. Main calls `cochon emptyContext`.
 >     validateDevelopment pc
 >     render startState e page
 
-> cochon' :: PageM ()
-> cochon' = do
->     locs :< loc <- getCtx
->     pfSt <- getProofState
->     let (msg, state') = runProofState pfSt loc
->     displayUser msg
-
 TODO refactor / rename this
 
 > parseCmd :: String -> Either String (PageM ())
@@ -287,14 +280,6 @@ the error message) and |Maybe| a new proof context.
 >             setCtx (locs :< loc)
 >             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
 >             displayUser s
-
->     case runProofState (eval <* startScheduler) loc of
->         (s, Just loc') -> do
->             setCtx (locs :< loc :< loc')
->             displayUser s
->         (s, Nothing) -> do
->             displayUser s
->             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
 
 
 We have some shortcuts for building common kinds of tactics:
