@@ -1,0 +1,53 @@
+.page {
+    font-family: "Input Sans", sans-serif;
+    font-weight: lighter;
+}
+
+.right-pane {
+    float: left;
+    width: 50%;
+}
+
+.interaction-log {
+}
+.log-elem {
+}
+
+.ctx-display {
+    float: left;
+    width: 50%;
+}
+.ctx-display pre {
+    font-family: "Input Mono", monospace;
+}
+
+.prompt {
+    margin-bottom: 20px;
+}
+.prompt-input {
+    font-size: 17px;
+    font-family: "Input Sans", sans-serif;
+    width: 95%;
+    height: 20px;
+}
+
+.tactic-list {
+    clear: both;
+}
+.tactic-info {
+    margin: 10px 0;
+}
+
+.entry {
+    /* border: 1px solid gray; */
+    background-color: rgba(218, 238, 255, 0.7)
+}
+
+.proof-state {
+    /* border: 2px dashed green; */
+    background-color: rgba(188, 50, 255, 0.5)
+}
+
+.tip {
+    background-color: rgba(255, 94, 112, 0.5)
+}
