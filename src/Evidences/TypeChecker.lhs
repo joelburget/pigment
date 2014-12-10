@@ -82,12 +82,12 @@ using |canTy|.
 >     , err " is not of type "
 >     , errTyVal ((C ty) :<: SET)
 >     ]
->     canTy chev (Set :>: Anchors) = return Anchors
->     canTy chev (Anchors :>: Anchor u t ts) = do
->         uuv <- chev (UID :>: u)
->         ttv@(t :=>: tv) <- chev (SET :>: t)
->         tstsv <- chev (ALLOWEDBY tv :>: ts)
->         return $ Anchor uuv ttv tstsv
+> canTy chev (Set :>: Anchors) = return Anchors
+> canTy chev (Anchors :>: Anchor u t ts) = do
+>     uuv <- chev (UID :>: u)
+>     ttv@(t :=>: tv) <- chev (SET :>: t)
+>     tstsv <- chev (ALLOWEDBY tv :>: ts)
+>     return $ Anchor uuv ttv tstsv
 > canTy chev (Set :>: AllowedBy t) = do
 >     ttv <- chev (SET :>: t)
 >     return $ AllowedBy ttv

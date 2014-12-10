@@ -23,8 +23,4 @@
 %endif
 
 > main :: IO ()
-> main = do
->     forM_ (enumFromTo minBound maxBound :: [Keyword]) $ \x -> do
->         print x
->         print $ fromEnum x
->     -- cochon emptyContext
+> main = cochon emptyContext

@@ -244,7 +244,7 @@ in using a She aspect.
 
 
 The |Con| object is used and abused in many circumstances. However,
-all ilts usages share the same pattern: |Con| is used wheneveer we
+all ilts usages share the same pattern: |Con| is used whenever we
 need to ''pack'' an object |t| into something else, to avoid
 ambiguities. For example, we use |Con| in the following case:
 %
@@ -979,6 +979,5 @@ TODO(joel) rename to throwErrorTm
 >   traverse f (t :$ u)   = (|(:$) (traverse f t) (traverse (traverse f) u)|)
 >   traverse f (op :@ ts) = (|(op :@) (traverse (traverse f) ts)|)
 >   traverse f (tm :? ty) = (|(:?) (traverse f tm) (traverse f ty)|)
-
 
 %endif

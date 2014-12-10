@@ -36,6 +36,7 @@
 > import DisplayLang.Scheme
 > import DisplayLang.Lexer
 > import DisplayLang.PrettyPrint
+> import DisplayLang.Reactify
 
 > import Elaboration.ElabProb
 > import Elaboration.ElabMonad
@@ -278,13 +279,22 @@ Should this be part of a transformer stack including Maybe and IO?
 > resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
 
+The |reactProofState| command generates a reactified representation
+of the proof state at the current location.
+
+> reactProofState :: ProofState PureReact
+> reactProofState = do
+>     inScope <- getInScope
+>     me <- getCurrentName
+>     renderReact inScope me
+
 > renderReact :: Entries -> Name -> ProofState PureReact
 > renderReact aus me = do
 >     es <- replaceEntriesAbove B0
 >     cs <- putBelowCursor F0
 >     case (es, cs) of
 >         (B0, F0) -> reactEmptyTip
->         _ -> do
+>         _ -> div_ <! className "tip" $ do
 >             d <- reactEs "" (es <>> F0)
 >             d' <- case cs of
 >                 F0 -> return d
@@ -295,68 +305,80 @@ Should this be part of a transformer stack including Maybe and IO?
 >             putEntriesAbove es
 >             putBelowCursor cs
 >             return (d' >> tip)
+>     where
 
-> reactEmptyTip :: ProofState PureReact
-> reactEmptyTip = do
->     tip <- getDevTip
->     case tip of
->         Module -> return ""
->         _ -> do
->             tip' <- reactTip
->             return (reactKword KwDefn >> tip')
+>         reactEmptyTip :: ProofState PureReact
+>         reactEmptyTip = div_ <! className "empty-tip" $ do
+>             tip <- getDevTip
+>             case tip of
+>                 Module -> return ""
+>                 _ -> do
+>                     tip' <- reactTip
+>                     return (reactKword KwDefn >> tip')
 
-> reactKword :: Keyword -> PureReact
-> reactKword = fromString . key
+>         reactKword :: Keyword -> PureReact
+>         reactKword = fromString . key
 
-> reactEs :: PureReact
->         -> Fwd (Entry Bwd)
->         -> ProofState PureReact
-> reactEs d F0 = return d
-> reactEs d (e :> es) = do
->     putEntryAbove e
->     ed <- reactE e
->     reactEs (d >> ed) es
+>         reactEs :: PureReact
+>                 -> Fwd (Entry Bwd)
+>                 -> ProofState PureReact
+>         reactEs d F0 = return d
+>         reactEs d (e :> es) = do
+>             putEntryAbove e
+>             ed <- reactE e
+>             reactEs (d >> ed) es
 
 The |reactBKind| function reactifies a |ParamKind| if supplied
 with an element representing its name and type.
 
-> reactBKind :: ParamKind -> PureReact -> PureReact
-> reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
-> reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
-> reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
+>         reactBKind :: ParamKind -> PureReact -> PureReact
+>         reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
+>         reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
+>         reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
 
-> reactE :: Entry Bwd -> ProofState PureReact
-> reactE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
->     ty' <- bquoteHere ty
->     tyd <- reactHereAt (SET :>: ty')
->     return $ reactBKind k $ do
->         fromString x
->         maybe "" (\x -> "[[" >> fromString x >> "]]") anchor
->         reactKword KwAsc
->         tyd
+>         reactE :: Entry Bwd -> ProofState PureReact
+>         reactE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
+>             ty' <- bquoteHere ty
+>             tyd <- reactHereAt (SET :>: ty')
+>             return $ reactBKind k $ div_ <! className "entry" $ do
+>                 fromString x
+>                 maybe "" (\x -> "[[" >> fromString x >> "]]") anchor
+>                 reactKword KwAsc
+>                 tyd
 
-
-> reactE e = do
->     goIn
->     -- d <- reactPS aus me XXX
->     goOut
->     return $ do
->         fromString (fst (entryLastName e))
->         maybe "" (\x -> "[[" >> fromString x >> "]]") $ entryAnchor e
->         reactKword KwSemi
+>         reactE e = do
+>             goIn
+>             d <- renderReact aus me
+>             goOut
+>             return $ div_ <! className "entry" $ do
+>                 fromString (fst (entryLastName e))
+>                 maybe "" (\x -> "[[" >> fromString x >> "]]") $ entryAnchor e
+>                 d
+>                 reactKword KwSemi
 
 > reactTip :: ProofState PureReact
-> reactTip = return "TODO(joel) reactTip"
+> reactTip = do
+>     tip <- getDevTip
+>     case tip of
+>         Module -> return ""
+>         Unknown (ty :=>: _) -> do
+>             hk <- getHoleKind
+>             tyd <- reactHere (SET :>: ty)
+>             return (reactHKind hk >> reactKword KwAsc >> tyd)
+>         Suspended (ty :=>: _) prob -> do
+>             hk <- getHoleKind
+>             tyd <- reactHere (SET :>: ty)
+>             return (fromString ("(SUSPENDED: " ++ show prob ++ ")")
+>                         >> reactHKind hk >> reactKword KwAsc >> tyd)
+>         Defined tm (ty :=>: tyv) -> do
+>             tyd <- reactHere (SET :>: ty)
+>             tmd <- reactHereAt (tyv :>: tm)
+>             return (tmd >> reactKword KwAsc >> tyd)
 
-The |reactProofState| command generates a reactified representation
-of the proof state at the current location.
-
-> reactProofState :: ProofState PureReact
-> reactProofState = do
->     inScope <- getInScope
->     me <- getCurrentName
->     d <- prettyPS inScope me
->     return (fromString (renderHouseStyle d))
+> reactHKind :: HKind -> PureReact
+> reactHKind Waiting     = "?"
+> reactHKind Hoping      = "HOPE?"
+> reactHKind (Crying s)  = fromString ("CRY <<" ++ s ++ ">>")
 
 > prettyPS :: Entries -> Name -> ProofState Doc
 > prettyPS aus me = do

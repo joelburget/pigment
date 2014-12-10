@@ -111,16 +111,6 @@ then we can (probably) turn it into a tag applied to some arguments.
 >     unfold (DPAIR s t)  = s : unfold t
 >     unfold t            = [t]
 
-The |sumlike| function determines whether a value representing a description
-is a sum or a sigma from an enumerate. If so, it returns |Just| the enumeration
-and a function from the enumeration to descriptions.
-\question{Where should this live?}
-
->   sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
->   sumlike (SUMD e b)            = Just (e, (b $$) . A)
->   sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
->   sumlike _                     = Nothing
-
 Conversely, we can distill an index to a tag as follows. Note that if the
 index contains a stuck term, we simply give up and let the normal distillation
 rules take over; the pretty-printer will then do the right thing.

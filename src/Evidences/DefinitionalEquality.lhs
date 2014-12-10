@@ -121,16 +121,14 @@ variable |v|. Then, we apply |v| to the function |f|, getting a value of type
 >      fresh ("__etaExpandB" :<: s)
 >      (\v  -> inQuote (t $$ A v :>: (f $$ A v))) r)
 > etaExpand (Prf p :>: x) r = Just (BOX (Irr (inQuote (PRF p :>: x) r)))
->   etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
->   etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =
->       -- XXX: to be implemented
->       undefined
+> etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
+> etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =
+>     -- XXX: to be implemented
+>     undefined
 > etaExpand (Unit :>: v) r = Just VOID
 > etaExpand (Sigma s t :>: p) r = let x = p $$ Fst in
 >   Just (PAIR (inQuote (s :>: x) r) (inQuote (t $$ (A x) :>: (p $$ Snd)) r))
 > etaExpand _                  _ = Nothing
-
-
 
 \subsection{exQuote}
 

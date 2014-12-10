@@ -12,8 +12,6 @@
 > import Data.List
 > import Data.String (fromString)
 
-import Text.PrettyPrint.HughesPJ
-
 > import ProofState.Structure.Developments
 
 > import DisplayLang.DisplayTm
@@ -49,9 +47,9 @@ The |Reactive| class describes things that can be made into React elements.
 >     reactify Set       = reactKword KwSet
 >     reactify (Pi s t)  = reactPi "" (DPI s t)
 >     reactify (Con x)   = reactKword KwCon >> reactify x
->     reactify (Anchor (DTAG u) t ts) = text_ u >> reactive ts
+>     reactify (Anchor (DTAG u) t ts) = fromString u >> reactify ts
 >     reactify AllowedEpsilon = ""
->     reactify (AllowedCons _ _ _ s ts) = reactive s >> reactive ts
+>     reactify (AllowedCons _ _ _ s ts) = reactify s >> reactify ts
 >     reactify (Mu (Just l   :?=: _)) = reactify l
 >     reactify (Mu (Nothing  :?=: Id t)) = reactKword KwMu >> reactify t
 >     reactify (EnumT t)  = reactKword KwEnum >> reactify t
@@ -87,7 +85,7 @@ The |Reactive| class describes things that can be made into React elements.
 >         reactify s
 >     reactify Prop           = reactKword KwProp
 >     reactify (Prf p)        = reactKword KwPrf >> reactify p
->     reactify (All p q)      = reactifyAll empty (DALL p q)
+>     reactify (All p q)      = reactifyAll "" (DALL p q)
 >     reactify (And p q)      = reactify p >> reactKword KwAnd >> reactify q
 >     reactify Trivial        = reactKword KwTrivial
 >     reactify Absurd         = reactKword KwAbsurd
@@ -102,9 +100,9 @@ The |Reactive| class describes things that can be made into React elements.
 >     reactify (RCons s i t)     = do
 >         reactify s
 >         ">"
->         reactify i ArgSize
+>         reactify i
 >         " , "
->         reactify t ArgSize
+>         reactify t
 >     reactify Unit         = reactKword KwSig >> "()"
 >     reactify Void         = reactifyPair DVOID
 >     reactify (Sigma s t)  = reactifySigma "" (DSIGMA s t)
@@ -139,8 +137,6 @@ and a codomain, and represents them appropriately for the current size.
 -- >   | isEmpty bs  = wrapDoc d PiSize
 -- >   | otherwise   = wrapDoc (bs >> reactKword KwArr >> d) PiSize
 
-
-
 To reactify a scope, we accumulate arguments until something other
 than a $\lambda$-term is reached.
 
@@ -155,23 +151,20 @@ than a $\lambda$-term is reached.
 >     reactKword KwArr
 >     reactify tm
 
-
 > instance Reactive DInTmRN where
 >     reactify (DL s)          = reactify s
 >     reactify (DC c)          = reactify c
 >     reactify (DN n)          = reactify n
 >     reactify (DQ x)          = fromString $ '?':x
 >     reactify DU              = reactKword KwUnderscore
->     reactify (DEqBlue t u) = reactify t >> kword KwEqBlue >> reactify u
+>     reactify (DEqBlue t u) = reactify t >> reactKword KwEqBlue >> reactify u
 >     reactify (DIMu (Just s   :?=: _) _)  = reactify s
 >     reactify (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
 >         reactKword KwIMu
 >         reactify ii
 >         reactify d
 >         reactify i
-
 >     reactify indtm           = fromString $ show $ indtm
-
 
 > instance Reactive DExTmRN where
 >     reactify (n ::$ els)  = reactify n >> mapM_ reactify els

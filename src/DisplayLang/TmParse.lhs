@@ -226,12 +226,12 @@ the parser.
 > inDTmParsersMore :: ParamParserList DInTmRN DInTmRN
 > inDTmParsersMore = arrange [
 >     (EqSize, \ t -> (| DEqBlue  (pFilter isEx (pure t)) (%keyword KwEqBlue%)
->                                 (pFilter isEx (sizedDInTm (pred EqSize))) |)) :
+>                                 (pFilter isEx (sizedDInTm (pred EqSize))) |)),
 
->     (AndSize, \ s -> (| (DAND s) (%keyword KwAnd%) (sizedDInTm AndSize)  |)) :
->     (ArrSize, \ s -> (| (DIMP s) (%keyword KwImp%) (sizedDInTm PiSize)   |)) :
+>     (AndSize, \ s -> (| (DAND s) (%keyword KwAnd%) (sizedDInTm AndSize)  |)),
+>     (ArrSize, \ s -> (| (DIMP s) (%keyword KwImp%) (sizedDInTm PiSize)   |)),
 
->     (ArrSize, \ s -> (| (DARR s) (%keyword KwArr%) (sizedDInTm PiSize) |)) :
+>     (ArrSize, \ s -> (| (DARR s) (%keyword KwArr%) (sizedDInTm PiSize) |))
 >     ]
 
 

@@ -509,7 +509,6 @@ Import more tactics from an aspect:
           )
         ,  ctHelp = "compile <name> <file> - compiles the proof state with <name> as the main term to be evalauted, producing a binary called <file>."
         }
->     : [] )
 
 >   : CochonTactic
 >         {  ctName = "data"
@@ -667,23 +666,26 @@ and another term of the same type. It prints out the resulting substitution.
 >   : nullaryCT "simplify" (problemSimplify >> optional' seekGoal >> return "Simplified.")
 >       "simplify - simplifies the current problem."
 
->   : CochonTactic
->         {  ctName = "record"
->         ,  ctParse = do
->              nom <- tokenString
->              keyword KwDefn
->              scs <- tokenListArgs (bracket Round $ tokenPairArgs
->                tokenString
->                (keyword KwAsc)
->                tokenInTm)
->               (keyword KwSemi)
->              return $ B0 :< nom :< pars :< scs
->         , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
->                     elabRecord nom (argList (argPair argToStr argToIn) pars)
->                                    (argList (argPair argToStr argToIn) cons)
->                       >> return "Record'd.")
->         ,  ctHelp = "record <name> [<para>]* := [(<label> : <ty>) ;]* - builds a record type."
->         }
+TODO(joel) - how did this ever work?
+pars is not bound here either https://github.com/joelburget/pigment/blob/bee79687c30933b8199bd9ae6aaaf8048a0c1cf9/src/Tactics/Record.lhs
+
+<   : CochonTactic
+<         {  ctName = "record"
+<         ,  ctParse = do
+<              nom <- tokenString
+<              keyword KwDefn
+<              scs <- tokenListArgs (bracket Round $ tokenPairArgs
+<                tokenString
+<                (keyword KwAsc)
+<                tokenInTm)
+<               (keyword KwSemi)
+<              return $ B0 :< nom :< pars :< scs
+<         , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
+<                     elabRecord nom (argList (argPair argToStr argToIn) pars)
+<                                    (argList (argPair argToStr argToIn) cons)
+<                       >> return "Record'd.")
+<         ,  ctHelp = "record <name> [<para>]* := [(<label> : <ty>) ;]* - builds a record type."
+<         }
 
 >   : unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
 >       "relabel <pattern> - changes names of arguments in label to pattern"
@@ -698,6 +700,7 @@ but this is left for backwards compatibility.
 
 >   : nullaryCT "propsimplify" propSimplifyTactic
 >       "propsimplify - applies propositional simplification to the current goal."
+>   : [] )
 
 > elimCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
 > elimCTactic c r = do
@@ -707,7 +710,10 @@ but this is left for backwards compatibility.
 >     toFirstMethod
 >     return "Eliminated. Subgoals awaiting work..."
 
-> matchCTactic :: [(String, DInTmRN)] -> DExTmRN -> DInTmRN -> ProofState PureReact
+> matchCTactic :: [(String, DInTmRN)]
+>              -> DExTmRN
+>              -> DInTmRN
+>              -> ProofState PureReact
 > matchCTactic xs a b = draftModule "__match" $ do
 >     rs <- traverse matchHyp xs
 >     (_ :=>: av :<: ty) <- elabInfer' a

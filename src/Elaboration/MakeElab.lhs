@@ -140,6 +140,14 @@ representation.
 > subElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
 > subElabInfer loc tm = eCompute (sigSetVAL :>: makeElabInfer loc tm)
 
+> inductionOpLabMethodType = L $ "l" :. [.l.
+>                    L $ "d" :. [.d.
+>                    L $ "P" :. [._P.
+>                    PI (N $ descOp :@ [NV d, MU (|(NV l)|) (NV d)])
+>                       (L $ "x" :. [.x.
+>                        ARR (N $ boxOp :@ [NV d, MU (|(NV l)|) (NV d), NV _P, NV x])
+>                            (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
+
 Since we frequently pattern-match on the goal type when elaborating |In| terms,
 we abstract it out. Thus |makeElab'| actually implements elaboration.
 
