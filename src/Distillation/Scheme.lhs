@@ -1,4 +1,4 @@
-\section{The Scheme distiller}
+\prettysection{The Scheme distiller}
 \label{sec:Distillation.Scheme}
 
 %if False
@@ -21,12 +21,15 @@
 > import DisplayLang.Scheme
 > import DisplayLang.Name
 > import DisplayLang.PrettyPrint
+> import DisplayLang.Reactify
 
 > import NameSupply.NameSupplier
 
 > import Evidences.Tm
 > import Evidences.Mangler
 > import Evidences.Eval
+
+> import React
 
 %endif
 
@@ -49,7 +52,7 @@ as well as the collected list of references we have made so far. It
 turns the |INTM| scheme into an a Display term scheme with relative
 names.
 
-> distillScheme ::  Entries -> Bwd REF -> Scheme INTM -> 
+> distillScheme ::  Entries -> Bwd REF -> Scheme INTM ->
 >                   ProofStateT INTM (Scheme DInTmRN, INTM)
 
 On a ground type, there is not much to be done: |distill| does the
@@ -76,15 +79,15 @@ we may as well supply it, though it should not be inspected.
 >     -- Under a fresh |ref|\ldots
 >     freshRef (x :<: evTm s') $ \ref -> do
 >         -- Distill the codomain
->         (schT', t') <- distillScheme  
+>         (schT', t') <- distillScheme
 >                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' Nothing)
->                          (refs :< ref) 
+>                          (refs :< ref)
 >                          schT
 >         return (SchExplicitPi (x :<: schS') schT', PIV x s' t')
 
 On an implicit $\Pi$, the operation is fairly similar. Instead of
 |distillScheme|-ing the domain, we proceed as for ground types --- it
-is one. 
+is one.
 
 > distillScheme entries refs (SchImplicitPi (x :<: s) schT) = do
 >     -- Distill the domain as a ground type
@@ -93,9 +96,9 @@ is one.
 >     -- Under a fresh |ref|\ldots
 >     freshRef (x :<: sv) $ \ref -> do
 >         -- Distill the domain
->         (schT', t') <- distillScheme 
+>         (schT', t') <- distillScheme
 >                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' Nothing)
->                          (refs :< ref) 
+>                          (refs :< ref)
 >                          schT
 >         return (SchImplicitPi (x :<: sd) schT', PIV x s' t')
 
@@ -104,8 +107,8 @@ We have been helped by |underneath|, which replaces (de Bruijn indexed)
 variables in a term with references from the given list.
 
 > underneath :: Bwd REF -> INTM -> INTM
-> underneath = underneath' 0 
->     where 
+> underneath = underneath' 0
+>     where
 >       underneath' :: Int -> Bwd REF -> INTM -> INTM
 >       underneath' _ B0          tm = tm
 >       underneath' n (rs :< ref) tm = underneath' (n+1) rs (under n ref %% tm)
@@ -124,3 +127,8 @@ ProofState usage.
 > prettySchemeHere sch = do
 >     sch' <- distillSchemeHere sch
 >     return $ pretty sch' maxBound
+>
+> reactSchemeHere :: Scheme INTM -> ProofState PureReact
+> reactSchemeHere sch = do
+>     sch' <- distillSchemeHere sch
+>     return $ reactify sch'

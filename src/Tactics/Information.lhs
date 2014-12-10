@@ -9,7 +9,6 @@
 
 > import Control.Applicative hiding (empty)
 > import Control.Monad.State
-> import Text.PrettyPrint.HughesPJ
 
 > import NameSupply.NameSupply
 
@@ -35,7 +34,6 @@
 > import DisplayLang.Name
 > import DisplayLang.Scheme
 > import DisplayLang.Lexer
-> import DisplayLang.PrettyPrint
 > import DisplayLang.Reactify
 
 > import Elaboration.ElabProb
@@ -77,8 +75,8 @@ end, so it will not leave any subgoals lying around in the proof state.
 > infoElaborate tm = draftModule "__infoElaborate" $ do
 >     (tm' :=>: tmv :<: ty) <- elabInfer' tm
 >     tm'' <- bquoteHere tmv
->     s <- prettyHere (ty :>: tm'')
->     return (fromString (renderHouseStyle s))
+>     s <- reactHere (ty :>: tm'')
+>     return s
 
 
 The |infoInfer| command is similar to |infoElaborate|, but it returns a string
@@ -88,8 +86,8 @@ representation of the resulting type.
 > infoInfer tm = draftModule "__infoInfer" $ do
 >     (_ :<: ty) <- elabInfer' tm
 >     ty' <- bquoteHere ty
->     s <- prettyHere (SET :>: ty')
->     return (fromString (renderHouseStyle s))
+>     s <- reactHere (SET :>: ty')
+>     return s
 
 
 The |infoContextual| command displays a distilled list of things in
@@ -104,22 +102,29 @@ argument is True.
 >     inScope <- getInScope
 >     bsc <- gets inBScope
 >     d <- help bsc inScope
->     return (fromString (renderHouseStyle d))
+>     return d
 >   where
->     help :: BScopeContext -> Entries -> ProofState Doc
->     help bsc B0 = return empty
+>     help :: BScopeContext -> Entries -> ProofState PureReact
+>     help bsc B0 = return ""
 >     help bsc (es :< EPARAM ref _ k _ _) | not gals = do
->         ty     <- bquoteHere (pty ref)
->         docTy  <- prettyHereAt (pred ArrSize) (SET :>: ty)
->         d      <- help bsc es
->         return $ d $$ prettyBKind k (text (showRelName (christenREF bsc ref))
->                                               <+> kword KwAsc <+> docTy)
+>         ty       <- bquoteHere (pty ref)
+>         reactTy  <- reactHereAt (SET :>: ty)
+>         d        <- help bsc es
+>         return $ do
+>             d
+>             reactBKind k $ do
+>                 fromString $ showRelName $ christenREF bsc ref
+>                 reactKword KwAsc
+>                 reactTy
 >     help bsc (es :< EDEF ref _ _ _ _ _) | gals = do
->         ty     <- bquoteHere $ removeShared (paramSpine es) (pty ref)
->         docTy  <- prettyHere (SET :>: ty)
->         d      <- help bsc es
->         return $ d $$ (text (showRelName (christenREF bsc ref))
->                                 <+> kword KwAsc <+> docTy)
+>         ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
+>         reactTy  <- reactHere (SET :>: ty)
+>         d        <- help bsc es
+>         return $ do
+>             d
+>             fromString $ showRelName $ christenREF bsc ref
+>             reactKword KwAsc
+>             reactTy
 >     help bsc (es :< _) = help bsc es
 
 >     removeShared :: Spine {TT} REF -> TY -> TY
@@ -140,9 +145,9 @@ the saved state. We can get rid of it once we are confident that the new version
 >     ds <- many' (hypsHere bsc me <* optional' killBelow <* goOut <* removeEntryAbove)
 >     d <- hypsHere bsc me
 >     put save
->     return (fromString (renderHouseStyle (vcat (d:reverse ds))))
+>     return $ sequence_ $ d:reverse ds
 >  where
->    hypsHere :: BScopeContext -> Name -> ProofState Doc
+>    hypsHere :: BScopeContext -> Name -> ProofState PureReact
 >    hypsHere bsc me = do
 >        es <- getEntriesAbove
 >        d <- hyps bsc me
@@ -153,27 +158,36 @@ the saved state. We can get rid of it once we are confident that the new version
 >        l <- getLayer
 >        replaceLayer (l { belowEntries = NF F0 })
 >
->    hyps :: BScopeContext -> Name -> ProofState Doc
+>    hyps :: BScopeContext -> Name -> ProofState PureReact
 >    hyps bsc me = do
 >        es <- getEntriesAbove
 >        case (gals, es) of
->            (_, B0) -> return empty
+>            (_, B0) -> return ""
 >            (False, es' :< EPARAM ref _ k _ _) -> do
 >                putEntriesAbove es'
 >                ty' <- bquoteHere (pty ref)
->                docTy <- prettyHere (SET :>: ty')
+>                reactTy <- reactHere (SET :>: ty')
 >                d <- hyps bsc me
->                return (d $$ prettyBKind k (text (showRelName (christenREF bsc ref)) <+> kword KwAsc <+> docTy))
+>                return $ do
+>                    d
+>                    reactBKind k $ do
+>                        fromString $ showRelName $ christenREF bsc ref
+>                        reactKword KwAsc
+>                        reactTy
 >            (True, es' :< EDEF ref _ _ _ _ _) -> do
 >                goIn
 >                es <- getEntriesAbove
 >                (ty :=>: _) <- getGoal "hyps"
 >                ty' <- bquoteHere (evTm (inferGoalType es ty))
->                docTy <- prettyHere (SET :>: ty')
+>                reactTy <- reactHere (SET :>: ty')
 >                goOut
 >                putEntriesAbove es'
 >                d <- hyps bsc me
->                return (d $$ (text (showRelName (christenREF bsc ref)) <+> kword KwAsc <+> docTy))
+>                return $ do
+>                    d
+>                    fromString (showRelName (christenREF bsc ref))
+>                    reactKword KwAsc
+>                    reactTy
 >            (_, es' :< _) -> putEntriesAbove es' >> hyps bsc me
 
 
@@ -182,32 +196,31 @@ the saved state. We can get rid of it once we are confident that the new version
 >     (_, as, ms) <- resolveHere x
 >     case ms of
 >         Just sch -> do
->             d <- prettySchemeHere (applyScheme sch as)
->             return (fromString (renderHouseStyle d))
+>             d <- reactSchemeHere (applyScheme sch as)
+>             return d
 >         Nothing -> return (fromString (showRelName x ++ " does not have a scheme."))
 
 
 The |infoWhatIs| command displays a term in various representations.
 
 > infoWhatIs :: DExTmRN -> ProofState PureReact
-> infoWhatIs tmd = draftModule "__infoWhatIs" (do
->     (tm :=>: tmv :<: tyv) <- elabInfer' tmd
+> infoWhatIs tmd = draftModule "__infoWhatIs" $ do
+>     tm :=>: tmv :<: tyv <- elabInfer' tmd
 >     tmq <- bquoteHere tmv
 >     tms :=>: _ <- distillHere (tyv :>: tmq)
 >     ty <- bquoteHere tyv
 >     tys :=>: _ <- distillHere (SET :>: ty)
->     return (fromString $ unlines
->         [  "Parsed term:", show tmd
->         ,  "Elaborated term:", show tm
->         ,  "Quoted term:", show tmq
->         ,  "Distilled term:", show tms
->         ,  "Pretty-printed term:", renderHouseStyle (pretty tms maxBound)
->         ,  "Inferred type:", show tyv
->         ,   "Quoted type:", show ty
->         ,   "Distilled type:", show tys
->         ,   "Pretty-printed type:", renderHouseStyle (pretty tys maxBound)
->         ])
->   )
+>     return $ sequence_
+>         [  "Parsed term:", fromString (show tmd)
+>         ,  "Elaborated term:", fromString (show tm)
+>         ,  "Quoted term:", fromString (show tmq)
+>         ,  "Distilled term:", fromString (show tms)
+>         ,  "Pretty-printed term:", reactify tms
+>         ,  "Inferred type:", fromString (show tyv)
+>         ,   "Quoted type:", fromString (show ty)
+>         ,   "Distilled type:", fromString (show tys)
+>         ,   "Pretty-printed type:", reactify tys
+>         ]
 
 Model
 =====
@@ -278,6 +291,13 @@ Should this be part of a transformer stack including Maybe and IO?
 > resetUserInput :: PageM ()
 > resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
+The |reactBKind| function reactifies a |ParamKind| if supplied
+with an element representing its name and type.
+
+> reactBKind :: ParamKind -> PureReact -> PureReact
+> reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
+> reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
+> reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
 
 The |reactProofState| command generates a reactified representation
 of the proof state at the current location.
@@ -329,14 +349,6 @@ of the proof state at the current location.
 >             ed <- reactE e
 >             reactEs (d >> ed) es
 
-The |reactBKind| function reactifies a |ParamKind| if supplied
-with an element representing its name and type.
-
->         reactBKind :: ParamKind -> PureReact -> PureReact
->         reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
->         reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
->         reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
-
 >         reactE :: Entry Bwd -> ProofState PureReact
 >         reactE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
 >             ty' <- bquoteHere ty
@@ -385,82 +397,6 @@ with an element representing its name and type.
 > reactHKind Waiting     = "?"
 > reactHKind Hoping      = "HOPE?"
 > reactHKind (Crying s)  = fromString ("CRY <<" ++ s ++ ">>")
-
-> prettyPS :: Entries -> Name -> ProofState Doc
-> prettyPS aus me = do
->         es <- replaceEntriesAbove B0
->         cs <- putBelowCursor F0
->         case (es, cs) of
->             (B0, F0)  -> prettyEmptyTip
->             _   -> do
->                 d <- prettyEs empty (es <>> F0)
->                 d' <- case cs of
->                     F0  -> return d
->                     _   -> do
->                         d'' <- prettyEs empty cs
->                         return (d $$ text "---" $$ d'')
->                 tip <- prettyTip
->                 putEntriesAbove es
->                 putBelowCursor cs
->                 return (lbrack <+> d' $$ rbrack <+> tip)
->  where
->     prettyEs :: Doc -> Fwd (Entry Bwd) -> ProofState Doc
->     prettyEs d F0         = return d
->     prettyEs d (e :> es) = do
->         putEntryAbove e
->         ed <- prettyE e
->         prettyEs (d $$ ed) es
->
->     prettyE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
->         ty' <- bquoteHere ty
->         tyd <- prettyHereAt (pred ArrSize) (SET :>: ty')
->         return (prettyBKind k
->                  (text x  <+> (maybe empty (brackets . brackets . text) anchor)
->                           <+> kword KwAsc
->                           <+> tyd))
->
->     prettyE e = do
->         goIn
->         d <- prettyPS aus me
->         goOut
->         return (sep  [  text (fst (entryLastName e))
->                         <+> (maybe empty (brackets . brackets . text) $ entryAnchor e)
->                      ,  nest 2 d <+> kword KwSemi
->                      ])
->
->     prettyEmptyTip :: ProofState Doc
->     prettyEmptyTip = do
->         tip <- getDevTip
->         case tip of
->             Module -> return (brackets empty)
->             _ -> do
->                 tip <- prettyTip
->                 return (kword KwDefn <+> tip)
-
->     prettyTip :: ProofState Doc
->     prettyTip = do
->         tip <- getDevTip
->         case tip of
->             Module -> return empty
->             Unknown (ty :=>: _) -> do
->                 hk <- getHoleKind
->                 tyd <- prettyHere (SET :>: ty)
->                 return (prettyHKind hk <+> kword KwAsc <+> tyd)
->             Suspended (ty :=>: _) prob -> do
->                 hk <- getHoleKind
->                 tyd <- prettyHere (SET :>: ty)
->                 return (text ("(SUSPENDED: " ++ show prob ++ ")")
->                             <+> prettyHKind hk <+> kword KwAsc <+> tyd)
->             Defined tm (ty :=>: tyv) -> do
->                 tyd <- prettyHere (SET :>: ty)
->                 tmd <- prettyHereAt (pred ArrSize) (tyv :>: tm)
->                 return (tmd <+> kword KwAsc <+> tyd)
-
->     prettyHKind :: HKind -> Doc
->     prettyHKind Waiting     = text "?"
->     prettyHKind Hoping      = text "HOPE?"
->     prettyHKind (Crying s)  = text ("CRY <<" ++ s ++ ">>")
-
 
 The |elm| Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation of the
