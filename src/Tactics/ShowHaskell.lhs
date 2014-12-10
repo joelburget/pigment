@@ -107,12 +107,9 @@
 > instance ShowHaskell (Elim (Tm {d, p} REF)) where
 >     showHaskell bs (A a)       = "(A " ++ showHaskell bs a ++ ")"
 >     showHaskell bs Out         = "Out"
->
+>     showHaskell bs (Call l)    = "(CALL " ++ showHaskell bs l ++ ")"
 >     showHaskell bs Fst         = "Fst"
 >     showHaskell bs Snd         = "Snd"
->     showHaskell bs (Call l)    = "(CALL " ++ showHaskell bs l ++ ")"
->
->     showHaskell bs x           = error "showHaskell: can't show " ++ show x
 
 > instance ShowHaskell a => ShowHaskell [a] where
 >     showHaskell bs xs = "[" ++ intercalate ", " (map (showHaskell bs) xs) ++ "]"

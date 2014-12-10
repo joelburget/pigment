@@ -885,7 +885,6 @@ TODO(joel) rename to throwErrorTm
 >     halfZip AllowedEpsilon AllowedEpsilon = Just $ AllowedEpsilon
 >     halfZip (AllowedCons _S1 _T1 q1 s1 ts1) (AllowedCons _S2 _T2 q2 s2 ts2) = Just $ AllowedCons (_S1, _S2) (_T1, _T2) (q1, q2) (s1, s2) (ts1, ts2)
 >     halfZip (Mu t0) (Mu t1) = (| Mu (halfZip t0 t1) |)
->     halfZip _          _          = Nothing
 >     halfZip (EnumT t0) (EnumT t1) = Just (EnumT (t0,t1))
 >     halfZip Ze Ze = Just Ze
 >     halfZip (Su t0) (Su t1) = Just (Su (t0,t1))
@@ -918,6 +917,7 @@ TODO(joel) rename to throwErrorTm
 >     halfZip (Pair s0 t0) (Pair s1 t1) = Just (Pair (s0,s1) (t0,t1))
 >     halfZip UId UId = Just UId
 >     halfZip (Tag s) (Tag s') | s == s' = Just (Tag s)
+>     halfZip _          _          = Nothing
 
 > instance Traversable Elim where
 >   traverse f (A s)  = (|A (f s)|)
@@ -929,9 +929,9 @@ TODO(joel) rename to throwErrorTm
 > instance HalfZip Elim where
 >   halfZip (A s) (A t)  = Just $ A (s, t)
 >   halfZip (Call t1) (Call t2) = Just (Call (t1, t2))
->   halfZip _ _          = Nothing
 >   halfZip Fst Fst = (|Fst|)
 >   halfZip Snd Snd = (|Snd|)
+>   halfZip _ _          = Nothing
 
 > instance Traversable Irr where
 >   traverse f (Irr x) = (|Irr (f x)|)

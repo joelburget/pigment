@@ -297,7 +297,7 @@ things...
 > key KwCon         = "con"
 > key KwOut         = "%"
 
-> key k             = error ("key: missing keyword " ++ show k)
+< key k             = error ("key: missing keyword " ++ show k)
 
 It is straightforward to make a translation table, |keywords|:
 

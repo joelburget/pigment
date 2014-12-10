@@ -76,12 +76,6 @@ using |canTy|.
 >   ssv@(s :=>: sv) <- chev (SET :>: s)
 >   ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
 >   return $ Pi ssv ttv
-> canTy  chev (ty :>: x) = throwError $ StackError
->     [ err "canTy: the proposed value "
->     , errCan x
->     , err " is not of type "
->     , errTyVal ((C ty) :<: SET)
->     ]
 > canTy chev (Set :>: Anchors) = return Anchors
 > canTy chev (Anchors :>: Anchor u t ts) = do
 >     uuv <- chev (UID :>: u)
@@ -242,6 +236,12 @@ using |canTy|.
 >   return $ Pair xxv yyv
 > canTy _  (Set :>: UId)    = return UId
 > canTy _  (UId :>: Tag s)  = return (Tag s)
+> canTy chev (ty :>: x) = throwError $ StackError
+>     [ err "canTy: the proposed value "
+>     , errCan x
+>     , err " is not of type "
+>     , errTyVal ((C ty) :<: SET)
+>     ]
 
 
 \subsubsection{Eliminators}

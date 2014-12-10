@@ -75,7 +75,6 @@ being with $\Pi$-types.
 >     pretty (EnumT t)  = wrapDoc (kword KwEnum <+> pretty t ArgSize) AppSize
 >     pretty Ze         = const (int 0)
 >     pretty (Su t)     = prettyEnumIndex 1 t
->     pretty can       = const (quotes . text . show $ can)
 >     pretty (EqBlue pp qq) = pretty (DEqBlue (foo pp) (foo qq))
 >       where
 >         foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
@@ -135,6 +134,7 @@ being with $\Pi$-types.
 >     pretty (Pair a b)   = prettyPair (DPAIR a b)
 >     pretty UId      = const (kword KwUId)
 >     pretty (Tag s)  = const (kword KwTag <> text s)
+>     pretty can       = const (quotes . text . show $ can)
 
 The |prettyPi| function takes a document representing the domains
 so far, a term and the current size. It accumulates domains until a
@@ -167,7 +167,6 @@ The |Elim| functor is straightforward.
 >     pretty (Call _) = const (kword KwCall)
 >     pretty Fst = const (kword KwFst)
 >     pretty Snd = const (kword KwSnd)
->     pretty elim   = const (quotes . text . show $ elim)
 
 
 To pretty-print a scope, we accumulate arguments until something other

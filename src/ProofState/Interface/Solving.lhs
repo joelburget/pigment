@@ -32,7 +32,7 @@
 > import Evidences.Tm
 > import Evidences.Eval
 
-> import {-# SOURCE #-} Elaboration.Wire
+> import Elaboration.Wire
 
 %endif
 
