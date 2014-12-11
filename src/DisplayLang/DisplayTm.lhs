@@ -5,7 +5,7 @@
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
->     ScopedTypeVariables,
+>     ScopedTypeVariables, PatternSynonyms,
 >     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 
 > module DisplayLang.DisplayTm where

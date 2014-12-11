@@ -4,7 +4,8 @@
 %if False
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving #-}
+> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
+>     PatternSynonyms #-}
 
 > module ProofState.Structure.Developments where
 
@@ -158,7 +159,6 @@ these useful patterns:
 >     EEntity ref name (Parameter paramKind) term anchor
 > pattern EDEF ref name defKind dev term anchor =
 >     EEntity ref name (Definition defKind dev) term anchor
-
 
 \paragraph{Kinds of Definitions:}
 

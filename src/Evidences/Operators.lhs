@@ -4,7 +4,7 @@
 %if False
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
+> {-# LANGUAGE TypeOperators, GADTs, KindSignatures, PatternSynonyms,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
 
 > module Evidences.Operators where

@@ -8,6 +8,7 @@ debug:
 
 clean:
 	git clean -xf
+	rm -rf main
 
 server:
 	python -m SimpleHTTPServer 8765

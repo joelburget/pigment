@@ -6,7 +6,7 @@
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
 >     FlexibleContexts, ScopedTypeVariables, ConstraintKinds,
->     GeneralizedNewtypeDeriving #-}
+>     GeneralizedNewtypeDeriving, PatternSynonyms #-}
 
 > module Evidences.Tm where
 
@@ -740,16 +740,16 @@ further failures. The top of the stack is the head of the list.
 
 > newtype StackError t = StackError { unStackError :: [ErrorItem t] }
 
-instance MonadPlus (Either (StackError a)) where
-    mzero = Left (StackError [])
-    mplus x@(Right l) _ = x
-    mplus _ x = x
-
-     mplus (Left (StackError xs)) (Left (StackError ys)) =
-         Left (StackError (xs++ys))
-     mplus l@(Left (StackError xs)) _ = l
-     mplus _ r@(Left (StackError xs)) = r
-     mplus (Right l) (Right r) =k
+< instance MonadPlus (Either (StackError a)) where
+<     mzero = Left (StackError [])
+<     mplus x@(Right l) _ = x
+<     mplus _ x = x
+<
+<      mplus (Left (StackError xs)) (Left (StackError ys)) =
+<          Left (StackError (xs++ys))
+<      mplus l@(Left (StackError xs)) _ = l
+<      mplus _ r@(Left (StackError xs)) = r
+<      mplus (Right l) (Right r) =k
 
 > instance Error (StackError t) where
 >   strMsg = sErr

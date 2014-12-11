@@ -31,7 +31,9 @@
 The |reactKword| function gives a react element representing a |Keyword|.
 
 > reactKword :: Keyword -> PureReact
-> reactKword = fromString . key
+> reactKword kw =
+>     let k = fromString (key kw)
+>     in span_ <! class_ k $ text_ k
 
 > parens :: PureReact -> PureReact
 > parens r = "(" >> r >> ")"

@@ -331,11 +331,11 @@ of the proof state at the current location.
 >         reactEmptyTip = do
 >             tip <- getDevTip
 >             case tip of
->                 Module -> return ""
+>                 Module -> return $ div_ <! className "empty-empty-tip" $ "[]"
 >                 _ -> do
 >                     tip' <- reactTip
 >                     return $ div_ <! className "empty-tip" $
->                         reactKword KwDefn >> tip'
+>                         reactKword KwDefn >> " " >> tip'
 
 >         reactKword :: Keyword -> PureReact
 >         reactKword = fromString . key
@@ -354,20 +354,22 @@ of the proof state at the current location.
 >             ty' <- bquoteHere ty
 >             tyd <- reactHereAt (SET :>: ty')
 >             return $ reactBKind k $ div_ <! className "entry" $ do
->                 fromString x
->                 maybe "" (\x -> "[[" >> fromString x >> "]]") anchor
+>                 span_ <! class_ "tm-name" $ fromString x
+>                 span_ <! class_ "anchor" $
+>                     maybe "" (\x -> "[[" >> fromString x >> "]]") anchor
 >                 reactKword KwAsc
->                 tyd
+>                 div_ <! class_ "ty" $ tyd
 
 >         reactE e = do
 >             goIn
 >             d <- renderReact aus me
 >             goOut
 >             return $ div_ <! className "entry" $ do
->                 fromString (fst (entryLastName e))
->                 maybe "" (\x -> "[[" >> fromString x >> "]]") $ entryAnchor e
+>                 span_ <! class_ "tm-name" $ fromString (fst (entryLastName e))
+>                 span_ <! class_ "anchor" $
+>                     maybe "" (\x -> "[[" >> fromString x >> "]]") $
+>                         entryAnchor e
 >                 d
->                 reactKword KwSemi
 
 > reactTip :: ProofState PureReact
 > reactTip = do
@@ -377,8 +379,10 @@ of the proof state at the current location.
 >         Unknown (ty :=>: _) -> do
 >             hk <- getHoleKind
 >             tyd <- reactHere (SET :>: ty)
->             return $ div_ <! className "tip" $
->                 reactHKind hk >> reactKword KwAsc >> tyd
+>             return $ div_ <! className "tip" $ do
+>                 reactHKind hk
+>                 reactKword KwAsc
+>                 tyd
 >         Suspended (ty :=>: _) prob -> do
 >             hk <- getHoleKind
 >             tyd <- reactHere (SET :>: ty)
@@ -394,9 +398,10 @@ of the proof state at the current location.
 >                 (tmd >> reactKword KwAsc >> tyd)
 
 > reactHKind :: HKind -> PureReact
-> reactHKind Waiting     = "?"
-> reactHKind Hoping      = "HOPE?"
-> reactHKind (Crying s)  = fromString ("CRY <<" ++ s ++ ">>")
+> reactHKind kind = span_ <! class_ "hole" $ case kind of
+>     Waiting    -> "?"
+>     Hoping     -> "HOPE?"
+>     (Crying s) -> fromString ("CRY <<" ++ s ++ ">>")
 
 The |elm| Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation of the
