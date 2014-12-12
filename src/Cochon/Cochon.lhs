@@ -45,7 +45,6 @@
 > import Tactics.PropositionSimplify
 > import Tactics.ProblemSimplify
 > import Tactics.Information
-> import Tactics.Gadgets
 > import Tactics.Data
 > import Tactics.IData
 > import Tactics.Relabel
@@ -60,8 +59,6 @@
 
 > import Cochon.CommandLexer
 > import Cochon.Error
-
-> import Compiler.Compiler
 
 > import Kit.BwdFwd
 > import Kit.Parsley
@@ -86,17 +83,18 @@ View
 
 > page :: InteractionReact
 > page = div_ <! class_ "page" $ do
->     nest proofCtx proofCtxDisplay
->     div_ <! class_ "right-pane" $ do
->         prompt
->         nest outputLog interactionLog
->     tacticList
+>     div_ <! class_ "top-pane" $ nest proofCtx proofCtxDisplay
+>     div_ <! class_ "bottom-pane" $ prompt
+>     -- nest outputLog interactionLog
+>     -- tacticList
 
 > prompt :: InteractionReact
 > prompt = div_ <! class_ "prompt" $ do
 >     InteractionState{_userInput=v} <- getState
+>     "> "
 >     input_ <! class_ "prompt-input"
 >            <! value_ (toJSStr v)
+>            <! autofocus_ True
 >            <! onChange handleChange
 >            <! onKeyPress handleKey
 
@@ -129,7 +127,7 @@ View
 > proofCtxDisplay :: StatefulReact (Bwd ProofContext) ()
 > proofCtxDisplay = div_ <! class_ "ctx-display" $ do
 >     _ :< ctx <- getState
->     pureNest $ pre_ $ fst $ runProofState reactProofState ctx
+>     pureNest $ fst $ runProofState reactProofState ctx
 
 > tacticList :: InteractionReact
 > tacticList = div_ <! class_ "tactic-list" $
@@ -479,21 +477,6 @@ Miscellaneous tactics:
 
 >     : nullaryCT "validate" (validateHere >> return "Validated.")
 >         "validate - re-checks the definition at the current location."
-
-Import more tactics from an aspect:
-
-  : CochonTactic
-        {  ctName = "compile"
-        ,  ctParse = (|(|(B0 :<) tokenName|) :< tokenString|)
-        ,  ctxTrans = (\ [ExArg (DP r ::$ []), StrArg fn] -> InteractionM () $ \(InteractionState{proofCtx=(locs :< loc)} -> do
-            let  Right dev = evalStateT getAboveCursor loc
-                 Right (n := _) = evalStateT (resolveDiscard r) loc
-            b <- compileCommand n (reverseDev dev) fn
-            putStrLn (if b then "Compiled." else "EPIC FAIL")
-            return (locs :< loc)
-          )
-        ,  ctHelp = "compile <name> <file> - compiles the proof state with <name> as the main term to be evalauted, producing a binary called <file>."
-        }
 
 >   : CochonTactic
 >         {  ctName = "data"

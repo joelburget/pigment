@@ -393,7 +393,6 @@ The |distillHere| command distills a term in the current context.
 > distillHere :: (TY :>: INTM) -> ProofState (DInTmRN :=>: VAL)
 > distillHere tt = liftErrorState DTIN $ distill B0 tt
 
-
 The |prettyHere| command distills a term in the current context,
 then passes it to the pretty-printer.
 
@@ -411,4 +410,4 @@ then passes it to the pretty-printer.
 > reactHereAt :: (TY :>: INTM) -> ProofState PureReact
 > reactHereAt tt = do
 >     dtm :=>: _ <- distillHere tt
->     return (reactify dtm)
+>     return $ reactify dtm

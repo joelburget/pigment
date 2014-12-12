@@ -41,9 +41,6 @@ location.
 > inScope :: ProofContext -> Entries
 > inScope pc@PC{pcAboveCursor=Dev{devEntries = es}} = globalScope pc <+> es
 
-
-
-
 The |definitionsToImpl| function lists the entries above the cursor
 that have been issued during elaboration of a programming problem
 (Section~\ref{subsec:Elaborator.Elaborator.elab-prog-problem}). \pierre{That's
@@ -54,7 +51,7 @@ all I know about it, sorry about that.}
 > magicImplName = "impl"
 >
 > definitionsToImpl :: ProofContext -> [REF :<: INTM]
-> definitionsToImpl pc@PC{pcAboveCursor=Dev{devEntries=es}} = 
+> definitionsToImpl pc@PC{pcAboveCursor=Dev{devEntries=es}} =
 >     help (pcLayers pc) (params es)
 >   where
 >     help :: Bwd Layer -> [REF :<: INTM] -> [REF :<: INTM]

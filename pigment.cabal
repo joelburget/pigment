@@ -9,6 +9,7 @@ build-type:     Simple
 executable pigment
   build-depends:
       base == 4.6.*,
+      lens-family,
       mtl >= 2.2,
       pretty
   main-is:        Main.lhs

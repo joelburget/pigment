@@ -32,8 +32,7 @@ The |reactKword| function gives a react element representing a |Keyword|.
 
 > reactKword :: Keyword -> PureReact
 > reactKword kw =
->     let k = fromString (key kw)
->     in span_ <! class_ k $ text_ k
+>     span_ <! class_ (fromString (show kw)) $ fromString (key kw)
 
 > parens :: PureReact -> PureReact
 > parens r = "(" >> r >> ")"
@@ -158,12 +157,14 @@ than a $\lambda$-term is reached.
 >     reactify (DQ x)          = fromString $ '?':x
 >     reactify DU              = reactKword KwUnderscore
 >     reactify (DEqBlue t u) = reactify t >> reactKword KwEqBlue >> reactify u
->     reactify (DIMu (Just s   :?=: _) _)  = reactify s
->     reactify (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
+>     reactify (DIMu (Just s   :?=: _) _) = reactify s
+>     reactify (DIMu (Nothing  :?=: (Id ii :& Id d)) i) = do
 >         reactKword KwIMu
 >         reactify ii
 >         reactify d
 >         reactify i
+>     reactify (DAnchor name _)  = fromString name
+>     -- reactify (DTag name tms) = name
 >     reactify indtm           = fromString $ show $ indtm
 
 > instance Reactive DExTmRN where

@@ -45,7 +45,7 @@ zipper is a record with the following fields:
 
 \begin{description}
 \item[|aboveEntries|] appearing \emph{above} the working development
-\item[|currenEntry|] data about the working development
+\item[|currentEntry|] data about the working development
 \item[|belowEntries|] appearing \emph{below} the working development
 \item[|layTip|] the |Tip| of the development that contains the current entry
 \item[|layNSupply|] the |NameSupply| of the development that contains the
@@ -121,7 +121,7 @@ justifies some piece of kit to deal with this global context.
 
 Once we have the derivative, the zipper is almost here. The proof
 context is represented by a stack of layers (|pcLayers|), ending with
-the working development (|pcDev|) above the cursor and the entries
+the working development (|pcAboveCursor|) above the cursor and the entries
 below the cursor (|pcBelowCursor|)..
 
 > data ProofContext = PC
@@ -131,7 +131,7 @@ below the cursor (|pcBelowCursor|)..
 >     }
 >   deriving Show
 
-The |emptyContext| corresponds to the following (purposedly verbose)
+The |emptyContext| corresponds to the following (intentionally verbose)
 definition:
 
 > emptyContext :: ProofContext

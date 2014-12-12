@@ -120,7 +120,7 @@ the proof context, we will change focus, therefore \emph{leaving} the
 current entry, or \emph{entering} into another.
 
 When leaving the current entry, the current entry is turned back into
-a conventional entry, so that it can inserted with its peers in the
+a conventional entry, so that it can be inserted with its peers in the
 development (above or below). In a word, this operation \emph{zip}
 back the current entry.
 

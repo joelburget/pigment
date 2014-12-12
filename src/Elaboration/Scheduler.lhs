@@ -58,12 +58,12 @@ so it will stabilise the children and return to where it started.
 > startScheduler :: ProofState ()
 > startScheduler = getCurrentName >>= scheduler
 
-In general, the scheduler might have to move non-locally (e.g. in order to solve
-goals elsewhere in the proof state), so it keeps track of a target location to
-return to. When |scheduler| is called, it checks to see if there might be any
-suspended problems below the current location. If so, it resets the suspend
-state and starts searching from the top of the development. If not, it calls
-|schedulerDone| to move out or terminate as appropriate.
+In general, the scheduler might have to move non-locally (e.g. in order to
+solve goals elsewhere in the proof state), so it keeps track of a target
+location to return to. When |scheduler| is called, it checks to see if there
+might be any suspended problems below the current location. If so, it resets
+the suspend state and starts searching from the top of the development. If not,
+it calls |schedulerDone| to move out or terminate as appropriate.
 
 > scheduler :: Name -> ProofState ()
 > scheduler n = do
@@ -136,10 +136,11 @@ resulting term. It returns whether an elaboration process was resumed
 >     _ -> return False
 
 
-Given a (potentially, but not necessarily, unstable) elaboration problem for the
-current location, we can |resume| it to try to produce a term. If this suceeds,
-the cursor will be in the same location, but if it fails (i.e.\ the problem has
-been suspended) then the cursor could be anywhere earlier in the proof state.
+Given a (potentially, but not necessarily, unstable) elaboration problem for
+the current location, we can |resume| it to try to produce a term. If this
+suceeds, the cursor will be in the same location, but if it fails (i.e.\ the
+problem has been suspended) then the cursor could be anywhere earlier in the
+proof state.
 
 > resume :: (INTM :=>: VAL) -> EProb -> ProofState (Maybe (INTM :=>: VAL))
 > resume _ (ElabDone tt) = return . Just . maybeEval $ tt

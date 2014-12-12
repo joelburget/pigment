@@ -130,7 +130,6 @@
 %include Tactics/Data.lhs
 %include Tactics/Record.lhs
 %include Tactics/Relabel.lhs
-%include Tactics/Gadgets.lhs
 %include Tactics/ShowHaskell.lhs
 %include Tactics/Unification.lhs
 %include Tactics/Matching.lhs
@@ -168,15 +167,6 @@
 %include SourceLang/Parser.lhs
 %include SourceLang/Elaborator.lhs
 %include SourceLang/Example.lhs
-
-\chapter{Compiler}
-
-\input{Compiler/Introduction.tex}
-
-%include Compiler/OpDef.lhs
-%include Compiler/Compiler.lhs
-
-\appendix
 
 \chapter{Kit}
 

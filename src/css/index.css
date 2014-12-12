@@ -1,11 +1,25 @@
 .page {
-    font-family: "Inconsolata", "Input Sans", sans-serif;
+    font-family: "Inconsolata", sans-serif;
     font-weight: lighter;
 }
 
-.right-pane {
-    float: left;
-    width: 50%;
+.top-pane {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+}
+
+.bottom-pane {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 100px;
+    background-color: rgb(69, 69, 69);
+    border-top: 2px solid rgb(119, 139, 199);
 }
 
 .interaction-log {
@@ -14,21 +28,27 @@
 }
 
 .ctx-display {
-    float: left;
-    width: 50%;
+    margin: 10px;
 }
 .ctx-display pre {
-    font-family: "Inconsolata", "Input Mono", monospace;
+    font-family: "Inconsolata", monospace;
 }
 
 .prompt {
-    margin-bottom: 20px;
+    color: white;
+    margin: 20px;
 }
 .prompt-input {
+    color: white;
     font-size: 17px;
-    font-family: "Inconsolata", "Input Sans", sans-serif;
+    font-family: "Inconsolata", sans-serif;
     width: 95%;
-    height: 20px;
+    height: 55px;
+    border: none;
+    background-color: rgba(0, 0, 0, 0);
+}
+.prompt-input:focus {
+    outline: none;
 }
 
 .tactic-list {
@@ -40,7 +60,8 @@
 
 .entry {
     border-left: 5px solid rgb(166, 214, 255);
-    margin: 5px 0;
+    clear: both;
+    margin: 10px 0;
 }
 
 .proof-state {
@@ -48,11 +69,30 @@
 }
 
 .tip {
-    background-color: rgba(255, 94, 112, 0.5)
+    border-left: 5px solid rgba(255, 182, 111);
 }
 
 .empty-tip {
 }
 
 .empty-empty-tip {
+}
+
+.hole {
+    background-color: rgb(255, 222, 53);
+}
+
+.tm-name {
+    padding-left: 5px;
+}
+
+.ty {
+    padding-left: 5px;
+}
+
+.anchor {
+}
+
+.tm-name, .anchor, .empty-tip, .tip, .hole, .entry span {
+    display: table-cell;
 }

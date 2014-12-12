@@ -1,4 +1,4 @@
-\prettysection{The Scheme distiller}
+\section{The Scheme distiller}
 \label{sec:Distillation.Scheme}
 
 %if False

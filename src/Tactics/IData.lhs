@@ -45,8 +45,6 @@
 
 %endif
 
-
-
 > ielabCons :: String -> INTM -> (EXTM :=>: VAL) ->
 >                [Elim VAL] -> (String , DInTmRN) ->
 >                ProofState ( String          -- con name

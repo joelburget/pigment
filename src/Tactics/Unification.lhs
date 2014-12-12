@@ -3,7 +3,7 @@
 %if False
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards #-}
+> {-# LANGUAGE GADTs, TypeOperators #-}
 
 > module Tactics.Unification where
 
@@ -120,7 +120,7 @@ holes with the new ones.
 >         | r == paramRef                      = stripShared' n es
 >     stripShared' n (es :< EDEF _ _ _ _ _ _)  = stripShared' n es
 >     stripShared' n (es :< EModule _ _)       = stripShared' n es
->     stripShared' n es = do
+>     stripShared' n es =
 >       -- |proofTrace $ "stripShared: fail on " ++ show n|
 >       throwErrorS
 >           [ err "stripShared: fail on"

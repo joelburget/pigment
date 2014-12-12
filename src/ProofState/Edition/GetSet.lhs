@@ -140,8 +140,7 @@ And some specialized versions:
 > getHoleGoal :: ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do
 >     x <- getCurrentEntry
->     let CDefinition _ (_ := HOLE _ :<: _) _ _ _ = traceShowId x
->     -- CDefinition _ (_ := HOLE _ :<: _) _ _ _ <- getCurrentEntry
+>     let CDefinition _ (_ := HOLE _ :<: _) _ _ _ = traceShowId x -- getCurrentEntry
 >     getGoal "getHoleGoal"
 >
 > getHoleKind :: ProofStateT e HKind

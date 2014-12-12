@@ -77,7 +77,7 @@ value for performance purposes.
 \subsubsection{|Entry|}
 \label{subsubsec:ProofState.Structure.Developments.entry}
 
-As mentionned above, a |Dev| is a kind of tree. The branches are
+As mentioned above, a |Dev| is a kind of tree. The branches are
 introduced by the container |f (Entry f)| where |f| is Traversable,
 typically a backward list.
 

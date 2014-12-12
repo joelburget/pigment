@@ -291,8 +291,8 @@ Should this be part of a transformer stack including Maybe and IO?
 > resetUserInput :: PageM ()
 > resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
-The |reactBKind| function reactifies a |ParamKind| if supplied
-with an element representing its name and type.
+The |reactBKind| function reactifies a |ParamKind| if supplied with an element
+representing its name and type.
 
 > reactBKind :: ParamKind -> PureReact -> PureReact
 > reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
@@ -324,21 +324,21 @@ of the proof state at the current location.
 >             tip <- reactTip
 >             putEntriesAbove es
 >             putBelowCursor cs
->             return $ div_ <! className "proof-state" $ d' >> tip
+>             return $ div_ <! class_ "proof-state" $ do
+>                 div_ <! class_ "proof-state-inner" $ d'
+>                 tip
 >     where
 
 >         reactEmptyTip :: ProofState PureReact
 >         reactEmptyTip = do
 >             tip <- getDevTip
 >             case tip of
->                 Module -> return $ div_ <! className "empty-empty-tip" $ "[]"
+>                 Module -> return $ div_ <! className "empty-empty-tip" $
+>                     "[empty]"
 >                 _ -> do
 >                     tip' <- reactTip
 >                     return $ div_ <! className "empty-tip" $
 >                         reactKword KwDefn >> " " >> tip'
-
->         reactKword :: Keyword -> PureReact
->         reactKword = fromString . key
 
 >         reactEs :: PureReact
 >                 -> Fwd (Entry Bwd)
@@ -354,9 +354,8 @@ of the proof state at the current location.
 >             ty' <- bquoteHere ty
 >             tyd <- reactHereAt (SET :>: ty')
 >             return $ reactBKind k $ div_ <! className "entry" $ do
->                 span_ <! class_ "tm-name" $ fromString x
->                 span_ <! class_ "anchor" $
->                     maybe "" (\x -> "[[" >> fromString x >> "]]") anchor
+>                 div_ <! class_ "tm-name" $ fromString x
+>                 -- TODO(joel) - show anchor in alomst same way as below?
 >                 reactKword KwAsc
 >                 div_ <! class_ "ty" $ tyd
 
@@ -365,11 +364,13 @@ of the proof state at the current location.
 >             d <- renderReact aus me
 >             goOut
 >             return $ div_ <! className "entry" $ do
->                 span_ <! class_ "tm-name" $ fromString (fst (entryLastName e))
->                 span_ <! class_ "anchor" $
+>                 div_ <! class_ "tm-name" $ fromString (fst (entryLastName e))
+>                 div_ <! class_ "anchor" $
 >                     maybe "" (\x -> "[[" >> fromString x >> "]]") $
 >                         entryAnchor e
 >                 d
+
+"Developments can be of different nature: this is indicated by the Tip"
 
 > reactTip :: ProofState PureReact
 > reactTip = do
