@@ -3,38 +3,30 @@
 
 %if False
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes, PatternGuards #-}
-
-> module Elaboration.Wire where
-
-> import Control.Applicative
-> import Control.Monad.Except
-
-> import Kit.BwdFwd
-
-> import ProofState.Structure.Developments
-> import ProofState.Structure.Entries
-
-> import ProofState.Edition.ProofContext
-> import ProofState.Edition.News
-> import ProofState.Edition.ProofState
-> import ProofState.Edition.Entries
-> import ProofState.Edition.GetSet
-> import ProofState.Edition.Navigation
-> import ProofState.Edition.Scope
-
-> import ProofState.Interface.Lifting
-> import ProofState.Interface.ProofKit
-
-> import Evidences.Tm
-> import Evidences.Eval
-
-> import Elaboration.ElabProb
-
-> import Kit.MissingLibrary
-
+\begin{code}
+{-# OPTIONS_GHC -F -pgmF she #-}
+{-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
+             GADTs, RankNTypes, PatternGuards #-}
+module Elaboration.Wire where
+import Control.Applicative
+import Control.Monad.Except
+import Kit.BwdFwd
+import ProofState.Structure.Developments
+import ProofState.Structure.Entries
+import ProofState.Edition.ProofContext
+import ProofState.Edition.News
+import ProofState.Edition.ProofState
+import ProofState.Edition.Entries
+import ProofState.Edition.GetSet
+import ProofState.Edition.Navigation
+import ProofState.Edition.Scope
+import ProofState.Interface.Lifting
+import ProofState.Interface.ProofKit
+import Evidences.Tm
+import Evidences.Eval
+import Elaboration.ElabProb
+import Kit.MissingLibrary
+\end{code}
 %endif
 
 \subsection{Updating a reference}
@@ -46,9 +38,10 @@ tree. When |updateRef| is called to announce a changed reference (that
 the current development has already processed), it simply inserts a
 news bulletin below the current development.
 
-> updateRef :: REF -> ProofState ()
-> updateRef ref = putNewsBelow [(ref, GoodNews)]
-
+\begin{code}
+updateRef :: REF -> ProofState ()
+updateRef ref = putNewsBelow [(ref, GoodNews)]
+\end{code}
 
 \subsection{Committing news into the ProofState}
 
@@ -58,61 +51,68 @@ news bulletin to each entry in turn, picking up other bulletins along
 the way. This function is called when navigating to a development that
 may contain news bulletins, so they can be pushed out of sight.
 
-> propagateNews :: PropagateStatus ->  NewsBulletin -> NewsyEntries ->
->                                      ProofState NewsBulletin
-
+\begin{code}
+propagateNews :: PropagateStatus ->  NewsBulletin -> NewsyEntries ->
+                                     ProofState NewsBulletin
+\end{code}
 We need to keep track of whether news propagation was called normally or as a
 recursive call. If called normally, we will stash the news bulletin the proof
 state when done, but this is unnecessary if news propagation will continue
 outside the recursive call.
 
-> data PropagateStatus = NormalPropagate | RecursivePropagate
-
+\begin{code}
+data PropagateStatus = NormalPropagate | RecursivePropagate
+\end{code}
 If we have nothing to say and nobody to tell, we might as well give up
 and go home. If we were called recursively and have nobody to listen to
 the news, we give up as well.
 
-> propagateNews _ [] (NF F0) = return []
-> propagateNews RecursivePropagate news (NF F0) = return news
-
+\begin{code}
+propagateNews _ [] (NF F0) = return []
+propagateNews RecursivePropagate news (NF F0) = return news
+\end{code}
 If there are no entries to process, we should tell the current entry
 (there is one, as we are within a development), stash the bulletin
 after the current location and stop. Note that the insertion is
 optional because it will fail when we have reached the end of the
 module, at which point everyone knows the news anyway.
 
-> propagateNews NormalPropagate news (NF F0) = do
->     news' <- tellCurrentEntry news
->     optional (putNewsBelow news')
->     return news'
-
+\begin{code}
+propagateNews NormalPropagate news (NF F0) = do
+    news' <- tellCurrentEntry news
+    optional (putNewsBelow news')
+    return news'
+\end{code}
 To update a |Parameter|, we check to see if its type has become more defined,
 and pass on the good news if necessary.
 
-> propagateNews  top news
->                (NF (Right (EPARAM (name := DECL :<: tv) sn k ty a) :> es)) = do
->     case tellNews news ty of
->         (_, NoNews) -> do
->           let ref = name := DECL :<: tv
->           putEntryAbove (EPARAM ref sn k ty a)
->           propagateNews top news (NF es)
->         (ty', GoodNews) -> do
->           let ref = name := DECL :<: evTm ty'
->           putEntryAbove (EPARAM ref sn k ty' a)
->           propagateNews top (addNews (ref, GoodNews) news) (NF es)
-
+\begin{code}
+propagateNews  top news
+               (NF (Right (EPARAM (name := DECL :<: tv) sn k ty a) :> es)) = do
+    case tellNews news ty of
+        (_, NoNews) -> do
+          let ref = name := DECL :<: tv
+          putEntryAbove (EPARAM ref sn k ty a)
+          propagateNews top news (NF es)
+        (ty', GoodNews) -> do
+          let ref = name := DECL :<: evTm ty'
+          putEntryAbove (EPARAM ref sn k ty' a)
+          propagateNews top (addNews (ref, GoodNews) news) (NF es)
+\end{code}
 To update definitions or modules, we call on |propagateNewsWithin|.
 
-> propagateNews top news (NF (Right e :> es)) = do
->     news' <- propagateNewsWithin news e
->     propagateNews top news' (NF es)
-
+\begin{code}
+propagateNews top news (NF (Right e :> es)) = do
+    news' <- propagateNewsWithin news e
+    propagateNews top news' (NF es)
+\end{code}
 Finally, if we encounter an older news bulletin when propagating news,
 we can simply merge the two together.
 
-> propagateNews top news (NF (Left oldNews :> es)) =
->   propagateNews top (mergeNews news oldNews) (NF es)
-
+\begin{code}
+propagateNews top news (NF (Left oldNews :> es)) =
+  propagateNews top (mergeNews news oldNews) (NF es)
+\end{code}
 
 The |propagateNewsWithin| command will:
 \begin{enumerate}
@@ -122,23 +122,24 @@ The |propagateNewsWithin| command will:
 \item move the focus out of the definition.
 \end{enumerate}
 
-> propagateNewsWithin :: NewsBulletin -> Entry NewsyFwd -> ProofState NewsBulletin
-> propagateNewsWithin news e = do
->     -- Get current context and insert it as a layer
->     Dev es tip nsupply ss <- getAboveCursor
->     below <- getBelowCursor
->     putLayer (Layer es (mkCurrentEntry e) (reverseEntries below) tip nsupply ss)
->     -- Extract new information and make it the current location
->     let Just (Dev cs newTip newNSupply newSS) = entryDev e
->     putAboveCursor (Dev B0 newTip newNSupply newSS)
->     putBelowCursor F0
->     -- Propagate news through children and current entry
->     news'   <- propagateNews RecursivePropagate news cs
->     news''  <- tellCurrentEntry news'
->     -- Go out to where we were before
->     goOut
->     return news''
-
+\begin{code}
+propagateNewsWithin :: NewsBulletin -> Entry NewsyFwd -> ProofState NewsBulletin
+propagateNewsWithin news e = do
+    -- Get current context and insert it as a layer
+    Dev es tip nsupply ss <- getAboveCursor
+    below <- getBelowCursor
+    putLayer (Layer es (mkCurrentEntry e) (reverseEntries below) tip nsupply ss)
+    -- Extract new information and make it the current location
+    let Just (Dev cs newTip newNSupply newSS) = entryDev e
+    putAboveCursor (Dev B0 newTip newNSupply newSS)
+    putBelowCursor F0
+    -- Propagate news through children and current entry
+    news'   <- propagateNews RecursivePropagate news cs
+    news''  <- tellCurrentEntry news'
+    -- Go out to where we were before
+    goOut
+    return news''
+\end{code}
 
 \subsection{Informing a current entry about its development}
 
@@ -171,12 +172,14 @@ pattern-matching. At least, with two explicitly named functions, one
 can hardly ignore that one is for Parameters and the other for
 Definitions.}
 
-> tellEntry :: NewsBulletin -> Entry Bwd -> ProofState (NewsBulletin, Entry Bwd)
-
+\begin{code}
+tellEntry :: NewsBulletin -> Entry Bwd -> ProofState (NewsBulletin, Entry Bwd)
+\end{code}
 Modules carry no type information, so they are easy:
 
-> tellEntry news (EModule n d) = return (news, EModule n d)
-
+\begin{code}
+tellEntry news (EModule n d) = return (news, EModule n d)
+\end{code}
 The update of a parameter consists in:
 \begin{enumerate}
 \item updating its type based on the news we received, and
@@ -184,11 +187,12 @@ The update of a parameter consists in:
       been updated
 \end{enumerate}
 
-> tellEntry news (EPARAM (name := DECL :<: tv) sn k ty anchor) = do
->     let (ty' :=>: tv', n)  = tellNewsEval news (ty :=>: tv)
->     let ref = name := DECL :<: tv'
->     return (addNews (ref, n) news, EPARAM ref sn k ty' anchor)
-
+\begin{code}
+tellEntry news (EPARAM (name := DECL :<: tv) sn k ty anchor) = do
+    let (ty' :=>: tv', n)  = tellNewsEval news (ty :=>: tv)
+    let ref = name := DECL :<: tv'
+    return (addNews (ref, n) news, EPARAM ref sn k ty' anchor)
+\end{code}
 To update a hole, we must first check to see if the news bulletin contains a
 definition for it. If so, we fill in the definition (and do not need to
 update the news bulletin). If not, we must  \pierre{why?}:
@@ -200,28 +204,28 @@ update the news bulletin). If not, we must  \pierre{why?}:
 If the hole is |Hoping| and we have good news about its type, then we
 restart elaboration to see if it can make any progress.
 
-> tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
->                       dkind dev@(Dev {devTip=Unknown tt}) ty anchor)
->   | Just (ref'@(_ := DEFN tm :<: _), GoodNews) <- getNews news ref = do
->     -- We have a Definition for it
->     es   <- getInScope
->     tm'  <- bquoteHere (tm $$$ paramSpine es)
->     let  (tt', _) = tellNewsEval news tt
->          (ty', _) = tellNews news ty
->     -- Define the hole
->     return (news, EDEF ref' sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor)
->
->   | otherwise = do
->     -- Not a Definition
->     let  (tt', n)             = tellNewsEval news tt
->          (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
->          ref                  = name := HOLE h :<: tyv'
->          tip                  = case (min n n', h) of
->                                  (GoodNews, Hoping)  -> Suspended tt' ElabHope
->                                  _                   -> Unknown tt'
->     return  (addNews (ref, min n n') news,
->             EDEF ref sn dkind (dev{devTip=tip}) ty' anchor)
-
+\begin{code}
+tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
+                      dkind dev@(Dev {devTip=Unknown tt}) ty anchor)
+  | Just (ref'@(_ := DEFN tm :<: _), GoodNews) <- getNews news ref = do
+    -- We have a Definition for it
+    es   <- getInScope
+    tm'  <- bquoteHere (tm $$$ paramSpine es)
+    let  (tt', _) = tellNewsEval news tt
+         (ty', _) = tellNews news ty
+    -- Define the hole
+    return (news, EDEF ref' sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor)
+  | otherwise = do
+    -- Not a Definition
+    let  (tt', n)             = tellNewsEval news tt
+         (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
+         ref                  = name := HOLE h :<: tyv'
+         tip                  = case (min n n', h) of
+                                 (GoodNews, Hoping)  -> Suspended tt' ElabHope
+                                 _                   -> Unknown tt'
+    return  (addNews (ref, min n n') news,
+            EDEF ref sn dkind (dev{devTip=tip}) ty' anchor)
+\end{code}
 To update a hole with a suspended elaboration problem attached, we
 proceed similarly to the previous case, but we also update the
 elaboration problem.  If the news bulletin defines this hole, it had
@@ -230,35 +234,36 @@ are meant to enforce? Or something that might break one day? See bug
 \#53.}, in which case we can safely ignore the attached |ElabHope|
 process.
 
-> tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
->                       dkind dev@(Dev {devTip=Suspended tt prob}) ty anchor)
->   | Just ne <- getNews news ref = do
->      -- We have a Definition for it
->      case prob of
->       ElabHope  -> do
->         -- The elaboration strategy \emph{has to} be to |Hope|
->         tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor)
->       _         -> do
->         -- \pierre{Is that a |throwError| or an |error|?}
->         throwError . sErr . unlines $ [
->                     "tellEntry: news bulletin contains update", show ne,
->                     "for hole", show ref,
->                     "with suspended computation", show prob]
->   | otherwise = do
->     -- We don't have a Definition
->     let  (tt', n)             = tellNewsEval news tt
->          (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
->          ref                  = name := HOLE h :<: tyv'
->          prob'                = tellEProb news prob
->          state                = if isUnstable prob'
->                                   then SuspendUnstable
->                                   else SuspendStable
->     suspendHierarchy state
->     return  (addNews (ref, min n n') news,
->             EDEF ref sn dkind (dev{devTip=Suspended tt' prob'}) ty' anchor)
->         where tellEProb :: NewsBulletin -> EProb -> EProb
->               tellEProb news = fmap (getLatest news)
-
+\begin{code}
+tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
+                      dkind dev@(Dev {devTip=Suspended tt prob}) ty anchor)
+  | Just ne <- getNews news ref = do
+     -- We have a Definition for it
+     case prob of
+      ElabHope  -> do
+        -- The elaboration strategy \emph{has to} be to |Hope|
+        tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor)
+      _         -> do
+        -- \pierre{Is that a |throwError| or an |error|?}
+        throwError . sErr . unlines $ [
+                    "tellEntry: news bulletin contains update", show ne,
+                    "for hole", show ref,
+                    "with suspended computation", show prob]
+  | otherwise = do
+    -- We don't have a Definition
+    let  (tt', n)             = tellNewsEval news tt
+         (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
+         ref                  = name := HOLE h :<: tyv'
+         prob'                = tellEProb news prob
+         state                = if isUnstable prob'
+                                  then SuspendUnstable
+                                  else SuspendStable
+    suspendHierarchy state
+    return  (addNews (ref, min n n') news,
+            EDEF ref sn dkind (dev{devTip=Suspended tt' prob'}) ty' anchor)
+        where tellEProb :: NewsBulletin -> EProb -> EProb
+              tellEProb news = fmap (getLatest news)
+\end{code}
 
 To update a closed definition (|Defined|), we must:
 \begin{enumerate}
@@ -269,45 +274,50 @@ To update a closed definition (|Defined|), we must:
 \item update the news bulletin with news about this definition.
 \end{enumerate}
 
-> tellEntry news (EDEF  (name := DEFN tmL :<: tyv) sn dkind
->                       dev@(Dev {devTip=Defined tm tt}) ty anchor) = do
->     let  (tt', n)             = tellNewsEval news tt
->          (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
->          (tm', n'')           = tellNews news tm
->     aus <- getGlobalScope
->     let tmL' = parBind aus (devEntries dev) tm'
-
+\begin{code}
+tellEntry news (EDEF  (name := DEFN tmL :<: tyv) sn dkind
+                      dev@(Dev {devTip=Defined tm tt}) ty anchor) = do
+    let  (tt', n)             = tellNewsEval news tt
+         (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
+         (tm', n'')           = tellNews news tm
+    aus <- getGlobalScope
+    let tmL' = parBind aus (devEntries dev) tm'
+\end{code}
 For paranoia purposes, the following test might be helpful:
 
 <     mc <- withNSupply (inCheck $ check (tyv' :>: tmL'))
 <     mc `catchEither` unlines ["tellEntry " ++ showName name ++ ":",
 <                                 show tmL', "is not of type", show ty' ]
 
->     let ref = name := DEFN (evTm tmL') :<: tyv'
->     return  (addNews (ref, GoodNews {-min (min n n') n''-}) news,
->             EDEF ref sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor)
-
+\begin{code}
+    let ref = name := DEFN (evTm tmL') :<: tyv'
+    return  (addNews (ref, GoodNews {-min (min n n') n''-}) news,
+            EDEF ref sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor)
+\end{code}
 
 The |tellCurrentEntry| function informs the current entry about a news
 bulletin that her children have already received, and returns the
 updated news.
 
-> tellCurrentEntry :: NewsBulletin -> ProofState NewsBulletin
-> tellCurrentEntry news = do
->     e <- getLeaveCurrent
->     (news', e') <- tellEntry news e
->     putEnterCurrent e'
->     return news'
-
+\begin{code}
+tellCurrentEntry :: NewsBulletin -> ProofState NewsBulletin
+tellCurrentEntry news = do
+    e <- getLeaveCurrent
+    (news', e') <- tellEntry news e
+    putEnterCurrent e'
+    return news'
+\end{code}
 
 
 When the current location or one of its children has suspended, we need to
 update the outer layers.
 
-> suspendHierarchy :: SuspendState -> ProofState ()
-> suspendHierarchy ss = getLayers >>= putLayers . help ss
->   where
->     help :: SuspendState -> Bwd Layer -> Bwd Layer
->     help ss B0 = B0
->     help ss (ls :< l) = help ss' ls :< l{laySuspendState = ss'}
->       where ss' = min ss (laySuspendState l)
+\begin{code}
+suspendHierarchy :: SuspendState -> ProofState ()
+suspendHierarchy ss = getLayers >>= putLayers . help ss
+  where
+    help :: SuspendState -> Bwd Layer -> Bwd Layer
+    help ss B0 = B0
+    help ss (ls :< l) = help ss' ls :< l{laySuspendState = ss'}
+      where ss' = min ss (laySuspendState l)
+\end{code}

@@ -1,7 +1,8 @@
 %if False
 
-> module Epitome where
-
+\begin{code}
+module Epitome where
+\end{code}
 %endif
 
 \documentclass[a4paper]{report}

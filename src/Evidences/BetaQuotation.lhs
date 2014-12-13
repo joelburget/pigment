@@ -2,23 +2,18 @@
 
 %if False
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
-
-> module Evidences.BetaQuotation where
-
-> import Control.Applicative
-
-> import Data.Traversable
-
-> import Kit.BwdFwd
-
-> import Evidences.Tm
-> import Evidences.Eval
-
-> import NameSupply.NameSupplier
-
+\begin{code}
+{-# OPTIONS_GHC -F -pgmF she #-}
+{-# LANGUAGE TypeOperators, GADTs, KindSignatures,
+    TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+module Evidences.BetaQuotation where
+import Control.Applicative
+import Data.Traversable
+import Kit.BwdFwd
+import Evidences.Tm
+import Evidences.Eval
+import NameSupply.NameSupplier
+\end{code}
 %endif
 
 
@@ -42,20 +37,23 @@ discharge a bunch of assumptions inside a term.
 
 Apart from that, this is a standard $\beta$-quotation:
 
-> bquote :: NameSupplier m => Bwd REF -> Tm {d,VV} REF -> m (Tm {d,TT} REF)
-
+\begin{code}
+bquote :: NameSupplier m => Bwd REF -> Tm {d,VV} REF -> m (Tm {d,TT} REF)
+\end{code}
 If binded by one of our lambda, we bind the free variables to the
 right lambda. We don't do anything otherwise.
 
-> bquote  refs (P x) =
->     case x `elemIndex` refs of
->       Just i -> pure $ V i
->       Nothing -> pure $ P x
-
+\begin{code}
+bquote  refs (P x) =
+    case x `elemIndex` refs of
+      Just i -> pure $ V i
+      Nothing -> pure $ P x
+\end{code}
 Constant lambdas are painlessly structural.
 
-> bquote refs (L (K t))   = (| LK (bquote refs t) |)
-
+\begin{code}
+bquote refs (L (K t))   = (| LK (bquote refs t) |)
+\end{code}
 When we see a syntactic lambda value, we are very happy, because
 quotation is just renaming.
 
@@ -66,24 +64,27 @@ hence the current Cochon user has to see things he doesn't want to
 see. This could be solved by some Distillation work but we prefer to
 avoid over-engineering Cochon's Distillation for the time being.}
 
-> -- bquote refs (L (x :. t)) = (| (refs -|| L (x :. t)) |)
-
+\begin{code}
+-- bquote refs (L (x :. t)) = (| (refs -|| L (x :. t)) |)
+\end{code}
 For all other lambdas, it's the usual story: we create a fresh variable,
 evaluate the applied term, quote the result, and bring everyone under
 a binder.
 
-> bquote refs f@(L _) =
->     (|(L . (x :.))
->       (freshRef  (x :<: error "bquote: type undefined")
->                  (\x -> bquote  (refs :< x)
->                                 (f $$ A (pval x))))|)
->     where x = fortran f
-
+\begin{code}
+bquote refs f@(L _) =
+    (|(L . (x :.))
+      (freshRef  (x :<: error "bquote: type undefined")
+                 (\x -> bquote  (refs :< x)
+                                (f $$ A (pval x))))|)
+    where x = fortran f
+\end{code}
 For the other constructors, we simply go through and do as much damage
 as we can. Simple, easy.
 
-> bquote refs (C c)       = (| C (traverse (bquote refs) c) |)
-> bquote refs (N n)       = (| N (bquote refs n) |)
-> bquote refs (n :$ v)    = (| (bquote refs n) :$ (traverse (bquote refs) v) |)
-> bquote refs (op :@ vs)  = (| (op :@) (traverse (bquote refs) vs) |)
-
+\begin{code}
+bquote refs (C c)       = (| C (traverse (bquote refs) c) |)
+bquote refs (N n)       = (| N (bquote refs n) |)
+bquote refs (n :$ v)    = (| (bquote refs n) :$ (traverse (bquote refs) v) |)
+bquote refs (op :@ vs)  = (| (op :@) (traverse (bquote refs) vs) |)
+\end{code}

@@ -2,18 +2,14 @@
 
 %if False
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-
-> module DisplayLang.Name where
-
-> import Data.List
-
-> import NameSupply.NameSupply
-
-> import Evidences.Tm
-
-> import DisplayLang.DisplayTm
-
+\begin{code}
+{-# OPTIONS_GHC -F -pgmF she #-}
+module DisplayLang.Name where
+import Data.List
+import NameSupply.NameSupply
+import Evidences.Tm
+import DisplayLang.DisplayTm
+\end{code}
 %endif
 
 
@@ -28,20 +24,22 @@ past it and refers to the next thing named |x|.  An absolute offset
 |_n|, by contrast, refers to the exact numerical component of the
 name.
 
-> data Offs = Rel Int | Abs Int deriving (Show, Eq)
-> type RelName = [(String,Offs)]
-
+\begin{code}
+data Offs = Rel Int | Abs Int deriving (Show, Eq)
+type RelName = [(String,Offs)]
+\end{code}
 As a consequence, there is whole new family of objects: terms which
 variables are relative names. So it goes:
 
-> type InTmRN = InTm RelName
-> type ExTmRN = ExTm RelName
-> type DInTmRN = DInTm REF RelName
-> type DExTmRN = DExTm REF RelName
-> type DSPINE = DSpine REF RelName
-> type DHEAD = DHead REF RelName
-> type DSCOPE = DScope REF RelName
-
+\begin{code}
+type InTmRN = InTm RelName
+type ExTmRN = ExTm RelName
+type DInTmRN = DInTm REF RelName
+type DExTmRN = DExTm REF RelName
+type DSPINE = DSpine REF RelName
+type DHEAD = DHead REF RelName
+type DSCOPE = DScope REF RelName
+\end{code}
 
 
 \subsection{Names to strings}
@@ -49,14 +47,17 @@ variables are relative names. So it goes:
 The |showRelName| function converts a relative name to a string by
 inserting the appropriate punctuation.
 
-> showRelName :: RelName -> String
-> showRelName = intercalate "." . map showOffName
->     where showOffName (x, Rel 0) = x
->           showOffName (x, Rel i) = x ++ "^" ++ show i
->           showOffName (x, Abs i) = x ++ "_" ++ show i
-
+\begin{code}
+showRelName :: RelName -> String
+showRelName = intercalate "." . map showOffName
+    where showOffName (x, Rel 0) = x
+          showOffName (x, Rel i) = x ++ "^" ++ show i
+          showOffName (x, Abs i) = x ++ "_" ++ show i
+\end{code}
 The |showName| function converts an absolute name to a string
 absolutely. 
 
-> showName :: Name -> String
-> showName = showRelName . map (\(x, i) -> (x, Abs i))
+\begin{code}
+showName :: Name -> String
+showName = showRelName . map (\(x, i) -> (x, Abs i))
+\end{code}

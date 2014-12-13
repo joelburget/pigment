@@ -2,20 +2,18 @@
 
 %if False
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
-
-> module ProofState.Edition.FakeRef where
-
-> import ProofState.Edition.ProofContext
-> import ProofState.Edition.Scope
-> import ProofState.Edition.ProofState
-> import ProofState.Edition.GetSet
-
-> import Evidences.Tm
-> import Evidences.Eval
-
+\begin{code}
+{-# OPTIONS_GHC -F -pgmF she #-}
+{-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
+             GADTs, RankNTypes #-}
+module ProofState.Edition.FakeRef where
+import ProofState.Edition.ProofContext
+import ProofState.Edition.Scope
+import ProofState.Edition.ProofState
+import ProofState.Edition.GetSet
+import Evidences.Tm
+import Evidences.Eval
+\end{code}
 %endif
 
 
@@ -30,14 +28,15 @@ parameters).
 role currently played by |FakeRef|s to name label and let us find them
 into the ProofState.}
 
-> getFakeRef :: ProofState REF
-> getFakeRef = do
->    CDefinition _  (cEntryName := HOLE _ :<: ty) _ _ _ <- getCurrentEntry
->    return $ cEntryName := FAKE :<: ty
-
-> getFakeCurrentEntry :: ProofState (EXTM :=>: VAL)
-> getFakeCurrentEntry = do
->    r <- getFakeRef
->    inScope <- getInScope
->    let tm = P r $:$ (paramSpine inScope)
->    return $ tm :=>: evTm tm
+\begin{code}
+getFakeRef :: ProofState REF
+getFakeRef = do
+   CDefinition _  (cEntryName := HOLE _ :<: ty) _ _ _ <- getCurrentEntry
+   return $ cEntryName := FAKE :<: ty
+getFakeCurrentEntry :: ProofState (EXTM :=>: VAL)
+getFakeCurrentEntry = do
+   r <- getFakeRef
+   inScope <- getInScope
+   let tm = P r $:$ (paramSpine inScope)
+   return $ tm :=>: evTm tm
+\end{code}

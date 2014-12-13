@@ -3,24 +3,20 @@
 
 %if False
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
-
-> module Evidences.DefinitionalEquality where
-
-> import Control.Applicative
-
-> import Kit.BwdFwd
-> import Kit.MissingLibrary
-
-> import Evidences.Tm
-> import Evidences.Eval
-> import Evidences.TypeChecker
-
-> import NameSupply.NameSupply
-> import NameSupply.NameSupplier
-
+\begin{code}
+{-# OPTIONS_GHC -F -pgmF she #-}
+{-# LANGUAGE TypeOperators, GADTs, KindSignatures,
+    TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+module Evidences.DefinitionalEquality where
+import Control.Applicative
+import Kit.BwdFwd
+import Kit.MissingLibrary
+import Evidences.Tm
+import Evidences.Eval
+import Evidences.TypeChecker
+import NameSupply.NameSupply
+import NameSupply.NameSupplier
+\end{code}
 %endif
 
 Testing for equality is a direct application of normalization by
@@ -30,15 +26,17 @@ it is a simple matter of syntactic equality, as defined in Section
 \ref{subsec:Evidences.Tm.syntactic-equality}, to compare the normal
 forms.
 
-> equal :: (TY :>: (VAL,VAL)) -> NameSupply -> Bool
-> equal (ty :>: (v1,v2)) r = quote (ty :>: v1) r == quote (ty :>: v2) r
-
+\begin{code}
+equal :: (TY :>: (VAL,VAL)) -> NameSupply -> Bool
+equal (ty :>: (v1,v2)) r = quote (ty :>: v1) r == quote (ty :>: v2) r
+\end{code}
 
 |quote| is a type-directed operation that returns a normal form |INTM|
 by recursively evaluating the value |VAL| of type |TY|.
 
-> quote :: (TY :>: VAL) -> NameSupply -> INTM
-
+\begin{code}
+quote :: (TY :>: VAL) -> NameSupply -> INTM
+\end{code}
 The normal form corresponds to a $\beta$-normal $\eta$-long form:
 there are no $\beta$-redexes present and all possible
 $\eta$-expansions have been performed.
@@ -53,17 +51,19 @@ Where |inQuote| quotes values and |exQuote| quotes neutral terms. As
 we are initially provided with a value, we quote it with |inQuote|, in
 a fresh namespace.
 
-> quote vty r = inQuote vty (freshNSpace r "quote")
-
+\begin{code}
+quote vty r = inQuote vty (freshNSpace r "quote")
+\end{code}
 
 \subsection{inQuote}
 
 Quoting a value consists in, if possible, $\eta$-expanding
 it. So it goes:
 
-> inQuote :: (TY :>: VAL) -> NameSupply -> INTM
-> inQuote (C ty :>: v)          r | Just t    <- etaExpand (ty :>: v) r = t
-
+\begin{code}
+inQuote :: (TY :>: VAL) -> NameSupply -> INTM
+inQuote (C ty :>: v)          r | Just t    <- etaExpand (ty :>: v) r = t
+\end{code}
 Needless to say, we can always $\eta$-expand a closure. Therefore, if
 $\eta$-expansion has failed, there are two possible cases: either we
 are quoting a neutral term, or a canonical term. In the case of
@@ -78,9 +78,10 @@ opportunity to turn some laws (monad law, functor law, etc.) to hold
 \emph{definitionally}. This is known as Boutillier's
 trick~\cite{boutillier:report}.
 
-> inQuote (_ :>: N n)      r = N t
->     where (t :<: _) = exQuote (simplify n r) r
-
+\begin{code}
+inQuote (_ :>: N n)      r = N t
+    where (t :<: _) = exQuote (simplify n r) r
+\end{code}
 In the case of a canonical term, we use |canTy| to check that |cv| is
 of type |cty| and, more importantly, to evaluate |cty|. Then, it is
 simply a matter of quoting this |typ :>: val| inside the canonical
@@ -88,20 +89,20 @@ constructor, and returning the fully quoted term. The reason for the
 presence of |Just| is that |canTy| asks for a |MonadError|. Obviously,
 we cannot fail in this code, but we have to be artificially cautious.
 
-> inQuote (C cty :>: C cv) r = either
->     (error $
->         "inQuote: impossible! Type " ++ show (fmap (\_ -> ()) cty) ++
->         " doesn't admit " ++ show cv)
->     id $ do
->          ct <- canTy chev (cty :>: cv)
->          return $ C $ fmap termOf ct
->              where chev (t :>: v) = do
->                    let tv = inQuote (t :>: v) r
->                    return $ tv :=>: v
->
-> inQuote (x :>: t) r = error $
->     "inQuote: type " ++ show x ++ " doesn't admit " ++ show t
-
+\begin{code}
+inQuote (C cty :>: C cv) r = either
+    (error $
+        "inQuote: impossible! Type " ++ show (fmap (\_ -> ()) cty) ++
+        " doesn't admit " ++ show cv)
+    id $ do
+         ct <- canTy chev (cty :>: cv)
+         return $ C $ fmap termOf ct
+             where chev (t :>: v) = do
+                   let tv = inQuote (t :>: v) r
+                   return $ tv :=>: v
+inQuote (x :>: t) r = error $
+    "inQuote: type " ++ show x ++ " doesn't admit " ++ show t
+\end{code}
 
 \subsection{$\eta$-expansion}
 
@@ -113,29 +114,31 @@ variable |v|. Then, we apply |v| to the function |f|, getting a value of type
 |t v|. At this point, we can safely quote the term. The result is a binding of
 |v| in the quoted term.
 
-> etaExpand :: (Can VAL :>: VAL) -> NameSupply -> Maybe INTM
-> etaExpand (Pi s t :>: f) r = Just $
->   L ("__etaExpandA" :.
->      fresh ("__etaExpandB" :<: s)
->      (\v  -> inQuote (t $$ A v :>: (f $$ A v))) r)
-> etaExpand (Prf p :>: x) r = Just (BOX (Irr (inQuote (PRF p :>: x) r)))
-> etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
-> etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =
->     -- XXX: to be implemented
->     undefined
-> etaExpand (Unit :>: v) r = Just VOID
-> etaExpand (Sigma s t :>: p) r = let x = p $$ Fst in
->   Just (PAIR (inQuote (s :>: x) r) (inQuote (t $$ (A x) :>: (p $$ Snd)) r))
-> etaExpand _                  _ = Nothing
-
+\begin{code}
+etaExpand :: (Can VAL :>: VAL) -> NameSupply -> Maybe INTM
+etaExpand (Pi s t :>: f) r = Just $
+  L ("__etaExpandA" :.
+     fresh ("__etaExpandB" :<: s)
+     (\v  -> inQuote (t $$ A v :>: (f $$ A v))) r)
+etaExpand (Prf p :>: x) r = Just (BOX (Irr (inQuote (PRF p :>: x) r)))
+etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
+etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =
+    -- XXX: to be implemented
+    undefined
+etaExpand (Unit :>: v) r = Just VOID
+etaExpand (Sigma s t :>: p) r = let x = p $$ Fst in
+  Just (PAIR (inQuote (s :>: x) r) (inQuote (t $$ (A x) :>: (p $$ Snd)) r))
+etaExpand _                  _ = Nothing
+\end{code}
 \subsection{exQuote}
 
 Now, let us examine the quotation of neutral terms. Remember that a
 neutral term is either a parameter, a stuck elimination, or a stuck
 operation. Hence, we consider each cases in turn.
 
-> exQuote :: NEU -> NameSupply -> (EXTM :<: TY)
-
+\begin{code}
+exQuote :: NEU -> NameSupply -> (EXTM :<: TY)
+\end{code}
 To quote a free variable, ie. a parameter, the idea is the
 following. If we are asked to quote a free variable |P|, there are two
 possible cases. First case, we have introduced it during an
@@ -144,12 +147,13 @@ bound by a lambda: it needs to be turned into the bound variable |V|,
 with the right De Bruijn index. Second case, we have not introduced
 it: we can simply return it as such.
 
-> exQuote (P x)       r = quop x r :<: pty x
->     where quop :: REF -> NameSupply -> EXTM
->           quop ref@(ns := _) r = help (bwdList ns) r
->               where
->               help (ns :< (_,i)) (r,j) = if ns == r then V (j-i-1) else P ref
-
+\begin{code}
+exQuote (P x)       r = quop x r :<: pty x
+    where quop :: REF -> NameSupply -> EXTM
+          quop ref@(ns := _) r = help (bwdList ns) r
+              where
+              help (ns :< (_,i)) (r,j) = if ns == r then V (j-i-1) else P ref
+\end{code}
 \begin{danger}
 
 The code above relies on the very structure of the names, as provided
@@ -168,49 +172,50 @@ If an elimination is stuck, it is because the function is stuck while
 the arguments are ready to go. So, we have to recursively |exQuote|
 the neutral application, while |inQuote|-ing the arguments.
 
-> exQuote (n :$ v)    r = (n' :$ e') :<: ty'
->     where (n' :<: ty)  = exQuote n r
->           e' = fmap termOf e
->           Right (e,ty') = elimTy chev (N n :<: unC ty) v
->           chev (t :>: x) = do
->             let tx = inQuote (t :>: x) r
->             return $ tx :=>: x
->           unC :: VAL -> Can VAL
->           unC (C ty) = ty
-
+\begin{code}
+exQuote (n :$ v)    r = (n' :$ e') :<: ty'
+    where (n' :<: ty)  = exQuote n r
+          e' = fmap termOf e
+          Right (e,ty') = elimTy chev (N n :<: unC ty) v
+          chev (t :>: x) = do
+            let tx = inQuote (t :>: x) r
+            return $ tx :=>: x
+          unC :: VAL -> Can VAL
+          unC (C ty) = ty
+\end{code}
 
 Similarly, if an operation is stuck, this means that one of the value
 passed as an argument needs to be |inQuote|-ed. So it goes. Note that
 the operation itself cannot be stuck: it is a simple fully-applied
 constructor which can always compute.
 
-> exQuote (op :@ vs)  r = (op :@ vals) :<: v
->     where (vs',v) = either  (error "exQuote: impossible happened.")
->                             id $ opTy op chev vs
->           vals = map termOf vs'
->           chev (t :>: x) = do
->               let tx = inQuote (t :>: x) r
->               return $ tx :=>: x
-
+\begin{code}
+exQuote (op :@ vs)  r = (op :@ vals) :<: v
+    where (vs',v) = either  (error "exQuote: impossible happened.")
+                            id $ opTy op chev vs
+          vals = map termOf vs'
+          chev (t :>: x) = do
+              let tx = inQuote (t :>: x) r
+              return $ tx :=>: x
+\end{code}
 
 
 \subsection{Simplification of stuck terms}
 
 \question{Got to write something about that. Me tired. Another time.}
 
-> simplify :: NEU -> NameSupply -> NEU
-> simplify n r = exSimp n r
->
-> inSimp :: VAL -> NameSupply -> VAL
-> inSimp (N n) = (| N (exSimp n) |)
-> inSimp v     = (| v |)
->
-> exSimp :: NEU -> NameSupply -> NEU
-> exSimp (P x)      = (| (P x) |)
-> exSimp (n :$ el)  = (| exSimp n :$ (inSimp ^$ el) |)
-> exSimp (op :@ vs) = opS op <*> (inSimp ^$ vs)
->   where
->     opS op r vs = case opSimp op vs r of
->       Nothing -> op :@ vs
->       Just n  -> n
-
+\begin{code}
+simplify :: NEU -> NameSupply -> NEU
+simplify n r = exSimp n r
+inSimp :: VAL -> NameSupply -> VAL
+inSimp (N n) = (| N (exSimp n) |)
+inSimp v     = (| v |)
+exSimp :: NEU -> NameSupply -> NEU
+exSimp (P x)      = (| (P x) |)
+exSimp (n :$ el)  = (| exSimp n :$ (inSimp ^$ el) |)
+exSimp (op :@ vs) = opS op <*> (inSimp ^$ vs)
+  where
+    opS op r vs = case opSimp op vs r of
+      Nothing -> op :@ vs
+      Just n  -> n
+\end{code}

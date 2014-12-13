@@ -3,21 +3,16 @@
 
 %if False
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving #-}
-
-> module ProofState.Structure.Entries where
-
-> import Data.Traversable
-
-> import NameSupply.NameSupply
-
-> import Evidences.Tm
-
-> import DisplayLang.Scheme
-
-> import ProofState.Structure.Developments
-
+\begin{code}
+{-# OPTIONS_GHC -F -pgmF she #-}
+{-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving #-}
+module ProofState.Structure.Entries where
+import Data.Traversable
+import NameSupply.NameSupply
+import Evidences.Tm
+import DisplayLang.Scheme
+import ProofState.Structure.Developments
+\end{code}
 %endif
 
 
@@ -33,45 +28,41 @@ letter.
 
 Hence, we have:
 
-> entryRef :: Traversable f => Entry f -> Maybe REF
-> entryRef (EEntity r _ _ _ _)    = Just r
-> entryRef (EModule _ _)  = Nothing
->
-> entryName :: Traversable f => Entry f -> Name
-> entryName (EEntity (n := _) _ _ _ _)  = n
-> entryName (EModule n _)             = n
->
-> entryLastName :: Traversable f => Entry f -> (String, Int)
-> entryLastName (EEntity _ xn _ _ _)  = xn
-> entryLastName (EModule n _)       = last n
->
-> entryScheme :: Traversable f => Entry f -> Maybe (Scheme INTM)
-> entryScheme (EDEF _ _ (PROG sch) _ _ _)  = Just sch
-> entryScheme _                          = Nothing
->
-> entryDev :: Traversable f => Entry f -> Maybe (Dev f)
-> entryDev (EDEF _ _ _ d _ _)  = Just d
-> entryDev (EModule _ d)     = Just d
-> entryDev (EPARAM _ _ _ _ _)  = Nothing
->
-> entrySuspendState :: Traversable f => Entry f -> SuspendState
-> entrySuspendState e = case entryDev e of
->     Just dev  -> devSuspendState dev
->     Nothing   -> SuspendNone
->
-> entryAnchor :: Traversable f => Entry f -> Maybe String
-> entryAnchor (EEntity _ _ _ _ anchor)  = anchor
-> entryAnchor (EModule _ _)             = Nothing
-
+\begin{code}
+entryRef :: Traversable f => Entry f -> Maybe REF
+entryRef (EEntity r _ _ _ _)    = Just r
+entryRef (EModule _ _)  = Nothing
+entryName :: Traversable f => Entry f -> Name
+entryName (EEntity (n := _) _ _ _ _)  = n
+entryName (EModule n _)             = n
+entryLastName :: Traversable f => Entry f -> (String, Int)
+entryLastName (EEntity _ xn _ _ _)  = xn
+entryLastName (EModule n _)       = last n
+entryScheme :: Traversable f => Entry f -> Maybe (Scheme INTM)
+entryScheme (EDEF _ _ (PROG sch) _ _ _)  = Just sch
+entryScheme _                          = Nothing
+entryDev :: Traversable f => Entry f -> Maybe (Dev f)
+entryDev (EDEF _ _ _ d _ _)  = Just d
+entryDev (EModule _ d)     = Just d
+entryDev (EPARAM _ _ _ _ _)  = Nothing
+entrySuspendState :: Traversable f => Entry f -> SuspendState
+entrySuspendState e = case entryDev e of
+    Just dev  -> devSuspendState dev
+    Nothing   -> SuspendNone
+entryAnchor :: Traversable f => Entry f -> Maybe String
+entryAnchor (EEntity _ _ _ _ anchor)  = anchor
+entryAnchor (EModule _ _)             = Nothing
+\end{code}
 
 \subsection{Entry equality}
 
 
 Two entries are equal if and only if they have the same name:
 
-> instance Traversable f => Eq (Entry f) where
->     e1 == e2 = entryName e1 == entryName e2
-
+\begin{code}
+instance Traversable f => Eq (Entry f) where
+    e1 == e2 = entryName e1 == entryName e2
+\end{code}
 
 
 \subsection{Changing the carrier of an |Entry|}
@@ -89,10 +80,11 @@ Changing the type of the carrier is possible for parameters, in which
 case we return a |Right entry|. It is not possible for definitions and
 modules, in which case we return an unchanged |Left dev|.
 
-> entryCoerce ::  (Traversable f, Traversable g) => 
->                 Entry f -> Either (Dev f) (Entry g)
-> entryCoerce (EPARAM ref xn k ty anchor)  =  Right $ EPARAM ref xn k ty anchor
-> entryCoerce (EDEF _ _ _ dev _ _)    =  Left dev
-> entryCoerce (EModule _ dev)       =  Left dev
-
+\begin{code}
+entryCoerce ::  (Traversable f, Traversable g) => 
+                Entry f -> Either (Dev f) (Entry g)
+entryCoerce (EPARAM ref xn k ty anchor)  =  Right $ EPARAM ref xn k ty anchor
+entryCoerce (EDEF _ _ _ dev _ _)    =  Left dev
+entryCoerce (EModule _ dev)       =  Left dev
+\end{code}
 

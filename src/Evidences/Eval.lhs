@@ -2,23 +2,19 @@
 
 %if False
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
-
-> module Evidences.Eval where
-
-> import Control.Applicative
-
-> import Data.Foldable
-> import Data.Maybe
-
-> import Kit.BwdFwd
-> import Kit.MissingLibrary
-
-> import Evidences.Tm
-> import Evidences.Operators
-
+\begin{code}
+{-# OPTIONS_GHC -F -pgmF she #-}
+{-# LANGUAGE TypeOperators, GADTs, KindSignatures,
+    TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+module Evidences.Eval where
+import Control.Applicative
+import Data.Foldable
+import Data.Maybe
+import Kit.BwdFwd
+import Kit.MissingLibrary
+import Evidences.Tm
+import Evidences.Operators
+\end{code}
 %endif
 
 
@@ -65,35 +61,33 @@ elimination.
 
 This translates into the following code:
 
-> ($$) :: VAL -> Elim VAL -> VAL
-> L (K v)      $$ A _  = v               -- By \ref{eqn:Evidences.Rules.elim-cstt}
-> L (H (vs, rho) x t)  $$ A v
->   = eval t (vs :< v, naming x v rho)   -- By \ref{eqn:Evidences.Rules.elim-bind}
-> L (x :. t)   $$ A v
->   = eval t (B0 :< v, naming x v [])    -- By \ref{eqn:Evidences.Rules.elim-bind}
-> C (Con t)    $$ Out  = t               -- By \ref{eqn:Evidences.Rules.elim-con}
-
-> LRET t $$ Call l = t
-
-> COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
->     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
->     f $$ A s]
-
-> PAIR x y $$ Fst = x
-> PAIR x y $$ Snd = y
-
-> N n          $$ e    = N (n :$ e)      -- By \ref{eqn:Evidences.Rules.elim-stuck}
-> f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
->                                  "\nwith eliminator\n" ++ show e
-
+\begin{code}
+($$) :: VAL -> Elim VAL -> VAL
+L (K v)      $$ A _  = v               -- By \ref{eqn:Evidences.Rules.elim-cstt}
+L (H (vs, rho) x t)  $$ A v
+  = eval t (vs :< v, naming x v rho)   -- By \ref{eqn:Evidences.Rules.elim-bind}
+L (x :. t)   $$ A v
+  = eval t (B0 :< v, naming x v [])    -- By \ref{eqn:Evidences.Rules.elim-bind}
+C (Con t)    $$ Out  = t               -- By \ref{eqn:Evidences.Rules.elim-con}
+LRET t $$ Call l = t
+COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
+    L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
+    f $$ A s]
+PAIR x y $$ Fst = x
+PAIR x y $$ Snd = y
+N n          $$ e    = N (n :$ e)      -- By \ref{eqn:Evidences.Rules.elim-stuck}
+f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
+                                 "\nwith eliminator\n" ++ show e
+\end{code}
 The |naming| operation amends the current naming scheme, taking account
 the instantiation of x: see below.
 
 The left fold of |$$| applies a value to a bunch of eliminators:
 
-> ($$$) :: (Foldable f) => VAL -> f (Elim VAL) -> VAL
-> ($$$) = Data.Foldable.foldl ($$)
-
+\begin{code}
+($$$) :: (Foldable f) => VAL -> f (Elim VAL) -> VAL
+($$$) = Data.Foldable.foldl ($$)
+\end{code}
 \subsection{Operators}
 
 Running an operator is quite simple, as operators come with the
@@ -108,9 +102,10 @@ operator. On the left, the operator is stuck, so return the neutral
 term consisting of the operation applied to its arguments. On the
 right, we have gone down to a value, so we simply return it.
 
-> (@@) :: Op -> [VAL] -> VAL
-> op @@ vs = either (\_ -> N (op :@ vs)) id (opRun op vs)
-
+\begin{code}
+(@@) :: Op -> [VAL] -> VAL
+op @@ vs = either (\_ -> N (op :@ vs)) id (opRun op vs)
+\end{code}
 Note that we respect the invariant on |N| values: we have an |:@|
 that, for sure, is applying at least one stuck term to an operator
 that uses it.
@@ -132,11 +127,12 @@ value.
 
 This naturally leads to the following code:
 
-> body :: Scope {TT} REF -> ENV -> Scope {VV} REF
-> body (K v)     g            = K (eval v g)
-> body (x :. t)  (B0, rho)    = txtSub rho x :. t  -- closed lambdas stay syntax
-> body (x :. t)  g@(_, rho)   = H g (txtSub rho x) t
-
+\begin{code}
+body :: Scope {TT} REF -> ENV -> Scope {VV} REF
+body (K v)     g            = K (eval v g)
+body (x :. t)  (B0, rho)    = txtSub rho x :. t  -- closed lambdas stay syntax
+body (x :. t)  g@(_, rho)   = H g (txtSub rho x) t
+\end{code}
 Now, as well as making closures, the current renaming scheme is applied
 to the bound variable name, for cosmetic purposes.
 
@@ -165,27 +161,28 @@ A bound variable simply requires to extract the corresponding value
 from the environment (f). Elimination is handled by |$$| defined above
 (g). And similarly for operators with |@@| (h).
 
-> eval :: Tm {d, TT} REF -> ENV -> VAL
-> eval (L b)       = (|L (body b)|)                -- By (a)
-> eval (C c)       = (|C (eval ^$ c)|)             -- By (b)
-> eval (N n)       = eval n                        -- By (c)
-> eval (t :? _)    = eval t                        -- By (d)
-> eval (P x)       = (|(pval x)|)                  -- By (e)
-> eval (V i)       = evar i                        -- By (f)
-> eval (t :$ e)    = (|eval t $$ (eval ^$ e)|)     -- By (g)
-> eval (op :@ vs)  = (|(op @@) (eval ^$ vs)|)      -- By (h)
-> eval (Yuk v)     = (|v|)
-
-> evar :: Int -> ENV -> VAL
-> evar i (vs, ts) = fromMaybe (error "eval: bad index") (vs !. i)
-
+\begin{code}
+eval :: Tm {d, TT} REF -> ENV -> VAL
+eval (L b)       = (|L (body b)|)                -- By (a)
+eval (C c)       = (|C (eval ^$ c)|)             -- By (b)
+eval (N n)       = eval n                        -- By (c)
+eval (t :? _)    = eval t                        -- By (d)
+eval (P x)       = (|(pval x)|)                  -- By (e)
+eval (V i)       = evar i                        -- By (f)
+eval (t :$ e)    = (|eval t $$ (eval ^$ e)|)     -- By (g)
+eval (op :@ vs)  = (|(op @@) (eval ^$ vs)|)      -- By (h)
+eval (Yuk v)     = (|v|)
+evar :: Int -> ENV -> VAL
+evar i (vs, ts) = fromMaybe (error "eval: bad index") (vs !. i)
+\end{code}
 
 Finally, the evaluation of a closed term simply consists in calling the
 interpreter defined above with the empty environment.
 
-> evTm :: Tm {d, TT} REF -> VAL
-> evTm t = eval t (B0, [])
-
+\begin{code}
+evTm :: Tm {d, TT} REF -> VAL
+evTm t = eval t (B0, [])
+\end{code}
 
 \subsection{Alpha-conversion on the fly}
 
@@ -198,9 +195,10 @@ That's a plan for mapping characters to strings. We apply them
 to strings like this, with no change to characters which aren't
 mapped.
 
-> txtSub :: TXTSUB -> String -> String
-> txtSub ts = foldMap blat where blat c = fromMaybe [c] $ lookup c ts
-
+\begin{code}
+txtSub :: TXTSUB -> String -> String
+txtSub ts = foldMap blat where blat c = fromMaybe [c] $ lookup c ts
+\end{code}
 The |ENV| type packs up a renaming scheme, which we apply to every
 bound variable name advice string that we encounter as we go: the
 deed is done in |body|, above.
@@ -214,16 +212,17 @@ The idea is that matching the target of an eliminator in this way will
 give good names to the variables bound in its methods, if we're lucky and
 well prepared.
 
-> naming :: String -> VAL -> TXTSUB -> TXTSUB
-> naming x (N (P y)) rho
->   = mkMap (reverse x) (reverse (refNameAdvice y)) rho where
->     mkMap ""        _         rho  = rho
->     mkMap _         ""        rho  = rho
->     mkMap [c]       s         rho  | s /= [c]  = (c, s) : rho
->     mkMap (c : cs)  (c' : s)  rho  | c /= c'   = mkMap cs s ((c, [c']) : rho)
->     mkMap (_ : cs)  (_ : s)   rho  = mkMap cs s rho
-> naming _ _ rho = rho
-
+\begin{code}
+naming :: String -> VAL -> TXTSUB -> TXTSUB
+naming x (N (P y)) rho
+  = mkMap (reverse x) (reverse (refNameAdvice y)) rho where
+    mkMap ""        _         rho  = rho
+    mkMap _         ""        rho  = rho
+    mkMap [c]       s         rho  | s /= [c]  = (c, s) : rho
+    mkMap (c : cs)  (c' : s)  rho  | c /= c'   = mkMap cs s ((c, [c']) : rho)
+    mkMap (_ : cs)  (_ : s)   rho  = mkMap cs s rho
+naming _ _ rho = rho
+\end{code}
 \subsection{Util}
 
 The |sumlike| function determines whether a value representing a description
@@ -231,7 +230,9 @@ is a sum or a sigma from an enumerate. If so, it returns |Just| the enumeration
 and a function from the enumeration to descriptions.
 \question{Where should this live?}
 
-> sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
-> sumlike (SUMD e b)            = Just (e, (b $$) . A)
-> sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
-> sumlike _                     = Nothing
+\begin{code}
+sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
+sumlike (SUMD e b)            = Just (e, (b $$) . A)
+sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
+sumlike _                     = Nothing
+\end{code}

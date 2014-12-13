@@ -1,7 +1,8 @@
 %if False
 
-> module DisplayLang.Introduction where
-
+\begin{code}
+module DisplayLang.Introduction where
+\end{code}
 %endif
 
 The life cycle of a term in the system looks like this, where vertices are
