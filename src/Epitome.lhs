@@ -87,37 +87,37 @@ Language {#sec:language}
 --------
 
 $$\begin{array}{rll}
-{\textsc}{InTm} ::= & \verb!Set! 
+{\textsc}{InTm} ::= & \verb!Set!
                 & \mbox{Universe of sets} \\
-            | & \verb!Prop! 
+            | & \verb!Prop!
                 & \mbox{Universe of propositions} \\
-            | & {\langle}\verb!(!{\textsc}{Nom}\verb! : !{\textsc}{InTm} \verb!)!{\rangle}^+\verb! -> ! {\textsc}{InTm} 
+            | & {\langle}\verb!(!{\textsc}{Nom}\verb! : !{\textsc}{InTm} \verb!)!{\rangle}^+\verb! -> ! {\textsc}{InTm}
                 & \mbox{\(\Pi\)-type} \\
-            | & {\textsc}{InTm} \verb! -> ! {\textsc}{InTm}  
+            | & {\textsc}{InTm} \verb! -> ! {\textsc}{InTm}
                 & \mbox{nondependent function type} \\
-            | & \verb!\! {\textsc}{Nom}^* \verb! -> ! {\textsc}{InTm} 
+            | & \verb!\! {\textsc}{Nom}^* \verb! -> ! {\textsc}{InTm}
                 & \mbox{\(\lambda\)-abstraction} \\
-            | & \verb!:- ! {\textsc}{InTm} 
+            | & \verb!:- ! {\textsc}{InTm}
                 & \mbox{set of proofs} \\
-            | & {\textsc}{NAT} {\langle}\verb!+ ! {\textsc}{InTm}{\rangle}^? 
+            | & {\textsc}{NAT} {\langle}\verb!+ ! {\textsc}{InTm}{\rangle}^?
                 & \mbox{Elements of enumerations} \\
-            | & \verb!con ! {\textsc}{InTm} 
+            | & \verb!con ! {\textsc}{InTm}
                 & \mbox{Constructor for inductive definitions} \\
-            | & \verb!Sig (!{\textsc}{Sig}\verb!)! 
+            | & \verb!Sig (!{\textsc}{Sig}\verb!)!
                 & \mbox{`record' signature} \\
-            | & \verb!()! 
+            | & \verb!()!
                 & \mbox{unit} \\
-            | & \verb![]! 
+            | & \verb![]!
                 & \mbox{void} \\
-            | & \verb![!{\textsc}{InTm}^+\:{\langle}\verb!, !{\textsc}{InTm}{\rangle}^?\verb!]! 
+            | & \verb![!{\textsc}{InTm}^+\:{\langle}\verb!, !{\textsc}{InTm}{\rangle}^?\verb!]!
                 & \mbox{tuple} \\
-            | & \verb!Enum ! {\textsc}{InTm} 
+            | & \verb!Enum ! {\textsc}{InTm}
                 & \mbox{enumeration} \\
             | & \verb!'! {\textsc}{Nom} \: {\textsc}{InTm}
                 & \mbox{tag or (co)data} \\
-            | & {\langle}\verb!(!{\textsc}{Nom}\verb! : !{\textsc}{InTm} \verb!)!{\rangle}^+\verb! => ! {\textsc}{InTm} 
+            | & {\langle}\verb!(!{\textsc}{Nom}\verb! : !{\textsc}{InTm} \verb!)!{\rangle}^+\verb! => ! {\textsc}{InTm}
                 & \mbox{propositional \(\forall\)} \\
-            | & {\textsc}{InTm} \verb! && ! {\textsc}{InTm} 
+            | & {\textsc}{InTm} \verb! && ! {\textsc}{InTm}
                 & \mbox{propositional And} \\
             | & \verb!TT ! | \verb| FF|
                 & \mbox{propositional Trivial and Absurd} \\
@@ -125,42 +125,42 @@ $$\begin{array}{rll}
                 & \mbox{proofs of Trivial and Absurd} \\
             | & {\textsc}{ExTm} \verb! == ! {\textsc}{ExTm}
                 & \mbox{blue equality} \\
-            | & \verb!(!{\textsc}{InTm}\verb!)! 
+            | & \verb!(!{\textsc}{InTm}\verb!)!
                 & \mbox{grouping} \\
-            | & {\textsc}{ExTm} 
+            | & {\textsc}{ExTm}
                 & \mbox{term with synthesizable type} \medskip \\
-{\textsc}{Sig} ::= & \varepsilon 
+{\textsc}{Sig} ::= & \varepsilon
                 & \mbox{unit signature} \\
-           | & {\langle}{\textsc}{Nom}\verb! : !{\rangle}^? {\textsc}{InTm} \: {\textsc}{SigMore} 
+           | & {\langle}{\textsc}{Nom}\verb! : !{\rangle}^? {\textsc}{InTm} \: {\textsc}{SigMore}
                 & \Sigma x : S . T \\
-{\textsc}{SigMore} ::= & \verb!;! {\textsc}{InTm} 
+{\textsc}{SigMore} ::= & \verb!;! {\textsc}{InTm}
                    & \verb!; T! \mbox{ means } \verb!T!\\
-                 & \verb!;! {\textsc}{Sig}  
+                 & \verb!;! {\textsc}{Sig}
                    & \verb!; S! \mbox{ means } \verb!S!\\
-                 & \verb!:-! {\textsc}{InTm} 
+                 & \verb!:-! {\textsc}{InTm}
                    & \verb!:- P! \mbox{ means } \verb!:- P!\\
-                 & \verb!:-! {\textsc}{InTm} \: {\textsc}{SigMore} 
+                 & \verb!:-! {\textsc}{InTm} \: {\textsc}{SigMore}
                    & \verb!:- P S! \mbox{ means } \Sigma \_ . P S \\
 {\textsc}{ExTm} ::= & \verb!(: ! {\textsc}{InTm} \verb!)!
                 & \mbox{type-cast} \\
             | & {\textsc}{Nom}{\langle}\verb!^!{\textsc}{Nat}{\rangle}^? {\langle}\verb!.! {\textsc}{Nom} {\langle}\verb!^!{\textsc}{Nat}{\rangle}^? {\rangle}^*
                 & \mbox{relative name} \\
-            | & {\textsc}{ExTm} \: {\textsc}{InTm} 
+            | & {\textsc}{ExTm} \: {\textsc}{InTm}
                 & \mbox{application} \\
-            | & {\textsc}{ExTm}\:\verb|!| 
+            | & {\textsc}{ExTm}\:\verb|!|
                 & \mbox{car} \\
-            | & {\textsc}{ExTm}\:\verb!-! 
+            | & {\textsc}{ExTm}\:\verb!-!
                 & \mbox{cdr} \\
-            | & {\textsc}{Op}\verb!(!{\textsc}{InTm}^{\verb!,!*}\verb!)! 
+            | & {\textsc}{Op}\verb!(!{\textsc}{InTm}^{\verb!,!*}\verb!)!
                 & \mbox{operator} \\
-            | & \verb!(!{\textsc}{InTm}\verb! : !{\textsc}{InTm}\verb!)!  \verb! <-> ! \verb!(!{\textsc}{InTm}\verb! : !{\textsc}{InTm}\verb!)! 
+            | & \verb!(!{\textsc}{InTm}\verb! : !{\textsc}{InTm}\verb!)!  \verb! <-> ! \verb!(!{\textsc}{InTm}\verb! : !{\textsc}{InTm}\verb!)!
                 & \mbox{green equality} \\
 \end{array}$$
 
 and more to come. For developments:
 
 $$\begin{array}{rll}
-{\textsc}{Top} ::= & {\langle}\verb![! {\textsc}{Girl}^* \verb!]! {\rangle}^? {\textsc}{Com}^{\verb!;!*} 
+{\textsc}{Top} ::= & {\langle}\verb![! {\textsc}{Girl}^* \verb!]! {\rangle}^? {\textsc}{Com}^{\verb!;!*}
                & \mbox{top-level development} \\
 
 {\textsc}{Girl} ::= & {\textsc}{Nom} {\langle}\verb![! {\textsc}{Line}^* \verb!]! | \verb!:=!  {\rangle}{\langle}\verb!?! | {\textsc}{InTm} {\rangle}\verb!:! {\textsc}{InTm} {\langle}\verb![| ! {\textsc}{Com}^{\verb!;!*} \verb! |]! {\rangle}^? \verb! ;!
@@ -201,7 +201,7 @@ The Proof State
 The Proof Tactics
 =================
 
-Elaboration {#chap:elaboration}
+[Elaboration](/Elaboration)
 ===========
 
 Distillation
