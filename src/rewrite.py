@@ -94,7 +94,8 @@ def merge_sections(contents):
 test_f = open("Main.lhs", "rw")
 
 if __name__ == "__main__":
-    for name in glob("*.lhs") + glob("*/*.lhs") + glob("*/*/*.lhs"):
+    # for name in glob("*.lhs") + glob("*/*.lhs") + glob("*/*/*.lhs"):
+    for name in glob("*/*.lhs-boot"):
         print "rewriting " + name
         f = open(name, "r+")
         write_me = "".join(merge_sections(replace_birdtracks(f.readlines())))

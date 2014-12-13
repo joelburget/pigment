@@ -1,22 +1,17 @@
-\section{Evaluation}
+Evaluation
+==========
 
-%if False
-
-\begin{code}
-{-# OPTIONS_GHC -F -pgmF she #-}
-{-# LANGUAGE TypeOperators, GADTs, KindSignatures,
-    TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
-module Evidences.Eval where
-import Control.Applicative
-import Data.Foldable
-import Data.Maybe
-import Kit.BwdFwd
-import Kit.MissingLibrary
-import Evidences.Tm
-import Evidences.Operators
-\end{code}
-%endif
-
+> {-# OPTIONS_GHC -F -pgmF she #-}
+> {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+> module Evidences.Eval where
+> import Control.Applicative
+> import Data.Foldable
+> import Data.Maybe
+> import Kit.BwdFwd
+> import Kit.MissingLibrary
+> import Evidences.Tm
+> import Evidences.Operators
 
 In this section, we implement an interpreter for Epigram. As one would
 expect, it will become handy during type-checking. We assume that
@@ -32,14 +27,14 @@ a given term in an empty environment.
 
 \subsection{Elimination}
 
-The |$$| function applies an elimination principle to a value. Note
-that this is open to further extension as we add new constructs and
+The |$$| function applies an elimination principle to a value. Note that
+this is open to further extension as we add new constructs and
 elimination principles to the language.
 
 Formally, the computation rules of the featureless language are the
 following:
 
-\begin{eqnarray}
+$$\begin{aligned}
 (\lambda \_ . v) u & \mapsto & v
     \label{eqn:Evidences.Rules.elim-cstt} \\
 (\lambda x . t) v  & \mapsto & \mbox{eval } t[x \mapsto v]
@@ -47,192 +42,180 @@ following:
 \mbox{unpack}(Con\ t) & \mapsto & t
     \label{eqn:Evidences.Rules.elim-con}  \\
 (N n) \$\$ ee      & \mapsto & N (n \:\$ e)
-    \label{eqn:Evidences.Rules.elim-stuck}
-\end{eqnarray}
+    \label{eqn:Evidences.Rules.elim-stuck}\end{aligned}$$
 
-The rules \ref{eqn:Evidences.Rules.elim-cstt} and
-\ref{eqn:Evidences.Rules.elim-bind} are standard lambda calculus
-stories. Rule \ref{eqn:Evidences.Rules.elim-con} is the expected
-"unpacking the packer" rule. Rule \ref{eqn:Evidences.Rules.elim-stuck}
-is justified as follow: if no application rule applies, this means
-that we are stuck. This can happen if and only if the application is
-itself stuck. The stuckness therefore propagates to the whole
-elimination.
+The rules [eqn:Evidences.Rules.elim-cstt] and
+[eqn:Evidences.Rules.elim-bind] are standard lambda calculus stories.
+Rule [eqn:Evidences.Rules.elim-con] is the expected “unpacking the
+packer” rule. Rule [eqn:Evidences.Rules.elim-stuck] is justified as
+follow: if no application rule applies, this means that we are stuck.
+This can happen if and only if the application is itself stuck. The
+stuckness therefore propagates to the whole elimination.
 
 This translates into the following code:
 
-\begin{code}
-($$) :: VAL -> Elim VAL -> VAL
-L (K v)      $$ A _  = v               -- By \ref{eqn:Evidences.Rules.elim-cstt}
-L (H (vs, rho) x t)  $$ A v
-  = eval t (vs :< v, naming x v rho)   -- By \ref{eqn:Evidences.Rules.elim-bind}
-L (x :. t)   $$ A v
-  = eval t (B0 :< v, naming x v [])    -- By \ref{eqn:Evidences.Rules.elim-bind}
-C (Con t)    $$ Out  = t               -- By \ref{eqn:Evidences.Rules.elim-con}
-LRET t $$ Call l = t
-COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
-    L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
-    f $$ A s]
-PAIR x y $$ Fst = x
-PAIR x y $$ Snd = y
-N n          $$ e    = N (n :$ e)      -- By \ref{eqn:Evidences.Rules.elim-stuck}
-f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
-                                 "\nwith eliminator\n" ++ show e
-\end{code}
+> ($$) :: VAL -> Elim VAL -> VAL
+> L (K v)      $$ A _  = v               -- By \ref{eqn:Evidences.Rules.elim-cstt}
+> L (H (vs, rho) x t)  $$ A v
+>   = eval t (vs :< v, naming x v rho)   -- By \ref{eqn:Evidences.Rules.elim-bind}
+> L (x :. t)   $$ A v
+>   = eval t (B0 :< v, naming x v [])    -- By \ref{eqn:Evidences.Rules.elim-bind}
+> C (Con t)    $$ Out  = t               -- By \ref{eqn:Evidences.Rules.elim-con}
+> LRET t $$ Call l = t
+> COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
+>     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
+>     f $$ A s]
+> PAIR x y $$ Fst = x
+> PAIR x y $$ Snd = y
+> N n          $$ e    = N (n :$ e)      -- By \ref{eqn:Evidences.Rules.elim-stuck}
+> f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
+>                                  "\nwith eliminator\n" ++ show e
+
 The |naming| operation amends the current naming scheme, taking account
 the instantiation of x: see below.
 
-The left fold of |$$| applies a value to a bunch of eliminators:
+The left fold of |\$\$| applies a value to a bunch of eliminators:
 
-\begin{code}
-($$$) :: (Foldable f) => VAL -> f (Elim VAL) -> VAL
-($$$) = Data.Foldable.foldl ($$)
-\end{code}
-\subsection{Operators}
+> ($$$) :: (Foldable f) => VAL -> f (Elim VAL) -> VAL
+> ($$$) = Data.Foldable.foldl ($$)
+
+Operators
+---------
 
 Running an operator is quite simple, as operators come with the
-mechanics to run them. However, we are not ensured to get a value out
-of an applied operator: the operator might get stuck by a neutral
-argument. In such case, the operator will blame the argument by
-returning it on the |Left|. Otherwise, it returns the computed value
-on the |Right|.
+mechanics to run them. However, we are not ensured to get a value out of
+an applied operator: the operator might get stuck by a neutral argument.
+In such case, the operator will blame the argument by returning it on
+the |Left|. Otherwise, it returns the computed value on the |Right|.
 
-Hence, the implementation of |@@| is as follow. First, run the
-operator. On the left, the operator is stuck, so return the neutral
-term consisting of the operation applied to its arguments. On the
-right, we have gone down to a value, so we simply return it.
+Hence, the implementation of |@@| is as follow. First, run the operator.
+On the left, the operator is stuck, so return the neutral term
+consisting of the operation applied to its arguments. On the right, we
+have gone down to a value, so we simply return it.
 
-\begin{code}
-(@@) :: Op -> [VAL] -> VAL
-op @@ vs = either (\_ -> N (op :@ vs)) id (opRun op vs)
-\end{code}
-Note that we respect the invariant on |N| values: we have an |:@|
-that, for sure, is applying at least one stuck term to an operator
-that uses it.
+> (@@) :: Op -> [VAL] -> VAL
+> op @@ vs = either (\_ -> N (op :@ vs)) id (opRun op vs)
 
+Note that we respect the invariant on |N| values: we have an |:@| that,
+for sure, is applying at least one stuck term to an operator that uses
+it.
 
-\subsection{Binders}
+Binders
+-------
 
 Evaluation under binders needs to distinguish two cases:
-\begin{itemize}
-\item the binder ignores its argument, or
-\item a variable |x| is defined and bound in a term |t|
-\end{itemize}
+
+-   the binder ignores its argument, or
+
+-   a variable |x| is defined and bound in a term |t|
 
 In the first case, we can trivially go under the binder and innocently
-evaluate. In the second case, we turn the binding -- a term -- into a
-closure -- a value. The body grabs the current environment, extends it
-with the awaited argument, and evaluate the whole term down to a
-value.
+evaluate. In the second case, we turn the binding – a term – into a
+closure – a value. The body grabs the current environment, extends it
+with the awaited argument, and evaluate the whole term down to a value.
 
 This naturally leads to the following code:
 
-\begin{code}
-body :: Scope {TT} REF -> ENV -> Scope {VV} REF
-body (K v)     g            = K (eval v g)
-body (x :. t)  (B0, rho)    = txtSub rho x :. t  -- closed lambdas stay syntax
-body (x :. t)  g@(_, rho)   = H g (txtSub rho x) t
-\end{code}
+> body :: Scope {TT} REF -> ENV -> Scope {VV} REF
+> body (K v)     g            = K (eval v g)
+> body (x :. t)  (B0, rho)    = txtSub rho x :. t  -- closed lambdas stay syntax
+> body (x :. t)  g@(_, rho)   = H g (txtSub rho x) t
+
 Now, as well as making closures, the current renaming scheme is applied
 to the bound variable name, for cosmetic purposes.
 
-\subsection{Evaluator}
+Evaluator
+---------
 
 Putting the above pieces together, plus some machinery, we are finally
 able to implement an evaluator. On a technical note, we are working in
-the Applicative |-> ENV| and use She's notation for writing
+the Applicative |-\> ENV| and use She’s notation for writing
 applicatives.
 
 The evaluator is typed as follow: provided with a term and a variable
-binding environment, it reduces the term to a value. The
-implementation is simply a matter of pattern-matching and doing the
-right thing. Hence, we evaluate under lambdas by calling |body|
-(a). We reduce canonical term by evaluating under the constructor
-(b). We drop off bidirectional annotations from Ex to In, just
-reducing the inner term |n| (c). Similarly for type ascriptions, we
-ignore the type and just evaluate the term (d).
+binding environment, it reduces the term to a value. The implementation
+is simply a matter of pattern-matching and doing the right thing. Hence,
+we evaluate under lambdas by calling |body| (a). We reduce canonical
+term by evaluating under the constructor (b). We drop off bidirectional
+annotations from Ex to In, just reducing the inner term |n| (c).
+Similarly for type ascriptions, we ignore the type and just evaluate the
+term (d).
 
-If we reach a parameter, either it is already defined or it is still
-not binded. In both case, |pval| is the right tool: if the parameter is
+If we reach a parameter, either it is already defined or it is still not
+binded. In both case, |pval| is the right tool: if the parameter is
 intrinsically associated to a value, we grab that value. Otherwise, we
 get the neutral term consisting of the stuck parameter (e).
 
-A bound variable simply requires to extract the corresponding value
-from the environment (f). Elimination is handled by |$$| defined above
-(g). And similarly for operators with |@@| (h).
+A bound variable simply requires to extract the corresponding value from
+the environment (f). Elimination is handled by |$$| defined above (g).
+And similarly for operators with |@@| (h).
 
-\begin{code}
-eval :: Tm {d, TT} REF -> ENV -> VAL
-eval (L b)       = (|L (body b)|)                -- By (a)
-eval (C c)       = (|C (eval ^$ c)|)             -- By (b)
-eval (N n)       = eval n                        -- By (c)
-eval (t :? _)    = eval t                        -- By (d)
-eval (P x)       = (|(pval x)|)                  -- By (e)
-eval (V i)       = evar i                        -- By (f)
-eval (t :$ e)    = (|eval t $$ (eval ^$ e)|)     -- By (g)
-eval (op :@ vs)  = (|(op @@) (eval ^$ vs)|)      -- By (h)
-eval (Yuk v)     = (|v|)
-evar :: Int -> ENV -> VAL
-evar i (vs, ts) = fromMaybe (error "eval: bad index") (vs !. i)
-\end{code}
+> eval :: Tm {d, TT} REF -> ENV -> VAL
+> eval (L b)       = (|L (body b)|)                -- By (a)
+> eval (C c)       = (|C (eval ^$ c)|)             -- By (b)
+> eval (N n)       = eval n                        -- By (c)
+> eval (t :? _)    = eval t                        -- By (d)
+> eval (P x)       = (|(pval x)|)                  -- By (e)
+> eval (V i)       = evar i                        -- By (f)
+> eval (t :$ e)    = (|eval t $$ (eval ^$ e)|)     -- By (g)
+> eval (op :@ vs)  = (|(op @@) (eval ^$ vs)|)      -- By (h)
+> eval (Yuk v)     = (|v|)
+> evar :: Int -> ENV -> VAL
+> evar i (vs, ts) = fromMaybe (error "eval: bad index") (vs !. i)
 
 Finally, the evaluation of a closed term simply consists in calling the
 interpreter defined above with the empty environment.
 
-\begin{code}
-evTm :: Tm {d, TT} REF -> VAL
-evTm t = eval t (B0, [])
-\end{code}
+> evTm :: Tm {d, TT} REF -> VAL
+> evTm t = eval t (B0, [])
 
-\subsection{Alpha-conversion on the fly}
+Alpha-conversion on the fly
+---------------------------
 
-Here's a bit of a dirty trick which sometimes results in better name choices.
-We firstly need the notion of a textual substitution from Tm.lhs.
+Here’s a bit of a dirty trick which sometimes results in better name
+choices. We firstly need the notion of a textual substitution from
+Tm.lhs.
 
-< type TXTSUB = [(Char, String)]   -- renaming plan
+\< type TXTSUB = [(Char, String)] – renaming plan
 
-That's a plan for mapping characters to strings. We apply them
-to strings like this, with no change to characters which aren't
-mapped.
+That’s a plan for mapping characters to strings. We apply them to
+strings like this, with no change to characters which aren’t mapped.
 
-\begin{code}
-txtSub :: TXTSUB -> String -> String
-txtSub ts = foldMap blat where blat c = fromMaybe [c] $ lookup c ts
-\end{code}
-The |ENV| type packs up a renaming scheme, which we apply to every
-bound variable name advice string that we encounter as we go: the
-deed is done in |body|, above.
+> txtSub :: TXTSUB -> String -> String
+> txtSub ts = foldMap blat where blat c = fromMaybe [c] $ lookup c ts
 
-The renaming scheme is amended every time we instantiate a bound variable
-with a free variable. Starting from the right, each characte of the bound
-name is mapped to the corresponding character of the free name. The first
-character of the bound name is mapped to the whole remaining prefix. So
-instantiating |"xys"| with |"monks"| maps |'y'| to |"k"| and |'x'| to |"mon"|.
-The idea is that matching the target of an eliminator in this way will
-give good names to the variables bound in its methods, if we're lucky and
-well prepared.
+The |ENV| type packs up a renaming scheme, which we apply to every bound
+variable name advice string that we encounter as we go: the deed is done
+in |body|, above.
 
-\begin{code}
-naming :: String -> VAL -> TXTSUB -> TXTSUB
-naming x (N (P y)) rho
-  = mkMap (reverse x) (reverse (refNameAdvice y)) rho where
-    mkMap ""        _         rho  = rho
-    mkMap _         ""        rho  = rho
-    mkMap [c]       s         rho  | s /= [c]  = (c, s) : rho
-    mkMap (c : cs)  (c' : s)  rho  | c /= c'   = mkMap cs s ((c, [c']) : rho)
-    mkMap (_ : cs)  (_ : s)   rho  = mkMap cs s rho
-naming _ _ rho = rho
-\end{code}
-\subsection{Util}
+The renaming scheme is amended every time we instantiate a bound
+variable with a free variable. Starting from the right, each characte of
+the bound name is mapped to the corresponding character of the free
+name. The first character of the bound name is mapped to the whole
+remaining prefix. So instantiating |“xys”| with |“monks”| maps |’y’| to
+|“k”| and |’x’| to |“mon”|. The idea is that matching the target of an
+eliminator in this way will give good names to the variables bound in
+its methods, if we’re lucky and well prepared.
 
-The |sumlike| function determines whether a value representing a description
-is a sum or a sigma from an enumerate. If so, it returns |Just| the enumeration
-and a function from the enumeration to descriptions.
-\question{Where should this live?}
+> naming :: String -> VAL -> TXTSUB -> TXTSUB
+> naming x (N (P y)) rho
+>   = mkMap (reverse x) (reverse (refNameAdvice y)) rho where
+>     mkMap ""        _         rho  = rho
+>     mkMap _         ""        rho  = rho
+>     mkMap [c]       s         rho  | s /= [c]  = (c, s) : rho
+>     mkMap (c : cs)  (c' : s)  rho  | c /= c'   = mkMap cs s ((c, [c']) : rho)
+>     mkMap (_ : cs)  (_ : s)   rho  = mkMap cs s rho
+> naming _ _ rho = rho
 
-\begin{code}
-sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
-sumlike (SUMD e b)            = Just (e, (b $$) . A)
-sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
-sumlike _                     = Nothing
-\end{code}
+Util
+----
+
+The |sumlike| function determines whether a value representing a
+description is a sum or a sigma from an enumerate. If so, it returns
+|Just| the enumeration and a function from the enumeration to
+descriptions.
+
+> sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
+> sumlike (SUMD e b)            = Just (e, (b $$) . A)
+> sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
+> sumlike _                     = Nothing

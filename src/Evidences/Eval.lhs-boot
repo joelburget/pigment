@@ -1,12 +1,9 @@
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
-
 > module Evidences.Eval where
-
 > import Data.Foldable
 > import Evidences.Tm
-
 > ($$) :: VAL -> Elim VAL -> VAL
 > ($$$) :: (Foldable f) => VAL -> f (Elim VAL) -> VAL
 > (@@) :: Op -> [VAL] -> VAL

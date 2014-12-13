@@ -1,17 +1,11 @@
 > module Elaboration.Wire where
-
 > import Evidences.Tm
-
 > import ProofState.Structure.Developments
 > import ProofState.Edition.ProofContext
 > import ProofState.Edition.News
 > import ProofState.Edition.ProofState
 > import Kit.BwdFwd
-
 > data PropagateStatus = NormalPropagate | RecursivePropagate
-
 > updateRef :: REF -> ProofState ()
-
 > propagateNews :: PropagateStatus -> NewsBulletin -> NewsyEntries -> ProofState NewsBulletin
-
 > tellEntry :: NewsBulletin -> Entry Bwd -> ProofState (NewsBulletin, Entry Bwd)

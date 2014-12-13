@@ -1,546 +1,487 @@
-\section{Using the |Elab| language}
-\label{sec:Elaboration.MakeElab}
+Using the |Elab| language {#sec:Elaboration.MakeElab}
+=========================
 
-%if False
+> {-# OPTIONS_GHC -F -pgmF she #-}
+> {-# LANGUAGE GADTs, TypeOperators, TupleSections #-}
+> module Elaboration.MakeElab where
+> import Control.Applicative
+> import Control.Monad.Except
+> import NameSupply.NameSupplier
+> import Evidences.Tm
+> import Evidences.TypeChecker
+> import Evidences.Eval
+> import Evidences.Operators
+> import Evidences.BetaQuotation
+> import Evidences.DefinitionalEquality
+> import Evidences.Utilities
+> import ProofState.Edition.ProofState
+> import DisplayLang.DisplayTm
+> import DisplayLang.Name
+> import DisplayLang.Scheme
+> import Elaboration.ElabProb
+> import Elaboration.ElabMonad
+> import Kit.BwdFwd
+> import Kit.MissingLibrary
 
-\begin{code}
-{-# OPTIONS_GHC -F -pgmF she #-}
-{-# LANGUAGE GADTs, TypeOperators, TupleSections #-}
-module Elaboration.MakeElab where
-import Control.Applicative
-import Control.Monad.Except
-import NameSupply.NameSupplier
-import Evidences.Tm
-import Evidences.TypeChecker
-import Evidences.Eval
-import Evidences.Operators
-import Evidences.BetaQuotation
-import Evidences.DefinitionalEquality
-import Evidences.Utilities
-import ProofState.Edition.ProofState
-import DisplayLang.DisplayTm
-import DisplayLang.Name
-import DisplayLang.Scheme
-import Elaboration.ElabProb
-import Elaboration.ElabMonad
-import Kit.BwdFwd
-import Kit.MissingLibrary
-\end{code}
-%endif
+Tools for writing elaborators
+-----------------------------
 
-\subsection{Tools for writing elaborators}
+The |eCan| instruction asks for the current goal to be solved by the
+given elaboration problem when the supplied value is canonical.
 
-The |eCan| instruction asks for the current goal to be solved by the given
-elaboration problem when the supplied value is canonical.
-
-\begin{code}
-eCan :: INTM :=>: VAL -> EProb -> Elab a
-eCan (_ :=>: C _)  prob = eElab (Loc 0) prob
-eCan tt            prob = eElab (Loc 0) (WaitCan (justEval tt) prob)
-\end{code}
+> eCan :: INTM :=>: VAL -> EProb -> Elab a
+> eCan (_ :=>: C _)  prob = eElab (Loc 0) prob
+> eCan tt            prob = eElab (Loc 0) (WaitCan (justEval tt) prob)
 
 We can type-check a term using the |eCheck| instruction.
 
-\begin{code}
-eCheck :: (TY :>: INTM) -> Elab (INTM :=>: VAL)
-eCheck tytm = do
-    nsupply <- eAskNSupply
-    case liftError DTIN (typeCheck (check tytm) nsupply) of
-        Left e    -> throwError e
-        Right tt  -> return tt
-\end{code}
+> eCheck :: (TY :>: INTM) -> Elab (INTM :=>: VAL)
+> eCheck tytm = do
+>     nsupply <- eAskNSupply
+>     case liftError DTIN (typeCheck (check tytm) nsupply) of
+>         Left e    -> throwError e
+>         Right tt  -> return tt
 
-The |eCoerce| instruction attempts to coerce a value from the first type to
-the second type, either trivially (if the types are definitionally equal) or by
-hoping for a proof of the appropriate equation and inserting a coercion.
+The |eCoerce| instruction attempts to coerce a value from the first type
+to the second type, either trivially (if the types are definitionally
+equal) or by hoping for a proof of the appropriate equation and
+inserting a coercion.
 
-\begin{code}
-eCoerce :: INTM :=>: VAL -> INTM :=>: VAL -> INTM :=>: VAL -> Elab (INTM :=>: VAL)
-eCoerce (_S :=>: _Sv) (_T :=>: _Tv) (s :=>: sv) = do
-    eq <- eEqual $ SET :>: (_Sv, _Tv)
-    if eq
-        then return (s :=>: sv)
-        else do
-            q :=>: qv <- eHopeFor $ PRF (EQBLUE (SET :>: _Sv) (SET :>: _Tv))
-            return $ N (coe :@ [_S, _T, q, s]) :=>: coe @@ [_Sv, _Tv, qv, sv]
-\end{code}
+> eCoerce :: INTM :=>: VAL -> INTM :=>: VAL -> INTM :=>: VAL -> Elab (INTM :=>: VAL)
+> eCoerce (_S :=>: _Sv) (_T :=>: _Tv) (s :=>: sv) = do
+>     eq <- eEqual $ SET :>: (_Sv, _Tv)
+>     if eq
+>         then return (s :=>: sv)
+>         else do
+>             q :=>: qv <- eHopeFor $ PRF (EQBLUE (SET :>: _Sv) (SET :>: _Tv))
+>             return $ N (coe :@ [_S, _T, q, s]) :=>: coe @@ [_Sv, _Tv, qv, sv]
 
-The |eEqual| instruction determines if two types are definitionally equal.
+The |eEqual| instruction determines if two types are definitionally
+equal.
 
-\begin{code}
-eEqual :: (TY :>: (VAL, VAL)) -> Elab Bool
-eEqual tyvv = do
-    nsupply <- eAskNSupply
-    return (equal tyvv nsupply)
-\end{code}
+> eEqual :: (TY :>: (VAL, VAL)) -> Elab Bool
+> eEqual tyvv = do
+>     nsupply <- eAskNSupply
+>     return (equal tyvv nsupply)
 
 The |eHope| instruction hopes that the current goal can be solved.
 
-\begin{code}
-eHope :: Elab a
-eHope = eElab (Loc 0) ElabHope
-\end{code}
+> eHope :: Elab a
+> eHope = eElab (Loc 0) ElabHope
 
 The |eHopeFor| instruction hopes for an element of a type.
 
-\begin{code}
-eHopeFor :: TY -> Elab (INTM :=>: VAL)
-eHopeFor ty = eCompute (ty :>: eHope)
-\end{code}
+> eHopeFor :: TY -> Elab (INTM :=>: VAL)
+> eHopeFor ty = eCompute (ty :>: eHope)
 
 The |eInfer| instruction infers the type of an evidence term.
 
-\begin{code}
-eInfer :: EXTM -> Elab (INTM :=>: VAL)
-eInfer tm = do
-    nsupply <- eAskNSupply
-    case liftError DTIN (typeCheck (infer tm) nsupply) of
-        Left e    -> throwError e
-        Right (tv :<: ty)  -> do
-            ty' :=>: _ <- eQuote ty
-            return $ PAIR ty' (N tm) :=>: PAIR ty tv
-\end{code}
+> eInfer :: EXTM -> Elab (INTM :=>: VAL)
+> eInfer tm = do
+>     nsupply <- eAskNSupply
+>     case liftError DTIN (typeCheck (infer tm) nsupply) of
+>         Left e    -> throwError e
+>         Right (tv :<: ty)  -> do
+>             ty' :=>: _ <- eQuote ty
+>             return $ PAIR ty' (N tm) :=>: PAIR ty tv
 
-The |eQuote| instruction $\beta$-quotes a value to produce a term representation.
-
-\begin{code}
-eQuote :: VAL -> Elab (INTM :=>: VAL)
-eQuote v = do
-    nsupply <- eAskNSupply
-    return (bquote B0 v nsupply :=>: v)
-\end{code}
-
-The |eSchedule| instruction asks for the scheduler to deal with other problems
-before returning its result.
-
-\begin{code}
-eSchedule :: (INTM :=>: VAL) -> Elab a
-eSchedule (tm :=>: tv) = eElab (Loc 0) (ElabSchedule (ElabDone (tm :=>: Just tv)))
-\end{code}
-
-\subsection{Elaborating |DInTm|s}
-
-We use the |Elab| language to describe how to elaborate a display term to
-produce an evidence term. The |makeElab| and |makeElabInfer| functions read a
-display term and use the capabilities of the |Elab| monad to produce a
-corresponding evidence term.
-
-When part of the display syntax needs to be elaborated as a
-subproblem, we call |subElab| or |subElabInfer| rather than |makeElab|
-or |makeElabInfer| to ensure that elaboration does not take place at
-the top level. This means that if the subproblem needs to modify the
-proof state (for example, to introduce a $\lambda$) it will create a
-new definition to work in. It also ensures that the subproblem can
-terminate with the |eElab| instruction, providing a syntactic
+The |eQuote| instruction $\beta$-quotes a value to produce a term
 representation.
 
-\begin{code}
-subElab :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
-subElab loc (ty :>: tm) = eCompute (ty :>: makeElab loc tm)
-subElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
-subElabInfer loc tm = eCompute (sigSetVAL :>: makeElabInfer loc tm)
-inductionOpLabMethodType = L $ "l" :. [.l.
-                   L $ "d" :. [.d.
-                   L $ "P" :. [._P.
-                   PI (N $ descOp :@ [NV d, MU (|(NV l)|) (NV d)])
-                      (L $ "x" :. [.x.
-                       ARR (N $ boxOp :@ [NV d, MU (|(NV l)|) (NV d), NV _P, NV x])
-                           (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
-\end{code}
-Since we frequently pattern-match on the goal type when elaborating |In| terms,
-we abstract it out. Thus |makeElab'| actually implements elaboration.
+> eQuote :: VAL -> Elab (INTM :=>: VAL)
+> eQuote v = do
+>     nsupply <- eAskNSupply
+>     return (bquote B0 v nsupply :=>: v)
 
-\begin{code}
-makeElab :: Loc -> DInTmRN -> Elab (INTM :=>: VAL)
-makeElab loc tm = makeElab' loc . (:>: tm) =<< eGoal
-makeElab' :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
-\end{code}
-We elaborate list-like syntax for enumerations into the corresponding inductive
-data. This cannot apply in general because it leads to infinite loops when
-elaborating illegal values for some descriptions. Perhaps we should remove it
-for enumerations as well.
+The |eSchedule| instruction asks for the scheduler to deal with other
+problems before returning its result.
 
-\begin{code}
-makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" =
-    makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
-makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t) | r == "EnumU" =
-    makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
-\end{code}
-More usefully, we elaborate a tag with a bunch of arguments by converting it
-into the corresponding inductive data structure. This depends on the description
-having a certain standard format, so it does not work in general.
-\question{Can we make it more robust by looking at the description?}
+> eSchedule :: (INTM :=>: VAL) -> Elab a
+> eSchedule (tm :=>: tv) = eElab (Loc 0) (ElabSchedule (ElabDone (tm :=>: Just tv)))
 
-\begin{code}
-makeElab' loc (MU l d :>: DTag s xs) =
-    makeElab' loc (MU l d :>: DCON (foldr DPAIR DVOID (DTAG s : xs)))
-\end{code}
+Elaborating |DInTm|s
+--------------------
 
-The following case exists only for backwards compatibility (gah). It allows
-functions on inductive types to be constructed by writing |con| in the right places.
-It can disappear as soon as someone bothers to update the test suite.
+We use the |Elab| language to describe how to elaborate a display term
+to produce an evidence term. The |makeElab| and |makeElabInfer|
+functions read a display term and use the capabilities of the |Elab|
+monad to produce a corresponding evidence term.
 
-\begin{code}
-makeElab' loc (PI (MU l d) t :>: DCON f) = do
-    d'  :=>: _    <- eQuote d
-    t'  :=>: _    <- eQuote t
-    tm  :=>: tmv  <- subElab loc $ case l of
-        Nothing  -> inductionOpMethodType $$ A d $$ A t :>: f
-        Just l   -> inductionOpLabMethodType $$ A l $$ A d $$ A t :>: f
-    x <- eLambda (fortran t)
-    return $ N (  inductionOp :@  [d',  NP x, t',  tm   ])
-           :=>:   inductionOp @@  [d,   NP x, t,   tmv  ]
-\end{code}
-A function from an enumeration is equivalent to a list, so the elaborator can
-turn lists into functions like this:
+When part of the display syntax needs to be elaborated as a subproblem,
+we call |subElab| or |subElabInfer| rather than |makeElab| or
+|makeElabInfer| to ensure that elaboration does not take place at the
+top level. This means that if the subproblem needs to modify the proof
+state (for example, to introduce a $\lambda$) it will create a new
+definition to work in. It also ensures that the subproblem can terminate
+with the |eElab| instruction, providing a syntactic representation.
 
-\begin{code}
-makeElab' loc (PI (ENUMT e) t :>: m) | isTuply m = do
-    t' :=>: _ <- eQuote t
-    e' :=>: _ <- eQuote e
-    tm :=>: tmv <- subElab loc (branchesOp @@ [e, t] :>: m)
-    x <- eLambda (fortran t)
-    return $ N (switchOp :@ [e', NP x, t', tm])
-                   :=>: switchOp @@ [e, NP x, t, tmv]
-  where
-    isTuply :: DInTmRN -> Bool
-    isTuply DVOID        = True
-    isTuply (DPAIR _ _)  = True
-    isTuply _            = False
-\end{code}
+> subElab :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
+> subElab loc (ty :>: tm) = eCompute (ty :>: makeElab loc tm)
+> subElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
+> subElabInfer loc tm = eCompute (sigSetVAL :>: makeElabInfer loc tm)
+> inductionOpLabMethodType = L $ "l" :. [.l.
+>                    L $ "d" :. [.d.
+>                    L $ "P" :. [._P.
+>                    PI (N $ descOp :@ [NV d, MU (|(NV l)|) (NV d)])
+>                       (L $ "x" :. [.x.
+>                        ARR (N $ boxOp :@ [NV d, MU (|(NV l)|) (NV d), NV _P, NV x])
+>                            (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
+
+Since we frequently pattern-match on the goal type when elaborating |In|
+terms, we abstract it out. Thus |makeElab’| actually implements
+elaboration.
+
+> makeElab :: Loc -> DInTmRN -> Elab (INTM :=>: VAL)
+> makeElab loc tm = makeElab' loc . (:>: tm) =<< eGoal
+> makeElab' :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
+
+We elaborate list-like syntax for enumerations into the corresponding
+inductive data. This cannot apply in general because it leads to
+infinite loops when elaborating illegal values for some descriptions.
+Perhaps we should remove it for enumerations as well.
+
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" =
+>     makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t) | r == "EnumU" =
+>     makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
+
+More usefully, we elaborate a tag with a bunch of arguments by
+converting it into the corresponding inductive data structure. This
+depends on the description having a certain standard format, so it does
+not work in general.
+
+> makeElab' loc (MU l d :>: DTag s xs) =
+>     makeElab' loc (MU l d :>: DCON (foldr DPAIR DVOID (DTAG s : xs)))
+
+The following case exists only for backwards compatibility (gah). It
+allows functions on inductive types to be constructed by writing |con|
+in the right places. It can disappear as soon as someone bothers to
+update the test suite.
+
+> makeElab' loc (PI (MU l d) t :>: DCON f) = do
+>     d'  :=>: _    <- eQuote d
+>     t'  :=>: _    <- eQuote t
+>     tm  :=>: tmv  <- subElab loc $ case l of
+>         Nothing  -> inductionOpMethodType $$ A d $$ A t :>: f
+>         Just l   -> inductionOpLabMethodType $$ A l $$ A d $$ A t :>: f
+>     x <- eLambda (fortran t)
+>     return $ N (  inductionOp :@  [d',  NP x, t',  tm   ])
+>            :=>:   inductionOp @@  [d,   NP x, t,   tmv  ]
+
+A function from an enumeration is equivalent to a list, so the
+elaborator can turn lists into functions like this:
+
+> makeElab' loc (PI (ENUMT e) t :>: m) | isTuply m = do
+>     t' :=>: _ <- eQuote t
+>     e' :=>: _ <- eQuote e
+>     tm :=>: tmv <- subElab loc (branchesOp @@ [e, t] :>: m)
+>     x <- eLambda (fortran t)
+>     return $ N (switchOp :@ [e', NP x, t', tm])
+>                    :=>: switchOp @@ [e, NP x, t, tmv]
+>   where
+>     isTuply :: DInTmRN -> Bool
+>     isTuply DVOID        = True
+>     isTuply (DPAIR _ _)  = True
+>     isTuply _            = False
 
 To elaborate a tag with an enumeration as its type, we search for the
 tag in the enumeration to determine the appropriate index.
 
-\begin{code}
-makeElab' loc (ENUMT t :>: DTAG a) = findTag a t 0
-  where
-    findTag :: String -> TY -> Int -> Elab (INTM :=>: VAL)
-    findTag a (CONSE (TAG b) t) n
-      | a == b        = return (toNum n :=>: toNum n)
-      | otherwise     = findTag a t (succ n)
-    findTag a _ n  = throwError . sErr $ "elaborate: tag `"
-                                          ++ a
-                                          ++ " not found in enumeration."
-    toNum :: Int -> Tm {In, p} x
-    toNum 0  = ZE
-    toNum n  = SU (toNum (n-1))
-makeElab' loc (PROP :>: DEqBlue t u) = do
-    ttt <- subElabInfer loc t
-    utt <- subElabInfer loc u
-    let ttm :=>: tv :<: tty :=>: ttyv = extractNeutral ttt
-    let utm :=>: uv :<: uty :=>: utyv = extractNeutral utt
-    return $  EQBLUE (tty   :>: ttm)  (uty   :>: utm)
-        :=>:  EQBLUE (ttyv  :>: tv)   (utyv  :>: uv)
-makeElab' loc (SET :>: DIMU Nothing iI d i) = do
-    iI  :=>: iIv  <- subElab loc (SET :>: iI)
-    d   :=>: dv   <- subElab loc (ARR iIv (idesc $$ A iIv) :>: d)
-    i   :=>: iv   <- subElab loc (iIv :>: i)
-    return $ IMU Nothing iI d i :=>: IMU Nothing iIv dv iv
-makeElab' loc (ty@(IMU _ _ _ _) :>: DTag s xs) =
-    makeElab' loc (ty :>: DCON (DPAIR (DTAG s) (foldr DPAIR DU xs)))
-makeElab' loc (NU l d :>: DVOID) =
-    makeElab' loc (NU l d :>: DCON (DPAIR DZE DVOID))
-makeElab' loc (NU l d :>: DPAIR s t) =
-    makeElab' loc (NU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
-makeElab' loc (SET :>: DNU Nothing d) = do
-    lt :=>: lv <- eFaker
-    dt :=>: dv <- subElab loc (desc :>: d)
-    return $ NU (Just (N lt)) dt :=>: NU (Just lv) dv
-makeElab' loc (NU l d :>: DCOIT DU sty f s) = do
-    d' :=>: _ <- eQuote d
-    makeElab' loc (NU l d :>: DCOIT (DTIN d') sty f s)
-\end{code}
-As a bit of syntactic sugar, we elaborate |con| as |COMPOSITE| and |[x]| as
-|CLASS x|. \question{Why not just use |CON| rather than |COMPOSITE| everywhere?}
+> makeElab' loc (ENUMT t :>: DTAG a) = findTag a t 0
+>   where
+>     findTag :: String -> TY -> Int -> Elab (INTM :=>: VAL)
+>     findTag a (CONSE (TAG b) t) n
+>       | a == b        = return (toNum n :=>: toNum n)
+>       | otherwise     = findTag a t (succ n)
+>     findTag a _ n  = throwError . sErr $ "elaborate: tag `"
+>                                           ++ a
+>                                           ++ " not found in enumeration."
+>     toNum :: Int -> Tm {In, p} x
+>     toNum 0  = ZE
+>     toNum n  = SU (toNum (n-1))
+> makeElab' loc (PROP :>: DEqBlue t u) = do
+>     ttt <- subElabInfer loc t
+>     utt <- subElabInfer loc u
+>     let ttm :=>: tv :<: tty :=>: ttyv = extractNeutral ttt
+>     let utm :=>: uv :<: uty :=>: utyv = extractNeutral utt
+>     return $  EQBLUE (tty   :>: ttm)  (uty   :>: utm)
+>         :=>:  EQBLUE (ttyv  :>: tv)   (utyv  :>: uv)
+> makeElab' loc (SET :>: DIMU Nothing iI d i) = do
+>     iI  :=>: iIv  <- subElab loc (SET :>: iI)
+>     d   :=>: dv   <- subElab loc (ARR iIv (idesc $$ A iIv) :>: d)
+>     i   :=>: iv   <- subElab loc (iIv :>: i)
+>     return $ IMU Nothing iI d i :=>: IMU Nothing iIv dv iv
+> makeElab' loc (ty@(IMU _ _ _ _) :>: DTag s xs) =
+>     makeElab' loc (ty :>: DCON (DPAIR (DTAG s) (foldr DPAIR DU xs)))
+> makeElab' loc (NU l d :>: DVOID) =
+>     makeElab' loc (NU l d :>: DCON (DPAIR DZE DVOID))
+> makeElab' loc (NU l d :>: DPAIR s t) =
+>     makeElab' loc (NU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
+> makeElab' loc (SET :>: DNU Nothing d) = do
+>     lt :=>: lv <- eFaker
+>     dt :=>: dv <- subElab loc (desc :>: d)
+>     return $ NU (Just (N lt)) dt :=>: NU (Just lv) dv
+> makeElab' loc (NU l d :>: DCOIT DU sty f s) = do
+>     d' :=>: _ <- eQuote d
+>     makeElab' loc (NU l d :>: DCOIT (DTIN d') sty f s)
 
-\begin{code}
-makeElab' loc (MONAD d x :>: DCON t) =
-    makeElab' loc (MONAD d x :>: DCOMPOSITE t)
-makeElab' loc (QUOTIENT a r p :>: DPAIR x DVOID) =
-    makeElab' loc (QUOTIENT a r p :>: DCLASS x)
-\end{code}
-In order to make programs as cryptic as possible, you can use |con| in the
-display language to generate a constant function from unit or curry a function
-from a pair.
+As a bit of syntactic sugar, we elaborate |con| as |COMPOSITE| and |[x]|
+as |CLASS x|.
 
-\begin{code}
-makeElab' loc (PI UNIT t :>: DCON f) = do
-    tm :=>: tmv <- subElab loc (t $$ A VOID :>: f)
-    return $ LK tm :=>: LK tmv
-makeElab' loc (PI (SIGMA d r) t :>: DCON f) = do
-    let mt =  PI d . L $ (fortran r) :. [.a.
-              PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
-              t -$ [PAIR (NV a) (NV b)] ] ]
-    mt'  :=>: _    <- eQuote mt
-    tm   :=>: tmv  <- subElab loc (mt :>: f)
-    x <- eLambda (fortran t)
-    return $ N ((tm :? mt') :$ A (N (P x :$ Fst)) :$ A (N (P x :$ Snd)))
-                    :=>: tmv $$ A (NP x $$ Fst) $$ A (NP x $$ Snd)
-makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s
-\end{code}
+> makeElab' loc (MONAD d x :>: DCON t) =
+>     makeElab' loc (MONAD d x :>: DCOMPOSITE t)
+> makeElab' loc (QUOTIENT a r p :>: DPAIR x DVOID) =
+>     makeElab' loc (QUOTIENT a r p :>: DCLASS x)
 
-We use underscores |DU| in elaboration to mean "figure this out yourself", while
-question marks |DQ| require us to wait for a user-provided value.
+In order to make programs as cryptic as possible, you can use |con| in
+the display language to generate a constant function from unit or curry
+a function from a pair.
 
-\begin{code}
-makeElab' loc (ty :>: DU) = eHope
-makeElab' loc (ty :>: DQ s) = eWait s ty >>= neutralise
-\end{code}
+> makeElab' loc (PI UNIT t :>: DCON f) = do
+>     tm :=>: tmv <- subElab loc (t $$ A VOID :>: f)
+>     return $ LK tm :=>: LK tmv
+> makeElab' loc (PI (SIGMA d r) t :>: DCON f) = do
+>     let mt =  PI d . L $ (fortran r) :. [.a.
+>               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
+>               t -$ [PAIR (NV a) (NV b)] ] ]
+>     mt'  :=>: _    <- eQuote mt
+>     tm   :=>: tmv  <- subElab loc (mt :>: f)
+>     x <- eLambda (fortran t)
+>     return $ N ((tm :? mt') :$ A (N (P x :$ Fst)) :$ A (N (P x :$ Snd)))
+>                     :=>: tmv $$ A (NP x $$ Fst) $$ A (NP x $$ Snd)
+> makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s
+
+We use underscores |DU| in elaboration to mean “figure this out
+yourself”, while question marks |DQ| require us to wait for a
+user-provided value.
+
+> makeElab' loc (ty :>: DU) = eHope
+> makeElab' loc (ty :>: DQ s) = eWait s ty >>= neutralise
 
 Elaborating a canonical term with canonical type is a job for |canTy|.
 
-canTy ::  (Alternative m, MonadError (StackError t) m) =>
-          (TY :>: t -> m (s :=>: VAL)) ->
-          (Can VAL :>: Can t) ->
-          m (Can (s :=>: VAL))
+canTy :: (Alternative m, MonadError (StackError t) m) =\> (TY :\>: t -\>
+m (s :=\>: VAL)) -\> (Can VAL :\>: Can t) -\> m (Can (s :=\>: VAL))
 
-\begin{code}
-makeElab' loc (C ty :>: DC tm) = do
-    v <- canTy (subElab loc) (ty :>: tm)
-    return $ (C $ fmap termOf v) :=>: (C $ fmap valueOf v)
-\end{code}
+> makeElab' loc (C ty :>: DC tm) = do
+>     v <- canTy (subElab loc) (ty :>: tm)
+>     return $ (C $ fmap termOf v) :=>: (C $ fmap valueOf v)
 
-There are a few possibilities for elaborating $\lambda$-abstractions. If both the
-range and term are constants, then we simply |makeElab| underneath. This avoids
-creating some trivial children.
+There are a few possibilities for elaborating $\lambda$-abstractions. If
+both the range and term are constants, then we simply |makeElab|
+underneath. This avoids creating some trivial children.
 
-subElab :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
-makeElab' :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
-DK     :: DInTm p x            -> DScope p x  -- constant
-K     :: Tm {In, p} x                      -> Scope p x     -- constant
-pattern LK t      = L (K t)              -- Lambda (with constant)
+subElab :: Loc -\> (TY :\>: DInTmRN) -\> Elab (INTM :=\>: VAL) makeElab’
+:: Loc -\> (TY :\>: DInTmRN) -\> Elab (INTM :=\>: VAL) DK :: DInTm p
+x -\> DScope p x – constant K :: Tm <span>In, p</span> x -\> Scope p x –
+constant pattern LK t = L (K t) – Lambda (with constant)
 
-\begin{code}
-makeElab' loc (PI s (L (K t)) :>: DL (DK dtm)) = do
-    tm :=>: tmv <- subElab loc (t :>: dtm)
-    return $ LK tm :=>: LK tmv
-\end{code}
-Otherwise, we can simply create a |lambdaParam| in the current development, and
-carry on elaborating. We can call |makeElab| here, rather than |subElab|,
-because it is a tail call.
+> makeElab' loc (PI s (L (K t)) :>: DL (DK dtm)) = do
+>     tm :=>: tmv <- subElab loc (t :>: dtm)
+>     return $ LK tm :=>: LK tmv
 
-\begin{code}
-makeElab' loc (ty :>: DL sc) = do
-    ref <- eLambda (dfortran (DL sc))
-    makeElab loc (dScopeTm sc)
-\end{code}
+Otherwise, we can simply create a |lambdaParam| in the current
+development, and carry on elaborating. We can call |makeElab| here,
+rather than |subElab|, because it is a tail call.
 
-We push types in to neutral terms by calling |subElabInfer| on the term, then
-coercing the result to the required type. (Note that |eCoerce| will check if the
-types are equal, and if so it will not insert a redundant coercion.)
+> makeElab' loc (ty :>: DL sc) = do
+>     ref <- eLambda (dfortran (DL sc))
+>     makeElab loc (dScopeTm sc)
 
-\begin{code}
-makeElab' loc (w :>: DN n) = do
-    w' :=>: _ <- eQuote w
-    tt <- subElabInfer loc n
-    let (yt :=>: yn :<: ty :=>: tyv) = extractNeutral tt
-    eCoerce (ty :=>: tyv) (w' :=>: w) (yt :=>: yn)
-\end{code}
+We push types in to neutral terms by calling |subElabInfer| on the term,
+then coercing the result to the required type. (Note that |eCoerce| will
+check if the types are equal, and if so it will not insert a redundant
+coercion.)
+
+> makeElab' loc (w :>: DN n) = do
+>     w' :=>: _ <- eQuote w
+>     tt <- subElabInfer loc n
+>     let (yt :=>: yn :<: ty :=>: tyv) = extractNeutral tt
+>     eCoerce (ty :=>: tyv) (w' :=>: w) (yt :=>: yn)
 
 If we already have an evidence term, we just type-check it. This allows
 elaboration code to partially elaborate a display term then embed the
 resulting evidence term and call the elaborator again.
 
-\begin{code}
-makeElab' loc (ty :>: DTIN tm) = eCheck (ty :>: tm)
-\end{code}
+> makeElab' loc (ty :>: DTIN tm) = eCheck (ty :>: tm)
 
-If the type is neutral and none of the preceding cases match,
-there is nothing we can do but wait for the type to become canonical.
+If the type is neutral and none of the preceding cases match, there is
+nothing we can do but wait for the type to become canonical.
 
-\begin{code}
-makeElab' loc (N ty :>: tm) = do
-    tt <- eQuote (N ty)
-    eCan tt (ElabProb tm)
-\end{code}
+> makeElab' loc (N ty :>: tm) = do
+>     tt <- eQuote (N ty)
+>     eCan tt (ElabProb tm)
 
 If nothing else matches, give up and report an error.
 
-\begin{code}
-makeElab' loc (ty :>: tm) = throwErrorS $
-    [ err "makeElab: can't push"
-    , errTyVal (ty :<: SET)
-    , err "into"
-    , errTm tm
-    ]
-\end{code}
+> makeElab' loc (ty :>: tm) = throwErrorS $
+>     [ err "makeElab: can't push"
+>     , errTyVal (ty :<: SET)
+>     , err "into"
+>     , errTm tm
+>     ]
 
-\subsection{Elaborating |DExTm|s}
+Elaborating |DExTm|s
+--------------------
 
 The |makeElabInfer| command is to |infer| in
-subsection~\ref{subsec:Evidences.TypeChecker.type-inference} as |makeElab|
+subsection [subsec:Evidences.TypeChecker.type-inference] as |makeElab|
 is to |check|. It elaborates the display term and infers its type to
 produce a type-term pair in the evidence language.
 
 The result of |makeElabInfer| is of type $\SIGMA{\V{X}}{\Set}{X}$, which
-we can represent as an evidence term or value (|sigSetTM| or |sigSetVAL|,
-respectively).
+we can represent as an evidence term or value (|sigSetTM| or
+|sigSetVAL|, respectively).
 
-\begin{code}
-sigSetVAL :: Tm {In,p} x
-sigSetVAL = SIGMA SET (idVAL "ssv")
-sigSetTM :: INTM
-sigSetTM =  sigSetVAL
-\end{code}
+> sigSetVAL :: Tm {In,p} x
+> sigSetVAL = SIGMA SET (idVAL "ssv")
+> sigSetTM :: INTM
+> sigSetTM =  sigSetVAL
 
-The |extractNeutral| function separates type-term pairs in both term and value
-forms. It avoids clutter in the term representation by splitting it up if it
-happens to be a canonical pair, or applying the appropriate eliminators if not.
+The |extractNeutral| function separates type-term pairs in both term and
+value forms. It avoids clutter in the term representation by splitting
+it up if it happens to be a canonical pair, or applying the appropriate
+eliminators if not.
 
-\begin{code}
-extractNeutral :: INTM :=>: VAL -> INTM :=>: VAL :<: INTM :=>: TY
-extractNeutral (PAIR ty tm :=>: PAIR tyv tmv) = tm :=>: tmv :<: ty :=>: tyv
-extractNeutral (PAIR ty tm :=>: tv) = tm :=>: tv $$ Snd :<: ty :=>: tv $$ Fst
-extractNeutral (tm :=>: tv) = N (tm' :$ Snd) :=>: tv $$ Snd :<: N (tm' :$ Fst) :=>: tv $$ Fst
-  where tm' = tm ?? sigSetTM
-\end{code}
+> extractNeutral :: INTM :=>: VAL -> INTM :=>: VAL :<: INTM :=>: TY
+> extractNeutral (PAIR ty tm :=>: PAIR tyv tmv) = tm :=>: tmv :<: ty :=>: tyv
+> extractNeutral (PAIR ty tm :=>: tv) = tm :=>: tv $$ Snd :<: ty :=>: tv $$ Fst
+> extractNeutral (tm :=>: tv) = N (tm' :$ Snd) :=>: tv $$ Snd :<: N (tm' :$ Fst) :=>: tv $$ Fst
+>   where tm' = tm ?? sigSetTM
 
 Since we use a head-spine representation for display terms, we need to
 elaborate the head of an application. The |makeElabInferHead| function
 uses the |Elab| monad to produce a type-term pair for the head, and
-provides its scheme (if it has one) for argument synthesis. The head
-may be a parameter, which is resolved; an embedded evidence term,
-which is checked; or a type annotation, which is converted to the
-identity function at the given type.
+provides its scheme (if it has one) for argument synthesis. The head may
+be a parameter, which is resolved; an embedded evidence term, which is
+checked; or a type annotation, which is converted to the identity
+function at the given type.
 
-\begin{code}
-makeElabInferHead :: Loc -> DHEAD -> Elab (INTM :=>: VAL, Maybe (Scheme INTM))
-makeElabInferHead loc (DP rn)     = eResolve rn
-makeElabInferHead loc (DTEX tm)   = (| (eInfer tm) , ~Nothing |)
-makeElabInferHead loc (DType ty)  = do
-    tm :=>: v <- subElab loc (SET :>: ty)
-    return (typeAnnotTM tm :=>: typeAnnotVAL v, Nothing)
-  where
-    typeAnnotTM :: INTM -> INTM
-    typeAnnotTM tm = PAIR (ARR tm tm) (idTM "typeAnnot")
-    typeAnnotVAL :: VAL -> VAL
-    typeAnnotVAL v = PAIR (ARR v v) (idVAL "typeAnnot")
-\end{code}
+> makeElabInferHead :: Loc -> DHEAD -> Elab (INTM :=>: VAL, Maybe (Scheme INTM))
+> makeElabInferHead loc (DP rn)     = eResolve rn
+> makeElabInferHead loc (DTEX tm)   = (| (eInfer tm) , ~Nothing |)
+> makeElabInferHead loc (DType ty)  = do
+>     tm :=>: v <- subElab loc (SET :>: ty)
+>     return (typeAnnotTM tm :=>: typeAnnotVAL v, Nothing)
+>   where
+>     typeAnnotTM :: INTM -> INTM
+>     typeAnnotTM tm = PAIR (ARR tm tm) (idTM "typeAnnot")
+>     typeAnnotVAL :: VAL -> VAL
+>     typeAnnotVAL v = PAIR (ARR v v) (idVAL "typeAnnot")
 
-Now we can implement |makeElabInfer|. We use |makeElabInferHead| to elaborate
-the head of the neutral term, then call |handleArgs| or |handleSchemeArgs| to
-process the spine of eliminators.
+Now we can implement |makeElabInfer|. We use |makeElabInferHead| to
+elaborate the head of the neutral term, then call |handleArgs| or
+|handleSchemeArgs| to process the spine of eliminators.
 
-\begin{code}
-makeElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
-makeElabInfer loc (t ::$ ss) = do
-    (tt, ms) <- makeElabInferHead loc t
-    let (tm :=>: tmv :<: ty :=>: tyv) = extractNeutral tt
-    case ms of
-        Just sch  -> handleSchemeArgs B0 sch  (tm ?? ty :=>: tmv :<: tyv) ss
-        Nothing   -> handleArgs               (tm ?? ty :=>: tmv :<: tyv) ss
-  where
-\end{code}
+> makeElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
+> makeElabInfer loc (t ::$ ss) = do
+>     (tt, ms) <- makeElabInferHead loc t
+>     let (tm :=>: tmv :<: ty :=>: tyv) = extractNeutral tt
+>     case ms of
+>         Just sch  -> handleSchemeArgs B0 sch  (tm ?? ty :=>: tmv :<: tyv) ss
+>         Nothing   -> handleArgs               (tm ?? ty :=>: tmv :<: tyv) ss
+>   where
+
 The |handleSchemeArgs| function takes a list of terms (corresponding to
-de Bruijn-indexed variables), the scheme, term and type of the neutral, and a
-spine of eliminators in display syntax. It elaborates the eliminators and applies
-them to the neutral term, using the scheme to handle insertion of implicit
-arguments.
+de Bruijn-indexed variables), the scheme, term and type of the neutral,
+and a spine of eliminators in display syntax. It elaborates the
+eliminators and applies them to the neutral term, using the scheme to
+handle insertion of implicit arguments.
 
-\begin{code}
-    handleSchemeArgs :: Bwd (INTM :=>: VAL) -> Scheme INTM ->
-        EXTM :=>: VAL :<: TY -> DSPINE -> Elab (INTM :=>: VAL)
-\end{code}
-If the scheme is just a type, then we call on the non-scheme |handleArgs|.
+>     handleSchemeArgs :: Bwd (INTM :=>: VAL) -> Scheme INTM ->
+>         EXTM :=>: VAL :<: TY -> DSPINE -> Elab (INTM :=>: VAL)
 
-\begin{code}
-    handleSchemeArgs es (SchType _) ttt as = handleArgs ttt as
-\end{code}
-If the scheme has an implicit $\Pi$-binding, then we hope for a value of the
-relevant type and carry on. Note that we evaluate the type of the binding in the
-context |es|.
+If the scheme is just a type, then we call on the non-scheme
+|handleArgs|.
 
-\begin{code}
-    handleSchemeArgs es  (SchImplicitPi (x :<: s) schT)
-                             (tm :=>: tv :<: PI sd t) as = do
-        stm :=>: sv <- eHopeFor (eval s (fmap valueOf es, []))
-        handleSchemeArgs (es :< (stm :=>: sv)) schT
-            (tm :$ A stm :=>: tv $$ A sv :<: t $$ A sv) as
-\end{code}
-If the scheme has an explicit $\Pi$-binding and we have an argument, then we can
-push the expected type into the argument and carry on.
-\question{Does this case need to be modified for higher-order schemes?}
+>     handleSchemeArgs es (SchType _) ttt as = handleArgs ttt as
 
-\begin{code}
-    handleSchemeArgs es  (SchExplicitPi (x :<: schS) schT)
-                             (tm :=>: tv :<: PI sd t) (A a : as) = do
-        let s' = schemeToInTm schS
-        atm :=>: av <- subElab loc (eval s' (fmap valueOf es, []) :>: a)
-        handleSchemeArgs (es :< (atm :=>: av)) schT
-            (tm :$ A atm :=>: tv $$ A av :<: t $$ A av) as
-\end{code}
-If the scheme has an explicit $\Pi$-binding, but we have no more eliminators,
-then we go under the binder and continue processing the scheme in order to
-insert any implicit arguments that might be there. We then have to reconstruct
-the overall type-term pair from the result.
+If the scheme has an implicit $\Pi$-binding, then we hope for a value of
+the relevant type and carry on. Note that we evaluate the type of the
+binding in the context |es|.
 
-\begin{code}
-    handleSchemeArgs es  (SchExplicitPi (x :<: schS) schT)
-                             (tm :=>: tv :<: PI sd t) [] = do
-        let sv = eval (schemeToInTm schS) (fmap valueOf es, [])
-        tm :=>: tv <- eCompute
-            (PI sv (L $ K sigSetVAL) :>: do
-                r <- eLambda x
-                let rtVal = NP r :: VAL
-                    rtInTm = NP r :: INTM
-                handleSchemeArgs (es :< (rtInTm :=>: rtVal)) schT
-                    (tm :$ A rtInTm :=>: tv $$ A rtVal :<: t $$ A rtVal) []
-            )
-        s' :=>: _ <- eQuote sv
-        let  atm  = tm ?? PIV x s' sigSetTM :$ A (NV 0)
-             rtm  = PAIR (PIV x s' (N (atm :$ Fst))) (LAV x (N (atm :$ Snd)))
-        return $ rtm :=>: evTm rtm
-\end{code}
-Otherwise, we probably have a scheme with an explicit $\Pi$-binding but an
-eliminator other than application, so we give up and throw an error.
+>     handleSchemeArgs es  (SchImplicitPi (x :<: s) schT)
+>                              (tm :=>: tv :<: PI sd t) as = do
+>         stm :=>: sv <- eHopeFor (eval s (fmap valueOf es, []))
+>         handleSchemeArgs (es :< (stm :=>: sv)) schT
+>             (tm :$ A stm :=>: tv $$ A sv :<: t $$ A sv) as
 
-\begin{code}
-    handleSchemeArgs es sch (_ :=>: v :<: ty) as = throwErrorS
-        [ err "handleSchemeArgs: cannot handle scheme"
-        , errScheme sch
-        , err "with neutral term"
-        , errTyVal (v :<: ty)
-        , err "and eliminators"
-        , map ErrorElim as
-        ]
-\end{code}
+If the scheme has an explicit $\Pi$-binding and we have an argument,
+then we can push the expected type into the argument and carry on.
 
-The |handleArgs| function is a simplified version of |handleSchemeArgs|, for
-neutral terms without schemes. It takes a typed neutral term and a spine of
-eliminators in display syntax, and produces a set-value pair in the |Elab| monad.
+>     handleSchemeArgs es  (SchExplicitPi (x :<: schS) schT)
+>                              (tm :=>: tv :<: PI sd t) (A a : as) = do
+>         let s' = schemeToInTm schS
+>         atm :=>: av <- subElab loc (eval s' (fmap valueOf es, []) :>: a)
+>         handleSchemeArgs (es :< (atm :=>: av)) schT
+>             (tm :$ A atm :=>: tv $$ A av :<: t $$ A av) as
 
-\begin{code}
-    handleArgs :: (EXTM :=>: VAL :<: TY) -> DSPINE -> Elab (INTM :=>: VAL)
-\end{code}
-If we have run out of eliminators, then we just give back the neutral term with
-its type.
+If the scheme has an explicit $\Pi$-binding, but we have no more
+eliminators, then we go under the binder and continue processing the
+scheme in order to insert any implicit arguments that might be there. We
+then have to reconstruct the overall type-term pair from the result.
 
-\begin{code}
-    handleArgs (tm :=>: tv :<: ty) [] = do
-        ty' :=>: _ <- eQuote ty
-        return $ PAIR ty' (N tm) :=>: PAIR ty tv
-\end{code}
-If we have a term of a labelled type being eliminated with |Call|, we need to
-attach the appropriate label to the call and continue with the returned type.
+>     handleSchemeArgs es  (SchExplicitPi (x :<: schS) schT)
+>                              (tm :=>: tv :<: PI sd t) [] = do
+>         let sv = eval (schemeToInTm schS) (fmap valueOf es, [])
+>         tm :=>: tv <- eCompute
+>             (PI sv (L $ K sigSetVAL) :>: do
+>                 r <- eLambda x
+>                 let rtVal = NP r :: VAL
+>                     rtInTm = NP r :: INTM
+>                 handleSchemeArgs (es :< (rtInTm :=>: rtVal)) schT
+>                     (tm :$ A rtInTm :=>: tv $$ A rtVal :<: t $$ A rtVal) []
+>             )
+>         s' :=>: _ <- eQuote sv
+>         let  atm  = tm ?? PIV x s' sigSetTM :$ A (NV 0)
+>              rtm  = PAIR (PIV x s' (N (atm :$ Fst))) (LAV x (N (atm :$ Snd)))
+>         return $ rtm :=>: evTm rtm
 
-\begin{code}
-    handleArgs (t :=>: v :<: LABEL l ty) (Call _ : as) = do
-        l' :=>: _ <- eQuote l
-        handleArgs (t :$ Call l' :=>: v $$ Call l :<: ty) as
-\end{code}
-For all other eliminators, assuming the type is canonical we can use |elimTy|.
+Otherwise, we probably have a scheme with an explicit $\Pi$-binding but
+an eliminator other than application, so we give up and throw an error.
 
-\begin{code}
-    handleArgs (t :=>: v :<: C cty) (a : as) = do
-        (a', ty') <- elimTy (subElab loc) (v :<: cty) a
-        handleArgs (t :$ fmap termOf a' :=>: v $$ fmap valueOf a' :<: ty') as
-\end{code}
-Otherwise, we cannot do anything apart from waiting for the type to become
-canonical, so we suspend elaboration and record the current problem.
+>     handleSchemeArgs es sch (_ :=>: v :<: ty) as = throwErrorS
+>         [ err "handleSchemeArgs: cannot handle scheme"
+>         , errScheme sch
+>         , err "with neutral term"
+>         , errTyVal (v :<: ty)
+>         , err "and eliminators"
+>         , map ErrorElim as
+>         ]
 
-\begin{code}
-    handleArgs (tm :=>: tv :<: ty) as = do
-        tt <- eQuote ty
-        eCan tt (ElabInferProb (DTEX tm ::$ as))
-\end{code}
+The |handleArgs| function is a simplified version of |handleSchemeArgs|,
+for neutral terms without schemes. It takes a typed neutral term and a
+spine of eliminators in display syntax, and produces a set-value pair in
+the |Elab| monad.
+
+>     handleArgs :: (EXTM :=>: VAL :<: TY) -> DSPINE -> Elab (INTM :=>: VAL)
+
+If we have run out of eliminators, then we just give back the neutral
+term with its type.
+
+>     handleArgs (tm :=>: tv :<: ty) [] = do
+>         ty' :=>: _ <- eQuote ty
+>         return $ PAIR ty' (N tm) :=>: PAIR ty tv
+
+If we have a term of a labelled type being eliminated with |Call|, we
+need to attach the appropriate label to the call and continue with the
+returned type.
+
+>     handleArgs (t :=>: v :<: LABEL l ty) (Call _ : as) = do
+>         l' :=>: _ <- eQuote l
+>         handleArgs (t :$ Call l' :=>: v $$ Call l :<: ty) as
+
+For all other eliminators, assuming the type is canonical we can use
+|elimTy|.
+
+>     handleArgs (t :=>: v :<: C cty) (a : as) = do
+>         (a', ty') <- elimTy (subElab loc) (v :<: cty) a
+>         handleArgs (t :$ fmap termOf a' :=>: v $$ fmap valueOf a' :<: ty') as
+
+Otherwise, we cannot do anything apart from waiting for the type to
+become canonical, so we suspend elaboration and record the current
+problem.
+
+>     handleArgs (tm :=>: tv :<: ty) as = do
+>         tt <- eQuote ty
+>         eCan tt (ElabInferProb (DTEX tm ::$ as))
