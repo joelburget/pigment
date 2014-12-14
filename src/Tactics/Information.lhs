@@ -212,6 +212,8 @@ Model
 > data InteractionState = InteractionState
 >     { _proofCtx :: Bwd ProofContext
 >     , _userInput :: String
+>     -- TODO(joel) - make this [(String, PureReact)] so we can display input
+>     -- and output. Better yet, include the context so we can time travel.
 >     , _outputLog :: [PureReact]
 >     , _proofState :: ProofState PureReact
 >     , _rightPaneVisible :: Visibility
@@ -299,6 +301,7 @@ the proof state at the current location.
 >     inScope <- getInScope
 >     me <- getCurrentName
 >     renderReact inScope me
+
 > renderReact :: Entries -> Name -> ProofState PureReact
 > renderReact aus me = do
 >     es <- replaceEntriesAbove B0

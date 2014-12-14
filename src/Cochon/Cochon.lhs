@@ -138,15 +138,7 @@ View ====
 >             Left err -> tellUser err
 >             Right interaction -> do
 >                 interaction
->                 locs :< loc <- getCtx
->                 pfSt <- getProofState
->                 let (msg, maybeCtx) = runProofState pfSt loc
->                 displayUser msg
->                 case maybeCtx of
->                     Just loc' -> do
->                         setCtx (locs :< loc')
->                         resetUserInput
->                     Nothing -> return ()
+>                 resetUserInput
 >     unPageM action state
 > handleKey state _ = state
 
@@ -187,6 +179,7 @@ TODO refactor / rename this
 >             "Parse failure: " ++
 >             describePFailure pf (intercalate " " . map crushToken)
 >         Right cds -> Right $ doCTactics cds
+
 > paranoid = False
 > veryParanoid = False
 
@@ -206,12 +199,20 @@ length - surely this can be expressed more compactly
 >                   putStrLn $ renderHouseStyle $ prettyStackError ss
 >               _ -> return ()
 
+TODO(joel) - this is really weird:
+* it's a bit of a holdover
+* naming indicates it shows the user their current prompt, but `prompt` does
+  that.
+* this really just shows one of the user's interactions
+* it's also the start proofstate
+
 > showPrompt :: ProofState PureReact
 > showPrompt = do
 >     mty <- optional' getHoleGoal
 >     case mty of
->         Just (_ :=>: ty)  -> (|(showGoal ty) >> showInputLine|)
->         Nothing           -> showInputLine
+>         Just (_ :=>: ty) -> showGoal ty
+>         Nothing          -> return ""
+>     showInputLine
 >   where
 >     showGoal :: TY -> ProofState PureReact
 >     showGoal ty@(LABEL _ _) = do
@@ -253,12 +254,12 @@ A Cochon tactic consists of:
     current context
 * `ctHelp` - help text for this tactic
 
-> data CochonTactic =
->     CochonTactic  {  ctName   :: String
->                   ,  ctParse  :: Parsley Token (Bwd CochonArg)
->                   ,  ctxTrans :: [CochonArg] -> PageM ()
->                   ,  ctHelp   :: PureReact
->                   }
+> data CochonTactic = CochonTactic
+>     { ctName   :: String
+>     , ctParse  :: Parsley Token (Bwd CochonArg)
+>     , ctxTrans :: [CochonArg] -> PageM ()
+>     , ctHelp   :: PureReact
+>     }
 
 > instance Show CochonTactic where
 >     show = ctName
@@ -276,6 +277,7 @@ given string, either exactly or as a prefix.
 > tacticsMatching x = case find ((x ==) . ctName) cochonTactics of
 >     Just ct  -> [ct]
 >     Nothing  -> filter (isPrefixOf x . ctName) cochonTactics
+
 > tacticNames :: [CochonTactic] -> String
 > tacticNames = intercalate ", " . map ctName
 
@@ -290,12 +292,13 @@ command or the error message) and `Maybe` a new proof context.
 > runProofState m loc =
 >     case runStateT (m `catchError` catchUnprettyErrors) loc of
 >         Right (s, loc') -> (s, Just loc')
->         Left ss         -> (fromString $ renderHouseStyle $ prettyStackError ss, Nothing)
+>         Left ss         ->
+>             (fromString $ renderHouseStyle $ prettyStackError ss, Nothing)
 
 > simpleOutput :: ProofState PureReact -> PageM ()
 > simpleOutput eval = do
 >     locs :< loc <- getCtx
->     case runProofState (eval <* startScheduler) loc of
+>     case runProofState (eval <* startScheduler) loc of -- ACK
 >         (s, Just loc') -> do
 >             setCtx (locs :< loc :< loc')
 >             displayUser s
@@ -681,11 +684,13 @@ compatibility.
 >   where
 >     prettyType :: INTM -> ProofState String
 >     prettyType ty = prettyHere (SET :>: ty) >>= return . renderHouseStyle
+
 > defineCTactic :: DExTmRN -> DInTmRN -> ProofState PureReact
 > defineCTactic rl tm = do
 >     relabel rl
 >     elabGiveNext (DLRET tm)
 >     return "Hurrah!"
+
 > byCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
 > byCTactic n e = do
 >     elimCTactic n e
@@ -695,21 +700,10 @@ compatibility.
 >     optional' seekGoal                  -- jump to goal
 >     return "Eliminated and simplified."
 
-> doCTacticsAt :: [(Name, [CTData])] -> PageM ()
-> doCTacticsAt [] = return ()
-> doCTacticsAt ((_, []):ncs) = doCTacticsAt ncs
-> doCTacticsAt ((n, cs):ncs) = do
->     locs :< loc <- getCtx
->     let Right loc' = execStateT (goTo n) loc
->     setCtx (locs :< loc :< loc')
->     doCTactics cs
->     doCTacticsAt ncs
 > doCTactics :: [CTData] -> PageM ()
 > doCTactics = Foldable.mapM_ doCTactic
 >     where doCTactic :: CTData -> PageM ()
 >           doCTactic = uncurry ctxTrans
-> pFileName :: Parsley Token String
-> pFileName = ident
 
 > tokenizeCommands :: Parsley Char [String]
 > tokenizeCommands = (|id ~ [] (% pEndOfStream %)

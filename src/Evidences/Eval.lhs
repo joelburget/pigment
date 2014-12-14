@@ -22,7 +22,7 @@ The interpreter is decomposed in four sections. First, the application
 of eliminators, implemented by `$$`. Second, the execution of
 operators, implemented by `@@`. Third, reduction under binder,
 implemented by `body`. Finally, full term evaluation, implemented by
-|eval|. At the end, this is all wrapped inside `evTm`, which evaluate
+`eval`. At the end, this is all wrapped inside `evTm`, which evaluate
 a given term in an empty environment.
 
 \subsection{Elimination}

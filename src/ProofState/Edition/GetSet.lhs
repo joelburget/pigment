@@ -117,8 +117,9 @@ Getting in the `HOLE`\
 > getHoleGoal :: ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do
 >     x <- getCurrentEntry
->     CDefinition _ (_ := HOLE _ :<: _) _ _ _ <- traceShow x getCurrentEntry
->     getGoal "getHoleGoal"
+>     case x of -- TODO(joel) do this properly with error machinery
+>         CModule _ -> throwErrorStr "got a module"
+>         CDefinition _ (_ := HOLE _ :<: _) _ _ _ -> getGoal "getHoleGoal"
 
 > getHoleKind :: ProofStateT e HKind
 > getHoleKind = do

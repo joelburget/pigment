@@ -5,6 +5,7 @@ The `ProofState` monad {#sec:ProofState.Edition.ProofState}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
 > module ProofState.Edition.ProofState where
+
 > import Control.Applicative
 > import Control.Monad.State
 > import DisplayLang.Name
