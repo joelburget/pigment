@@ -123,7 +123,7 @@ View ====
 
 > workingOn :: InteractionReact
 > workingOn = div_ <! class_ "working-on" $ do
->     InteractionState{_proofCtx=_ :< loc, _proofState=pfSt} <- getState
+>     InteractionState{_proofCtx=_ :< loc} <- getState
 >     let runner = do
 >             mty <- optional' getHoleGoal
 >             goal <- case mty of
@@ -202,7 +202,7 @@ We start out here. Main calls \`cochon emptyContext\`.
 > cochon loc = do
 >     Just e <- elemById "inject"
 >     let pc = B0 :< loc
->         startState = InteractionState pc "" [] undefined Visible Log
+>         startState = InteractionState pc "" [] Visible Log
 >     validateDevelopment pc
 >     render startState e page
 

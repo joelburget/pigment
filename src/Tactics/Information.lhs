@@ -216,34 +216,29 @@ Model
 >     -- TODO(joel) - make this [(String, PureReact)] so we can display input
 >     -- and output. Better yet, include the context so we can time travel.
 >     , _outputLog :: [PureReact]
->     , _proofState :: ProofState PureReact
 >     , _rightPaneVisible :: Visibility
 >     , _currentPane :: Pane
 >     }
 
 > proofCtx :: Lens' InteractionState (Bwd ProofContext)
-> proofCtx f (InteractionState p u o s v pn) =
->     (\p' -> InteractionState p' u o s v pn) <$> f p
+> proofCtx f (InteractionState p u o v pn) =
+>     (\p' -> InteractionState p' u o v pn) <$> f p
 
 > userInput :: Lens' InteractionState String
-> userInput f (InteractionState p u o s v pn) =
->     (\u' -> InteractionState p u' o s v pn) <$> f u
+> userInput f (InteractionState p u o v pn) =
+>     (\u' -> InteractionState p u' o v pn) <$> f u
 
 > outputLog :: Lens' InteractionState [PureReact]
-> outputLog f (InteractionState p u o s v pn) =
->     (\o' -> InteractionState p u o' s v pn) <$> f o
-
-> proofState :: Lens' InteractionState (ProofState PureReact)
-> proofState f (InteractionState p u o s v pn) =
->     (\s' -> InteractionState p u o s' v pn) <$> f s
+> outputLog f (InteractionState p u o v pn) =
+>     (\o' -> InteractionState p u o' v pn) <$> f o
 
 > rightPaneVisible :: Lens' InteractionState Visibility
-> rightPaneVisible f (InteractionState p u o s v pn) =
->     (\v' -> InteractionState p u o s v' pn) <$> f v
+> rightPaneVisible f (InteractionState p u o v pn) =
+>     (\v' -> InteractionState p u o v' pn) <$> f v
 
 > currentPane :: Lens' InteractionState Pane
-> currentPane f (InteractionState p u o s v pn) =
->     (\pn' -> InteractionState p u o s v pn') <$> f pn
+> currentPane f (InteractionState p u o v pn) =
+>     (\pn' -> InteractionState p u o v pn') <$> f pn
 
 > data SpecialKey
 >     = Enter
