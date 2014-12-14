@@ -54,8 +54,9 @@ the latter.
 > liftError :: (a -> b) -> Either (StackError a) c -> Either (StackError b) c
 > liftError f = either (Left . mapStackError (fmap f)) Right
 
-> liftError' :: (ErrorTok a -> ErrorTok b) -> Either (StackError a) c
->     -> Either (StackError b) c
+> liftError' :: (ErrorTok a -> ErrorTok b)
+>            -> Either (StackError a) c
+>            -> Either (StackError b) c
 > liftError' f = either (Left . mapStackError f) Right
 
 > liftErrorState :: (a -> b) -> ProofStateT a c -> ProofStateT b c

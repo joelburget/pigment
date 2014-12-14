@@ -63,7 +63,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
         ] : S
         \ y : S
         -= Cursor here =-
-        \ z : S 
+        \ z : S
       ] : S
       \ w : S
       C [
@@ -96,7 +96,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
         ] : S
         -= Cursor here =-
         \ y : S
-        \ z : S 
+        \ z : S
       ] : S
       \ w : S
       C [
@@ -128,7 +128,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
           \ b : S
         ] : S
         \ y : S
-        \ z : S 
+        \ z : S
         -= Cursor here =-
       ] : S
       \ w : S
@@ -162,7 +162,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
           -= Cursor here =-
         ] : S
         \ y : S
-        \ z : S 
+        \ z : S
       ] : S
       \ w : S
       C [
@@ -194,7 +194,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
           \ b : S
         ] : S
         \ y : S
-        \ z : S 
+        \ z : S
       ] : S
       \ w : S
       C [
@@ -227,7 +227,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
           \ b : S
         ] : S
         \ y : S
-        \ z : S 
+        \ z : S
       ] : S
       -= Cursor here =-
       \ w : S
@@ -261,7 +261,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
           \ b : S
         ] : S
         \ y : S
-        \ z : S 
+        \ z : S
       ] : S
       \ w : S
       C [
@@ -293,7 +293,7 @@ development |B| is in focus, with |y| above the cursor and |z| below it.
           \ b : S
         ] : S
         \ y : S
-        \ z : S 
+        \ z : S
       ] : S
       \ w : S
       C [
@@ -381,6 +381,7 @@ be *unzipped* to form the current development.
 >     l <- getLayer
 >     replaceLayer $ l { currentEntry = CDefinition dkind ref xn ty a}
 >     putAboveCursor dev
+
 > putEnterCurrent (EModule [] dev) = putAboveCursor dev
 > putEnterCurrent (EModule n dev) = do
 >     l <- getLayer
@@ -406,6 +407,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 >         B0 -> do
 >             -- There is no above..
 >             throwError $ sErr "cursorUp: cannot move cursor up."
+
 > cursorDown :: ProofState ()
 > cursorDown = do
 >     -- Look below
@@ -595,11 +597,15 @@ above.
 
 > cursorTop :: ProofState ()
 > cursorTop = much cursorUp
+
 > cursorBottom :: ProofState ()
 > cursorBottom = much cursorDown
+
 > goTop :: ProofState ()
 > goTop = much goUp
+
 > goBottom :: ProofState ()
 > goBottom = much goDown
+
 > goRoot :: ProofState ()
 > goRoot = much goOut

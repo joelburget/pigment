@@ -31,29 +31,14 @@ The derivative: |Layer|
 Hence, we define |Layer| by unzipping |Dev|. Each |Layer| of the zipper
 is a record with the following fields:
 
-|aboveEntries|
-
-:   appearing *above* the working development
-
-|currentEntry|
-
-:   data about the working development
-
-|belowEntries|
-
-:   appearing *below* the working development
-
-|layTip|
-
-:   the |Tip| of the development that contains the current entry
-
-|layNSupply|
-
-:   the |NameSupply| of the development that contains the current entry
-
-|laySuspendState|
-
-:   the state of the development that contains the current entry
+* `aboveEntries` - appearing *above* the working development
+* `currentEntry` - data about the working development
+* `belowEntries` - appearing *below* the working development
+* `layTip` - the |Tip| of the development that contains the current entry
+* `layNSupply` - the |NameSupply| of the development that contains the current
+    entry
+* `laySuspendState` - the state of the development that contains the current
+    entry
 
 > data Layer = Layer
 >   {  aboveEntries     :: Entries
