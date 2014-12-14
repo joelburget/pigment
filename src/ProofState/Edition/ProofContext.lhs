@@ -28,14 +28,14 @@ easily.
 The derivative: |Layer|
 -----------------------
 
-Hence, we define |Layer| by unzipping |Dev|. Each |Layer| of the zipper
+Hence, we define `Layer` by unzipping `Dev`. Each `Layer` of the zipper
 is a record with the following fields:
 
 * `aboveEntries` - appearing *above* the working development
 * `currentEntry` - data about the working development
 * `belowEntries` - appearing *below* the working development
-* `layTip` - the |Tip| of the development that contains the current entry
-* `layNSupply` - the |NameSupply| of the development that contains the current
+* `layTip` - the `Tip` of the development that contains the current entry
+* `layNSupply` - the `NameSupply` of the development that contains the current
     entry
 * `laySuspendState` - the state of the development that contains the current
     entry
@@ -60,22 +60,22 @@ Section [subsubsec:ProofState.Structure.Developments.entry].
 >                    |  CModule Name
 >     deriving Show
 
-One would expect the |belowEntries| to be an |Entries|, just as the
-|aboveEntries|. However, the |belowEntries| needs to be a richer
+One would expect the `belowEntries` to be an `Entries`, just as the
+|aboveEntries|. However, the `belowEntries` needs to be a richer
 structure to support the news infrastructure
 (Section [sec:ProofState.Edition.News]). Indeed, we propagate reference
 updates lazily, by pushing news bulletin below the current cursor.
 
-Hence, the |belowEntries| are not only normal entries but also contain
-news. We define a |newtype| for the composition of the |Fwd| and |Either
+Hence, the `belowEntries` are not only normal entries but also contain
+news. We define a `newtype` for the composition of the `Fwd` and |Either
 NewsBulletin| functors, and use this functor for defining the type of
 |belowEntries|.
 
 > newtype NewsyFwd x = NF { unNF :: Fwd (Either NewsBulletin x) }
 > type NewsyEntries = NewsyFwd (Entry NewsyFwd)
 
-Note that |aboveEntries| are |Entries|, that is |Bwd| list.
-|belowEntries| are |NewsyEntries|, hence |Fwd| list. This justifies some
+Note that `aboveEntries` are `Entries`, that is `Bwd` list.
+|belowEntries| are `NewsyEntries`, hence `Fwd` list. This justifies some
 piece of kit to deal with this global context.
 
 > deriving instance Show (Dev NewsyFwd)
@@ -109,7 +109,7 @@ entries below the cursor (|pcBelowCursor|)..
 >     }
 >   deriving Show
 
-The |emptyContext| corresponds to the following (intentionally verbose)
+The `emptyContext` corresponds to the following (intentionally verbose)
 definition:
 
 > emptyContext :: ProofContext

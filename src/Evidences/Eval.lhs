@@ -19,15 +19,15 @@ evaluated terms have been type-checked beforehand, that is: the
 interpreter always terminates.
 
 The interpreter is decomposed in four sections. First, the application
-of eliminators, implemented by |$$|. Second, the execution of
-operators, implemented by |@@|. Third, reduction under binder,
-implemented by |body|. Finally, full term evaluation, implemented by
-|eval|. At the end, this is all wrapped inside |evTm|, which evaluate
+of eliminators, implemented by `$$`. Second, the execution of
+operators, implemented by `@@`. Third, reduction under binder,
+implemented by `body`. Finally, full term evaluation, implemented by
+|eval|. At the end, this is all wrapped inside `evTm`, which evaluate
 a given term in an empty environment.
 
 \subsection{Elimination}
 
-The |$$| function applies an elimination principle to a value. Note that
+The `$$` function applies an elimination principle to a value. Note that
 this is open to further extension as we add new constructs and
 elimination principles to the language.
 
@@ -71,10 +71,10 @@ This translates into the following code:
 > f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
 >                                  "\nwith eliminator\n" ++ show e
 
-The |naming| operation amends the current naming scheme, taking account
+The `naming` operation amends the current naming scheme, taking account
 the instantiation of x: see below.
 
-The left fold of |\$\$| applies a value to a bunch of eliminators:
+The left fold of `\$\$` applies a value to a bunch of eliminators:
 
 > ($$$) :: (Foldable f) => VAL -> f (Elim VAL) -> VAL
 > ($$$) = Data.Foldable.foldl ($$)
@@ -86,9 +86,9 @@ Running an operator is quite simple, as operators come with the
 mechanics to run them. However, we are not ensured to get a value out of
 an applied operator: the operator might get stuck by a neutral argument.
 In such case, the operator will blame the argument by returning it on
-the |Left|. Otherwise, it returns the computed value on the |Right|.
+the `Left`. Otherwise, it returns the computed value on the `Right`.
 
-Hence, the implementation of |@@| is as follow. First, run the operator.
+Hence, the implementation of `@@` is as follow. First, run the operator.
 On the left, the operator is stuck, so return the neutral term
 consisting of the operation applied to its arguments. On the right, we
 have gone down to a value, so we simply return it.
@@ -96,7 +96,7 @@ have gone down to a value, so we simply return it.
 > (@@) :: Op -> [VAL] -> VAL
 > op @@ vs = either (\_ -> N (op :@ vs)) id (opRun op vs)
 
-Note that we respect the invariant on |N| values: we have an |:@| that,
+Note that we respect the invariant on `N` values: we have an `:@` that,
 for sure, is applying at least one stuck term to an operator that uses
 it.
 
@@ -107,7 +107,7 @@ Evaluation under binders needs to distinguish two cases:
 
 -   the binder ignores its argument, or
 
--   a variable |x| is defined and bound in a term |t|
+-   a variable `x` is defined and bound in a term |t|
 
 In the first case, we can trivially go under the binder and innocently
 evaluate. In the second case, we turn the binding – a term – into a
@@ -135,20 +135,20 @@ applicatives.
 The evaluator is typed as follow: provided with a term and a variable
 binding environment, it reduces the term to a value. The implementation
 is simply a matter of pattern-matching and doing the right thing. Hence,
-we evaluate under lambdas by calling |body| (a). We reduce canonical
+we evaluate under lambdas by calling `body` (a). We reduce canonical
 term by evaluating under the constructor (b). We drop off bidirectional
-annotations from Ex to In, just reducing the inner term |n| (c).
+annotations from Ex to In, just reducing the inner term `n` (c).
 Similarly for type ascriptions, we ignore the type and just evaluate the
 term (d).
 
 If we reach a parameter, either it is already defined or it is still not
-binded. In both case, |pval| is the right tool: if the parameter is
+binded. In both case, `pval` is the right tool: if the parameter is
 intrinsically associated to a value, we grab that value. Otherwise, we
 get the neutral term consisting of the stuck parameter (e).
 
 A bound variable simply requires to extract the corresponding value from
-the environment (f). Elimination is handled by |$$| defined above (g).
-And similarly for operators with |@@| (h).
+the environment (f). Elimination is handled by `$$` defined above (g).
+And similarly for operators with `@@` (h).
 
 > eval :: Tm {d, TT} REF -> ENV -> VAL
 > eval (L b)       = (|L (body b)|)                -- By (a)
@@ -184,16 +184,16 @@ strings like this, with no change to characters which aren’t mapped.
 > txtSub :: TXTSUB -> String -> String
 > txtSub ts = foldMap blat where blat c = fromMaybe [c] $ lookup c ts
 
-The |ENV| type packs up a renaming scheme, which we apply to every bound
+The `ENV` type packs up a renaming scheme, which we apply to every bound
 variable name advice string that we encounter as we go: the deed is done
-in |body|, above.
+in `body`, above.
 
 The renaming scheme is amended every time we instantiate a bound
 variable with a free variable. Starting from the right, each characte of
 the bound name is mapped to the corresponding character of the free
 name. The first character of the bound name is mapped to the whole
-remaining prefix. So instantiating |“xys”| with |“monks”| maps |’y’| to
-|“k”| and |’x’| to |“mon”|. The idea is that matching the target of an
+remaining prefix. So instantiating `“xys”` with `“monks”` maps `’y’` to
+|“k”| and `’x’` to `“mon”`. The idea is that matching the target of an
 eliminator in this way will give good names to the variables bound in
 its methods, if we’re lucky and well prepared.
 
@@ -210,7 +210,7 @@ its methods, if we’re lucky and well prepared.
 Util
 ----
 
-The |sumlike| function determines whether a value representing a
+The `sumlike` function determines whether a value representing a
 description is a sum or a sigma from an enumerate. If so, it returns
 |Just| the enumeration and a function from the enumeration to
 descriptions.

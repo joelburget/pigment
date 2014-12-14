@@ -25,7 +25,7 @@ Anchor resolution
 >       where anchors t | isAnchor t = B0 :< t
 >                       | otherwise  = B0
 
-To cope with shadowing, we will need some form of |RelativeAnchor|:
+To cope with shadowing, we will need some form of `RelativeAnchor`:
 
 \< type RelativeAnchor = (Anchor, Int)
 

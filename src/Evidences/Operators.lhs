@@ -18,7 +18,7 @@ Operators and primitives {#sec:Evidences.Operators}
 > import NameSupply.NameSupplier
 
 In this section, we weave some She aspects. In particular, we bring
-inside @Rules.lhs@ the |operators| defined by feature files, along with
+inside @Rules.lhs@ the `operators` defined by feature files, along with
 any auxiliary code.
 
 > operators :: [Op]
@@ -985,8 +985,8 @@ callOpSimp \_ \_ = empty
 >   where
 >     x =~ y = r -$ [ NV x , NV y ]
 
-The list of |primitives| includes axioms and fundamental definitions
-provided by the |Primitives| aspect, plus a reference corresponding to
+The list of `primitives` includes axioms and fundamental definitions
+provided by the `Primitives` aspect, plus a reference corresponding to
 each operator.
 
 > primitives :: [(String, REF)]
@@ -1021,7 +1021,7 @@ each operator.
 >         opEta = L $ "a" :. Prelude.foldr (\s x -> L (s :. x)) (N $ op :@ args) names
 
 We can look up the primitive reference corresponding to an operator
-using |lookupOpRef|. This ensures we maintain sharing of these
+using `lookupOpRef`. This ensures we maintain sharing of these
 references.
 
 > lookupOpRef :: Op -> REF

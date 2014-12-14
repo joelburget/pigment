@@ -1,4 +1,4 @@
-Using the |Elab| language {#sec:Elaboration.MakeElab}
+Using the `Elab` language {#sec:Elaboration.MakeElab}
 =========================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -26,14 +26,14 @@ Using the |Elab| language {#sec:Elaboration.MakeElab}
 Tools for writing elaborators
 -----------------------------
 
-The |eCan| instruction asks for the current goal to be solved by the
+The `eCan` instruction asks for the current goal to be solved by the
 given elaboration problem when the supplied value is canonical.
 
 > eCan :: INTM :=>: VAL -> EProb -> Elab a
 > eCan (_ :=>: C _)  prob = eElab (Loc 0) prob
 > eCan tt            prob = eElab (Loc 0) (WaitCan (justEval tt) prob)
 
-We can type-check a term using the |eCheck| instruction.
+We can type-check a term using the `eCheck` instruction.
 
 > eCheck :: (TY :>: INTM) -> Elab (INTM :=>: VAL)
 > eCheck tytm = do
@@ -42,7 +42,7 @@ We can type-check a term using the |eCheck| instruction.
 >         Left e    -> throwError e
 >         Right tt  -> return tt
 
-The |eCoerce| instruction attempts to coerce a value from the first type
+The `eCoerce` instruction attempts to coerce a value from the first type
 to the second type, either trivially (if the types are definitionally
 equal) or by hoping for a proof of the appropriate equation and
 inserting a coercion.
@@ -56,7 +56,7 @@ inserting a coercion.
 >             q :=>: qv <- eHopeFor $ PRF (EQBLUE (SET :>: _Sv) (SET :>: _Tv))
 >             return $ N (coe :@ [_S, _T, q, s]) :=>: coe @@ [_Sv, _Tv, qv, sv]
 
-The |eEqual| instruction determines if two types are definitionally
+The `eEqual` instruction determines if two types are definitionally
 equal.
 
 > eEqual :: (TY :>: (VAL, VAL)) -> Elab Bool
@@ -64,17 +64,17 @@ equal.
 >     nsupply <- eAskNSupply
 >     return (equal tyvv nsupply)
 
-The |eHope| instruction hopes that the current goal can be solved.
+The `eHope` instruction hopes that the current goal can be solved.
 
 > eHope :: Elab a
 > eHope = eElab (Loc 0) ElabHope
 
-The |eHopeFor| instruction hopes for an element of a type.
+The `eHopeFor` instruction hopes for an element of a type.
 
 > eHopeFor :: TY -> Elab (INTM :=>: VAL)
 > eHopeFor ty = eCompute (ty :>: eHope)
 
-The |eInfer| instruction infers the type of an evidence term.
+The `eInfer` instruction infers the type of an evidence term.
 
 > eInfer :: EXTM -> Elab (INTM :=>: VAL)
 > eInfer tm = do
@@ -85,7 +85,7 @@ The |eInfer| instruction infers the type of an evidence term.
 >             ty' :=>: _ <- eQuote ty
 >             return $ PAIR ty' (N tm) :=>: PAIR ty tv
 
-The |eQuote| instruction $\beta$-quotes a value to produce a term
+The `eQuote` instruction $\beta$-quotes a value to produce a term
 representation.
 
 > eQuote :: VAL -> Elab (INTM :=>: VAL)
@@ -93,27 +93,27 @@ representation.
 >     nsupply <- eAskNSupply
 >     return (bquote B0 v nsupply :=>: v)
 
-The |eSchedule| instruction asks for the scheduler to deal with other
+The `eSchedule` instruction asks for the scheduler to deal with other
 problems before returning its result.
 
 > eSchedule :: (INTM :=>: VAL) -> Elab a
 > eSchedule (tm :=>: tv) = eElab (Loc 0) (ElabSchedule (ElabDone (tm :=>: Just tv)))
 
-Elaborating |DInTm|s
+Elaborating `DInTm`s
 --------------------
 
-We use the |Elab| language to describe how to elaborate a display term
-to produce an evidence term. The |makeElab| and |makeElabInfer|
+We use the `Elab` language to describe how to elaborate a display term
+to produce an evidence term. The `makeElab` and |makeElabInfer|
 functions read a display term and use the capabilities of the |Elab|
 monad to produce a corresponding evidence term.
 
 When part of the display syntax needs to be elaborated as a subproblem,
-we call |subElab| or |subElabInfer| rather than |makeElab| or
+we call `subElab` or `subElabInfer` rather than `makeElab` or
 |makeElabInfer| to ensure that elaboration does not take place at the
 top level. This means that if the subproblem needs to modify the proof
 state (for example, to introduce a $\lambda$) it will create a new
 definition to work in. It also ensures that the subproblem can terminate
-with the |eElab| instruction, providing a syntactic representation.
+with the `eElab` instruction, providing a syntactic representation.
 
 > subElab :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
 > subElab loc (ty :>: tm) = eCompute (ty :>: makeElab loc tm)
@@ -128,7 +128,7 @@ with the |eElab| instruction, providing a syntactic representation.
 >                            (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
 
 Since we frequently pattern-match on the goal type when elaborating |In|
-terms, we abstract it out. Thus |makeElab’| actually implements
+terms, we abstract it out. Thus `makeElab’` actually implements
 elaboration.
 
 > makeElab :: Loc -> DInTmRN -> Elab (INTM :=>: VAL)
@@ -225,7 +225,7 @@ tag in the enumeration to determine the appropriate index.
 >     d' :=>: _ <- eQuote d
 >     makeElab' loc (NU l d :>: DCOIT (DTIN d') sty f s)
 
-As a bit of syntactic sugar, we elaborate |con| as |COMPOSITE| and |[x]|
+As a bit of syntactic sugar, we elaborate `con` as `COMPOSITE` and |[x]|
 as |CLASS x|.
 
 > makeElab' loc (MONAD d x :>: DCON t) =
@@ -233,7 +233,7 @@ as |CLASS x|.
 > makeElab' loc (QUOTIENT a r p :>: DPAIR x DVOID) =
 >     makeElab' loc (QUOTIENT a r p :>: DCLASS x)
 
-In order to make programs as cryptic as possible, you can use |con| in
+In order to make programs as cryptic as possible, you can use `con` in
 the display language to generate a constant function from unit or curry
 a function from a pair.
 
@@ -251,14 +251,14 @@ a function from a pair.
 >                     :=>: tmv $$ A (NP x $$ Fst) $$ A (NP x $$ Snd)
 > makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s
 
-We use underscores |DU| in elaboration to mean “figure this out
-yourself”, while question marks |DQ| require us to wait for a
+We use underscores `DU` in elaboration to mean “figure this out
+yourself”, while question marks `DQ` require us to wait for a
 user-provided value.
 
 > makeElab' loc (ty :>: DU) = eHope
 > makeElab' loc (ty :>: DQ s) = eWait s ty >>= neutralise
 
-Elaborating a canonical term with canonical type is a job for |canTy|.
+Elaborating a canonical term with canonical type is a job for `canTy`.
 
 canTy :: (Alternative m, MonadError (StackError t) m) =\> (TY :\>: t -\>
 m (s :=\>: VAL)) -\> (Can VAL :\>: Can t) -\> m (Can (s :=\>: VAL))
@@ -280,16 +280,16 @@ constant pattern LK t = L (K t) – Lambda (with constant)
 >     tm :=>: tmv <- subElab loc (t :>: dtm)
 >     return $ LK tm :=>: LK tmv
 
-Otherwise, we can simply create a |lambdaParam| in the current
-development, and carry on elaborating. We can call |makeElab| here,
-rather than |subElab|, because it is a tail call.
+Otherwise, we can simply create a `lambdaParam` in the current
+development, and carry on elaborating. We can call `makeElab` here,
+rather than `subElab`, because it is a tail call.
 
 > makeElab' loc (ty :>: DL sc) = do
 >     ref <- eLambda (dfortran (DL sc))
 >     makeElab loc (dScopeTm sc)
 
-We push types in to neutral terms by calling |subElabInfer| on the term,
-then coercing the result to the required type. (Note that |eCoerce| will
+We push types in to neutral terms by calling `subElabInfer` on the term,
+then coercing the result to the required type. (Note that `eCoerce` will
 check if the types are equal, and if so it will not insert a redundant
 coercion.)
 
@@ -321,15 +321,15 @@ If nothing else matches, give up and report an error.
 >     , errTm tm
 >     ]
 
-Elaborating |DExTm|s
+Elaborating `DExTm`s
 --------------------
 
-The |makeElabInfer| command is to |infer| in
+The `makeElabInfer` command is to `infer` in
 subsection [subsec:Evidences.TypeChecker.type-inference] as |makeElab|
-is to |check|. It elaborates the display term and infers its type to
+is to `check`. It elaborates the display term and infers its type to
 produce a type-term pair in the evidence language.
 
-The result of |makeElabInfer| is of type $\SIGMA{\V{X}}{\Set}{X}$, which
+The result of `makeElabInfer` is of type $\SIGMA{\V{X}}{\Set}{X}$, which
 we can represent as an evidence term or value (|sigSetTM| or
 |sigSetVAL|, respectively).
 
@@ -338,7 +338,7 @@ we can represent as an evidence term or value (|sigSetTM| or
 > sigSetTM :: INTM
 > sigSetTM =  sigSetVAL
 
-The |extractNeutral| function separates type-term pairs in both term and
+The `extractNeutral` function separates type-term pairs in both term and
 value forms. It avoids clutter in the term representation by splitting
 it up if it happens to be a canonical pair, or applying the appropriate
 eliminators if not.
@@ -350,8 +350,8 @@ eliminators if not.
 >   where tm' = tm ?? sigSetTM
 
 Since we use a head-spine representation for display terms, we need to
-elaborate the head of an application. The |makeElabInferHead| function
-uses the |Elab| monad to produce a type-term pair for the head, and
+elaborate the head of an application. The `makeElabInferHead` function
+uses the `Elab` monad to produce a type-term pair for the head, and
 provides its scheme (if it has one) for argument synthesis. The head may
 be a parameter, which is resolved; an embedded evidence term, which is
 checked; or a type annotation, which is converted to the identity
@@ -369,8 +369,8 @@ function at the given type.
 >     typeAnnotVAL :: VAL -> VAL
 >     typeAnnotVAL v = PAIR (ARR v v) (idVAL "typeAnnot")
 
-Now we can implement |makeElabInfer|. We use |makeElabInferHead| to
-elaborate the head of the neutral term, then call |handleArgs| or
+Now we can implement `makeElabInfer`. We use `makeElabInferHead` to
+elaborate the head of the neutral term, then call `handleArgs` or
 |handleSchemeArgs| to process the spine of eliminators.
 
 > makeElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
@@ -382,7 +382,7 @@ elaborate the head of the neutral term, then call |handleArgs| or
 >         Nothing   -> handleArgs               (tm ?? ty :=>: tmv :<: tyv) ss
 >   where
 
-The |handleSchemeArgs| function takes a list of terms (corresponding to
+The `handleSchemeArgs` function takes a list of terms (corresponding to
 de Bruijn-indexed variables), the scheme, term and type of the neutral,
 and a spine of eliminators in display syntax. It elaborates the
 eliminators and applies them to the neutral term, using the scheme to
@@ -398,7 +398,7 @@ If the scheme is just a type, then we call on the non-scheme
 
 If the scheme has an implicit $\Pi$-binding, then we hope for a value of
 the relevant type and carry on. Note that we evaluate the type of the
-binding in the context |es|.
+binding in the context `es`.
 
 >     handleSchemeArgs es  (SchImplicitPi (x :<: s) schT)
 >                              (tm :=>: tv :<: PI sd t) as = do
@@ -449,10 +449,10 @@ an eliminator other than application, so we give up and throw an error.
 >         , map ErrorElim as
 >         ]
 
-The |handleArgs| function is a simplified version of |handleSchemeArgs|,
+The `handleArgs` function is a simplified version of `handleSchemeArgs`,
 for neutral terms without schemes. It takes a typed neutral term and a
 spine of eliminators in display syntax, and produces a set-value pair in
-the |Elab| monad.
+the `Elab` monad.
 
 >     handleArgs :: (EXTM :=>: VAL :<: TY) -> DSPINE -> Elab (INTM :=>: VAL)
 
@@ -463,7 +463,7 @@ term with its type.
 >         ty' :=>: _ <- eQuote ty
 >         return $ PAIR ty' (N tm) :=>: PAIR ty tv
 
-If we have a term of a labelled type being eliminated with |Call|, we
+If we have a term of a labelled type being eliminated with `Call`, we
 need to attach the appropriate label to the call and continue with the
 returned type.
 

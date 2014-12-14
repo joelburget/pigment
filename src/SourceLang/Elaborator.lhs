@@ -16,7 +16,7 @@ Elaborator {#sec:SourceLang.Elaborator}
 Here we explain how to elaborate constructions. The elaborator is going
 to need a lot of work in order to actually run these definitions.
 
-First things first: to elaborate a term, we just use |subElab| defined
+First things first: to elaborate a term, we just use `subElab` defined
 before.
 
 > elabTerm :: Loc -> TY -> Parsed -> Elab Elaborated

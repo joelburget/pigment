@@ -269,7 +269,7 @@ A Cochon tactic consists of:
 > instance Ord CochonTactic where
 >     compare = comparing ctName
 
-The |tacticsMatching| function identifies Cochon tactics that match the
+The `tacticsMatching` function identifies Cochon tactics that match the
 given string, either exactly or as a prefix.
 
 > tacticsMatching :: String -> [CochonTactic]
@@ -281,7 +281,7 @@ given string, either exactly or as a prefix.
 
 Given a proof state command and a context, we can run the command with
 |runProofState| to produce a message (either the response from the
-command or the error message) and |Maybe| a new proof context.
+command or the error message) and `Maybe` a new proof context.
 
 > runProofState
 >     :: ProofState PureReact
@@ -508,7 +508,7 @@ Miscellaneous tactics:
 >      (\ [ExArg rl, InArg tm] -> defineCTactic rl tm)
 >      "define <prob> := <term> - relabels and solves <prob> with <term>.")
 
-The By gadget, written |\<=|, invokes elimination with a motive, then
+The By gadget, written `\<=`, invokes elimination with a motive, then
 simplifies the methods and moves to the first subgoal remaining.
 
 >   : (simpleCT
@@ -635,10 +635,10 @@ type.” \< </span>
 >   : unaryExCT "haskell" (\ t -> elabInfer' t >>= dumpHaskell)
 >       "haskell - renders an Epigram term as a Haskell definition."
 
-The |propSimplify| tactic attempts to simplify the type of the current
+The `propSimplify` tactic attempts to simplify the type of the current
 goal, which should be propositional. Usually one will want to use
 |simplify| instead, or simplification will happen automatically (with
-the |let| and |\<=| tactics), but this is left for backwards
+the `let` and `\<=` tactics), but this is left for backwards
 compatibility.
 
 >   : nullaryCT "propsimplify" propSimplifyTactic

@@ -1,4 +1,4 @@
-The |Elab| monad: a DSL for elaboration {#sec:Elaboration.ElabMonad}
+The `Elab` monad: a DSL for elaboration {#sec:Elaboration.ElabMonad}
 =======================================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -76,7 +76,7 @@ Now we can define the instructions we wanted:
 >   return (t :=>: evTm t)
 
 We will eventually need to keep track of which elaboration problems
-correspond to which source code locations. For the moment, |Loc|s are
+correspond to which source code locations. For the moment, `Loc`s are
 just ignored.
 
 > newtype Loc = Loc Int deriving Show

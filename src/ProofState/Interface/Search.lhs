@@ -23,7 +23,7 @@ to be able *search* in the proof context.
 Searching by name
 -----------------
 
-The |goTo| command moves the focus to the entry with the given name.
+The `goTo` command moves the focus to the entry with the given name.
 Recall that a long name is an itinerary in the proof context, listing
 short names from the root down to the entry. Hence, we simply have to
 follow this itinerary to reach our destination.
@@ -44,16 +44,16 @@ follow this itinerary to reach our destination.
 >                                , err (showName x)
 >                                ]
 >                           )
->     -- |seek| find the local short name on our itinerary
+>     -- `seek` find the local short name on our itinerary
 >     seek :: (String, Int) -> ProofState ()
 >     seek xn = goUp `whileA` (guard . (== xn) . last =<< getCurrentName)
 
 Searching for a goal
 --------------------
 
-First off, a *goal* is a development which |Tip| is of the |Unknown|
+First off, a *goal* is a development which `Tip` is of the |Unknown|
 type. Hence, to spot if the focus is set on a goal, we just have the
-check the |Tip|.
+check the `Tip`.
 
 > isGoal :: ProofState ()
 > isGoal = do
@@ -62,12 +62,12 @@ check the |Tip|.
 >         Unknown _ -> return ()
 >         _ -> throwErrorStr "couldn't get dev tip"
 
-Let us start with some gymnastic. We implement |prevStep| and |nextStep|
+Let us start with some gymnastic. We implement `prevStep` and |nextStep|
 that respectively looks for the previous and the next definition in the
 proof context. By *previous*, we mean contained in an entry directly
 above, or, if there is none, to the enclosing development. In other
 words, it has been defined “just *previously*”. The definition
-transposes to the case of |nextStep|.
+transposes to the case of `nextStep`.
 
 > prevStep :: ProofState ()
 > prevStep =  (goUp >> much goIn) <|> goOut

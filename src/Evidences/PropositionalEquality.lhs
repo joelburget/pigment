@@ -15,16 +15,16 @@ Observational Equality
 Let’s have some observational equality, now!
 @altenkirch_mcbride_swierstra:obs_equality
 
-The |eqGreen| operator, defined in section [sec:Features.Equality],
+The `eqGreen` operator, defined in section [sec:Features.Equality],
 computes the proposition that two values are equal if their containing
-sets are equal. We write |\<-\>| for application of this operator.
+sets are equal. We write `\<-\>` for application of this operator.
 
 > (<->) :: (TY :>: VAL) -> (TY :>: VAL) -> VAL
 > (y0 :>: t0) <-> (y1 :>: t1) = eqGreen @@ [y0,t0,y1,t1]
 > (<:-:>) :: (INTM :>: INTM) -> (INTM :>: INTM) -> INTM
 > (y0 :>: t0) <:-:> (y1 :>: t1) = N $ eqGreen :@ [y0,t0,y1,t1]
 
-We define the computational behaviour of the |eqGreen| operator as
+We define the computational behaviour of the `eqGreen` operator as
 follows,
 
 > opRunEqGreen :: [VAL] -> Either NEU VAL
@@ -89,21 +89,21 @@ Otherwise, something has gone horribly wrong.
 
 > opRunEqGreen as = error $ "opRunEqGreen: unmatched " ++ show as
 
-The |mkEqConj| function builds a conjunction of |eqGreen| propositions
+The `mkEqConj` function builds a conjunction of `eqGreen` propositions
 by folding over a list. It is uniformly structural for canonical terms,
 ignoring contravariance. Therefore, this requires a special case for
-|Pi| in |opRunEqGreen|.
+|Pi| in `opRunEqGreen`.
 
 > mkEqConj :: [(TY :>: VAL,TY :>: VAL)] -> VAL
 > mkEqConj ((tt0, tt1) : [])  = tt0 <-> tt1
 > mkEqConj ((tt0, tt1) : xs)  = AND (tt0 <-> tt1) (mkEqConj xs)
 > mkEqConj []                 = TRIVIAL
 
-The |coeh| function takes two types, a proof that they are equal and a
+The `coeh` function takes two types, a proof that they are equal and a
 value in the first type; it produces a value in the second type and a
 proof that it is equal to the original value. If the sets are
-definitinoally equal then this is easy, otherwise it applies |coe| to
-the value and uses the coherence axiom |coh| to produce the proof.
+definitinoally equal then this is easy, otherwise it applies `coe` to
+the value and uses the coherence axiom `coh` to produce the proof.
 
 > coeh :: TY -> TY -> VAL -> VAL -> (VAL, VAL)
 > coeh s t q v | partialEq s t q  = (v, pval refl $$ A s $$ A v)
@@ -114,14 +114,14 @@ the value and uses the coherence axiom |coh| to produce the proof.
 > coehin s t q v = (  N $ coe :@ [s -$ [], t -$ [], q -$ [], v]
 >                  ,  N $ coh :@ [s -$ [], t -$ [], q -$ [], v])
 
-The |coerce| function transports values between equal canonical sets.
+The `coerce` function transports values between equal canonical sets.
 Given two sets built from the same canonical constructor (represented as
 |Can (VAL, VAL)|, a proof of their equality and an element of the first
-set, it will try to return |Right v| where |v| is an element of the
-second set. If computation is blocked by a neutral value |n|, it will
+set, it will try to return |Right v| where `v` is an element of the
+second set. If computation is blocked by a neutral value `n`, it will
 return |Left n|.
 
-Features must extend this definition using the |Coerce| aspect for every
+Features must extend this definition using the `Coerce` aspect for every
 canonical set-former they introduce. They must handle coercions between
 all canonical inhabitants of such sets, but need not deal with neutral
 inhabitants. To ensure we can add arbitrary consistent axioms to the
@@ -159,7 +159,7 @@ system, they should not inspect the proof, but may eliminate it with
 >            , x ]
 > coerce (EnumT (CONSE _ _,   CONSE _ _))      _  ZE = Right ZE
 > coerce (EnumT (CONSE _ e1,  CONSE _ e2))     q  (SU x) = Right . SU $
->   coe @@ [ENUMT e1, ENUMT e2, CON $ q $$ Snd $$ Snd $$ Fst, x]  -- |CONSE| tails
+>   coe @@ [ENUMT e1, ENUMT e2, CON $ q $$ Snd $$ Snd $$ Fst, x]  -- `CONSE` tails
 > coerce (EnumT (NILE,        NILE))           q  x = Right x
 > coerce (EnumT (NILE,        t@(CONSE _ _)))  q  x = Right $
 >   nEOp @@ [q, ENUMT t]
@@ -280,10 +280,10 @@ system, they should not inspect the proof, but may eliminate it with
 > coerce cvv  q  r      = error $ unlines ["coerce: can't cope with sets",
 >                             show cvv, "and proof", show q, "and value", show r]
 
-The |partialEq| function takes two sets together with a proof that they
-are equal; it returns |True| if they are known to be definitionally
+The `partialEq` function takes two sets together with a proof that they
+are equal; it returns `True` if they are known to be definitionally
 equal. This is sound but not complete for the definitional equality, so
-if it returns |False| they might still be equal. It is safe to call
+if it returns `False` they might still be equal. It is safe to call
 during bquote, and hence during evaluation, because it avoids forcing
 the types of references.
 

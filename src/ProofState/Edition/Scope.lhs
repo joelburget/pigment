@@ -16,21 +16,21 @@ Scope management
 Extracting scopes as entries
 ----------------------------
 
-The |globalScope| function returns the parameters and definitions
+The `globalScope` function returns the parameters and definitions
 available in the current development, not including the ones involved in
 its construction.
 
 > globalScope :: ProofContext -> Entries
 > globalScope pc = foldMap aboveEntries (pcLayers pc)
 
-The |inScope| function returns all parameters and definitions above the
+The `inScope` function returns all parameters and definitions above the
 cursor. These are all entries rightfully usable at the cursor’s
 location.
 
 > inScope :: ProofContext -> Entries
 > inScope pc@PC{pcAboveCursor=Dev{devEntries = es}} = globalScope pc <+> es
 
-The |definitionsToImpl| function lists the entries above the cursor that
+The `definitionsToImpl` function lists the entries above the cursor that
 have been issued during elaboration of a programming problem
 (Section [subsec:Elaborator.Elaborator.elab-prog-problem]).
 
@@ -63,7 +63,7 @@ us extract such spine from a list of entries:
 > paramSpine :: Entries -> Spine {p} REF
 > paramSpine = fmap (A . N . P) . paramREFs
 
-Similarly, |applySpine| applies a reference to a given spine of
+Similarly, `applySpine` applies a reference to a given spine of
 parameters, provided as a spine. These are the shared parameters of a
 $\lambda$-lifted definition.
 

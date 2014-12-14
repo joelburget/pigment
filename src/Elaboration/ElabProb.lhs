@@ -14,7 +14,7 @@
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
 
-An |ElabProb| is a syntactic representation of an elaboration problem.
+An `ElabProb` is a syntactic representation of an elaboration problem.
 Examples include elaborating a particular piece of display syntax into
 an evidence term and waiting for something to happen before elaboration
 can proceed. Crucially, an elaboration problem can be suspended by
@@ -31,9 +31,9 @@ It caches the value representations of terms it contains.
 >     |  ElabHope
 >        -- hope for a solution to turn up
 >     |  ElabProb (DInTm x RelName)
->        -- elaborate |In| display term
+>        -- elaborate `In` display term
 >     |  ElabInferProb (DExTm x RelName)
->        -- elaborate and infer type of |Ex| display term
+>        -- elaborate and infer type of `Ex` display term
 >     |  WaitCan (InTm x :=>: Maybe VAL) (ElabProb x)
 >        -- wait for value to become canonical
 >     |  WaitSolve x (InTm x :=>: Maybe VAL) (ElabProb x)
@@ -42,7 +42,7 @@ It caches the value representations of terms it contains.
 >        -- kick off the scheduler
 
 |ElabProb| is a traversable functor, parameterised by the type of
-references, which are typically |REF|s. Note that traversal will discard
+references, which are typically `REF`s. Note that traversal will discard
 the cached values, but this is okay because the terms need to be
 re-evaluated after they have been updated anyway.
 
@@ -64,7 +64,7 @@ canonical.
 > isUnstable (WaitSolve _ _ _)                               = True
 > isUnstable (ElabSchedule _)                                = True
 
-Since |ElabProb| caches value representations of its terms, we define
+Since `ElabProb` caches value representations of its terms, we define
 some handy functions for producing and manipulating these.
 
 > justEval :: INTM :=>: VAL -> INTM :=>: Maybe VAL

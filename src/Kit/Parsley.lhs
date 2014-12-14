@@ -17,7 +17,7 @@ Parsley’s Semantics
 -------------------
 
 A parser is represented as a function trying to transform a list of
-tokens |t| to:
+tokens `t` to:
 
 -   if it succeeds:
 
@@ -55,7 +55,7 @@ In all other cases, something went wrong.
 Structure
 ---------
 
-It’s a |Monad| and all that.
+It’s a `Monad` and all that.
 
 > instance Monad (Parsley t) where
 >   return x = Parsley $ \ ts -> return ([], x, ts)
@@ -102,7 +102,7 @@ You can consume everything! This always succeed.
 
 You can peek ahead, that is: we return a lexeme composed by all the
 tokens to come, but we do not consider them as consumed (|[]| on the
-left, |ts| on the right).
+left, `ts` on the right).
 
 > peekToken :: Parsley t [t]
 > peekToken = Parsley $ \ ts -> Right ([], ts, ts)
@@ -119,15 +119,15 @@ High-level combinators
 ----------------------
 
 Based on the combinators defined in the previous section, we implement
-the combinators below without breaking the |Parsley(...)| abstraction.
+the combinators below without breaking the `Parsley(...)` abstraction.
 
-You can test for the end of the token stream with |pEndOfStream|:
+You can test for the end of the token stream with `pEndOfStream`:
 
 > pEndOfStream :: Parsley t ()
 > pEndOfStream = guard =<< (|null peekToken|)
 
 Parsing separated sequences goes like this, purely applicative with She
-support. Either we can parse a |p| followed by many |sep| and |p|, or we
+support. Either we can parse a `p` followed by many `sep` and `p`, or we
 return the empty list.
 
 > pSep :: Parsley t s -> Parsley t x -> Parsley t [x]
@@ -141,8 +141,8 @@ We can also allow an optional terminator for a separated sequence.
 > pSepTerminate sep p = pSep sep p <* optional sep
 
 Similarly, one is often willing to consume some data up to some
-delimiter. This is the role of |consumeUntil|. It runs the parser |p| up
-to hitting a delimiter recognized by |delim|.
+delimiter. This is the role of `consumeUntil`. It runs the parser `p` up
+to hitting a delimiter recognized by `delim`.
 
 > consumeUntil :: Parsley t a -> Parsley t eol -> Parsley t [a]
 > consumeUntil p delim = (|id ~ [] (% delim %)
@@ -150,20 +150,20 @@ to hitting a delimiter recognized by |delim|.
 > consumeUntil' = consumeUntil nextToken
 
 Thanks to the monadic nature of our parser, we can implement the
-following looping combinator. Hence, we can parse some input |a| with
+following looping combinator. Hence, we can parse some input `a` with
 |p| and bind it. Then, we can try to use the dynamically generated
-parser |l a|. Failing that, we simply return |a|.
+parser |l a|. Failing that, we simply return `a`.
 
 > pLoop :: Parsley t a -> (a -> Parsley t a) -> Parsley t a
 > pLoop p l = do
 >   a <- p
 >   pLoop (l a) l <|> pure a
 
-Similarly, we can take advantage of the monadic nature of |Parsley| to
-do some post-processing on its output. Hence, |pMapFilter| applies a
-*predicate* |f| to the result of |p|. The resulting parser is therefore
-a parser which recognizes valid |p|-inputs satisfying the predicate, and
-returning the result of |f| as tokens.
+Similarly, we can take advantage of the monadic nature of `Parsley` to
+do some post-processing on its output. Hence, `pMapFilter` applies a
+*predicate* `f` to the result of `p`. The resulting parser is therefore
+a parser which recognizes valid `p`-inputs satisfying the predicate, and
+returning the result of `f` as tokens.
 
 > pFilter :: (a -> Maybe b) -> Parsley t a -> Parsley t b
 > pFilter f p = do
@@ -185,7 +185,7 @@ Based on the combinators above, we can already build some interesting
 parsers.
 
 Hence, we can make a parser that matches the tokens satisfying a
-predicate, |tokenFilter|. Then, we can easily build a parser that
+predicate, `tokenFilter`. Then, we can easily build a parser that
 matches a given token.
 
 > tokenFilter :: (t -> Bool) -> Parsley t t

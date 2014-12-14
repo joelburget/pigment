@@ -22,8 +22,8 @@ The Get Set
 
 We provide various functions to get information from the proof state and
 store updated information, providing a friendlier interface than |get|
-and |put|. The rule of thumb for naming these functions is to prefix the
-name of a field by the action (|get|, |put|, |remove|, or |replace|).
+and `put`. The rule of thumb for naming these functions is to prefix the
+name of a field by the action (|get|, `put`, `remove`, or |replace|).
 
 Getters
 -------
@@ -112,7 +112,7 @@ Getting in the |CurrentEntry|
 >     scope <- getGlobalScope
 >     return (applySpine ref scope)
 
-Getting in the |HOLE|\
+Getting in the `HOLE`\
 
 > getHoleGoal :: ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do
@@ -220,14 +220,14 @@ Putting in the |Layers|
 
 Putting in the |CurrentEntry|
 
-Putting in the |PROG|\
+Putting in the `PROG`\
 
 > putCurrentScheme :: Scheme INTM -> ProofState ()
 > putCurrentScheme sch = do
 >     CDefinition _ ref xn ty a <- getCurrentEntry
 >     putCurrentEntry $ CDefinition (PROG sch) ref xn ty a
 
-Putting in the |HOLE|\
+Putting in the `HOLE`\
 
 > putHoleKind :: HKind -> ProofStateT e ()
 > putHoleKind hk = do

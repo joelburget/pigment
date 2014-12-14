@@ -39,7 +39,7 @@ proof state).
 > type Block t = [Refinement t]
 
 When we store terms, we potentially have three different
-representations: a |String| provided by the user, the result of parsing
+representations: a `String` provided by the user, the result of parsing
 it to display syntax, and the result of elaborating it as an evidence
 term.
 

@@ -191,7 +191,7 @@ eliminating by induction.
 > comprefold (as : ass) = foldr compre as ass
 
 This is a hack, and should probably be replaced with a version that
-tests for equality, so it doesn’t catch the wrong |MU|s.
+tests for equality, so it doesn’t catch the wrong `MU`s.
 
 > setLabel :: INTM -> INTM -> INTM
 > setLabel l (MU Nothing tm) = MU (Just l) tm

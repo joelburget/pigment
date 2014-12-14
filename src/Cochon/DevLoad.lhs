@@ -30,8 +30,8 @@ Loading Developments
 Parsing a Development
 ---------------------
 
-To parse a development, we represent it as a list of |DevLine|s, each of
-which corresponds to a |Parameter| or |Definition| entry and stores
+To parse a development, we represent it as a list of `DevLine`s, each of
+which corresponds to a `Parameter` or `Definition` entry and stores
 enough information to reconstruct it. Note that at this stage, we simply
 tag each definition with a list of commands to execute later.
 
@@ -131,9 +131,9 @@ a $\Pi$-abstraction (represented by @(x : S) -\>@).
 Construction
 ------------
 
-Once we have parsed a development as a list of |DevLine|, we interpret
-it in the |ProofState| monad. This is the role of |makeDev|. It updates
-the proof state to represent the given list of |DevLine|s, accumulating
+Once we have parsed a development as a list of `DevLine`, we interpret
+it in the `ProofState` monad. This is the role of `makeDev`. It updates
+the proof state to represent the given list of `DevLine`s, accumulating
 pairs of names and command lists along the way.
 
 > type NamedCommand = (Name, [CTData])
@@ -141,8 +141,8 @@ pairs of names and command lists along the way.
 > makeDev []      ncs = return ncs
 > makeDev (l:ls)  ncs = makeEntry l ncs >>= makeDev ls
 
-Each line of development is processed by |makeEntry|. This is where the
-magic happen and the |ProofState| is updated.
+Each line of development is processed by `makeEntry`. This is where the
+magic happen and the `ProofState` is updated.
 
 > makeEntry :: DevLine -> [NamedCommand] -> ProofState [NamedCommand]
 
@@ -161,7 +161,7 @@ accumulate the commands which might have been issued.
 >     goIn
 >     -- Recursively build the kids
 >     ncs' <- makeDev kids ncs
->     -- Translate |tipTys| into a real |INTM|
+>     -- Translate `tipTys` into a real |INTM|
 >     tipTy :=>: tipTyv <- elaborate' (SET :>: tipTys)
 >     -- Turn the module into a definition of |tipTy|
 >     moduleToGoal tipTy
@@ -211,16 +211,16 @@ definitions.
 Making a Parameter:
 
 To make a parameter, be it Lambda or Pi, is straightforward. First, we
-need to translate the type in display syntax to an |INTM|. Then, we make
+need to translate the type in display syntax to an `INTM`. Then, we make
 a fresh reference of that type. Finally, we store that reference in the
 development.
 
 > makeEntry (DLParam k x tys) ncs = do
->     -- Translate the display |tys| into an |INTM|
+>     -- Translate the display `tys` into an |INTM|
 >     ty :=>: tyv <- elaborate' (SET :>: tys)
 >     -- Make a fresh reference of that type
 >     freshRef (x :<: tyv) (\ref ->
->         -- Register |ref| as a Lambda
+>         -- Register `ref` as a Lambda
 >         putEntryAbove (EPARAM ref (mkLastName ref) k ty Nothing))
 >     -- Pass the accumulated commands
 >     return ncs

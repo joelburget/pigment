@@ -48,7 +48,7 @@ Presenting Information
 > infoDump :: ProofState PureReact
 > infoDump = gets (fromString . show)
 
-The |infoElaborate| command calls |elabInfer| on the given neutral
+The `infoElaborate` command calls `elabInfer` on the given neutral
 display term, evaluates the resulting term, bquotes it and returns a
 pretty-printed string representation. Note that it works in its own
 module which it discards at the end, so it will not leave any subgoals
@@ -61,7 +61,7 @@ lying around in the proof state.
 >     s <- reactHere (ty :>: tm'')
 >     return s
 
-The |infoInfer| command is similar to |infoElaborate|, but it returns a
+The `infoInfer` command is similar to `infoElaborate`, but it returns a
 string representation of the resulting type.
 
 > infoInfer :: DExTmRN -> ProofState PureReact
@@ -71,7 +71,7 @@ string representation of the resulting type.
 >     s <- reactHere (SET :>: ty')
 >     return s
 
-The |infoContextual| command displays a distilled list of things in the
+The `infoContextual` command displays a distilled list of things in the
 context, parameters if the argument is False or definitions if the
 argument is True.
 
@@ -175,7 +175,7 @@ confident that the new version (above) produces suitable output.
 >             return d
 >         Nothing -> return (fromString (showRelName x ++ " does not have a scheme."))
 
-The |infoWhatIs| command displays a term in various representations.
+The `infoWhatIs` command displays a term in various representations.
 
 > infoWhatIs :: DExTmRN -> ProofState PureReact
 > infoWhatIs tmd = draftModule "__infoWhatIs" $ do
@@ -283,7 +283,7 @@ Should this be part of a transformer stack including Maybe and IO?
 > resetUserInput :: PageM ()
 > resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
-The |reactBKind| function reactifies a |ParamKind| if supplied with an
+The `reactBKind` function reactifies a `ParamKind` if supplied with an
 element representing its name and type.
 
 > reactBKind :: ParamKind -> PureReact -> PureReact
@@ -291,7 +291,7 @@ element representing its name and type.
 > reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
 > reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
 
-The |reactProofState| command generates a reactified representation of
+The `reactProofState` command generates a reactified representation of
 the proof state at the current location.
 
 > reactProofState :: ProofState PureReact
@@ -390,7 +390,7 @@ the proof state at the current location.
 >     Hoping     -> "HOPE?"
 >     (Crying s) -> fromString ("CRY <<" ++ s ++ ">>")
 
-The |elm| Cochon tactic elaborates a term, then starts the scheduler to
+The `elm` Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation
 of the final type-term pair (using a quick hack).
 

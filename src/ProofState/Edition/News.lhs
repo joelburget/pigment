@@ -23,19 +23,19 @@ News
 ----
 
 |News| represents possible changes to references. At the moment, it may
-be |GoodNews| (the reference has become more defined) or |NoNews| (even
+be `GoodNews` (the reference has become more defined) or `NoNews` (even
 better from our perspective, as the reference has not changed). Note
-that |News| is ordered by increasing “niceness”.
+that `News` is ordered by increasing “niceness”.
 
 When we come to implement functionality to remove definitions from the
-proof state, we will also need |BadNews| (the reference has changed but
-is not more informative) and |DeletedNews| (the reference has gone
+proof state, we will also need `BadNews` (the reference has changed but
+is not more informative) and `DeletedNews` (the reference has gone
 completely).
 
 > data News = DeletedNews | BadNews | GoodNews | NoNews deriving (Eq, Ord, Show)
 
-Handily, |News| is a monoid where the neutral element is |NoNews| and
-composing two |News| takes the less nice.
+Handily, `News` is a monoid where the neutral element is `NoNews` and
+composing two `News` takes the less nice.
 
 > instance Monoid News where
 >     mempty   = NoNews
@@ -44,14 +44,14 @@ composing two |News| takes the less nice.
 News Bulletin
 -------------
 
-A |NewsBulletin| is a list of pairs of updated references and the news
+A `NewsBulletin` is a list of pairs of updated references and the news
 about them.
 
 > type NewsBulletin = [(REF, News)]
 
 Adding news
 
-The |addNews| function adds the given news to the bulletin, if it is
+The `addNews` function adds the given news to the bulletin, if it is
 newsworthy.
 
 > addNews :: (REF, News) -> NewsBulletin ->  NewsBulletin
@@ -64,26 +64,26 @@ newsworthy.
 >   seek ((r', n') : old) | r == r' = (n', old)
 >   seek (rn : old) = (n', rn : old') where (n', old') = seek old
 
-Using |seek|, we enforce the invariant that any reference appears at
-most once in a |NewsBulletin|.
+Using `seek`, we enforce the invariant that any reference appears at
+most once in a `NewsBulletin`.
 
 Getting the latest news
 
-The |lookupNews| function returns the news about a reference contained
-in the bulletin, which may be |NoNews| if the reference is not present.
+The `lookupNews` function returns the news about a reference contained
+in the bulletin, which may be `NoNews` if the reference is not present.
 
 > lookupNews :: NewsBulletin -> REF -> News
 > lookupNews nb ref = fromMaybe NoNews (lookup ref nb)
 
-The |getNews| function looks for a reference in the news bulletin, and
-returns it with its news if it is found, or returns |Nothing| if not.
+The `getNews` function looks for a reference in the news bulletin, and
+returns it with its news if it is found, or returns `Nothing` if not.
 
 > getNews :: NewsBulletin -> REF -> Maybe (REF, News)
 > getNews nb ref = find ((== ref) . fst) nb
 
-The |getLatest| function returns the most up-to-date copy of the given
+The `getLatest` function returns the most up-to-date copy of the given
 reference, either the one from the bulletin if it is present, or the one
-passed in otherwise. If given a |FAKE| reference, it will always return
+passed in otherwise. If given a `FAKE` reference, it will always return
 one, regardless of the status of the reference in the bulletin. This
 ensures that fake references in labels have their types updated without
 turning into real definitions unexpectedly.
@@ -93,7 +93,7 @@ turning into real definitions unexpectedly.
 >     where _ := _ :<: ty = realGetLatest news ref
 > getLatest news ref = realGetLatest news ref
 
-This is implemented via |realGetLatest|, which ignores fakery. The
+This is implemented via `realGetLatest`, which ignores fakery. The
 slightly odd recursive case arises because equality for references just
 compares their names.
 
@@ -105,7 +105,7 @@ compares their names.
 
 Merging news
 
-The |mergeNews| function takes older and newer bulletins, and composes
+The `mergeNews` function takes older and newer bulletins, and composes
 them to produce a single bulletin with the worst news about every
 reference mentioned in either.
 
@@ -115,11 +115,11 @@ reference mentioned in either.
 
 Read all about it
 
-The |tellNews| function applies a bulletin to a term. It returns the
+The `tellNews` function applies a bulletin to a term. It returns the
 updated term and the news about it (i.e. the least nice news of any
-reference used in the term). Using the |Writer| monad allows the term to
+reference used in the term). Using the `Writer` monad allows the term to
 be updated and the news about it calculated in a single traversal. Note
-that we ensure |FAKE| references remain as they are, as in |getLatest|.
+that we ensure `FAKE` references remain as they are, as in `getLatest`.
 
 > tellNews :: NewsBulletin -> Tm {d, TT} REF -> (Tm {d, TT} REF, News)
 > tellNews []    tm = (tm, NoNews)
@@ -133,7 +133,7 @@ that we ensure |FAKE| references remain as they are, as in |getLatest|.
 >     fixFake (_ := FAKE :<: _)  (n := _ :<: ty)  = n := FAKE :<: ty
 >     fixFake _                  r                = r
 
-The |tellNewsEval| function takes a bulletin, term and its present
+The `tellNewsEval` function takes a bulletin, term and its present
 value. It updates the term with the bulletin and re-evaluates it if
 necessary.
 

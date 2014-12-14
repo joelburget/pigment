@@ -15,7 +15,7 @@ Managing Entries in a Proof Context
 Manipulating the |CurrentEntry|
 
 As with entries in Section [sec:ProofState.Structure.Entries], we need
-some kit operating on any kind of |CurrentEntry|. So far, this is
+some kit operating on any kind of `CurrentEntry`. So far, this is
 restricted to getting its name:
 
 > currentEntryName :: CurrentEntry -> Name
@@ -31,9 +31,9 @@ a current entry:
 
 From Above to Below, and back
 
-The |aboveEntries| and |belowEntries| give a certain twist to the visit
-of a |Layer|: on one hand, |aboveEntries| go |Bwd|; on the other hand,
-|belowEntries| go |Fwd| with news. Therefore, when moving the cursor, we
+The `aboveEntries` and `belowEntries` give a certain twist to the visit
+of a `Layer`: on one hand, `aboveEntries` go `Bwd`; on the other hand,
+|belowEntries| go `Fwd` with news. Therefore, when moving the cursor, we
 sometimes need to change the structure that contains entries.
 
 We define such ‘rearranging’ function by mutual induction on |Entry f|
@@ -53,7 +53,7 @@ and |Dev f|:
 >                                 f (Entry f) -> g (Entry g)
 >            rearrangeEntries h xs = h (fmap (rearrangeEntry h) xs)
 
-Hence, we can change the carrier of |Entry| from |Bwd| to |Fwd| or a
+Hence, we can change the carrier of `Entry` from `Bwd` to `Fwd` or a
 variation thereof:
 
 > reverseEntry :: Entry Bwd -> Entry NewsyFwd
@@ -61,7 +61,7 @@ variation thereof:
 > reverseEntries :: Fwd (Entry Bwd) -> NewsyEntries
 > reverseEntries es = NF $ fmap (Right . reverseEntry) es
 
-Or we can change the carrier of a whole |Dev| from |Bwd| to |Fwd|:
+Or we can change the carrier of a whole `Dev` from `Bwd` to `Fwd`:
 
 > reverseDev :: Dev Bwd -> Dev Fwd
 > reverseDev = rearrangeDev (<>> F0)

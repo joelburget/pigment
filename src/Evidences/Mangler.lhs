@@ -13,21 +13,21 @@ Variable Manipulation
 
 Variable manipulation, in all its forms, ought be handled by the
 mangler. A |Mangle f x y| is a record that describes how to deal with
-parameters of type |x|, variables and binders, producing terms with
-parameters of type |y| and wrapping the results in some applicative
-functor |f|.
+parameters of type `x`, variables and binders, producing terms with
+parameters of type `y` and wrapping the results in some applicative
+functor `f`.
 
 It contains three fields:
 
-<span>|mangP|</span> describes what to do with parameters. It takes a
+<span>`mangP`</span> describes what to do with parameters. It takes a
 parameter value and a spine (a list of eliminators) that this parameter
 is applied to (handy for christening); it must produce an appropriate
 term.
 
-<span>|mangV|</span> describes what to do with variables. It takes a de
+<span>`mangV`</span> describes what to do with variables. It takes a de
 Brujin index and a spine as before, and must produce a term.
 
-<span>|mangB|</span> describes how to update the |Mangle| in response to
+<span>`mangB`</span> describes how to update the `Mangle` in response to
 a given binder name.
 
 > data Mangle f x y = Mang
@@ -36,10 +36,10 @@ a given binder name.
 >   ,  mangB :: String -> Mangle f x y
 >   }
 
-The interpretation of a |Mangle| is given by the |This mangles a term,
+The interpretation of a `Mangle` is given by the |This mangles a term,
 produing a term with the appropriate parameter type in the relevant
 idiom. This is basically a traversal, but calling the appropriate fields
-of |Mangle| for each parameter, variable or binder encountered.
+of `Mangle` for each parameter, variable or binder encountered.
 
 > (%) :: Applicative f => Mangle f x y -> Tm {In, TT} x -> f (Tm {In, TT} y)
 > m % L (K t)      = (|L (|K (m % t)|)|)
@@ -47,7 +47,7 @@ of |Mangle| for each parameter, variable or binder encountered.
 > m % C c          = (|C ((m %) ^$ c)|)
 > m % N n          = (|N (exMang m n (|[]|))|)
 
-The corresponding behaviour for |ExTm|s is implemented by |exMang|.
+The corresponding behaviour for `ExTm`s is implemented by `exMang`.
 
 > exMang ::  Applicative f => Mangle f x y ->
 >            Tm {Ex, TT} x -> f [Elim (Tm {In, TT} y)] -> f (Tm {Ex, TT} y)
@@ -64,11 +64,11 @@ The |
 > (%%#) :: Mangle Identity x y -> Tm {Ex, TT} x -> Tm {Ex, TT} y
 > m %%# t = runIdentity $ exMang m t (| [] |)
 
-The |under| mangle
+The `under` mangle
 ------------------
 
-The |under i y| mangle binds the variable with de Brujin index |i| to
-the parameter |y| and leaves the term otherwise unchanged.
+The |under i y| mangle binds the variable with de Brujin index `i` to
+the parameter `y` and leaves the term otherwise unchanged.
 
 > under :: Int -> x -> Mangle Identity x x
 > under i y = Mang
@@ -77,7 +77,7 @@ the parameter |y| and leaves the term otherwise unchanged.
 >   ,  mangB = \ _ -> under (i + 1) y
 >   }
 
-The |underScope| function goes under a binding, instantiating the bound
+The `underScope` function goes under a binding, instantiating the bound
 variable to the given reference.
 
 > underScope :: Scope {TT} x -> x -> InTm x
@@ -110,7 +110,7 @@ $\lambda$-abstractions in the proof state.
 The substitution mangle
 -----------------------
 
-The |substitute| function implements substitution for closed terms:
+The `substitute` function implements substitution for closed terms:
 given a list of typed references, a corresponding list of terms and a
 target term, it substitutes the terms for the references in the target.
 
@@ -130,10 +130,10 @@ target term, it substitutes the terms for the references in the target.
 >       | x == y     = v ?? ty
 >       | otherwise  = help bs vs x
 
-The |inc| mangle
+The `inc` mangle
 ----------------
 
-The |inc| mangle increments the bound variables in the term, allowing a
+The `inc` mangle increments the bound variables in the term, allowing a
 binding to be inserted for the call term. It keeps track of how many
 local binders it has gone under, so as to not increment them.
 

@@ -28,7 +28,7 @@ Updating a reference
 --------------------
 
 Here we describe how to handle updates to references in the proof state,
-caused by refinement commands like |give|. The idea is to deal with
+caused by refinement commands like `give`. The idea is to deal with
 updates lazily, to avoid unnecessary traversals of the proof tree. When
 |updateRef| is called to announce a changed reference (that the current
 development has already processed), it simply inserts a news bulletin
@@ -40,7 +40,7 @@ below the current development.
 Committing news into the ProofState
 -----------------------------------
 
-The |propagateNews| function takes a current news bulletin and a list of
+The `propagateNews` function takes a current news bulletin and a list of
 entries to *add* to the current development. It applies the news
 bulletin to each entry in turn, picking up other bulletins along the
 way. This function is called when navigating to a development that may
@@ -74,7 +74,7 @@ which point everyone knows the news anyway.
 >     optional (putNewsBelow news')
 >     return news'
 
-To update a |Parameter|, we check to see if its type has become more
+To update a `Parameter`, we check to see if its type has become more
 defined, and pass on the good news if necessary.
 
 > propagateNews  top news
@@ -89,7 +89,7 @@ defined, and pass on the good news if necessary.
 >           putEntryAbove (EPARAM ref sn k ty' a)
 >           propagateNews top (addNews (ref, GoodNews) news) (NF es)
 
-To update definitions or modules, we call on |propagateNewsWithin|.
+To update definitions or modules, we call on `propagateNewsWithin`.
 
 > propagateNews top news (NF (Right e :> es)) = do
 >     news' <- propagateNewsWithin news e
@@ -101,14 +101,14 @@ we can simply merge the two together.
 > propagateNews top news (NF (Left oldNews :> es)) =
 >   propagateNews top (mergeNews news oldNews) (NF es)
 
-The |propagateNewsWithin| command will:
+The `propagateNewsWithin` command will:
 
 1.  add the definition to the proof state without its children;
 
 2.  recursively propagate the news to the children, adding them as it
     goes;
 
-3.  call |tellCurrentEntry| to update the definition itself; and
+3.  call `tellCurrentEntry` to update the definition itself; and
 
 4.  move the focus out of the definition.
 
@@ -132,12 +132,12 @@ The |propagateNewsWithin| command will:
 Informing a current entry about its development
 -----------------------------------------------
 
-The |tellEntry| function informs an entry about a news bulletin that its
+The `tellEntry` function informs an entry about a news bulletin that its
 development (if any) have already received. It applies the news bulletin
 to the entry, returning the update entry together with (potentially)
 more news.
 
-[Invariant: |tellEntry| on a definition]
+[Invariant: `tellEntry` on a definition]
 
 If the entry is a definition, it must be the current entry of the
 current cursor position (i.e. the entry should come from
@@ -172,7 +172,7 @@ not need to update the news bulletin). If not, we must :
 
 3.  update the news bulletin with news about this definition.
 
-If the hole is |Hoping| and we have good news about its type, then we
+If the hole is `Hoping` and we have good news about its type, then we
 restart elaboration to see if it can make any progress.
 
 > tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
@@ -200,7 +200,7 @@ To update a hole with a suspended elaboration problem attached, we
 proceed similarly to the previous case, but we also update the
 elaboration problem. If the news bulletin defines this hole, it had
 better just be hoping for a solution , in which case we can safely
-ignore the attached |ElabHope| process.
+ignore the attached `ElabHope` process.
 
 > tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
 >                       dkind dev@(Dev {devTip=Suspended tt prob}) ty anchor)
@@ -211,7 +211,7 @@ ignore the attached |ElabHope| process.
 >         -- The elaboration strategy \emph{has to} be to |Hope|
 >         tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor)
 >       _         -> do
->         -- \pierre{Is that a |throwError| or an |error|?}
+>         -- \pierre{Is that a `throwError` or an `error`?}
 >         throwError . sErr . unlines $ [
 >                     "tellEntry: news bulletin contains update", show ne,
 >                     "for hole", show ref,
@@ -259,7 +259,7 @@ tmL’, “is not of type”, show ty’ ]
 >     return  (addNews (ref, GoodNews {-min (min n n') n''-}) news,
 >             EDEF ref sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor)
 
-The |tellCurrentEntry| function informs the current entry about a news
+The `tellCurrentEntry` function informs the current entry about a news
 bulletin that her children have already received, and returns the
 updated news.
 

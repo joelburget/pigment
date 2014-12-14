@@ -190,7 +190,7 @@ principles (:
 >   giveOutBelow $ N dty
 
 This is a hack, and should probably be replaced with a version that
-tests for equality, so it doesn’t catch the wrong |MU|s.
+tests for equality, so it doesn’t catch the wrong `MU`s.
 
 > isetLabel :: INTM -> INTM -> INTM
 > isetLabel l (IMU Nothing ity tm i) = IMU (Just l) ity tm i

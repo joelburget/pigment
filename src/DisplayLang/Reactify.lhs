@@ -17,7 +17,7 @@ Pretty-printing {#sec:DisplayLang.Reactify}
 > import Kit.MissingLibrary hiding ((<+>))
 > import React hiding (key)
 
-The |reactKword| function gives a react element representing a
+The `reactKword` function gives a react element representing a
 |Keyword|.
 
 > reactKword :: Keyword -> PureReact
@@ -26,7 +26,7 @@ The |reactKword| function gives a react element representing a
 > parens :: PureReact -> PureReact
 > parens r = "(" >> r >> ")"
 
-The |Reactive| class describes things that can be made into React
+The `Reactive` class describes things that can be made into React
 elements.
 
 > class Reactive x where
@@ -99,7 +99,7 @@ elements.
 >     reactify (Tag s)  = reactKword KwTag >> fromString s
 >     reactify can       = fromString . show $ can
 
-The |reactPi| function takes a term and the current size. It accumulates
+The `reactPi` function takes a term and the current size. It accumulates
 domains until a non(dependent) $\Pi$-type is found, then calls
 |reactPiMore| to produce the final element.
 
@@ -116,7 +116,7 @@ domains until a non(dependent) $\Pi$-type is found, then calls
 > -- reactPi bs tm = reactPiMore bs (reactify tm) XXX
 > reactPi bs tm = ""
 
-The |reactPiMore| function takes a bunch of domains (which may be empty)
+The `reactPiMore` function takes a bunch of domains (which may be empty)
 and a codomain, and represents them appropriately for the current size.
 
 > reactPiMore :: PureReact -> PureReact -> PureReact
@@ -217,7 +217,7 @@ a $\lambda$-term is reached.
 > --   | isEmpty s  = wrapDoc t AppSize
 > --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
-The |Elim| functor is straightforward.
+The `Elim` functor is straightforward.
 
 > instance Reactive (Elim DInTmRN) where
 >     reactify (A t)  = reactify t

@@ -14,7 +14,7 @@ Parsing Terms {#sec:DisplayLang.TmParse}
 > import DisplayLang.Lexer
 > import Evidences.Tm
 
-The term parser eats structured |Token|s as defined in @Lexer.lhs@. It
+The term parser eats structured `Token`s as defined in @Lexer.lhs@. It
 uses the monadic parser combinators to translate the grammar of terms
 defined in Section [sec:language].
 
@@ -22,7 +22,7 @@ Names
 -----
 
 A relative name is a list of idents separated by dots, and possibly with
-|^|^ or |~|~ symbols (for relative or absolute offsets).
+|^|^ or `~`~ symbols (for relative or absolute offsets).
 
 > nameParse :: Parsley Token RelName
 > nameParse = do
@@ -45,7 +45,7 @@ A relative name is a list of idents separated by dots, and possibly with
 Overall parser structure
 ------------------------
 
-The |pDExTm| and |pDInTm| functions start parsing at the maximum size.
+The `pDExTm` and `pDInTm` functions start parsing at the maximum size.
 
 > pDExTm :: Parsley Token DExTmRN
 > pDExTm = sizedDExTm maxBound
@@ -53,8 +53,8 @@ The |pDExTm| and |pDInTm| functions start parsing at the maximum size.
 > pDInTm = sizedDInTm maxBound
 
 We do not allow ascriptions in the term syntax, but they are useful in
-commands, so we provide |pAscription| to parse an ascription into
-separate components, and |pAscriptionTC| to parse an ascription as an
+commands, so we provide `pAscription` to parse an ascription into
+separate components, and `pAscriptionTC` to parse an ascription as an
 appropriate type annotation.
 
 > pAscription :: Parsley Token (DInTmRN :<: DInTmRN)
@@ -63,7 +63,7 @@ appropriate type annotation.
 > pAscriptionTC = (| typeAnnot pDInTm (%keyword KwAsc%) pDInTm |)
 >   where typeAnnot tm ty = DType ty ::$ [A tm]
 
-Each |sized| parser tries the appropriate |special| parser for the size,
+Each `sized` parser tries the appropriate `special` parser for the size,
 then falls back to parsing at the previous size followed by a |more|
 parser. At the smallest size, brackets must be used to start parsing
 from the largest size again. Concrete syntax is matched using the lists
@@ -92,7 +92,7 @@ of parsers defined in the following subsection.
 Lists of sized parsers
 ----------------------
 
-A |SizedParserList| is a list of parsers associated to every size; a
+A `SizedParserList` is a list of parsers associated to every size; a
 |ParamParserList| allows the parser to depend on a parameter.
 
 > type SizedParserList a    = [(Size, [Parsley Token a])]

@@ -50,7 +50,7 @@ goal.
 Assumptions
 -----------
 
-With |lambdaParam|, we can introduce parameters under a proof goal.
+With `lambdaParam`, we can introduce parameters under a proof goal.
 However, when working under a module, we would like to be able to
 introduce hypothesis of some type. This corresponds to some kind of
 “Assume” mechanism, where we assume the existence of an object of the
@@ -72,14 +72,14 @@ provided type under the given module.
 ----------------
 
 When working at defining a type (an object in |Set|), we can freely
-introduce |Pi|-abstractions. This is precisely what |piParam| let us do.
+introduce `Pi`-abstractions. This is precisely what `piParam` let us do.
 
 > piParam :: (String :<: INTM) -> ProofState REF
 > piParam (s :<: ty) = do
 >   ttv <- checkHere $ SET :>: ty
 >   piParamUnsafe $ s :<: ttv
 
-The variant |piParamUnsafe| will not check that the proposed type is
+The variant `piParamUnsafe` will not check that the proposed type is
 indeed a type, so it requires further attention.
 
 > piParamUnsafe :: (String :<: (INTM :=>: TY)) -> ProofState REF

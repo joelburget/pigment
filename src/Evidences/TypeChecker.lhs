@@ -33,22 +33,22 @@ t)) \< canTy ev (Set :\>: Set) = Just Set \< canTy ev (Set :\>: Pi s t)
 Nothing
 
 If we temporally forget Features, we have here a type-checker that takes
-an evaluation function |ev|, a type, and a term to be checked against
+an evaluation function `ev`, a type, and a term to be checked against
 this type. When successful, the result of typing is a canonical term
 that contains both the initial term and its normalized form, as we get
 it for free during type-checking.
 
 However, to avoid re-implementing the typing rules in various places, we
 had to generalize this function. The generalization consists in
-parameterizing |canTy| with a type-directed function |TY :\>: t -\> s|,
+parameterizing `canTy` with a type-directed function |TY :\>: t -\> s|,
 which is equivalent to |TY -\> t -\> s|. Because we still need an
 evaluation function, both functions are fused into a single one, of
 type: |TY :\>: t -\> (s,VAL)|. To support failures, we extend this type
-to |TY :\>: t -\> m (s,VAL)| where |m| is a |MonadError|.
+to |TY :\>: t -\> m (s,VAL)| where `m` is a `MonadError`.
 
-Hence, by defining an appropriate function |chev|, we can recover the
-previous definition of |canTy|. We can also do much more: intuitively,
-we can write any type-directed function in term of |canTy|. That is, any
+Hence, by defining an appropriate function `chev`, we can recover the
+previous definition of `canTy`. We can also do much more: intuitively,
+we can write any type-directed function in term of `canTy`. That is, any
 function traversing the types derivation tree can be expressed using
 |canTy|.
 
@@ -229,14 +229,14 @@ function traversing the types derivation tree can be expressed using
 
 Eliminators
 
-Type-checking eliminators mirrors |canTy|. |elimTy| is provided with a
-checker-evaluator, a value |f| of inferred typed |t|, ie. a |f :\<: t|
+Type-checking eliminators mirrors `canTy`. `elimTy` is provided with a
+checker-evaluator, a value `f` of inferred typed `t`, ie. a |f :\<: t|
 of |VAL :\<: Can VAL|, and an eliminator of |Elim t|. If the operation
 is type-safe, we are given back the eliminator enclosing the result of
 |chev| and the type of the eliminated value.
 
 it computes the type of the argument, ie. the eliminator, in |Elim (s
-:=\>: VAL)| and the type of the result in |TY|.
+:=\>: VAL)| and the type of the result in `TY`.
 
 Carefully bring t into scope (we don’t really care about m and s) so we
 can refer to it in \`ErrorItem t\`, which disambiguates an instance -
@@ -281,7 +281,7 @@ VAL) -\> Elim t -\> Check s (Elim (s :=\>: VAL),TY)
 
 Operators
 
-The |opTy| function explains how to interpret the telescope |opTyTel|:
+The `opTy` function explains how to interpret the telescope `opTyTel`:
 it labels the operator’s arguments with the types they must have and
 delivers the type of the whole application. To do that, one must be able
 to evaluate arguments. It is vital to type-check the sub-terms (left to
@@ -291,12 +291,12 @@ following type:
 \< opTy :: forall t. (t -\> VAL) -\> [t] -\> Maybe ([TY :\>: t] , TY) \<
 opTy ev args = (...)
 
-Where we are provided an evaluator |ev| and the list of arguments, which
+Where we are provided an evaluator `ev` and the list of arguments, which
 length should be the arity of the operator. If the type of the arguments
 is correct, we return them labelled with their type and the type of the
 result.
 
-However, we had to generalize it. Following the evolution of |canTy| in
+However, we had to generalize it. Following the evolution of `canTy` in
 Section [subsubsec:Evidences.TypeChecker.canTy], we have adopted the
 following scheme:
 
@@ -304,13 +304,13 @@ following scheme:
 >          Op -> (TY :>: t -> m (s :=>: VAL)) -> [t] ->
 >          m ([s :=>: VAL], TY)
 
-First, the |MonadError| constraint allows seamless integration in the
+First, the `MonadError` constraint allows seamless integration in the
 world of things that might fail. Second, we have extended the evaluation
 function to perform type-checking at the same time. We also liberalise
-the return type to |s|, to give more freedom in the choice of the
-checker-evaluator. This change impacts on |exQuote|, |infer|, and
+the return type to `s`, to give more freedom in the choice of the
+checker-evaluator. This change impacts on `exQuote`, `infer`, and
 |useOp|. If this definition is not clear now, it should become clear
-after the definition of |canTy| in
+after the definition of `canTy` in
 Section [subsubsec:Evidences.TypeChecker.canTy].
 
 > opTy op chev ss
@@ -337,13 +337,13 @@ into $T$: |T :\>: t|:
 $$\Gamma \vdash \mbox{TY} \ni \mbox{Tm \{In,.\} p}$$
 
 Technically, we also need a name supply and handle failure with a
-convenient monad. Therefore, we jump in the |Check| monad defined in
+convenient monad. Therefore, we jump in the `Check` monad defined in
 Section [subsec:NameSupply.NameSupplier.check-monad].
 
 > check :: (TY :>: INTM) -> Check INTM (INTM :=>: VAL)
 
 Type-checking a canonical term is rather easy, as we just have to
-delegate the hard work to |canTy|. The checker-evaluator simply needs to
+delegate the hard work to `canTy`. The checker-evaluator simply needs to
 evaluate the well-typed terms.
 
 > check (C cty :>: C ctm) = do
@@ -365,7 +365,7 @@ have to check that $T\ x \ni t$.
 >                               underScope sc ref))
 >   return $ L sc :=>: (evTm $ L sc)
 
-Formally, we can bring the |Ex| terms into the |In| world with the rule:
+Formally, we can bring the `Ex` terms into the `In` world with the rule:
 $$\Rule{n \in Y  \qquad
       \star \ni W \equiv Y}
      {W \ni n}$$
@@ -386,7 +386,7 @@ This translates naturally into the following code:
 >         , errTyVal (w :<: SET)
 >         ]
 
-Finally, we can extend the checker with the |Check| aspect. If no rule
+Finally, we can extend the checker with the `Check` aspect. If no rule
 has matched, then we have to give up.
 
 > check (PRF (ALL p q) :>: L sc)  = do
@@ -405,7 +405,7 @@ Type inference {#subsec:Evidences.TypeChecker.type-inference}
 --------------
 
 On the inference side, we also have a valid typing environment $\Gamma$
-that is used to pull types |TY| out of |Ex| terms:
+that is used to pull types `TY` out of `Ex` terms:
 
 $$\Gamma \vdash \mbox{Tm \{Ex,.\} p} \in \mbox{TY}$$
 
@@ -427,7 +427,7 @@ $$\Rule{f \in \Pi\ S\ T  \qquad
      {f x \in {(B x)}^\downarrow}$$
 
 The story is the same in the general case: we infer the eliminated term
-|t| and we type-check the eliminator, using |elimTy|. Because |elimTy|
+|t| and we type-check the eliminator, using `elimTy`. Because |elimTy|
 computes the result type, we have inferred the result type.
 
 > infer (t :$ s)           = do

@@ -21,9 +21,9 @@ implementer.
 Discharging entries in a term
 -----------------------------
 
-The “discharge into” operator |(-||)| takes a list of entries and a
+The “discharge into” operator `(-||)` takes a list of entries and a
 term, and changes the term so that parameters in the list of entries are
-represented by de Brujin indices. It makes key use of the |(-||||)|
+represented by de Brujin indices. It makes key use of the `(-||`|)|
 mangler.
 
 > (-|) :: Entries -> INTM -> INTM
@@ -32,7 +32,7 @@ mangler.
 Binding a term
 --------------
 
-The |parBind| function $\lambda$-binds a term over a list $\Delta$ of
+The `parBind` function $\lambda$-binds a term over a list $\Delta$ of
 entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
 
 > parBind ::  {- $\Delta$ :: -} Bwd (Entry Bwd) {- $\Gamma$ -} -> 
@@ -58,7 +58,7 @@ entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
 Binding a type
 --------------
 
-The |liftType| function $\Pi$-binds a type over a list of entries.
+The `liftType` function $\Pi$-binds a type over a list of entries.
 
 > liftType :: Entries -> INTM -> INTM
 > liftType es = liftType' (bwdList $ foldMap param es) 
@@ -77,8 +77,8 @@ The |liftType| function $\Pi$-binds a type over a list of entries.
 Making a type out of a goal
 ---------------------------
 
-The |inferGoalType| function $\Pi$-binds the type when it encounters a
-$\lambda$ in the list of entries, and produces |SET| when it encounters
+The `inferGoalType` function $\Pi$-binds the type when it encounters a
+$\lambda$ in the list of entries, and produces `SET` when it encounters
 a $\Pi$.
 
 > inferGoalType :: Bwd (Entry Bwd) -> INTM -> INTM

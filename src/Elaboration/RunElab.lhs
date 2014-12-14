@@ -1,4 +1,4 @@
-Implementing the |Elab| monad {#sec:Elaborator.RunElab}
+Implementing the `Elab` monad {#sec:Elaborator.RunElab}
 =============================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -46,14 +46,14 @@ Implementing the |Elab| monad {#sec:Elaborator.RunElab}
 Running elaboration processes {#subsec:Elaborator.RunElab.runElab}
 -----------------------------
 
-The |runElab| proof state command actually interprets an |Elab x| in the
+The `runElab` proof state command actually interprets an |Elab x| in the
 proof state. In other words, we define here the semantics of the |Elab|
 syntax.
 
 > runElab :: WorkTarget ->  (TY :>: Elab (INTM :=>: VAL)) ->
 >                           ProofState (INTM :=>: VAL, ElabStatus)
 
-This command is given a type and a program in the |Elab| DSL for
+This command is given a type and a program in the `Elab` DSL for
 creating an element of that type. It is also given a flag indicating
 whether elaboration is working on the current goal in the proof state.
 If the target is the current goal, the type pushed in must match the
@@ -68,7 +68,7 @@ a reference to that goal, so it cannot be solved.
 
 > data ElabStatus = ElabSuccess | ElabSuspended deriving Eq
 
-Some |Elab| instructions can only be used when working on the current
+Some `Elab` instructions can only be used when working on the current
 goal, for example introducting a lambda. We identify these so we can
 make a new subgoal when trying to execute them elsewhere.
 
@@ -81,7 +81,7 @@ make a new subgoal when trying to execute them elsewhere.
 
 Now, let us give the semantics of each command in turn. First of all, we
 catch all commands that can only run on the current goal, and redirect
-them to the specially crafted |runElabNewGoal|.
+them to the specially crafted `runElabNewGoal`.
 
 > runElab WorkElsewhere (ty :>: elab) | currentGoalOnly elab = runElabNewGoal (ty :>: elab)
 
@@ -108,7 +108,7 @@ task.
 
 > runElab wrk (ty :>: EGoal f) = runElab wrk (ty :>: f ty)
 
-|EWait| makes a |Waiting| hole and pass it along to the next elaboration
+|EWait| makes a `Waiting` hole and pass it along to the next elaboration
 task.
 
 > runElab wrk (ty :>: EWait s tyWait f) = do
@@ -117,7 +117,7 @@ task.
 >     runElab wrk (ty :>: f tt)
 
 |EElab| contains a syntactic representation of an elaboration problem.
-This representation is interpreted and executed by |runElabProb|.
+This representation is interpreted and executed by `runElabProb`.
 
 > runElab wrk (ty :>: EElab l p)  = runElabProb wrk l (ty :>: p)
 
@@ -182,7 +182,7 @@ into some definitions, or clashes could happen.
 As mentioned above, some commands can only be used when elaboration is
 taking place in the current goal. This is the purpose of
 |runElabNewGoal|: it creates a dummy definition and hands back the
-elaboration task to |runElab|.
+elaboration task to `runElab`.
 
 > runElabNewGoal :: (TY :>: Elab (INTM :=>: VAL)) -> ProofState (INTM :=>: VAL, ElabStatus)
 > runElabNewGoal (ty :>: elab) = do
@@ -210,32 +210,32 @@ elaboration task to |runElab|.
 Interpreting elaboration problems
 ---------------------------------
 
-The |runElabProb| interprets the syntactic representation of an
+The `runElabProb` interprets the syntactic representation of an
 elaboration problem. In other words, this function defines the semantics
-of the |EProb| language.
+of the `EProb` language.
 
 > runElabProb :: WorkTarget ->  Loc -> (TY :>: EProb) ->
 >                               ProofState (INTM :=>: VAL, ElabStatus)
 
-|ElabDone tt| always succeed at returning the given term |tt|.
+|ElabDone tt| always succeed at returning the given term `tt`.
 
 > runElabProb wrk loc (ty :>: ElabDone tt)  =
 >     return (maybeEval tt, ElabSuccess)
 
-|ElabProb tm| asks for the elaboration of the display term |tm| (for
+|ElabProb tm| asks for the elaboration of the display term `tm` (for
 pushed-in terms).
 
 > runElabProb wrk loc (ty :>: ElabProb tm)  =
 >     runElab wrk (ty :>: makeElab loc tm)
 
 |ElabInferProb tm| asks for the elaboration and type inference of the
-display term |tm| (for pull-out terms).
+display term `tm` (for pull-out terms).
 
 > runElabProb wrk loc (ty :>: ElabInferProb tm) =
 >     runElab wrk (ty :>: makeElabInfer loc tm)
 
 |WaitCan tm prob| prevents the interpretation of the elaboration problem
-|prob| until |tm| is indeed a canonical object. Otherwise, the problem
+|prob| until `tm` is indeed a canonical object. Otherwise, the problem
 is indefinitely suspended.
 
 > runElabProb wrk loc (ty :>: WaitCan (_ :=>: Just (C _)) prob) =
@@ -243,7 +243,7 @@ is indefinitely suspended.
 > runElabProb wrk loc (ty :>: WaitCan (tm :=>: Nothing) prob) =
 >     runElabProb wrk loc (ty :>: WaitCan (tm :=>: Just (evTm tm)) prob)
 
-The semantics of the |ElabHope| command is specifically given by the
+The semantics of the `ElabHope` command is specifically given by the
 |runElabHope| interpreter in
 Section [subsec:Elaboration.RunElab.elabHope].
 
@@ -259,12 +259,12 @@ progress.
 
 The following problems are suspended, for different reasons:
 
--   a |WaitCan| command offering an object that is *not* canonical;
+-   a `WaitCan` command offering an object that is *not* canonical;
 
--   a |WaitSolve| command, because we cannot solve references during
+-   a `WaitSolve` command, because we cannot solve references during
     elaboration, but the scheduler can do so later; and
 
--   an |ElabSchedule| command, whose purpose is to suspend the current
+-   an `ElabSchedule` command, whose purpose is to suspend the current
     elaboration and call the scheduler.
 
 > runElabProb top loc (ty :>: prob) = do
@@ -280,11 +280,11 @@ The following problems are suspended, for different reasons:
 Hoping, hoping, hoping {#subsec:Elaboration.RunElab.elabHope}
 ----------------------
 
-The |runElabHope| command interprets the |ElabHope| instruction, which
+The `runElabHope` command interprets the `ElabHope` instruction, which
 hopes for an element of a given type. In a few cases, based on the type,
 we might be able to solve the problem immediately:
 
--   An element of type |UNIT| is |VOID|;
+-   An element of type `UNIT` is `VOID`;
 
 -   A proof of a proposition might be found or refined by the
     propositional simplifier
@@ -313,8 +313,8 @@ we search the hypotheses for a value with the same label.
 >     seekOn es
 >     where
 
-The traversal of the hypotheses is carried by |seekOn|. It searches
-parameters and hands them to |seekIn|.
+The traversal of the hypotheses is carried by `seekOn`. It searches
+parameters and hands them to `seekIn`.
 
 >       seekOn B0                                    = do
 >           label' <- bquoteHere label
@@ -326,7 +326,7 @@ parameters and hands them to |seekIn|.
 >           seekIn B0 (P param) (pty param) <|> seekOn es'
 >       seekOn (es' :< _)                            =    seekOn es'
 
-Then, |seekIn| tries to match the label we are looking for with an
+Then, `seekIn` tries to match the label we are looking for with an
 hypothesis we have found. Recall that a label is a telescope targetting
 a label, hence we try to peel off this telescope to match the label.
 
@@ -514,7 +514,7 @@ but do not always spot them.
 Suspending computation {#subsec:Elaboration.RunElab.suspending}
 ----------------------
 
-The |suspend| command can be used to delay elaboration, by creating a
+The `suspend` command can be used to delay elaboration, by creating a
 subgoal of the given type and attaching a suspended elaboration problem
 to its tip. When the scheduler hits the goal, the elaboration problem
 will restart if it is unstable.
@@ -533,7 +533,7 @@ will restart if it is unstable.
 >     suspendHierarchy ss
 >     return r
 
-The |suspendMe| command attaches a suspended elaboration problem to the
+The `suspendMe` command attaches a suspended elaboration problem to the
 current location.
 
 > suspendMe :: EProb -> ProofState (EXTM :=>: VAL)
@@ -546,7 +546,7 @@ current location.
 >     suspendHierarchy ss
 >     getCurrentDefinition
 
-The |suspendThis| command attaches the problem to the current goal if we
+The `suspendThis` command attaches the problem to the current goal if we
 are working on it, and creates a new subgoal otherwise.
 
 > suspendThis :: WorkTarget ->  (String :<: INTM :=>: TY) -> EProb ->

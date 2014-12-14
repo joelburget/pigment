@@ -36,7 +36,7 @@ for unstable elaboration problems and executes any it finds.
 
 When the scheduler is started, all problems before the working location
 should be stable, but there may be unstable problems in the current
-location and below it. The |startScheduler| command runs the scheduler
+location and below it. The `startScheduler` command runs the scheduler
 from the current location, so it will stabilise the children and return
 to where it started.
 
@@ -45,10 +45,10 @@ to where it started.
 
 In general, the scheduler might have to move non-locally (e.g. in order
 to solve goals elsewhere in the proof state), so it keeps track of a
-target location to return to. When |scheduler| is called, it checks to
+target location to return to. When `scheduler` is called, it checks to
 see if there might be any suspended problems below the current location.
 If so, it resets the suspend state and starts searching from the top of
-the development. If not, it calls |schedulerDone| to move out or
+the development. If not, it calls `schedulerDone` to move out or
 terminate as appropriate.
 
 > scheduler :: Name -> ProofState ()
@@ -60,7 +60,7 @@ terminate as appropriate.
 >                                 schedulerContinue n
 >         _                -> schedulerDone n
 
-The |schedulerContinue| command processes the entries below the cursor.
+The `schedulerContinue` command processes the entries below the cursor.
 The suspend state should describe the entries above the cursor. If there
 are no entries below, we are done. If we find a parameter, we simply
 move past it, because it cannot have a suspended problem attached. If we
@@ -79,7 +79,7 @@ search its children from the top.
 >             resumeCurrentEntry
 >             scheduler n
 
-Once done, the |schedulerDone| command checks if this is the target
+Once done, the `schedulerDone` command checks if this is the target
 location. If so, we stop; otherwise, we resume the current entry and
 continue searching.
 
@@ -96,7 +96,7 @@ continue searching.
 >                           goOutBelow
 >                           schedulerContinue n
 
-The |resumeCurrentEntry| command checks for an unstable elaboration
+The `resumeCurrentEntry` command checks for an unstable elaboration
 problem on the current entry of the current location, and resumes
 elaboration if it finds one. If elaboration succeeds, it gives the
 resulting term. It returns whether an elaboration process was resumed
@@ -120,7 +120,7 @@ resulting term. It returns whether an elaboration process was resumed
 >     _ -> return False
 
 Given a (potentially, but not necessarily, unstable) elaboration problem
-for the current location, we can |resume| it to try to produce a term.
+for the current location, we can `resume` it to try to produce a term.
 If this suceeds, the cursor will be in the same location, but if it
 fails (i.e. the problem has been suspended) then the cursor could be
 anywhere earlier in the proof state.
@@ -148,7 +148,7 @@ anywhere earlier in the proof state.
 >     solveHole' ref [] tm -- takes us to who knows where
 >     return Nothing
 
-If we have a |WaitSolve| problem where the hole has already been solved
+If we have a `WaitSolve` problem where the hole has already been solved
 with something else, we need to ensure the solution is compatible. If
 the two solutions are definitionally equal, everything is fine,
 otherwise we hope for a proof of their equality.

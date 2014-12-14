@@ -16,7 +16,7 @@ The Moonshine distillery {#sec:Distillation.Moonshine}
 Moonshining
 -----------
 
-The |moonshine| command attempts the dubious task of converting an
+The `moonshine` command attempts the dubious task of converting an
 Evidence term (possibly of dubious veracity) into a Display term. This
 is mostly for error-message generation.
 

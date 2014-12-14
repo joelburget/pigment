@@ -23,7 +23,7 @@ Tm
 Syntax of Terms and Values
 --------------------------
 
-We distinguish |In|Terms (into which we push types) and |Ex|Terms (from
+We distinguish `In`Terms (into which we push types) and `Ex`Terms (from
 which we pull types).
 
 > data Dir    = In | Ex
@@ -34,7 +34,7 @@ terms that are checked against given types, and there are *inferable*
 terms whose types are inferred relative to a typing context. We push
 types in to checkable terms, and pull types from inferable terms.
 
-We also distinguish the representations of |TT| terms and |VV| values.
+We also distinguish the representations of `TT` terms and `VV` values.
 
 > data Phase  = TT | VV
 
@@ -54,7 +54,7 @@ We can push types into:
 
 >   L     :: Scope p x             -> Tm {In, p}   x -- \(\lambda\)
 >   C     :: Can (Tm {In, p} x)    -> Tm {In, p}   x -- canonical
->   N     :: Tm {Ex, p} x          -> Tm {In, p}   x -- |Ex| to |In|
+>   N     :: Tm {Ex, p} x          -> Tm {In, p}   x -- `Ex` to |In|
 
 And we can infer types from:
 
@@ -62,7 +62,7 @@ And we can infer types from:
 
 -   variables, by reading the context;
 
--   fully applied operators, by |opTy| defined below;
+-   fully applied operators, by `opTy` defined below;
 
 -   elimination, by the type of the eliminator; and
 
@@ -75,8 +75,8 @@ And we can infer types from:
 >   (:?)  :: Tm {In, TT} x -> Tm {In, TT} x       -> Tm {Ex, TT}  x -- typing
 >   Yuk   :: Tm {In, VV} x                        -> Tm {Ex, TT}  x -- dirty
 
-To put some flesh on these bones, we define and use the |Scope|, |Can|,
-|Op|, and |Elim| data-types. Their role is described below. Before that,
+To put some flesh on these bones, we define and use the `Scope`, `Can`,
+|Op|, and `Elim` data-types. Their role is described below. Before that,
 let us point out an important invariant. Non-implementers are advised to
 skip the following.
 
@@ -92,7 +92,7 @@ To prove that statement, we first show that any |Tm <span>In, VV</span>
 p| which is not a |N t| is not a neutral term. This is obvious as we are
 left with lambda and canonicals, which cannot be stuck. Then, we have to
 prove that a |N t| in |Tm <span>In, VV</span> p| form is a stuck term.
-We do so by case analysis on the term |t| inside the |N|:
+We do so by case analysis on the term `t` inside the `N`:
 
 -   Typing and variables will not let you get values, so a neutral value
     is not one of those.
@@ -101,17 +101,17 @@ We do so by case analysis on the term |t| inside the |N|:
     its definition.
 
 -   An eliminator in value form consists in an elimination applied to a
-    value in |Ex|, which is – by induction – a neutral term. Hence, the
+    value in `Ex`, which is – by induction – a neutral term. Hence, the
     eliminator is stuck too.
 
 -   The case for fully applied operator is more problematic: we need one
-    of the arguments to be a |N t|, and to be used by |Op|. This way,
+    of the arguments to be a |N t|, and to be used by `Op`. This way,
     the operation is indeed a neutral term. We can hardly enforce this
     constraint in Haskell type system, so we have to deal with this
     approximation.
 
 As a consequence, fully applied operators call for some care. If you are
-to explicitly write a |:@| term wrapped inside a |N|, you must be sure
+to explicitly write a `:@` term wrapped inside a `N`, you must be sure
 that the operator is indeed applied to a stuck term *which is used* by
 the operator. During evaluation, for example, we have been careful in
 returning a neutral operator if and only if the operator was consuming a
@@ -128,12 +128,12 @@ for no good reason.
 
 Scopes
 
-A |Scope| represents the body of a binder, but the representation
-differs with phase. In *terms*, |x :. t| is a *binder*: the |t| is a de
+A `Scope` represents the body of a binder, but the representation
+differs with phase. In *terms*, |x :. t| is a *binder*: the `t` is a de
 Bruijn term with a new bound variable 0, and the old ones incremented.
-The |x| is just advice for display name selection.
+The `x` is just advice for display name selection.
 
-It is important to ensure that |body| computes to a fully evaluated
+It is important to ensure that `body` computes to a fully evaluated
 value, otherwise say “good bye” to strong normalisation.
 
 In both cases, we represent constant functions with |K t|, equivalent of
@@ -146,9 +146,9 @@ In both cases, we represent constant functions with |K t|, equivalent of
 
 Canonical objects
 
-The |Can| functor explains how canonical objects are constructed from
+The `Can` functor explains how canonical objects are constructed from
 sub-objects (terms or values, as appropriate). Lambda is not included
-here: morally, it belongs; practically, adapting |Can| to support
+here: morally, it belongs; practically, adapting `Can` to support
 binding complicates the definition. Note the presence of the @import@
 She-ism: this means that canonical constructors can be later plugged in
 using a She aspect.
@@ -204,16 +204,16 @@ using a She aspect.
 >     Tag    :: String -> Can t
 >   deriving (Show, Eq)
 
-The |Con| object is used and abused in many circumstances. However, all
-ilts usages share the same pattern: |Con| is used whenever we need to
-”pack” an object |t| into something else, to avoid ambiguities. For
-example, we use |Con| in the following case:
+The `Con` object is used and abused in many circumstances. However, all
+ilts usages share the same pattern: `Con` is used whenever we need to
+”pack” an object `t` into something else, to avoid ambiguities. For
+example, we use `Con` in the following case:
 $$\Rule{desc x (Mu x) \ni y}
      {Mu x \ni Con y}$$
 
 Eliminators
 
-The |Elim| functor explains how eliminators are constructed from their
+The `Elim` functor explains how eliminators are constructed from their
 sub-objects. It’s a sort of logarithm @hancock:amen. Projective
 eliminators for types with $\eta$-laws go here.
 
@@ -225,12 +225,12 @@ eliminators for types with $\eta$-laws go here.
 >   Snd    :: Elim t
 >   deriving (Show, Eq)
 
-Just as |Con| was packing things up, we define here |Out| to unpack
+Just as `Con` was packing things up, we define here `Out` to unpack
 them.
 
-Eliminators can be chained up in a *spine*. A |Spine| is a list of
+Eliminators can be chained up in a *spine*. A `Spine` is a list of
 eliminators for terms, typically representing a list of arguments that
-can be applied to a term with the |$:$| operator.
+can be applied to a term with the `$:$` operator.
 
 > type Spine p x = [Elim (Tm {In, p} x)]
 > ($:$) :: Tm {Ex, p} x -> Spine p x -> Tm {Ex, p} x
@@ -256,18 +256,18 @@ Hence, we first describe the implementation of the telescope.
 
 Telescope
 
-A telescope |TEL| represents the standard notion of telescope in Type
+A telescope `TEL` represents the standard notion of telescope in Type
 Theory. This consists in a sequence of types which definition might rely
 on any term inhabiting the previous types. A telescope is terminated by
-a |Target|.
+a `Target`.
 
 > data TEL x  = Target x
 >             | (String :<: TY) :-: (VAL -> TEL x)
 > infix 3 :-:
 
-The interpretation of the telescope is carried by |telCheck|. On the
-model of |opTy| defined below, this interpretation uses a generic
-checker-evaluator |chev|. Based on this chev, it simply goes over the
+The interpretation of the telescope is carried by `telCheck`. On the
+model of `opTy` defined below, this interpretation uses a generic
+checker-evaluator `chev`. Based on this chev, it simply goes over the
 telescope, checking and evaluating as it moves further.
 
 > telCheck ::  (Alternative m, MonadError (StackError t) m) =>
@@ -282,9 +282,9 @@ telescope, checking and evaluating as it moves further.
 
 Running the operator
 
-The |opRun| field implements the computational behavior: given suitable
+The `opRun` field implements the computational behavior: given suitable
 arguments, we should receive a value, or failing that, the neutral term
-to blame for the failure of computation. For example, if |append| were
+to blame for the failure of computation. For example, if `append` were
 an operator, it would compute if the first list is nil or cons, but
 complain about the first list if it is neutral.
 
@@ -383,7 +383,7 @@ We have some pattern synonyms for common, er, patterns.
 > pattern UID    = C UId
 > pattern TAG s  = C (Tag s)
 
-We have some type synonyms for commonly occurring instances of |Tm|.
+We have some type synonyms for commonly occurring instances of `Tm`.
 
 > type InTm   = Tm {In, TT}
 > type ExTm   = Tm {Ex, TT}
@@ -397,11 +397,11 @@ We have some type synonyms for commonly occurring instances of |Tm|.
 > type TXTSUB = [(Char, String)]        -- renaming plan
 
 We have special pairs for types going into and coming out of stuff. We
-write |typ :\>: thing| to say that |typ| accepts the term |thing|,
-i.e. we can push the |typ| in the |thing|. Conversely, we write |thing
-:\<: typ| to say that |thing| is of inferred type |typ|, i.e.we can pull
-the type |typ| out of the |thing|. Therefore, we can read |:\>:| as
-“accepts” and |:\<:| as “has inferred type”.
+write |typ :\>: thing| to say that `typ` accepts the term `thing`,
+i.e. we can push the `typ` in the `thing`. Conversely, we write |thing
+:\<: typ| to say that `thing` is of inferred type `typ`, i.e.we can pull
+the type `typ` out of the `thing`. Therefore, we can read `:\>:` as
+“accepts” and `:\<:` as “has inferred type”.
 
 > data ty :>: tm = ty :>: tm  deriving (Show,Eq)
 > infix 4 :>:
@@ -428,10 +428,10 @@ with the associated projections:
 > termOf :: (t :=>: v) -> t
 > termOf (t :=>: _) = t
 
-Intuitively, |t :=\>: v| can be read as “the term |t| reduces to the
-value |v|”.
+Intuitively, |t :=\>: v| can be read as “the term `t` reduces to the
+value `v`”.
 
-We use |(??)| as a smart constructor for type ascriptions that omits
+We use `(??)` as a smart constructor for type ascriptions that omits
 them when the term is in fact neutral.
 
 > (??) :: INTM -> INTM -> EXTM
@@ -504,8 +504,8 @@ values, and are shared.
 > data REF = (:=) { refName :: Name, refBody :: (RKind :<: TY)}
 > infix 2 :=
 
-References are compared by name, as the |NameSupply| guarantees a source
-of unique, fresh names. Note however that |REF|s being shared, one could
+References are compared by name, as the `NameSupply` guarantees a source
+of unique, fresh names. Note however that `REF`s being shared, one could
 think of using physical pointer equality to implement this test (!).
 This would require us to ensure we retain sharing in all circumstances,
 however.
@@ -516,15 +516,15 @@ however.
 > instance Show REF where
 >   show (name := kt) = intercalate "." (map (\(x,n) -> x ++ "_" ++ show n) name) ++ " := " ++ show kt
 
-A |REF| can be of one of four kinds:
+A `REF` can be of one of four kinds:
 
--   |DECL|: used a binder, a declaration;
+-   `DECL`: used a binder, a declaration;
 
--   |DEFN|: computed, a definition;
+-   `DEFN`: computed, a definition;
 
--   |HOLE|: not computed yet, a definition-to-be; or
+-   `HOLE`: not computed yet, a definition-to-be; or
 
--   |FAKE|: a hysterectomized definition, used to make labels.
+-   `FAKE`: a hysterectomized definition, used to make labels.
 
 > data RKind
 >   =  DECL
@@ -535,13 +535,13 @@ A |REF| can be of one of four kinds:
 
 A hole will be in one of three “Buddy Holly” states:
 
--   |Crying|: the elaboration strategy intended to solve the hole has
+-   `Crying`: the elaboration strategy intended to solve the hole has
     gone wrong.
 
--   |Waiting|: a solution strategy exists for the hole (including the
+-   `Waiting`: a solution strategy exists for the hole (including the
     “strategy” of waiting for the user to solve it).
 
--   |Hoping|: no solution strategy is assigned to the hole, so it will
+-   `Hoping`: no solution strategy is assigned to the hole, so it will
     take any value that you can give it.
 
 Stealing documentation from http://www.e-pig.org/epilogue/?p=147 might
@@ -550,8 +550,8 @@ be a good idea at this point.
 > data HKind = Crying String | Waiting | Hoping
 >   deriving Show
 
-We can already define some handy operators on |REF|s. First, we can turn
-a |REF| to a |VAL|ue by using |pval|. If the reference is already
+We can already define some handy operators on `REF`s. First, we can turn
+a `REF` to a `VAL`ue by using `pval`. If the reference is already
 defined, then we pick the computed value. Otherwise, it is dealt with as
 a neutral parameter.
 
@@ -578,7 +578,7 @@ it computing.
 >   deriving (Show)
 
 For example, labels are used in the presentation of the |Enum|
-(Section [sec:Features.Enum]) and |Desc| (Section [sec:Features.Desc])
+(Section [sec:Features.Enum]) and `Desc` (Section [sec:Features.Desc])
 data-types. These data-types are themselves implemented as fix-points of
 non human-readable descriptions, hence we hide the details behind a
 label. The curious reader is referred to their implementation. Anybody
@@ -593,7 +593,7 @@ labelled.
 >     Nothing -> False
 >     Just x -> M.getAll (crush (M.All . uncurry (==)) x)
 
-If we have a labelled |INTM|, we can try to extract the name from the
+If we have a labelled `INTM`, we can try to extract the name from the
 label.
 
 > extractREF :: EXTM -> Maybe REF
@@ -625,13 +625,13 @@ It is sometimes useful to construct the identity function:
 > ($#) :: Int -> [Int] -> InTm x
 > f $# xs = N (foldl (\ g x -> g :$ A (NV x)) (V f) xs)
 
-The aptly named |\$\#\#| operator applies an |ExTm| to a list of
+The aptly named `\$\#\#` operator applies an `ExTm` to a list of
 |InTm|s.
 
 > ($##) :: (Functor t, Foldable t) => ExTm x -> t (InTm x) -> ExTm x
 > f $## xs = foldl (\ v w -> v :$ A w) f xs
 
-Sensible name advice is a hard problem. The |fortran| function tries to
+Sensible name advice is a hard problem. The `fortran` function tries to
 extract a useful name from a binder.
 
 > fortran :: Tm {In, p} x -> String
@@ -639,7 +639,7 @@ extract a useful name from a binder.
 > fortran (L (H _ x _))   | not (null x) = x
 > fortran _ = "xf"
 
-Similarly, it is useful to extract name advice from a |REF|.
+Similarly, it is useful to extract name advice from a `REF`.
 
 > refNameAdvice :: REF -> String
 > refNameAdvice = fst . last . refName

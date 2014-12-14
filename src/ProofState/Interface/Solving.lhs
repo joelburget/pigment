@@ -27,9 +27,9 @@ Solving goals
 Giving a solution
 -----------------
 
-The |give| command takes a term and solves the current goal with it, if
+The `give` command takes a term and solves the current goal with it, if
 it type-checks. At the end of the operation, the cursor has not moved:
-we are still under the goal, which has now been |Defined|. Note that
+we are still under the goal, which has now been `Defined`. Note that
 entries below the cursor are (lazily) notified of the good news.
 
 > give :: INTM -> ProofState (EXTM :=>: VAL)
@@ -38,7 +38,7 @@ entries below the cursor are (lazily) notified of the good news.
 >     case tip of
 >         Unknown (tipTyTm :=>: tipTy) -> do
 >             -- Working on a goal
->             -- The |tm| is of the expected type
+>             -- The `tm` is of the expected type
 >             checkHere (tipTy :>: tm)
 >                 `pushError`
 >                 (StackError
@@ -65,9 +65,9 @@ entries below the cursor are (lazily) notified of the good news.
 
 For convenience, we combine giving a solution and moving. Indeed, after
 |give|, the cursor stands in a rather boring position: under a |Defined|
-entry, with no work to do. So, a first variant is |giveOutBelow| that
+entry, with no work to do. So, a first variant is `giveOutBelow` that
 gives a solution and moves just below the now-defined entry. A second
-variant is |giveNext| that gives as well and moves to the next goal, if
+variant is `giveNext` that gives as well and moves to the next goal, if
 one is available.
 
 > giveOutBelow :: INTM -> ProofState (EXTM :=>: VAL)
@@ -80,8 +80,8 @@ Finding trivial solutions
 
 Often, to solve a goal, we make a definition that contains further
 developments and, eventually, leads to a solution. To solve the goal, we
-are therefore left to |give| this definition. This is the role of the
-|done| command that tries to |give| the entry above the cursor.
+are therefore left to `give` this definition. This is the role of the
+|done| command that tries to `give` the entry above the cursor.
 
 > done :: ProofState (EXTM :=>: VAL)
 > done = do
@@ -94,10 +94,10 @@ are therefore left to |give| this definition. This is the role of the
 >         -- The entry was not a definition
 >         throwError $ sErr "done: entry above cursor must be a definition."
 
-Slightly more sophisticated is the well-known |apply| tactic in Coq: we
-are trying to solve a goal of type |T| while we have a definition of
-type |Pi S T|. We can therefore solve the goal |T| provided we can solve
-the goal |S|. We have this tactic too and, guess what, it is |apply|.
+Slightly more sophisticated is the well-known `apply` tactic in Coq: we
+are trying to solve a goal of type `T` while we have a definition of
+type |Pi S T|. We can therefore solve the goal `T` provided we can solve
+the goal `S`. We have this tactic too and, guess what, it is `apply`.
 
 > apply :: ProofState (EXTM :=>: VAL)
 > apply = do
@@ -116,7 +116,7 @@ the goal |S|. We have this tactic too and, guess what, it is |apply|.
 >     _ -> throwError $ sErr  $ "apply: last entry in the development"
 >                             ++ " must be a definition with a pi-type."
 
-The |ungawa| command looks for a truly obvious thing to do, and does it.
+The `ungawa` command looks for a truly obvious thing to do, and does it.
 
 > ungawa :: ProofState ()
 > ungawa =  ignore done <|> ignore apply <|> ignore (lambdaParam "ug")
@@ -127,7 +127,7 @@ Refining the proof state
 
 To refine the proof state, we must supply a new goal type and a
 realiser, which takes values in the new type to values in the original
-type. The |refineProofState| command creates a new subgoal at the top of
+type. The `refineProofState` command creates a new subgoal at the top of
 the working development, so the entries in that development are not in
 scope.
 

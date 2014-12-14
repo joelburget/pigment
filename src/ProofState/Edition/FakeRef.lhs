@@ -12,7 +12,7 @@ Fake references
 > import Evidences.Tm
 > import Evidences.Eval
 
-The |getFakeCurrentEntry| command returns a neutral application of a
+The `getFakeCurrentEntry` command returns a neutral application of a
 fake reference that represents the current entry of the current
 location. Note that its type is $\lambda$-lifted over its parameters in
 global scope, but it is then applied to them (as shared parameters).

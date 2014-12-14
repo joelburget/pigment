@@ -38,10 +38,10 @@ However, we have removed the following:
 -   Type ascriptions, replaced by type annotations ; and
 
 -   Operators, replaced by a parameter containing the corresponding
-    reference in |primitives| (Section [sec:Evidences.Operators])
+    reference in `primitives` (Section [sec:Evidences.Operators])
 
 Because of a limitation of GHC |deriving Traversable|, we define two
-mutually recursive data types instead of taking a |Dir| parameter.
+mutually recursive data types instead of taking a `Dir` parameter.
 Thanks to this hack, we can use |deriving Traversable|.
 
 > data DInTm :: * -> * -> * where
@@ -65,12 +65,12 @@ Thanks to this hack, we can use |deriving Traversable|.
 >  deriving (Functor, Foldable, Traversable, Show)
 
 Note that, again, we are polymorphic in the representation of free
-variables. The variables in Display terms are denoted here by |x|. The
-variables of embedded Evidence terms are denoted by |p|. Hence, there is
+variables. The variables in Display terms are denoted here by `x`. The
+variables of embedded Evidence terms are denoted by `p`. Hence, there is
 two potentially distinct set of free variables.
 
-While we reuse the |Can| and |Elim| functors from |Tm|, we redefine the
-notion of scope. We store |DExTm|s so as to give easy access to the head
+While we reuse the `Can` and `Elim` functors from `Tm`, we redefine the
+notion of scope. We store `DExTm`s so as to give easy access to the head
 and spine for elaboration and pretty-printing.
 
 > dfortran :: DInTm p x -> String
@@ -79,8 +79,8 @@ and spine for elaboration and pretty-printing.
 
 Scopes, canonical objects and eliminators
 
-The |DScope| functor is a simpler version of the |Scope| functor: we
-only ever consider *terms* here, while |Scope| had to deal with
+The `DScope` functor is a simpler version of the `Scope` functor: we
+only ever consider *terms* here, while `Scope` had to deal with
 *values*. Hence, we give this purely syntaxic, first-order
 representation of scopes:
 
@@ -107,14 +107,14 @@ Spines of eliminators are just like in the evidence language:
 
 Embedding evidence terms
 
-The |DT| and |DTEx| constructors allow evidence terms to be treated as
-|In| and |Ex| display terms, respectively. This is useful for
+The `DT` and `DTEx` constructors allow evidence terms to be treated as
+|In| and `Ex` display terms, respectively. This is useful for
 elaboration, because it allows the elaborator to combine finished terms
 with display syntax and continue elaborating. Such terms cannot be
 pretty-printed, however, so they should not be used in the distiller.
 
-To make |deriving Traversable| work properly, we have to |newtype|-wrap
-them and manually give trivial |Traversable| instances for the wrappers.
+To make |deriving Traversable| work properly, we have to `newtype`-wrap
+them and manually give trivial `Traversable` instances for the wrappers.
 The instantiation code is hidden in the literate document.
 
 > newtype InTmWrap  p x = InTmWrap  (InTm p)  deriving Show
@@ -127,7 +127,7 @@ The instantiation code is hidden in the literate document.
 > instance Traversable (ExTmWrap p) where
 >   traverse f (ExTmWrap x) = pure (ExTmWrap x)
 
-The following are essentially saying that |DInTm| is traversable in its
+The following are essentially saying that `DInTm` is traversable in its
 first argument, as well as its second.
 
 > traverseDTIN :: Applicative f => (p -> f q) -> DInTm p x -> f (DInTm q x)
@@ -154,7 +154,7 @@ Type annotations
 
 Because type ascriptions are horrible things to parse[^1], in the
 display language we use type annotations instead. The type annotation
-|DType ty| gets elaborated to the identity function for type |ty|,
+|DType ty| gets elaborated to the identity function for type `ty`,
 thereby pushing the type into its argument. The distiller removes type
 ascriptions and replaces them with appropriate type annotations if
 necessary.
@@ -163,7 +163,7 @@ Useful Abbreviations
 --------------------
 
 The convention for display term pattern synonyms is that they should
-match their evidence term counterparts, but with the addition of |D|s in
+match their evidence term counterparts, but with the addition of `D`s in
 appropriate places.
 
 > pattern DSET        = DC Set
@@ -245,7 +245,7 @@ appropriate places.
 Sizes
 -----
 
-We keep track of the |Size| of terms when parsing, to avoid nasty left
+We keep track of the `Size` of terms when parsing, to avoid nasty left
 recursion, and when pretty-printing, to minimise the number of brackets
 we output. In increasing order, the sizes are:
 
@@ -253,9 +253,9 @@ we output. In increasing order, the sizes are:
 >   deriving (Show, Eq, Enum, Bounded, Ord)
 
 When a higher-size term has to be put in a lower-size position, it must
-be wrapped in parentheses. For example, an application has |AppSize| but
-its arguments have |ArgSize|, so |g (f x)| cannot be written |g f x|,
-whereas |EqSize| is bigger than |AppSize| so |f x == g x| means the same
+be wrapped in parentheses. For example, an application has `AppSize` but
+its arguments have `ArgSize`, so |g (f x)| cannot be written |g f x|,
+whereas `EqSize` is bigger than `AppSize` so |f x == g x| means the same
 thing as |(f x) == (g x)|.
 
 [^1]: Left nesting is not really a friend of our damn parser

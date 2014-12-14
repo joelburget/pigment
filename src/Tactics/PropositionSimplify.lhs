@@ -117,7 +117,7 @@ either:
 > pattern SimplyTrivial prf  = Simply B0 B0 prf
 > pattern SimplyOne p g h    = Simply (B0 :< p) (B0 :< g) h
 
-We need a name supply for simplification, and use the |Maybe| monad to
+We need a name supply for simplification, and use the `Maybe` monad to
 allow failure. This could just as well be an arbitrary monad supporting
 these effects.
 
@@ -135,9 +135,9 @@ to proofs of $Q$ (second argument).
 Simplification in Action
 ------------------------
 
-The |propSimplify| command takes a global context, local context and
+The `propSimplify` command takes a global context, local context and
 proposition; it attempts to simplify the proposition following the rules
-above. if the result is |SimplyAbsurd| or |SimplyTrivial| then no
+above. if the result is `SimplyAbsurd` or `SimplyTrivial` then no
 simplification is guaranteed to have taken place, but if it is |Simply|
 one or more new propositions then these will be simpler than the
 original proposition. Note that this may fail if no simplification is
@@ -151,10 +151,10 @@ Simplifying $\Trivial$ and $\Absurd$ is remarkably easy.
 > propSimplify _ TRIVIAL  = return (SimplyTrivial  VOID)
 
 To simplify a conjunction $P \wedge Q$, we simplify each conjunct
-separately, then call the |simplifyAnd| helper function to combine the
+separately, then call the `simplifyAnd` helper function to combine the
 results. If either conjunct is absurd, then we can easily show that the
 conjunction is absurd. Otherwise, we append the lists of conjuncts and
-pre-compose the proofs with |Fst| or |Snd| as appropriate.
+pre-compose the proofs with `Fst` or `Snd` as appropriate.
 
 > propSimplify delta (AND p q) = forkSimplify delta p $
 >     \ pr -> case fst pr of
@@ -207,8 +207,8 @@ simplifying the proposition to itself.
 
 If $Q$ is absurd, then the simplified proposition is an implication from
 the simplified conjuncts of $P$ to $\Absurd$. The proof of the original
-implication is by absurdity elimination, applying the |pgs| to the proof
-of $P$ to get proofs of the |pis|, then applying the simplified
+implication is by absurdity elimination, applying the `pgs` to the proof
+of $P$ to get proofs of the `pis`, then applying the simplified
 proposition to these.
 
 >     consequent (Simply pis pgs ph, _) (SimplyAbsurd qx, _) = do
@@ -227,8 +227,8 @@ proposition to these.
 >                     rh
 
 If the consequent $Q$ is trivial, then the implication is trivial, which
-we can prove by applying the |pgs| to a hypothetical proof of $P$ to get
-proofs of the |pis|, then substituting these for the |pis| in the proof
+we can prove by applying the `pgs` to a hypothetical proof of $P$ to get
+proofs of the `pis`, then substituting these for the `pis` in the proof
 of $Q$.
 
 >     consequent (Simply pis pgs ph, _) (SimplyTrivial qt, _) = do
@@ -239,8 +239,8 @@ Otherwise, if $Q$ simplifies, then the implication simplifies to a
 conjunction of implications. Each implication is from the simplified
 components of $P$ to a single simplified component of $Q$. To prove the
 original implication, we assume a proof of $P$, then construct proofs of
-the |pis| from it and proofs of the |qis| by applying the proofs of the
-|ris| to these. We can then substitute these proofs for the |pis| and
+the `pis` from it and proofs of the `qis` by applying the proofs of the
+|ris| to these. We can then substitute these proofs for the `pis` and
 |qis| in the proof of $Q$.
 
 >     consequent (Simply pis pgs ph, simpP) (Simply qis qgs qh, simpQ)
@@ -333,7 +333,7 @@ $\ALL{x}{S} Q_i$ for each $Q_i$ in the simplification of $Q$.
 >              ph      = dischargeLam (B0 :< refS) (substitute qis qiPrfs qh)
 >         return (Simply pis pgs ph)
 
-To simplify a blue equation, we use |simplifyBlue|.
+To simplify a blue equation, we use `simplifyBlue`.
 
 > propSimplify delta (EQBLUE (sty :>: s) (tty :>: t)) =
 >     simplifyBlue True delta (sty :>: s) (tty :>: t)
@@ -358,11 +358,11 @@ If nothing else matches, we can always try searching the context.
 
 > propSimplify delta p = propSearch delta p
 
-The |simplifyBlue| command attempts to simplify a blue equation using
+The `simplifyBlue` command attempts to simplify a blue equation using
 |refl|, optionally unrolling it (calling eqGreen and simplifying the
 resulting pieces), or just searching the context. Note that if the
-|canUnroll| boolean is |False|, this will either find a proof of the
-equation and return |SimplyTrivial|, or it will fail.
+|canUnroll| boolean is `False`, this will either find a proof of the
+equation and return `SimplyTrivial`, or it will fail.
 
 > simplifyBlue ::  Bool -> Bwd REF -> TY :>: VAL -> TY :>: VAL ->
 >     Simplifier Simplify
@@ -386,11 +386,11 @@ equation and return |SimplyTrivial|, or it will fail.
 >        Right q        -> forkSimplify delta q
 >            (return . simplifyTransform (:$ Out) CON . fst)
 
-The |propSearch| operation searches the context for a proof of the
+The `propSearch` operation searches the context for a proof of the
 proposition, and if it finds one, returns the trivial simplification.
-When |seekProof| finds a proof in the context, it calls |backchain| to
+When `seekProof` finds a proof in the context, it calls `backchain` to
 go under any implications and test if the consequent matches the goal;
-if so, |backchain| then calls |seekProof| to attempt to prove the
+if so, `backchain` then calls `seekProof` to attempt to prove the
 hypotheses, in the context with the backchained proposition removed.
 
 > propSearch :: Bwd REF -> VAL -> Simplifier Simplify
@@ -414,11 +414,11 @@ hypotheses, in the context with the backchained proposition removed.
 >     unPRF :: VAL -> VAL
 >     unPRF (PRF p) = p
 
-The |forceSimplify| function is a variant of |propSimplify| that
+The `forceSimplify` function is a variant of `propSimplify` that
 guarantees to give a result, by trying to simplify the proposition and
 yielding an identical copy if simplification fails. It also returns a
 boolean indicating whether simplification occurred. This is useful in
-cases such as |&&|, where we know we can do some simplification even if
+cases such as `&&`, where we know we can do some simplification even if
 the conjuncts do not simplify. The first argument is an optional hint
 for the name of the reference.
 
@@ -441,7 +441,7 @@ for the name of the reference.
 
 To ensure correctness of fresh name generation, we need to fork the name
 supply before performing additional simplification, so we define helper
-functions to fork then call |propSimplify| or |forceSimplify|.
+functions to fork then call `propSimplify` or `forceSimplify`.
 
 > forkSimplify :: Bwd REF -> VAL ->
 >     ((Simplify, Bool) -> Simplifier a) -> Simplifier a
@@ -457,7 +457,7 @@ functions to fork then call |propSimplify| or |forceSimplify|.
 Invoking Simplification
 -----------------------
 
-When in the |ProofState|, we can simplify a proposition using the
+When in the `ProofState`, we can simplify a proposition using the
 current name supply and context:
 
 > runPropSimplify :: VAL -> ProofState (Maybe Simplify)
@@ -466,9 +466,9 @@ current name supply and context:
 >     es       <- getParamsInScope
 >     return $ runReaderT (propSimplify (bwdList es) p) nsupply
 
-The |propSimplifyHere| command attempts propositional simplification on
+The `propSimplifyHere` command attempts propositional simplification on
 the current location, which must be an open goal of type |PRF p| for
-some |p|. If it is unable to simplify |p| or simplifies it to |FF|, it
+some `p`. If it is unable to simplify `p` or simplifies it to `FF`, it
 will fail and throw an error. Otherwise, it will create zero or more new
 subgoals (from the conjuncts of the simplified proposition, if any),
 solve the current goal with the subgoals, and return a list of their
@@ -491,7 +491,7 @@ types.
 >             return (fmap sndEx pis)
 >   where
 
-The |makeSubgoal| command makes a new subgoal whose type corresponds to
+The `makeSubgoal` command makes a new subgoal whose type corresponds to
 the type of the given reference, and returns its term representation.
 
 >     makeSubgoal :: REF :<: INTM -> ProofState INTM

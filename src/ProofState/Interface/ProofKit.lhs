@@ -1,4 +1,4 @@
-The |ProofState| Kit {#sec:ProofState.Interface.ProofKit}
+The `ProofState` Kit {#sec:ProofState.Interface.ProofKit}
 ====================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -20,16 +20,16 @@ The |ProofState| Kit {#sec:ProofState.Interface.ProofKit}
 > import Evidences.BetaQuotation
 
 The proof state lives on a rich substrate of operations, inherited from
-the |ProofContext| as well as the |ProofState| monad. In this module, we
+the `ProofContext` as well as the `ProofState` monad. In this module, we
 export these operations as part of the Interface.
 
 Accessing the |NameSupply|
 --------------------------
 
-By definition of the |Development| in
+By definition of the `Development` in
 Section [sec:ProofState.Structure.Developments], we have that every
 entry is associated a namespace by the mean of a local name supply. As a
-result, the |ProofState| can almost be made a |NameSupplier|. The
+result, the `ProofState` can almost be made a `NameSupplier`. The
 exception being that it cannot fork the name supply, because it cannot
 generates new namespaces.
 
@@ -64,20 +64,20 @@ command $\beta$-quotes a term using the local name supply.
 > bquoteHere :: Tm {d, VV} REF -> ProofStateT e (Tm {d, TT} REF)
 > bquoteHere tm = withNSupply $ bquote B0 tm
 
-Secondly, any type-checking problem (defined in the |Check| monad) can
-be executed in the |ProofState|.
+Secondly, any type-checking problem (defined in the `Check` monad) can
+be executed in the `ProofState`.
 
 > runCheckHere :: (ErrorTok e -> ErrorTok DInTmRN) -> Check e a -> ProofState a
 > runCheckHere f c = do
 >     me <- withNSupply $ liftError' f . typeCheck c
 >     lift me
 
-As a consequence, we have |checkHere| to |check| terms against types:
+As a consequence, we have `checkHere` to `check` terms against types:
 
 > checkHere :: (TY :>: INTM) -> ProofState (INTM :=>: VAL)
 > checkHere tt = runCheckHere (fmap DTIN) $ check tt
 
-and |inferHere| to |infer| types from terms:
+and `inferHere` to `infer` types from terms:
 
 > inferHere :: EXTM -> ProofState (VAL :<: TY)
 > inferHere tm = runCheckHere (fmap DTIN) $ infer tm
@@ -85,7 +85,7 @@ and |inferHere| to |infer| types from terms:
 Being paranoiac
 ---------------
 
-The |validateHere| command performs some sanity checks on the current
+The `validateHere` command performs some sanity checks on the current
 location, which may be useful for paranoia purposes.
 
 > validateHere :: ProofState ()

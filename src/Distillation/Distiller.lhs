@@ -28,31 +28,31 @@ The distiller {#sec:Distillation.Distiller}
 > import Evidences.DefinitionalEquality
 > import React
 
-The distiller, like the elaborator, is organized on a |check|/|infer|
+The distiller, like the elaborator, is organized on a `check|/`infer|
 basis, following the type-checker implementation in
-Section [subsec:Evidences.TypeChecker.type-checking]. |distill| mirrors
-|check| — distilling |INTM|s, while |distillInfer| mirrors |infer| —
-distilling |EXTM|s.
+Section [subsec:Evidences.TypeChecker.type-checking]. `distill` mirrors
+|check| — distilling `INTM`s, while `distillInfer` mirrors `infer` —
+distilling `EXTM`s.
 
-Distilling |INTM|s {#subsec:Distillation.Distiller.intm}
+Distilling `INTM`s {#subsec:Distillation.Distiller.intm}
 ------------------
 
-The |distill| command converts a typed |INTM| in the Evidence language
-to a term in the Display language; that is, it reverses |elaborate|. It
+The `distill` command converts a typed `INTM` in the Evidence language
+to a term in the Display language; that is, it reverses `elaborate`. It
 peforms christening at the same time, turning absolute names into
 relative names.
 
 The distiller first tries to apply Feature-specific rules. These rules
 contain the inteligence of the distiller, aiming at making a concise
 Display term. If unsuccessful, the distiller falls back to the generic
-rules in |distillBase|.
+rules in `distillBase`.
 
 When going under a binder, we have to introduce fresh names to distill
 further. When christening, these fresh names have to be dealt with
-separately (see |unresolve| in
+separately (see `unresolve` in
 Section [subsec:ProofState.Interface.NameResolution.christening]):
 indeed, they are actually bound variables. Hence, we collect this *local
-scope* as a list of |Entries|.
+scope* as a list of `Entries`.
 
 > distill :: Entries -> (TY :>: INTM) -> ProofStateT INTM (DInTmRN :=>: VAL)
 > distill es (ANCHORS :>: x@(ANCHOR (TAG u) t ts)) = do
@@ -72,7 +72,7 @@ data type is really supposed to be a list, as in |EnumD|).
 >                                                            (ty :>: c)
 >       return ((DPAIR s t) :=>: CON v)
 
-If we have a canonical value in |MU s|, where |s| starts with a finite
+If we have a canonical value in |MU s|, where `s` starts with a finite
 sum, then we can (probably) turn it into a tag applied to some
 arguments.
 
@@ -202,7 +202,7 @@ not be necessary.)
 >     convScope (_ :. _)  x  tm = x ::. tm
 >     convScope (K _)     _  tm = DK tm
 
-If we encounter a neutral term, we switch to |distillInfer|.
+If we encounter a neutral term, we switch to `distillInfer`.
 
 > distillBase entries (_ :>: N n) = do
 >     (n' :<: _) <- distillInfer entries n []
@@ -217,17 +217,17 @@ If none of the cases match, we complain loudly.
 >     , errVal ty
 >     ]
 
-Distilling |EXTM|s
+Distilling `EXTM`s
 ------------------
 
-The |distillInfer| command is the |EXTM| version of |distill|, which
-also yields the type of the term. Following |distill|, we maintain the
+The `distillInfer` command is the `EXTM` version of `distill`, which
+also yields the type of the term. Following `distill`, we maintain the
 local scope of fresh references.
 
-Moreover, recall that the |DExTm| terms are in Spine form: they are
-composed of a |DHead| — either parameter, type annotation, or embedding
-of |ExTm| — and followed by a spine of eliminators. To perform this
-translation, we accumulate a |spine| and distill it when we reach the
+Moreover, recall that the `DExTm` terms are in Spine form: they are
+composed of a `DHead` — either parameter, type annotation, or embedding
+of `ExTm` — and followed by a spine of eliminators. To perform this
+translation, we accumulate a `spine` and distill it when we reach the
 head. Doing so, shared parameters can be removed (see
 subsection [subsec:ProofState.Interface.NameResolution.christening]).
 
@@ -326,9 +326,9 @@ loudly.
 Distillation support
 --------------------
 
-The |distillSpine| command takes a list of entries in scope, a typed
+The `distillSpine` command takes a list of entries in scope, a typed
 value and a spine of arguments for the value. It distills the spine,
-using |elimTy| to determine the appropriate type to push in at each
+using `elimTy` to determine the appropriate type to push in at each
 step, and returns the distilled spine and the overall type of the
 application.
 
@@ -351,7 +351,7 @@ application.
 >     , map ErrorElim spine
 >     ]
 
-The |toDExTm| helper function will distill a term to produce an |Ex|
+The `toDExTm` helper function will distill a term to produce an |Ex|
 representation by applying a type annotation only if necessary.
 
 > toDExTm :: Entries -> (INTM :>: INTM) -> ProofStateT INTM DExTmRN
@@ -366,12 +366,12 @@ representation by applying a type annotation only if necessary.
 Distillation interface
 ----------------------
 
-The |distillHere| command distills a term in the current context.
+The `distillHere` command distills a term in the current context.
 
 > distillHere :: (TY :>: INTM) -> ProofState (DInTmRN :=>: VAL)
 > distillHere tt = liftErrorState DTIN $ distill B0 tt
 
-The |prettyHere| command distills a term in the current context, then
+The `prettyHere` command distills a term in the current context, then
 passes it to the pretty-printer.
 
 > prettyHere :: (TY :>: INTM) -> ProofState Doc

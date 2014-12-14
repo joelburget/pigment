@@ -16,23 +16,23 @@ Pretty-printing {#sec:DisplayLang.PrettyPrint}
 > import Kit.BwdFwd
 > import Kit.MissingLibrary hiding ((<+>))
 
-We use the |HughesPJ| pretty-printing combinators. This section defines
+We use the `HughesPJ` pretty-printing combinators. This section defines
 how to pretty-print everything defined in the Core chapter, and provides
 she aspects to allow features to add their own pretty-printing support.
 
-The |kword| function gives the document representing a |Keyword|.
+The `kword` function gives the document representing a `Keyword`.
 
 > kword :: Keyword -> Doc
 > kword = text . key
 
-The |Pretty| class describes things that can be pretty-printed. The
-|pretty| function takes a value |x| and the |Size| at which it should be
-printed, and should return a document representation of |x|.
+The `Pretty` class describes things that can be pretty-printed. The
+|pretty| function takes a value `x` and the `Size` at which it should be
+printed, and should return a document representation of `x`.
 
 > class Show x => Pretty x where
 >     pretty :: x -> Size -> Doc
 
-The |wrapDoc| operator takes a document, its size and the size it should
+The `wrapDoc` operator takes a document, its size and the size it should
 be printed at. If the document’s size is larger than the current size,
 it is wrapped in parentheses.
 
@@ -41,11 +41,11 @@ it is wrapped in parentheses.
 >   | dSize > curSize  = parens d
 >   | otherwise        = d
 
-When defining instances of |Pretty|, we will typically pattern-match on
+When defining instances of `Pretty`, we will typically pattern-match on
 the first argument and construct a function that takes the current size
-by partially applying |wrapDoc| to a document and its size.
+by partially applying `wrapDoc` to a document and its size.
 
-The |Can| functor is fairly easy to pretty-print, the only complexity
+The `Can` functor is fairly easy to pretty-print, the only complexity
 being with $\Pi$-types.
 
 > instance Pretty (Can DInTmRN) where
@@ -123,9 +123,9 @@ being with $\Pi$-types.
 >     pretty (Tag s)  = const (kword KwTag <> text s)
 >     pretty can       = const (quotes . text . show $ can)
 
-The |prettyPi| function takes a document representing the domains so
+The `prettyPi` function takes a document representing the domains so
 far, a term and the current size. It accumulates domains until a
-non(dependent) $\Pi$-type is found, then calls |prettyPiMore| to produce
+non(dependent) $\Pi$-type is found, then calls `prettyPiMore` to produce
 the final document.
 
 > prettyPi :: Doc -> DInTmRN -> Size -> Doc
@@ -137,7 +137,7 @@ the final document.
 >     (kword KwPi <+> pretty s minBound <+> pretty t minBound)
 > prettyPi bs tm = prettyPiMore bs (pretty tm PiSize)
 
-The |prettyPiMore| function takes a bunch of domains (which may be
+The `prettyPiMore` function takes a bunch of domains (which may be
 empty) and a codomain, and represents them appropriately for the current
 size.
 
@@ -146,7 +146,7 @@ size.
 >   | isEmpty bs  = wrapDoc d PiSize
 >   | otherwise   = wrapDoc (bs <+> kword KwArr <+> d) PiSize
 
-The |Elim| functor is straightforward.
+The `Elim` functor is straightforward.
 
 > instance Pretty (Elim DInTmRN) where
 >     pretty (A t)  = pretty t
@@ -244,7 +244,7 @@ than a $\lambda$-term is reached.
 >   | isEmpty s  = wrapDoc t AppSize
 >   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
 
-The |prettyBKind| function pretty-prints a |ParamKind| if supplied with
+The `prettyBKind` function pretty-prints a `ParamKind` if supplied with
 a document representing its name and type.
 
 > prettyBKind :: ParamKind -> Doc -> Doc
@@ -252,7 +252,7 @@ a document representing its name and type.
 > prettyBKind ParamAll  d = kword KwLambda <+> d <+> kword KwImp
 > prettyBKind ParamPi   d = parens d <+> kword KwArr
 
-The |renderHouseStyle| hook allows us to customise the document
+The `renderHouseStyle` hook allows us to customise the document
 rendering if necessary.
 
 > renderHouseStyle :: Doc -> String

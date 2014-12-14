@@ -62,7 +62,7 @@ Note that the resulting values may contain earlier references that need
 to be substituted out. Any references left with no value at the end are
 unconstrained by the matching problem.
 
-The |matchValue| command requires the type of the values to be pushed
+The `matchValue` command requires the type of the values to be pushed
 in. It expands elements of $\Pi$-types by applying them to fresh
 references, which must not occur in solution values (this might
 otherwise happen when given a higher-order matching problem with no
@@ -101,7 +101,7 @@ references occur.
 >         $ matchValue zs tvv
 >     return (() :=>: v)
 
-The |matchNeutral| command matches two neutrals, and returns their type
+The `matchNeutral` command matches two neutrals, and returns their type
 along with the matching substitution.
 
 > matchNeutral :: Bwd REF -> NEU -> NEU -> StateT MatchSubst ProofState TY

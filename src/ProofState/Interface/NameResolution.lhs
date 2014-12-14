@@ -26,21 +26,21 @@ Resolving and unresolving names {#sec:ProofState.Interface.NameResolution}
 Typographical note: in this section, we write <span>*f*</span> for a
 relative name (component) and @f~0~@ for an absolute name (component).
 
-A |BScopeContext| contains information from the |ProofContext| required
+A `BScopeContext` contains information from the `ProofContext` required
 for name resolution: a list of the above entries and last component of
 the current entry’s name for each layer, along with the entries in the
 current development.
 
 > type BScopeContext =  (Bwd (Entries, (String, Int)), Entries)
 
-We can extract such a thing from a |ProofContext| using |inBScope|:
+We can extract such a thing from a `ProofContext` using `inBScope`:
 
 > inBScope :: ProofContext -> BScopeContext
 > inBScope (PC layers dev _) =
 >   (  fmap (\l -> (aboveEntries l, last . currentEntryName . currentEntry $ l)) layers
 >   ,  devEntries dev)
 
-An |FScopeContext| is the forwards variant:
+An `FScopeContext` is the forwards variant:
 
 > type FScopeContext =  ( Fwd (Entry Bwd)
 >                       , Fwd ((String, Int), Fwd (Entry Bwd)))
@@ -53,14 +53,14 @@ We can reverse the former to produce the latter:
 >     (fs, (u,es' <>> F0) :> vfss)
 > bToF (B0,es) = (es <>> F0,F0)
 
-The |flat| function, up to currying, takes a |BScopeContext| and
+The `flat` function, up to currying, takes a `BScopeContext` and
 flattens it to produce a list of entries.
 
 > flat :: Bwd (Entries, (String,Int)) -> Entries -> Entries
 > flat B0 es = es
 > flat (esus :< (es',_)) es = flat esus (es' <+> es)
 
-The |flatNom| function produces a name by prepending its second argument
+The `flatNom` function produces a name by prepending its second argument
 with the name components from the backwards list.
 
 > flatNom :: Bwd (Entries, (String,Int)) -> Name -> Name
@@ -87,13 +87,13 @@ When in the process of resolving a relative name, we keep track of a
 >                      ,  Maybe (Scheme INTM)
 >                      )
 
-The outcome of the process is a |ResolveResult|: a reference, a list of
+The outcome of the process is a `ResolveResult`: a reference, a list of
 shared parameters to which it should be applied, and a scheme for it (if
 there is one).
 
 > type ResolveResult = (REF, [REF], Maybe (Scheme INTM))
 
-The |resolveHere| command resolves a relative name to a reference, a
+The `resolveHere` command resolves a relative name to a reference, a
 spine of shared parameters to which it should be applied, and possibly a
 scheme. If the name ends with “./”, the scheme will be discarded, so all
 parameters can be provided explicitly.
@@ -112,7 +112,7 @@ parameters can be provided explicitly.
 >                              then  (init x,  True)
 >                              else  (x,       False)
 
-The |resolveDiscard| command resolves a relative name to a reference,
+The `resolveDiscard` command resolves a relative name to a reference,
 discarding any shared parameters it should be applied to.
 
 > resolveDiscard :: RelName -> ProofState REF
@@ -123,17 +123,17 @@ There are four stages relating to whether we are looking up or down
 navigating the part of the proof state which is on the way back to (or
 from) the root of the tree to the cursor position.
 
-We start off in |resolve|, which calls |lookUp| (for <span>*\^*</span>)
-or |lookDown| (for <span>*\_*</span>) to find the first name element.
-Then |lookFor| and |lookFor’| recursively call each other and |lookDown|
+We start off in `resolve`, which calls `lookUp` (for <span>*\^*</span>)
+or `lookDown` (for <span>*\_*</span>) to find the first name element.
+Then `lookFor` and `lookFor’` recursively call each other and |lookDown|
 until we find the target name, in which case we stop, or we reach the
-local part of the context, in which case |lookLocal| is called. Finally,
-|lookLocal| calls |huntLocal| with an appropriate list of entries, so it
+local part of the context, in which case `lookLocal` is called. Finally,
+|lookLocal| calls `huntLocal` with an appropriate list of entries, so it
 looks up or down until it finds the target name.
 
-The |resolve| function starts the name resolution process: if the name
-is a primitive we are done, otherwise it invokes |lookUp| or |lookDown|
-as appropriate then continues with |lookFor|.
+The `resolve` function starts the name resolution process: if the name
+is a primitive we are done, otherwise it invokes `lookUp` or |lookDown|
+as appropriate then continues with `lookFor`.
 
 > resolve :: RelName -> BScopeContext -> Either (StackError t) ResolveResult
 > resolve [(y, Rel 0)] _
@@ -325,7 +325,7 @@ We can split the name into 3 parts:
 
 We must only print the last part of the 1st, and we must print the 2nd
 absolutely. As far as I remember the naming of these three parts is
-dealt with by (respectively) |nomTop|, |nomAbs| and |nomRel|.
+dealt with by (respectively) `nomTop`, `nomAbs` and `nomRel`.
 
 4) Don’t snap your spine
 
@@ -347,7 +347,7 @@ section from the name of the current development.
 
 Here goes...
 
-To |unresolve| an absolute name, we need its reference kind, the spine
+To `unresolve` an absolute name, we need its reference kind, the spine
 of arguments to which it is applied, the context in which we are viewing
 it and a list of entries in local scope. We obtain a relative name, the
 number of shared parameters to drop, and the scheme of the name (if
@@ -367,12 +367,12 @@ If so, we return its short name with no shared parameters and no scheme.
 >         Just (s, _)  -> ([(s, Rel 0)], 0, Nothing)
 
 Otherwise, we actually have to do some work. We work in the |Maybe|
-monad and |failNom| will be called if unresolution fails.
+monad and `failNom` will be called if unresolution fails.
 
 >         Nothing      -> maybe (failNom tar, 0, Nothing) id $
 >             case (partNoms tar msc [] B0, rk) of
 
-If the reference is a |DECL|, then it had better be a parameter above,
+If the reference is a `DECL`, then it had better be a parameter above,
 and we do not need to worry about shared parameters. We simply call
 |nomTop| to find it.
 
@@ -441,8 +441,8 @@ spine, then return the gibberish.
 
 Different name
 
-First, |nomTop| handles the section where the name differs from our
-current position. We call it by its |lastNom| but need to look up the
+First, `nomTop` handles the section where the name differs from our
+current position. We call it by its `lastNom` but need to look up the
 offset and scheme.
 
 > nomTop :: Name -> BScopeContext -> Maybe ((String,Offs),Maybe (Scheme INTM))
@@ -450,7 +450,7 @@ offset and scheme.
 >     (i, ms) <- countB 0 n bsc
 >     return ((lastNom n, Rel i), ms)
 
-To determine the relative offset, |nomTop| uses |countB|, which looks
+To determine the relative offset, `nomTop` uses `countB`, which looks
 backwards through the context, counting the number of things in scope
 with the same last name component. This also returns the scheme
 attached, if there is one.
@@ -474,7 +474,7 @@ attached, if there is one.
 
 Same name, different spine
 
-Next, |nomAbs| handles the section where the name is the same as the
+Next, `nomAbs` handles the section where the name is the same as the
 current location but the spine is different.
 
 > nomAbs :: Name -> FScopeContext -> Maybe (RelName, Maybe (Scheme INTM))
@@ -508,7 +508,7 @@ current location but the spine is different.
 
 Same name and spine
 
-Finally, |nomRel| handles the section where the name and spine both
+Finally, `nomRel` handles the section where the name and spine both
 match the current location.
 
 > nomRel :: Name -> Entries
@@ -532,13 +532,13 @@ match the current location.
 
 Useful oddments for unresolution
 
-The common |lastNom| function extracts the |String| component of the
+The common `lastNom` function extracts the `String` component of the
 last part of a name.
 
 > lastNom :: Name -> String
 > lastNom = fst . last
 
-The |failNom| function is used to give up and convert an absolute name
+The `failNom` function is used to give up and convert an absolute name
 that cannot be unresolved into a relative name. This can happen when
 distilling erroneous terms, which may not be well-scoped.
 
@@ -547,7 +547,7 @@ distilling erroneous terms, which may not be well-scoped.
 
 Invoking unresolution
 
-The |christenName| and |christenREF| functions call |unresolve| for
+The `christenName` and `christenREF` functions call `unresolve` for
 names, and the name part of references, respectively.
 
 > christenName :: BScopeContext -> Name -> RKind -> RelName
@@ -556,7 +556,7 @@ names, and the name part of references, respectively.
 > christenREF :: BScopeContext -> REF -> RelName
 > christenREF bsc (target := rk :<: _) = christenName bsc target rk
 
-The |showEntries| function folds over a bunch of entries, christening
+The `showEntries` function folds over a bunch of entries, christening
 them with the given entries in scope and current name, and intercalating
 to produce a comma-separated list.
 
@@ -566,7 +566,7 @@ to produce a comma-separated list.
 >     f e | Just r <- entryRef e  = [showRelName (christenREF bsc r)]
 >         | otherwise             = []
 
-The |showEntriesAbs| function works similarly, but uses absolute names
+The `showEntriesAbs` function works similarly, but uses absolute names
 instead of christening them.
 
 > showEntriesAbs :: Traversable f => f (Entry f) -> String

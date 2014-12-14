@@ -15,8 +15,8 @@ Schemes {#sec:DisplayLang.Scheme}
 Schemes for implicit arguments
 ------------------------------
 
-A definition may have a |Scheme|, which allows us to handle implicit
-syntax. A |Scheme| is defined by: $$\begin{array}{rll}
+A definition may have a `Scheme`, which allows us to handle implicit
+syntax. A `Scheme` is defined by: $$\begin{array}{rll}
 \SC{Scheme} ::= & \D{Ty}
                 & \mbox{a real, tangible type} \\
              || & \PI{\V{x}}{\SC{Scheme}}{\SC{Scheme}}
@@ -54,7 +54,7 @@ Given a scheme, we can extract the names of its $\Pi$s:
 Turning schemes to terms
 ------------------------
 
-We can also convert a |Scheme x| to an |x|, if we are given a way to
+We can also convert a |Scheme x| to an `x`, if we are given a way to
 interpret $\Pi$-bindings:
 
 > schemeToType :: (String -> x -> x -> x) -> Scheme x -> x
@@ -74,7 +74,7 @@ With two direct special cases:
 Unlifting schemes
 -----------------
 
-Schemes are stored fully $\Pi$-lifted with |SchExplicitPI|s, so we may
+Schemes are stored fully $\Pi$-lifted with `SchExplicitPI`s, so we may
 need to apply them to a spine of shared parameters:
 
 > applyScheme :: Scheme INTM -> [REF] -> Scheme INTM

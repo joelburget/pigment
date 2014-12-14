@@ -21,9 +21,9 @@ Navigating in the Proof Context {#sec:Proofstate.Edition.Navigation}
 > import Evidences.Tm
 
 In Section [sec:ProofState.Structure.Developments], we have developed
-the notion of |Development|, a tree reifing the proof construction
+the notion of `Development`, a tree reifing the proof construction
 process. In order to navigate this tree, we have computed its zipper in
-Section [sec:ProofState.Edition.ProofContext], the |ProofContext|. At
+Section [sec:ProofState.Edition.ProofContext], the `ProofContext`. At
 this stage, we have a notion of *movement* in the proof context.
 
 However, we had to postpone the development of navigation commands to
@@ -41,7 +41,7 @@ We shall now develop this navigation kit, comfortably installed in the
 development; it contains a *cursor* which is the point at which changes
 take place. Consider the following development presented in
 Figure [fig:ProofState.Edition.Navigation.devpmt]: we have that the
-development |B| is in focus, with |y| above the cursor and |z| below it.
+development `B` is in focus, with `y` above the cursor and `z` below it.
 
 <span>3.3cm</span>
 
@@ -319,31 +319,31 @@ The navigation commands are the following:
 
 -   Cursor navigation:
 
-    -   |cursorUp| moves the cursor up by one entry (under |E| in the
+    -   `cursorUp` moves the cursor up by one entry (under `E` in the
         example);
 
-    -   |cursorDown| moves the cursor down by one entry (under |z| in
+    -   `cursorDown` moves the cursor down by one entry (under `z` in
         the example);
 
 -   Focus navigation:
 
-    -   |goIn| moves the focus in the first definition above the cursor,
+    -   `goIn` moves the focus in the first definition above the cursor,
         and brings the cursor at the bottom of the newly focused
-        development (inside |E| and below |b| in the example);
+        development (inside `E` and below `b` in the example);
 
-    -   |goOut| moves the focus out to the development that contains it,
-        with the cursor at the bottom of the development (under |G| in
+    -   `goOut` moves the focus out to the development that contains it,
+        with the cursor at the bottom of the development (under `G` in
         the example);
 
-    -   |goOutBelow| moves the focus out to the development that
+    -   `goOutBelow` moves the focus out to the development that
         contains it, with the cursor under the previously focused entry
-        (under |B| in the example);
+        (under `B` in the example);
 
-    -   |goUp| moves the focus up to the closest definition and leaves
-        the cursor at the bottom (inside |A| in the example); and
+    -   `goUp` moves the focus up to the closest definition and leaves
+        the cursor at the bottom (inside `A` in the example); and
 
-    -   |goDown| moves the focus down to the closest definition and
-        leaves the cursor at the bottom (inside |C| in the example).
+    -   `goDown` moves the focus down to the closest definition and
+        leaves the cursor at the bottom (inside `C` in the example).
 
 These commands fail with an error if they are impossible because the
 proof context is not in the required form. Things are slightly more
@@ -353,7 +353,7 @@ must be pushed down when the cursor or focus move.
 
 From Entry to Current entry, and back
 
-With |getCurrentEntry| and |putCurrentEntry|, we know how to access the
+With `getCurrentEntry` and `putCurrentEntry`, we know how to access the
 current entry, and overwrite it. However, when navigating through the
 proof context, we will change focus, therefore *leaving* the current
 entry, or *entering* into another.
@@ -400,7 +400,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 >     case above of
 >         aboveE :< e -> do
 >             below <- getBelowCursor
->             -- Move |e| from |above| to |below|
+>             -- Move `e` from `above` to |below|
 >             putEntriesAbove aboveE
 >             putBelowCursor $ e :> below
 >             return ()
@@ -415,7 +415,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 >     below <- getBelowCursor
 >     case below of
 >         e :> belowE -> do
->             -- Move |e| from |below| to |above|
+>             -- Move `e` from `below` to |above|
 >             putEntriesAbove (above :< e)
 >             putBelowCursor belowE
 >             return ()
@@ -425,7 +425,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 
 Focus navigation
 
-The |goIn| command moves the cursor upward, until it reaches a
+The `goIn` command moves the cursor upward, until it reaches a
 definition. If one can be found, it enters it and goes at the bottom.
 
 > goIn :: ProofState ()
@@ -455,7 +455,7 @@ definition. If one can be found, it enters it and goes at the bottom.
 >              putBelowCursor F0
 >              return ()
 
-The |goOut| command moves the focus to the outer layer, with the cursor
+The `goOut` command moves the focus to the outer layer, with the cursor
 at the bottom of it. Therefore, we zip back the current development,
 with the additional burden of dealing with news.
 
@@ -480,7 +480,7 @@ with the additional burden of dealing with news.
 >             -- Already at outermost position
 >             throwError $ sErr "goOut: you can't go that way."
 
-The |goOutBelow| variant has a similar effect than |goOut|, excepted
+The `goOutBelow` variant has a similar effect than `goOut`, excepted
 that it brings the cursor right under the previous point of focus.
 
 > goOutBelow :: ProofState ()
@@ -496,7 +496,7 @@ that it brings the cursor right under the previous point of focus.
 >             return ()
 >         B0 -> throwError $ sErr "goOutBelow: you can't go that way."
 
-The |goUp| command moves the focus upward, looking for a definition. If
+The `goUp` command moves the focus upward, looking for a definition. If
 one can be found, the cursor is moved at the bottom of the new
 development.
 
@@ -534,7 +534,7 @@ development.
 >             -- There is no up
 >             throwError $ sErr "goUp: you can't go that way."
 
-Similarly to |goUp|, the |goDown| command moves the focus downward,
+Similarly to `goUp`, the `goDown` command moves the focus downward,
 looking for a definition. If one can be found, the cursor is placed at
 the bottom of the new development. As often, moving down implies dealing
 with news: we accumulate them as we go, updating the parameteres on our
@@ -571,7 +571,7 @@ way.
 >                                     ,  belowEntries  =  NF belowNE }
 >                   -- Put the cursor at the bottom of the development
 >                   -- The suspend state is cleared because there are no
->                   -- entries in the |Dev|; the state will be updated
+>                   -- entries in the `Dev`; the state will be updated
 >                   -- during news propagation.
 >                   putAboveCursor (Dev B0 tip' nsupply' SuspendNone)
 >                   putBelowCursor F0

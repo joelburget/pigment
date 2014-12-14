@@ -45,7 +45,7 @@ implementation (such as in tactics, for instance). It consists in making
 a module, going in it, doing some constructions and analyses, and at
 some stage wanting to say that this module is actually an open
 definition of a certain type (a goal). Turning a module into a goal is
-implemented by |moduleToGoal|. An instance of this pattern appears in
+implemented by `moduleToGoal`. An instance of this pattern appears in
 Section [subsec:Tactics.Elimination.analysis].
 
 > moduleToGoal :: INTM -> ProofState (EXTM :=>: VAL)

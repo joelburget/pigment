@@ -55,7 +55,7 @@ $$\Gamma, \Delta \vdash e : (P : \Xi \rightarrow \Set)
 the *motive* of the elimination, $\Xi$ the *indices*, $\vec{m}$ the
 *methods*, $\vec{t}$ the *targets* and $P \vec{t}$ the *return type*.
 
-We will define |elim| this way:
+We will define `elim` this way:
 
 \< elim :: Maybe REF -\> (TY :\>: INTM) -\> ProofState () \< elim comma
 eliminator = (...)
@@ -63,7 +63,7 @@ eliminator = (...)
 Analyzing the eliminator {#subsec:Tactics.Elimination.analysis}
 ------------------------
 
-Presented as a development, |elim| is called in the context
+Presented as a development, `elim` is called in the context
 
 <span>5cm</span>
 
@@ -71,7 +71,7 @@ Presented as a development, |elim| is called in the context
 `  `$(\Delta)$` `$\rightarrow$\
 `] := ? : T`
 
-where $\Gamma$ and $\Delta$ are introduced and |T| is waiting to be
+where $\Gamma$ and $\Delta$ are introduced and `T` is waiting to be
 solved.
 
 We have to analyze the eliminator we are given for two reasons. First,
@@ -91,7 +91,7 @@ eliminator, namely:
 -   the targets $\vec{t}$ applied to the motive.
 
 To analyze the eliminator, we play a nice game. One option would be to
-jump in a |draftModule|, introduce |lambdaParam|s, then retrieve and
+jump in a `draftModule`, introduce `lambdaParam`s, then retrieve and
 check the different parts as we go along. However, this would mean that
 the terms would be built from references that would become invalid when
 the draft module was dropped. Therefore, we would suffer the burden (and
@@ -115,7 +115,7 @@ We will build the motive *in-place*, instead of analyzing the eliminator
 *and then* making the motive. Moreover, we are able to safely check the
 shape of the eliminator and extract the interesting bits.
 
-The |introElim| command takes the eliminator with its type, which should
+The `introElim` command takes the eliminator with its type, which should
 be a function whose domain is the motive type and whose range contains
 the methods and return type. It creates a new definition for the rebuilt
 eliminator, with subgoals for the motive and methods. It returns the
@@ -161,7 +161,7 @@ type, there is nothing we can do:
 
 Making the methods
 
-Above, we have used |makeMethods| to introduce the methods and retrieve
+Above, we have used `makeMethods` to introduce the methods and retrieve
 the return type of the eliminator. Remember that the eliminator is a
 telescope of $\Pi$-types. To get the type of the motive, we have matched
 the first component of the telescope. To get the methods, we simply
@@ -179,7 +179,7 @@ consummed.
 
 Checking the motive and targets
 
-The |checkTargets| command verifies that the motive is of type
+The `checkTargets` command verifies that the motive is of type
 $\Xi \rightarrow Set$ and that the return type is the motive applied to
 some arguments (the targets), which are returned.
 
@@ -198,7 +198,7 @@ some arguments (the targets), which are returned.
 Identifiying the motive
 -----------------------
 
-The |introElim| command has generated a subgoal for the motive and left
+The `introElim` command has generated a subgoal for the motive and left
 us inside it. That’s a good thing because this is what we are going to
 do.
 
@@ -318,7 +318,7 @@ methods. Therefore, we can already split $\Delta$ into its parametric
 and non-parametric parts, $\Delta_0$ and $\Delta_1$. As we are not
 interested in $\Delta_0$, we fearlessly throw it away.
 
-We aim to implement the |findNonParametricHyps| command, which takes the
+We aim to implement the `findNonParametricHyps` command, which takes the
 context $\Delta$ as a list of references with their types in term form
 and the type of the eliminator, and returns the filtered context
 $\Delta_1$. The initial dependencies are those of the motive and
@@ -331,9 +331,9 @@ methods.
 >     let deps = foldMap collectRefs argTypes
 >     removeDependencies delta deps
 
-Note that we have been careful in asking for |elimTy| here, the type of
+Note that we have been careful in asking for `elimTy` here, the type of
 the eliminator. One might have thought of getting the type of the motive
-and methods during |introElim|, and using those. That would not work:
+and methods during `introElim`, and using those. That would not work:
 the motive is defined under the scope of $\Delta$, so its lambda-lifted
 form includes $\Delta$. Hence, the type of the methods are defined in
 terms of the motive. Hence, all $\Delta$ is innocently included into
@@ -351,13 +351,13 @@ pollution, and we get what we asked for.
 >       return $ _Stm : t
 > unfoldTelescope _ = return []
 
-The dependencies can be extracted from terms in |INTM| form using the
+The dependencies can be extracted from terms in `INTM` form using the
 following helper function:
 
 > collectRefs :: INTM -> [REF]
 > collectRefs = foldMap (\x -> [x])
 
-Now, we are left with implementing |removeDependencies|. In the case
+Now, we are left with implementing `removeDependencies`. In the case
 where $r \in \Delta$ belongs to the dependency set, we exclude it from
 $\Delta_1$. We add the references in the type of $r$ to the dependency
 set, then continue. If $r$ is not in the dependency set, we continue and
@@ -379,7 +379,7 @@ Finding removable hypotheses
 We need to do something like this to find removable hypotheses (those
 about which we gain no information and hence might as well not abstract
 over). However, the problem is more complex than just dependency
-analysis, because of labelled types. The |shouldKeep| function doesn’t
+analysis, because of labelled types. The `shouldKeep` function doesn’t
 work properly and should be replaced with a proper type-directed
 traversal for this to make sense.
 
@@ -405,23 +405,23 @@ traversal for this to make sense.
 >     shouldKeep (_ :@ ts) = Data.Foldable.any shouldKeep ts
 >     shouldKeep _ = False
 
-Representing the context as |Binder|s
+Representing the context as `Binder`s
 
 As we have seen, simplifying the motive will involve considering the
 non-parametric context $\Delta_1$ and, as we go along, remove some of
 its components. We will work with $\Delta_1$ in the following form. A
-|Binder| is a reference with the |INTM| representation of its type, and
+|Binder| is a reference with the `INTM` representation of its type, and
 a corresponding argument term that will be used when applying the
 motive.
 
 > type Binder = (REF :<: INTM, INTM)
 
-Note that binders are |DECL| references which are copied from the
+Note that binders are `DECL` references which are copied from the
 original context and modified. This is not really a problem: remember
 that they are an imitative fiction. Once we have found which binders we
 keep, we will discharge them over the goal type to produce the motive.
 
-We can get a |Binder| from a typed reference by taking the reference
+We can get a `Binder` from a typed reference by taking the reference
 itself as the second component:
 
 > toBinder :: (REF :<: INTM) -> Binder
@@ -431,13 +431,13 @@ Extracting an element of $\Delta_1$
 
 Recall that, during simplification, we need to identify references
 belonging to the context $\Delta_1$ and remove the corresponding $\Pi$
-in the simplified context $\Delta_1'$. However, in |ProofState|, we
+in the simplified context $\Delta_1'$. However, in `ProofState`, we
 cannot really remove a $\Pi$ once it has been made. Therefore, we delay
 the making of the $\Pi$s until we precisely know which ones are needed.
 Meanwhile, to carry out our analysis, we directly manipulate the binders
 computed from $\Delta_1$.
 
-To symbolically remove a $\Pi$, we remove the corresponding |Binder|.
+To symbolically remove a $\Pi$, we remove the corresponding `Binder`.
 When simplification ends, we simply introduce the $\Pi$s corresponding
 to the remaining binders.
 
@@ -445,7 +445,7 @@ Let us implement the “search and symbolic removal” operation
 |lookupBinders|: we are given a reference, which may or may not belong
 to the binders. If the reference belongs to the binders, we return the
 binders before it, and the binders after it (which might depend on it);
-if not, we return |Nothing|.
+if not, we return `Nothing`.
 
 > lookupBinders :: REF -> Bwd Binder -> Maybe (Bwd Binder, Fwd Binder)
 > lookupBinders p binders = help binders F0
@@ -460,8 +460,8 @@ Renaming references
 
 As we have seen, we will need to carry a fair amount of renaming. A
 renaming operation consists in replacing some references by some other
-references, in a term in |INTM| form. In such a case, renaming is simply
-a matter of |fmap| over the term.
+references, in a term in `INTM` form. In such a case, renaming is simply
+a matter of `fmap` over the term.
 
 > renameTM :: [(REF, REF)] -> INTM -> INTM
 > renameTM us = fmap (\ r -> maybe r id (lookup r us))
@@ -490,7 +490,7 @@ hypotheses. Moreover, we have turned $\Delta_1$ into a list of binders.
 Our mission here is to add a bunch of equational constraints to the
 binders, simplifying them wherever possible.
 
-A |Constraint| represents an equation between a reference (in the
+A `Constraint` represents an equation between a reference (in the
 indices $\Xi$) with its type, and a target in $\vec{t}$ with its type.
 
 > type Constraint =  (REF :<: INTM, (INTM :~>: INTM) :<: (INTM :~>: INTM))
@@ -499,7 +499,7 @@ We will be renaming references when we solve constraints, but we need to
 keep track of the original terms (without renaming) for use when
 constructing arguments to the eliminator (the second component of the
 binders, which are in the scope of the original context). We use the
-type |a : \>: b| for a pair in which |a| is not updated and |b| is
+type |a : \>: b| for a pair in which `a` is not updated and `b` is
 updated.
 
 > data a :~>: b = a :~>: b
@@ -507,7 +507,7 @@ updated.
 
 Note that there is no need to rename the left-hand sides of constraints,
 since they are fresh references that do not depend on the binders. Hence
-we can implement |renameConstraints| to apply a list of updates to the
+we can implement `renameConstraints` to apply a list of updates to the
 right-hand sides
 
 > renameConstraints :: [(REF, REF)] -> Bwd Constraint -> Fwd Constraint
@@ -520,9 +520,9 @@ right-hand sides
 
 Acquiring constraints
 
-The |introMotive| command starts with two copies of the motive type and
+The `introMotive` command starts with two copies of the motive type and
 a list of targets. It must be called inside the goal for the motive. It
-unfolds the types in parallel, introducing fresh |lambdaParam|s on the
+unfolds the types in parallel, introducing fresh `lambdaParam`s on the
 left and working through the targets on the right; as it does so, it
 accumulates constraints between the introduced references (in $\Xi$) and
 the targets. It also returns the number of extra definitions created
@@ -576,7 +576,7 @@ takes the projections separately.
 
 Simplifying constraints
 
-The |simplifyMotive| command takes a list of binders, a list of
+The `simplifyMotive` command takes a list of binders, a list of
 constraints and a goal type. It computes an updated list of binders and
 an updated goal type.
 
@@ -633,7 +633,7 @@ Building the motive
 
 Finally, we can make the motive, hence closing the subgoal. This simply
 consists in chaining the commands above, and give the computed term.
-Unless we’ve screwed things up, |giveOutBelow| should always be happy.
+Unless we’ve screwed things up, `giveOutBelow` should always be happy.
 
 > makeMotive ::  TY -> INTM -> Bwd (REF :<: INTM) -> Bwd INTM -> TY ->
 >                ProofState (Bwd (REF :<: INTM), [Binder])
@@ -672,7 +672,7 @@ Discharge the binders over the goal type to produce the motive:
 >     giveOutBelow goal''
 
 Return to the construction of the rebuilt eliminator, by going out the
-same number of times as |introMotive| went in:
+same number of times as `introMotive` went in:
 
 >     replicateM_ n goOut
 >     return (delta0, trail binders')
@@ -680,7 +680,7 @@ same number of times as |introMotive| went in:
 Putting things together
 -----------------------
 
-Now we can combine the pieces to produce the |elim| command:
+Now we can combine the pieces to produce the `elim` command:
 
 > elim :: Maybe REF -> (TY :>: EXTM) -> ProofState [EXTM :=>: VAL]
 > elim comma (elimTy :>: elim) = do
@@ -691,13 +691,13 @@ and its context, before we start modifying the development.
 >     (goal :=>: _) <- getGoal "T"
 >     delta <- getLocalContext comma
 
-We call |introElim| to rebuild the eliminator as a definition, check
+We call `introElim` to rebuild the eliminator as a definition, check
 that everything is correct, and make subgoals for the motive and
 methods.
 
 >     (elimName, motiveType, targets) <- introElim (elimTy :>: elim)
 
-Then we call |makeMotive| to introduce the indices, build and simplify
+Then we call `makeMotive` to introduce the indices, build and simplify
 constraints, and solve the motive subgoal.
 
 >     (delta0, binders) <- makeMotive motiveType goal delta targets elimTy
@@ -759,10 +759,10 @@ will typically want to move to the first (lifted) method:
 > toFirstMethod :: ProofState ()
 > toFirstMethod = goIn >> goTop
 
-The |getLocalContext| command takes a comma and returns the local
+The `getLocalContext` command takes a comma and returns the local
 context, by looking up the parameters above and dropping those before
 the comma, if one is supplied. Regardless of the comma, we only go back
-as far as a |CurrentEntry| with name |magicImplName| if one exists, so
+as far as a `CurrentEntry` with name `magicImplName` if one exists, so
 shared parameters for programming problems will always be excluded.
 
 > getLocalContext :: Maybe REF -> ProofState (Bwd (REF :<: INTM))

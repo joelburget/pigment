@@ -40,11 +40,11 @@ Invoking the Elaborator {#sec:Elaborator.Elaborator}
 Elaborating terms
 -----------------
 
-The |elaborate| command elaborates a term in display syntax, given its
+The `elaborate` command elaborates a term in display syntax, given its
 type, to produce an elaborated term and its value representation. It
-behaves similarly to |check| from
+behaves similarly to `check` from
 subsection [subsec:Evidences.TypeChecker.type-checking], except that it
-operates in the |Elab| monad, so it can create subgoals and
+operates in the `Elab` monad, so it can create subgoals and
 $\lambda$-lift terms.
 
 > elaborate :: Loc -> (TY :>: DInTmRN) -> ProofState (INTM :=>: VAL)
@@ -84,8 +84,8 @@ elaborates it and runs the scheduler.
 Elaborating construction commands
 ---------------------------------
 
-The |elabGive| command elaborates the given display term in the
-appropriate type for the current goal, and calls the |give| command on
+The `elabGive` command elaborates the given display term in the
+appropriate type for the current goal, and calls the `give` command on
 the resulting term. If its argument is a nameless question mark, it
 avoids creating a pointless subgoal by simply returning a reference to
 the current goal (applied to the appropriate shared parameters).
@@ -112,7 +112,7 @@ the current goal (applied to the appropriate shared parameters).
 >         aus <- getGlobalScope
 >         return (applySpine ref aus)
 
-The |elabMake| command elaborates the given display term in a module to
+The `elabMake` command elaborates the given display term in a module to
 produce a type, then converts the module to a goal with that type. Thus
 any subgoals produced by elaboration will be children of the resulting
 goal.
@@ -126,7 +126,7 @@ goal.
 >     goOutBelow
 >     return tm
 
-The |elabPiParam| command elaborates the given display term to produce a
+The `elabPiParam` command elaborates the given display term to produce a
 type, and creates a $\Pi$ with that type.
 
 > elabPiParam :: (String :<: DInTmRN) -> ProofState REF
@@ -141,7 +141,7 @@ type, and creates a $\Pi$ with that type.
 Elaborating programming problems {#subsec:Elaborator.Elaborator.elab-prog-problem}
 --------------------------------
 
-The |elabLet| command sets up a programming problem, given a name and
+The `elabLet` command sets up a programming problem, given a name and
 scheme. The command |let plus (m : Nat)(n : Nat) : Nat| should result in
 the following proof state:
 
@@ -195,7 +195,7 @@ recursive call.
 >     refs <- traverse lambdaParam (schemeNames schCallLocal)
 >     giveOutBelow (N (P (last refs) :$ Call (N (pn $## map NP (init refs)))))
 
-For now we just call |elabProgram| to set up the remainder of the
+For now we just call `elabProgram` to set up the remainder of the
 programming problem. This could be implemented more cleanly, but it
 works.
 
@@ -213,7 +213,7 @@ Sorry for the horrible de Bruijn index mangling.
 >     makeCall l n (SchExplicitPi (x :<: schS) schT) =
 >         SchExplicitPi (x :<: schS) (makeCall l (n+1) schT)
 
-The |elabProgram| command adds a label to a type, given a list of
+The `elabProgram` command adds a label to a type, given a list of
 arguments. e.g. with a goal |plus : Nat -\> Nat -\> Nat|, |program x,y|
 will give a proof state of:
 

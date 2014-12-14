@@ -178,10 +178,10 @@ Functor Kit
 Applicative Kit
 ---------------
 
-The |untilA| operator runs its first argument one or more times until
+The `untilA` operator runs its first argument one or more times until
 its second argument succeeds, at which point it returns the result. If
 the first argument fails, the whole operation fails. If you have
-understood |untilA|, it won’t take you long to understand |whileA|.
+understood `untilA`, it won’t take you long to understand `whileA`.
 
 > untilA :: Alternative f => f () -> f a -> f a
 > g `untilA` test = g *> try
@@ -190,8 +190,8 @@ understood |untilA|, it won’t take you long to understand |whileA|.
 > g `whileA` test = try
 >     where try = test <|> (g *> try)
 
-The |much| operator runs its argument until it fails, then returns the
-state of its last success. It is very similar to |many|, except that it
+The `much` operator runs its argument until it fails, then returns the
+state of its last success. It is very similar to `many`, except that it
 throws away the results.
 
 > much :: Alternative f => f () -> f ()

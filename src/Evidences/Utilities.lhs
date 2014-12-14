@@ -15,7 +15,7 @@ Utilities
 > import Evidences.Eval
 > import Kit.BwdFwd
 
-From |EXTM| to |INTM| and back again
+From `EXTM` to `INTM` and back again
 ------------------------------------
 
 Various commands yield an |EXTM :=\>: VAL|, and we sometimes need to
@@ -24,8 +24,8 @@ convert this to an |INTM :=\>: VAL|.
 > neutralise :: Monad m => (EXTM :=>: VAL) -> m (INTM :=>: VAL)
 > neutralise (n :=>: v) = return $ N n :=>: v
 
-Conversely, sometimes we have an |INTM| and the value representation of
-its type, but need an |EXTM|. We avoid |bquote| if possible.
+Conversely, sometimes we have an `INTM` and the value representation of
+its type, but need an `EXTM`. We avoid `bquote` if possible.
 
 > annotate :: NameSupplier m => INTM -> TY -> m EXTM
 > annotate (N n)  _   = return n
@@ -34,7 +34,7 @@ its type, but need an |EXTM|. We avoid |bquote| if possible.
 Discharging a list of hypotheses over a term
 --------------------------------------------
 
-The |dischargeLam| function discharges and $\lambda$-binds a list of
+The `dischargeLam` function discharges and $\lambda$-binds a list of
 references over a term.
 
 > dischargeLam :: Bwd REF -> INTM -> INTM
@@ -44,9 +44,9 @@ references over a term.
 >     wrapLambdas B0 tm = tm
 >     wrapLambdas (bs :< (n := _)) tm = wrapLambdas bs (L (fst (last n) :. tm))
 
-The |dischargeF| function discharges and binds a list of typed
-references over a term, using the given |binder| function at each step.
-The |binder| takes a |Bool| indicating whether the corresponding
+The `dischargeF` function discharges and binds a list of typed
+references over a term, using the given `binder` function at each step.
+The `binder` takes a `Bool` indicating whether the corresponding
 reference occurred in the original term, the name advice for the binder,
 the type of the reference and the term to be bound.
 
@@ -65,8 +65,8 @@ the type of the reference and the term to be bound.
 
 Using the above, we can easily discharge and $\forall$-bind or discharge
 and $\Pi$-bind. Note that when the bound variable is not used, a |K|
-binder is used. For |dischargeAll|, the initial term must be in the form
-|PRF q| for some proposition |q|.
+binder is used. For `dischargeAll`, the initial term must be in the form
+|PRF q| for some proposition `q`.
 
 > dischargeAll :: Bwd (REF :<: INTM) -> INTM -> INTM
 > dischargeAll = dischargeF f
@@ -80,7 +80,7 @@ binder is used. For |dischargeAll|, the initial term must be in the form
 >     f :: Bool -> String -> INTM -> INTM -> INTM
 >     f _   x p q = PIV x p q
 
-The |dischargeAllREF| function calls |dischargeAll| on the type of a
+The `dischargeAllREF` function calls `dischargeAll` on the type of a
 reference, producing a reference with the same name but whose type is
 $\forall$-abstracted over the list of references. This should be used
 with caution, as it could lead to having two references with the same
@@ -91,7 +91,7 @@ name but different types.
 >     (n := DECL :<: evTm ty') :<: ty'
 >   where ty' = dischargeAll bs ty
 
-The |mkFun| function turns a Haskell function into a term by applying it
+The `mkFun` function turns a Haskell function into a term by applying it
 to a fresh reference and discharging over that reference.
 
 > mkFun :: NameSupplier m => (REF -> INTM) -> m INTM
@@ -101,7 +101,7 @@ to a fresh reference and discharging over that reference.
 Term construction and deconstruction
 ------------------------------------
 
-The |splitSpine| function takes a neutral value and tries to split it
+The `splitSpine` function takes a neutral value and tries to split it
 into a reference and a spine of arguments to which it is applied.
 
 > splitSpine :: NEU -> Maybe (REF, [VAL])

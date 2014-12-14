@@ -15,7 +15,7 @@ Name management
 > import Evidences.Tm
 > import Evidences.Operators
 
-The |lookupName| function looks up a name in the context (including
+The `lookupName` function looks up a name in the context (including
 axioms and primitives); if found, it returns the reference applied to
 the spine of shared parameters.
 
@@ -29,7 +29,7 @@ the spine of shared parameters.
 >           Just (_, ref)  -> return $ Just $ applySpine ref inScope
 >           Nothing        -> return Nothing
 
-The |pickName| command takes a prefix suggestion and a name suggestion
+The `pickName` command takes a prefix suggestion and a name suggestion
 (either of which may be empty), and returns a more-likely-to-be-unique
 name if the name suggestion is empty.
 

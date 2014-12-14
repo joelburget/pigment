@@ -13,13 +13,13 @@ $\beta$-Quotation
 > import NameSupply.NameSupplier
 
 As we are in the quotation business, let us define $\beta$-quotation,
-ie. |bquote|. Unlike |quote|, |bquote| does not perform
+ie. `bquote`. Unlike `quote`, `bquote` does not perform
 $\eta$-expansion, it just brings the term in $\beta$-normal form.
-Therefore, the code is much more simpler than |quote|, although the idea
+Therefore, the code is much more simpler than `quote`, although the idea
 is the same.
 
-It is important to note that we are in a |NameSupplier| and we don’t
-require a specially crafted |NameSupply| (unlike |quote| and |quop|).
+It is important to note that we are in a `NameSupplier` and we don’t
+require a specially crafted `NameSupply` (unlike `quote` and |quop|).
 Because of that, we have to maintain the variables we have generated and
 to which De Bruijn index they correspond. This is the role of the
 backward list of references. Note also that we let the user provide an

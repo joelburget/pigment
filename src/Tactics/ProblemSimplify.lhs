@@ -47,10 +47,10 @@ such as:
 -   solving the problem completely if it is trivial (for example, if it
     depends on a proof of false).
 
-The |problemSimplify| command performs these simplifications. It works
+The `problemSimplify` command performs these simplifications. It works
 by repeatedly transforming the proof state into a simpler version, one
 step at a time. It will fail if no simplification is possible. The real
-work is done in |simplifyGoal| below.
+work is done in `simplifyGoal` below.
 
 > problemSimplify :: ProofState (EXTM :=>: VAL)
 > problemSimplify = do
@@ -61,17 +61,17 @@ We say simplification is *at the top level* if we are simplifying
 exactly the current goal in the proof state. If this is not the case, we
 can still make some simplifications but others require us to quote the
 type being simplified and make a new goal so we are back at the top
-level. The |Bool| parameter to the following functions indicates whether
+level. The `Bool` parameter to the following functions indicates whether
 simplification is at the top level.
 
-When simplifying at the top level, we should |give| the simplified form
-once we have computed it. The |topWrap| command makes this easy.
+When simplifying at the top level, we should `give` the simplified form
+once we have computed it. The `topWrap` command makes this easy.
 
 > topWrap :: Bool -> INTM :=>: VAL -> ProofState (INTM :=>: VAL)
 > topWrap True   tt = give (termOf tt) >> return tt
 > topWrap False  tt = return tt
 
-Once we have simplified the goal slightly, we use |trySimplifyGoal| to
+Once we have simplified the goal slightly, we use `trySimplifyGoal` to
 attempt to continue, but give back the current result if no more
 simplification is possible. If not at the top level, this has to create
 a new goal.
@@ -93,7 +93,7 @@ a new goal.
 >     return $ N z :=>: evTm z
 >   )
 
-We implement the simplification steps in |simplifyGoal|. This takes a
+We implement the simplification steps in `simplifyGoal`. This takes a
 boolean parameter indicating whether simplification is at the top level,
 and a type being simplified. It will return a term and value of that
 type (which might be the current hole).
@@ -142,7 +142,7 @@ simplification to help out. If the proposition is absurd we win, and if
 it simplifies into a conjunction we abstract over each conjunct
 individually. If the proposition cannot be simplified, we check to see
 if it is an equation with a variable on one side, and if so, eliminate
-it by |substEq|. Otherwise, we just put it in the context and carry on.
+it by `substEq`. Otherwise, we just put it in the context and carry on.
 Note that this assumes we are at the top level.
 
 > simplifyGoal True (PI (PRF p) t) = do
@@ -256,7 +256,7 @@ we can just invoke propositional simplification...
 If the goal is a programming problem to produce a proof, and the
 proposition is trivial, then we win. However, we cannot simplify
 non-trivial propositions as the user might not want us to. Similarly, we
-cannot simplify inside |LABEL| unless we know we are going to solve the
+cannot simplify inside `LABEL` unless we know we are going to solve the
 goal completely.
 
 > simplifyGoal b (LABEL _ (PRF p)) = do
@@ -293,7 +293,7 @@ argument is the codomain function of the $\Pi$-type.
 >     ref <- lambdaParam (fortran t)
 >     trySimplifyGoal True (t $$ A (NP ref))
 
-The |elimSimplify| command invokes elimination with a motive, simplifies
+The `elimSimplify` command invokes elimination with a motive, simplifies
 the methods, then returns to the original goal.
 
 > elimSimplify :: (TY :>: EXTM) -> ProofState ()
