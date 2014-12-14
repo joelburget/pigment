@@ -46,11 +46,9 @@ signature for a term:
 
 We can push types into:
 
--   lambda terms;
-
--   canonical terms; and
-
--   inferred terms.
+* lambda terms;
+* canonical terms; and
+* inferred terms.
 
 >   L     :: Scope p x             -> Tm {In, p}   x -- \(\lambda\)
 >   C     :: Can (Tm {In, p} x)    -> Tm {In, p}   x -- canonical
@@ -58,15 +56,11 @@ We can push types into:
 
 And we can infer types from:
 
--   parameters, because they carry their types;
-
--   variables, by reading the context;
-
--   fully applied operators, by `opTy` defined below;
-
--   elimination, by the type of the eliminator; and
-
--   type ascription on a checkable term, by the ascripted type.
+* parameters, because they carry their types;
+* variables, by reading the context;
+* fully applied operators, by `opTy` defined below;
+* elimination, by the type of the eliminator; and
+* type ascription on a checkable term, by the ascripted type.
 
 >   P     :: x                                    -> Tm {Ex, p}   x -- parameter
 >   V     :: Int                                  -> Tm {Ex, TT}  x -- variable
@@ -678,14 +672,20 @@ further failures. The top of the stack is the head of the list.
 
 > newtype StackError t = StackError { unStackError :: [ErrorItem t] }
 
-\< instance MonadPlus (Either (StackError a)) where \< mzero = Left
-(StackError []) \< mplus x@(Right l) \_ = x \< mplus \_ x = x \< \<
-mplus (Left (StackError xs)) (Left (StackError ys)) = \< Left
-(StackError (xs++ys)) \< mplus l@(Left (StackError xs)) \_ = l \< mplus
-\_ r@(Left (StackError xs)) = r \< mplus (Right l) (Right r) =k
+< instance MonadPlus (Either (StackError a)) where
+< mzero = Left (StackError [])
+< mplus x@(Right l) \_ = x
+< mplus \_ x = x
+<
+< mplus (Left (StackError xs)) (Left (StackError ys)) =
+< Left (StackError (xs++ys))
+< mplus l@(Left (StackError xs)) \_ = l
+< mplus \_ r@(Left (StackError xs)) = r
+< mplus (Right l) (Right r) =k
 
 > instance Error (StackError t) where
 >   strMsg = sErr
+
 > instance M.Monoid (StackError t) where
 >   (StackError a) `mappend` (StackError b) = StackError (a ++ b)
 >   mempty = StackError []
@@ -694,27 +694,38 @@ To ease the writing of error terms, we have a bunch of combinators:
 
 > err :: String -> ErrorItem t
 > err s = [StrMsg s]
+
 > sErr :: String -> StackError t
 > sErr = StackError . pure . err
+
 > errTm :: t -> ErrorItem t
 > errTm t = [ErrorTm (t :<: Nothing)]
+
 > errCan :: Can t -> ErrorItem t
 > errCan t = [ErrorCan t]
+
 > errTyVal :: (VAL :<: VAL) -> ErrorItem t
 > errTyVal (t :<: ty) = [ErrorVAL (t :<: Just ty)]
+
 > errVal :: VAL -> ErrorItem t
 > errVal t = [ErrorVAL (t :<: Nothing)]
+
 > errElim :: Elim t -> ErrorItem t
 > errElim t = [ErrorElim t]
+
 > errRef :: REF -> ErrorItem t
 > errRef r = [ErrorREF r]
+
 > pushError :: MonadError (StackError t) m => m a -> StackError t -> m a
 > pushError c e = catchError c (\x -> throwError (e <> x))
+
 > throwErrorS :: MonadError (StackError t) m => [ErrorItem t] -> m a
 > throwErrorS = throwError . StackError
+
 > catchMaybe :: MonadError (StackError t) m => Maybe a -> StackError t -> m a
 > catchMaybe (Just x) _ = return x
 > catchMaybe Nothing  e = throwError e
+
 > catchEither :: MonadError (StackError t) m
 >             => Either (StackError t) a
 >             -> StackError t
@@ -831,18 +842,21 @@ TODO(joel) rename to throwErrorTm
 >     halfZip UId UId = Just UId
 >     halfZip (Tag s) (Tag s') | s == s' = Just (Tag s)
 >     halfZip _          _          = Nothing
+
 > instance Traversable Elim where
 >   traverse f (A s)  = (|A (f s)|)
 >   traverse _ Out    = (|Out|)
 >   traverse f (Call l) = (| Call (f l) |)
 >   traverse f Fst  = (|Fst|)
 >   traverse f Snd  = (|Snd|)
+
 > instance HalfZip Elim where
 >   halfZip (A s) (A t)  = Just $ A (s, t)
 >   halfZip (Call t1) (Call t2) = Just (Call (t1, t2))
 >   halfZip Fst Fst = (|Fst|)
 >   halfZip Snd Snd = (|Snd|)
 >   halfZip _ _          = Nothing
+
 > instance Traversable Irr where
 >   traverse f (Irr x) = (|Irr (f x)|)
 
@@ -856,23 +870,29 @@ TODO(joel) rename to throwErrorTm
 >   show (op :@ vs)  = "(" ++ opName op ++ " :@ " ++ show vs ++ ")"
 >   show (t :? y)    = "(" ++ show t ++ " :? " ++ show y ++ ")"
 >   show (Yuk v)     = "((" ++ show v ++ "))"
+
 > instance Show x => Show (Scope p x) where
 >   show (x :. t)   = show x ++ " :. " ++ show t
 >   show (H g x t) = "H (" ++ show g ++ ") " ++ x ++ "(" ++ show t ++ ")"
 >   show (K t) = "K (" ++ show t ++")"
+
 > instance Show Op where
 >   show = opName
+
 > instance Traversable (Scope {p}) where
 >   traverse f (x :. t)   = (|(x :.) (traverse f t)|)
 >   traverse f (K t)      = (|K (traverse f t)|)
 >   traverse f (H (e, s) x t)  = (|H (| (traverse (traverse f) e) , ~s|) ~x (traverse f t)|)
+
 > instance Traversable f => Traversable (Labelled f) where
 >   traverse f (mt :?=: ft)  = (| traverse f mt :?=: traverse f ft |)
+
 > instance (Traversable f, HalfZip f) => HalfZip (Labelled f) where
 >   halfZip (Just a  :?=: fs)  (Just b :?=: ft)  =
 >     (| (Just (a, b)  :?=:) (halfZip fs ft) |)
 >   halfZip (_       :?=: fs)  (_      :?=: ft)  =
 >     (| (Nothing  :?=:) (halfZip fs ft) |)
+
 > instance Traversable (Tm {d,p}) where
 >   traverse f (L sc)     = (|L (traverse f sc)|)
 >   traverse f (C c)      = (|C (traverse (traverse f) c)|)
