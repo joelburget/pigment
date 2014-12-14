@@ -26,6 +26,11 @@
     margin: 10px 0;
 }
 
+/* make the prompt line up with the text */
+.log-elem .icon.ion-ios-arrow-forward {
+    vertical-align: middle;
+}
+
 .ctx-display {
     margin: 10px;
 }

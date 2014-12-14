@@ -56,8 +56,10 @@ Thanks to this hack, we can use |deriving Traversable|.
 >     DIMu :: Labelled (Id :*: Id) (DInTm p x) -> DInTm p x  -> DInTm p x
 >     DTag :: String -> [DInTm p x] -> DInTm p x
 >  deriving (Functor, Foldable, Traversable, Show)
+
 > data DExTm p x = DHead p x ::$ DSpine p x
 >   deriving (Functor, Foldable, Traversable, Show)
+
 > data DHead :: * -> * -> * where
 >     DP     :: x                -> DHead  p x -- parameter
 >     DType  :: DInTm p x        -> DHead  p x -- type annotation
