@@ -1,22 +1,19 @@
 .page {
+    display: flex;
     font-family: "Inconsolata", sans-serif;
     font-weight: lighter;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 .top-pane {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 100px;
+    flex: 1;
 }
 
 .bottom-pane {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-
     height: 100px;
     background-color: rgb(69, 69, 69);
     border-top: 2px solid rgb(119, 139, 199);
@@ -52,7 +49,7 @@
 }
 
 .tactic-list {
-    clear: both;
+    font-size: 14px;
 }
 .tactic-info {
     margin: 10px 0;
@@ -95,4 +92,76 @@
 
 .tm-name, .anchor, .empty-tip, .tip, .hole, .entry span {
     display: table-cell;
+}
+
+.left-pane {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.pane-bar {
+    /* vertically center the arrow */
+    cursor: pointer;
+    width: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 150%;
+    background-color: rgb(61, 61, 61);
+    color: rgb(190, 190, 190);
+
+    /* button styles */
+    box-shadow: none;
+    outline: 0;
+    border-top: 0;
+    border-left: 3px solid rgb(103, 103, 103);
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.pane-bar:hover {
+    color: white;
+}
+
+.right-pane {
+    padding: 20px;
+    background-color: rgb(61,61,61);
+    border-left: 3px solid rgb(103, 103, 103);
+    box-sizing: border-box;
+    color: rgb(218, 218, 218);
+    display: table-cell;
+    overflow: scroll;
+    width: 300px;
+}
+
+.choose-pane {
+    border-bottom: 1px solid white;
+    display: flex;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.choose-pane div {
+    cursor: pointer;
+    margin: 0 10px;
+    padding: 2px 0;
+}
+
+.choose-pane div:hover {
+    color: white;
+}
+
+.choose-pane div:first-child {
+    margin-left: 0;
+}
+
+.choose-pane div:last-child {
+    margin-right: 0;
+}
+
+.selected-pane {
+    border-bottom: 3px solid rgb(144, 188, 237);
 }

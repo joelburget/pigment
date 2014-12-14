@@ -32,8 +32,10 @@ Getting in |ProofContext|
 
 > getLayers :: ProofStateT e (Bwd Layer)
 > getLayers = gets pcLayers
+
 > getAboveCursor :: ProofStateT e (Dev Bwd)
 > getAboveCursor = gets pcAboveCursor
+
 > getBelowCursor :: ProofStateT e (Fwd (Entry Bwd))
 > getBelowCursor = gets pcBelowCursor
 
@@ -52,10 +54,12 @@ Getting in |AboveCursor|
 > getEntriesAbove = do
 >     dev <- getAboveCursor
 >     return $ devEntries dev
+
 > getDevNSupply :: ProofStateT e NameSupply
 > getDevNSupply = do
 >     dev <- getAboveCursor
 >     return $ devNSupply dev
+
 > getDevTip :: ProofStateT e Tip
 > getDevTip = do
 >     dev <- getAboveCursor
@@ -67,6 +71,7 @@ And some specialized versions:
 > getEntryAbove = do
 >     _ :< e <- getEntriesAbove -- XXX this errors on "done"
 >     return e
+
 > getGoal :: String -> ProofStateT e (INTM :=>: TY)
 > getGoal s = do
 >     tip <- getDevTip
@@ -77,6 +82,7 @@ And some specialized versions:
 >           [ err "getGoal: fail to match a goal in "
 >           , err s
 >           ]
+
 > withGoal :: (VAL -> ProofState ()) -> ProofState ()
 > withGoal f = do
 >   (_ :=>: goal) <- getGoal "withGoal"
@@ -99,6 +105,7 @@ Getting in the |CurrentEntry|
 >     case cEntry of
 >       CModule [] -> return []
 >       _ -> return $ currentEntryName cEntry
+
 > getCurrentDefinition :: ProofStateT e (EXTM :=>: VAL)
 > getCurrentDefinition = do
 >     CDefinition _ ref _ _ _ <- getCurrentEntry
@@ -110,8 +117,9 @@ Getting in the |HOLE|\
 > getHoleGoal :: ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do
 >     x <- getCurrentEntry
->     let CDefinition _ (_ := HOLE _ :<: _) _ _ _ = traceShowId x -- getCurrentEntry
+>     CDefinition _ (_ := HOLE _ :<: _) _ _ _ <- traceShow x getCurrentEntry
 >     getGoal "getHoleGoal"
+
 > getHoleKind :: ProofStateT e HKind
 > getHoleKind = do
 >     CDefinition _ (_ := HOLE hk :<: _) _ _ _ <- getCurrentEntry
@@ -121,10 +129,13 @@ Getting the Scopes
 
 > getInScope :: ProofStateT e Entries
 > getInScope = gets inScope
+
 > getDefinitionsToImpl :: ProofStateT e [REF :<: INTM]
 > getDefinitionsToImpl = gets definitionsToImpl
+
 > getGlobalScope :: ProofStateT e Entries
 > getGlobalScope = gets globalScope
+
 > getParamsInScope :: ProofStateT e [REF]
 > getParamsInScope = do
 >     inScope <- getInScope
@@ -139,10 +150,12 @@ Putting in |ProofContext|
 > putLayers ls = do
 >     pc <- get
 >     put pc{pcLayers=ls}
+
 > putAboveCursor :: Dev Bwd -> ProofStateT e ()
 > putAboveCursor dev = do
 >     replaceAboveCursor dev
 >     return ()
+
 > putBelowCursor :: Fwd (Entry Bwd) -> ProofStateT e (Fwd (Entry Bwd))
 > putBelowCursor below = do
 >     pc <- get
@@ -155,6 +168,7 @@ And some specialized versions:
 > putLayer l = do
 >     pc@PC{pcLayers=ls} <- get
 >     put pc{pcLayers=ls :< l}
+
 > putEntryBelowCursor :: Entry Bwd -> ProofStateT e ()
 > putEntryBelowCursor e = do
 >     below <- getBelowCursor
@@ -167,14 +181,17 @@ Putting in |AboveCursor|
 > putEntriesAbove es = do
 >     replaceEntriesAbove es
 >     return ()
+
 > putDevNSupply :: NameSupply -> ProofStateT e ()
 > putDevNSupply ns = do
 >     dev <- getAboveCursor
 >     putAboveCursor dev{devNSupply = ns}
+
 > putDevSuspendState :: SuspendState -> ProofStateT e ()
 > putDevSuspendState ss = do
 >     dev <- getAboveCursor
 >     putAboveCursor dev{devSuspendState = ss}
+
 > putDevTip :: Tip -> ProofStateT e ()
 > putDevTip tip = do
 >     dev <- getAboveCursor
@@ -194,6 +211,7 @@ Putting in the |Layers|
 >     l <- getLayer
 >     _ <- replaceLayer l{currentEntry=m}
 >     return ()
+
 > putNewsBelow :: NewsBulletin -> ProofStateT e ()
 > putNewsBelow news = do
 >     l <- getLayer

@@ -54,6 +54,8 @@ Cochon (Command-line Interface)
 > import Haste hiding (fromString, prompt)
 > import Haste.JSON
 > import Haste.Prim
+> import Lens.Family2
+> import Lens.Family2.Stock
 > import React hiding (key)
 > import qualified React
 
@@ -66,21 +68,70 @@ View ====
 
 > page :: InteractionReact
 > page = div_ <! class_ "page" $ do
->     div_ <! class_ "top-pane" $ nest proofCtx proofCtxDisplay
->     div_ <! class_ "bottom-pane" $ prompt
->     -- nest outputLog interactionLog
->     -- tacticList
+>     div_ <! class_ "left-pane" $ do
+>         div_ <! class_ "top-pane" $ nest proofCtx proofCtxDisplay
+>         div_ <! class_ "bottom-pane" $ prompt
+>     rightPane
+
+> rightPane :: InteractionReact
+> rightPane = do
+>     s <- getState
+>     when (s^.rightPaneVisible == Visible) innerRightPane
+>     paneToggle
+
+> paneToggle :: InteractionReact
+> paneToggle = button_ <! class_ "pane-bar"
+>                      <! onClick handleToggleRightPane $ do
+>     s <- getState
+>     let cls = case s^.rightPaneVisible of
+>           Invisible -> "icon ion-arrow-left-b"
+>           Visible   -> "icon ion-arrow-right-b"
+>     i_ <! class_ cls $ ""
+
+> choosePaneButtons :: StatefulReact Pane ()
+> choosePaneButtons = div_ <! class_ "choose-pane" $ do
+>     pane <- getState
+>     let go x = if x == pane then "selected-pane" else ""
+>     div_ <! class_ (go Log)
+>          <! onClick (handleSelectPane Log) $ "Command Log"
+>     div_ <! class_ (go Commands)
+>          <! onClick (handleSelectPane Commands) $ "Commands"
+>     div_ <! class_ (go Settings)
+>          <! onClick (handleSelectPane Settings) $ "Settings"
+
+> innerRightPane :: InteractionReact
+> innerRightPane = div_ <! class_ "right-pane" $ do
+>     InteractionState{_currentPane=pane} <- getState
+>
+>     nest currentPane choosePaneButtons
+>     case pane of
+>         Log -> nest outputLog interactionLog
+>         Commands -> pureNest tacticList
+>         Settings -> "TODO(joel) - settings"
+
 > prompt :: InteractionReact
 > prompt = div_ <! class_ "prompt" $ do
 >     InteractionState{_userInput=v} <- getState
->     "> "
+>     i_ <! class_ "icon ion-ios-arrow-forward" $ ""
+>     " "
 >     input_ <! class_ "prompt-input"
 >            <! value_ (toJSStr v)
 >            <! autofocus_ True
 >            <! onChange handleChange
 >            <! onKeyPress handleKey
+
+> handleSelectPane :: Pane
+>                  -> Pane
+>                  -> MouseEvent
+>                  -> Pane
+> handleSelectPane pane _ _ = pane
+
+> handleToggleRightPane :: InteractionState -> MouseEvent -> InteractionState
+> handleToggleRightPane state _ = state & rightPaneVisible %~ toggleVisibility
+
 > handleChange :: InteractionState -> ChangeEvent -> InteractionState
 > handleChange state evt = state{_userInput=(fromJSStr (targetValue evt))}
+
 > handleKey :: InteractionState -> KeyboardEvent -> InteractionState
 > handleKey state KeyboardEvent{React.key="Enter"} = do
 >     let action = case parseCmd (_userInput state) of
@@ -98,18 +149,21 @@ View ====
 >                     Nothing -> return ()
 >     unPageM action state
 > handleKey state _ = state
+
 > interactionLog :: StatefulReact [PureReact] ()
 > interactionLog = div_ <! class_ "interaction-log" $ do
 >     logs <- getState
 >     Foldable.forM_ logs pureNest
+
 > proofCtxDisplay :: StatefulReact (Bwd ProofContext) ()
 > proofCtxDisplay = div_ <! class_ "ctx-display" $ do
 >     _ :< ctx <- getState
 >     pureNest $ fst $ runProofState reactProofState ctx
-> tacticList :: InteractionReact
+
+> tacticList :: PureReact
 > tacticList = div_ <! class_ "tactic-list" $
 >     Foldable.forM_ cochonTactics $ \tactic ->
->         div_ <! class_ "tactic-info" $ pureNest $ ctHelp tactic
+>         div_ <! class_ "tactic-info" $ ctHelp tactic
 
 Controller ==========
 
@@ -119,7 +173,7 @@ We start out here. Main calls \`cochon emptyContext\`.
 > cochon loc = do
 >     Just e <- elemById "inject"
 >     let pc = B0 :< loc
->         startState = InteractionState pc "" [] showPrompt
+>         startState = InteractionState pc "" [] showPrompt Visible Log
 >     validateDevelopment pc
 >     render startState e page
 
@@ -167,42 +221,37 @@ length - surely this can be expressed more compactly
 >     showGoal ty = do
 >         s <- prettyHere . (SET :>:) =<< bquoteHere ty
 >         return $ fromString $ "Goal: " ++ show s ++ "\n"
+>
+>     -- TODO(joel) - this shouldn't even be here
 >     showInputLine :: ProofState PureReact
 >     showInputLine = do
 >         mn <- optional' getCurrentName
->         return $ fromString $ case mn of
->             Just n   -> showName n ++ " > "
->             Nothing  -> "> "
+>         return $ do
+>             fromString $ case mn of
+>                 Just n   -> showName n
+>                 Nothing  -> ""
+>             i_ <! class_ "icon ion-ios-arrow-forward" $ ""
 
 > describePFailure :: PFailure a -> ([a] -> String) -> String
-> describePFailure (PFailure (ts, fail)) f = (case fail of
->     Abort        -> "parser aborted."
->     EndOfStream  -> "end of stream."
->     EndOfParser  -> "end of parser."
->     Expect t     -> "expected " ++ f [t] ++ "."
->     Fail s       -> s
->   ) ++ (if length ts > 0
->        then "\nSuccessfully parsed: ``" ++ f ts ++ "''."
->        else "")
+> describePFailure (PFailure (ts, fail)) f =
+>     let errMsg = case fail of
+>             Abort        -> "parser aborted."
+>             EndOfStream  -> "end of stream."
+>             EndOfParser  -> "end of parser."
+>             Expect t     -> "expected " ++ f [t] ++ "."
+>             Fail s       -> s
+>         sucMsg = if length ts > 0
+>                then "\nSuccessfully parsed: ``" ++ f ts ++ "''."
+>                else ""
+>     in errMsg ++ sucMsg
 
 A Cochon tactic consists of:
 
-|ctName|
-
-:   the name of this tactic
-
-|ctParse|
-
-:   a parser that parses the arguments for this tactic
-
-|ctxTrans|
-
-:   a state transition to perform for a given list of arguments and
+* `ctName` - the name of this tactic
+* `ctParse` - parser that parses the arguments for this tactic
+* `ctxTrans` - state transition to perform for a given list of arguments and
     current context
-
-|ctHelp|
-
-:   the help text for this tactic
+* `ctHelp` - help text for this tactic
 
 > data CochonTactic =
 >     CochonTactic  {  ctName   :: String
@@ -210,10 +259,13 @@ A Cochon tactic consists of:
 >                   ,  ctxTrans :: [CochonArg] -> PageM ()
 >                   ,  ctHelp   :: PureReact
 >                   }
+
 > instance Show CochonTactic where
 >     show = ctName
+
 > instance Eq CochonTactic where
 >     ct1 == ct2 =  ctName ct1 == ctName ct2
+
 > instance Ord CochonTactic where
 >     compare = comparing ctName
 
@@ -264,8 +316,10 @@ specialised versions of it for nullary and unary tactics.
 >     ,  ctxTrans = simpleOutput . eval
 >     ,  ctHelp = fromString help
 >     }
+
 > nullaryCT :: String -> ProofState PureReact -> String -> CochonTactic
 > nullaryCT name eval help = simpleCT name (pure B0) (const eval) help
+
 > unaryExCT :: String -> (DExTmRN -> ProofState PureReact) -> String -> CochonTactic
 > unaryExCT name eval help = simpleCT
 >     name
@@ -273,20 +327,24 @@ specialised versions of it for nullary and unary tactics.
 >      | (B0 :<) tokenAscription |)
 >     (eval . argToEx . head)
 >     help
+
 > unaryInCT :: String -> (DInTmRN -> ProofState PureReact) -> String -> CochonTactic
 > unaryInCT name eval help = simpleCT
 >     name
 >     (| (B0 :<) tokenInTm |)
 >     (eval . argToIn . head)
 >     help
+
 > unDP :: DExTm p x -> x
 > unDP (DP ref ::$ []) = ref
+
 > unaryNameCT :: String -> (RelName -> ProofState PureReact) -> String -> CochonTactic
 > unaryNameCT name eval help = simpleCT
 >     name
 >     (| (B0 :<) tokenName |)
 >     (eval . unDP . argToEx . head)
 >     help
+
 > unaryStringCT :: String
 >               -> (String -> ProofState PureReact)
 >               -> String
@@ -401,22 +459,6 @@ Navigation tactics:
 
 Miscellaneous tactics:
 
->      : CochonTactic
->          {  ctName = "help"
->          ,  ctParse = (| (B0 :<) tokenString
->                        | B0
->                        |)
->          ,  ctxTrans = (\args ->
->              case args of
->                  [] -> tellUser $ "Tactics available: " ++ tacticNames cochonTactics
->                  [StrArg s] -> case tacticsMatching s of
->                      [] -> tellUser "There is no tactic by that name."
->                      cts -> displayUser $ Prelude.mapM_ ctHelp cts
->            )
->          ,  ctHelp = fromString $ "help - displays a list of supported tactics.\n"
->                 ++ "help <tactic> - displays help about <tactic>.\n\n"
->                 ++ "What, you expected 'help help' to produce an amusing response?"
->          }
 >     : CochonTactic
 >         {  ctName = "undo"
 >         ,  ctParse = pure B0

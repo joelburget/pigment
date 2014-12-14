@@ -196,56 +196,90 @@ The |infoWhatIs| command displays a term in various representations.
 >         ,   "Pretty-printed type:", reactify tys
 >         ]
 
-Model =====
+Model
+=====
 
 > type InteractionReact = StatefulReact InteractionState ()
+
+> data Pane = Log | Commands | Settings deriving Eq
+
+> data Visibility = Visible | Invisible deriving Eq
+
+> toggleVisibility :: Visibility -> Visibility
+> toggleVisibility Visible = Invisible
+> toggleVisibility Invisible = Visible
+
 > data InteractionState = InteractionState
 >     { _proofCtx :: Bwd ProofContext
 >     , _userInput :: String
 >     , _outputLog :: [PureReact]
 >     , _proofState :: ProofState PureReact
+>     , _rightPaneVisible :: Visibility
+>     , _currentPane :: Pane
 >     }
+
 > proofCtx :: Lens' InteractionState (Bwd ProofContext)
-> proofCtx f (InteractionState p u o s) =
->     (\p' -> InteractionState p' u o s) <$> f p
+> proofCtx f (InteractionState p u o s v pn) =
+>     (\p' -> InteractionState p' u o s v pn) <$> f p
+
 > userInput :: Lens' InteractionState String
-> userInput f (InteractionState p u o s) =
->     (\u' -> InteractionState p u' o s) <$> f u
+> userInput f (InteractionState p u o s v pn) =
+>     (\u' -> InteractionState p u' o s v pn) <$> f u
+
 > outputLog :: Lens' InteractionState [PureReact]
-> outputLog f (InteractionState p u o s) =
->     (\o' -> InteractionState p u o' s) <$> f o
+> outputLog f (InteractionState p u o s v pn) =
+>     (\o' -> InteractionState p u o' s v pn) <$> f o
+
 > proofState :: Lens' InteractionState (ProofState PureReact)
-> proofState f (InteractionState p u o s) =
->     (\s' -> InteractionState p u o s') <$> f s
+> proofState f (InteractionState p u o s v pn) =
+>     (\s' -> InteractionState p u o s' v pn) <$> f s
+
+> rightPaneVisible :: Lens' InteractionState Visibility
+> rightPaneVisible f (InteractionState p u o s v pn) =
+>     (\v' -> InteractionState p u o s v' pn) <$> f v
+
+> currentPane :: Lens' InteractionState Pane
+> currentPane f (InteractionState p u o s v pn) =
+>     (\pn' -> InteractionState p u o s v pn') <$> f pn
+
 > data SpecialKey
 >     = Enter
 >     deriving Show
 
-Controller Helpers ==================
+Controller Helpers
+==================
 
 Should this be part of a transformer stack including Maybe and IO?
 
 > newtype PageM a = PageM (InteractionState -> (a, InteractionState))
+
 > instance Monad PageM where
 >     return a = PageM $ \state -> (a, state)
 >     (PageM fa) >>= interact = PageM $ \state ->
 >         let (a, state') = fa state
 >             PageM fb = interact a
 >         in fb state'
+
 > unPageM :: PageM a -> InteractionState -> InteractionState
 > unPageM (PageM f) = snd . f
+
 > getProofState :: PageM (ProofState PureReact)
 > getProofState = PageM $ \state -> (_proofState state, state)
+
 > setCtx :: Bwd ProofContext -> PageM ()
 > setCtx ctx = PageM $ \state -> ((), state{_proofCtx=ctx})
+
 > getCtx :: PageM (Bwd ProofContext)
 > getCtx = PageM $ \state -> (_proofCtx state, state)
+
 > displayUser :: PureReact -> PageM ()
 > displayUser react =
 >     let elem = div_ <! class_ "log-elem" $ react
 >     in PageM $ \state -> ((), state{_outputLog=elem:(_outputLog state)})
+
 > tellUser :: String -> PageM ()
 > tellUser = displayUser . fromString
+
 > resetUserInput :: PageM ()
 > resetUserInput = PageM $ \state -> ((), state{_userInput=""})
 
