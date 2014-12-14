@@ -77,6 +77,7 @@ argument is True.
 
 > infoHypotheses  = infoContextual False
 > infoContext     = infoContextual True
+
 > infoContextual :: Bool -> ProofState PureReact
 > infoContextual gals = do
 >     inScope <- getInScope
@@ -264,9 +265,6 @@ Should this be part of a transformer stack including Maybe and IO?
 
 > unPageM :: PageM a -> InteractionState -> InteractionState
 > unPageM (PageM f) = snd . f
-
-> getProofState :: PageM (ProofState PureReact)
-> getProofState = PageM $ \state -> (_proofState state, state)
 
 > setCtx :: Bwd ProofContext -> PageM ()
 > setCtx ctx = PageM $ \state -> ((), state{_proofCtx=ctx})

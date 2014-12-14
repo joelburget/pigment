@@ -70,7 +70,9 @@ View ====
 > page = div_ <! class_ "page" $ do
 >     div_ <! class_ "left-pane" $ do
 >         div_ <! class_ "top-pane" $ nest proofCtx proofCtxDisplay
->         div_ <! class_ "bottom-pane" $ prompt
+>         div_ <! class_ "bottom-pane" $ do
+>             prompt
+>             workingOn
 >     rightPane
 
 > rightPane :: InteractionReact
@@ -113,12 +115,45 @@ View ====
 > prompt = div_ <! class_ "prompt" $ do
 >     InteractionState{_userInput=v} <- getState
 >     i_ <! class_ "icon ion-ios-arrow-forward" $ ""
->     " "
 >     input_ <! class_ "prompt-input"
 >            <! value_ (toJSStr v)
 >            <! autofocus_ True
 >            <! onChange handleChange
 >            <! onKeyPress handleKey
+
+> workingOn :: InteractionReact
+> workingOn = div_ <! class_ "working-on" $ do
+>     InteractionState{_proofCtx=_ :< loc, _proofState=pfSt} <- getState
+>     let runner = do
+>             mty <- optional' getHoleGoal
+>             goal <- case mty of
+>                 Just (_ :=>: ty) -> showGoal ty
+>                 Nothing          -> return ""
+>
+>             mn <- optional' getCurrentName
+>             let name = fromString $ case mn of
+>                     Just n   -> showName n
+>                     Nothing  -> ""
+>
+>             return (goal, name)
+>
+>     pureNest $ case runProofState runner loc of
+>         Left err -> err
+>         Right ((goal, name), loc') -> goal >> name
+
+> showGoal :: TY -> ProofState PureReact
+> showGoal ty@(LABEL _ _) = do
+>     h <- infoHypotheses
+>     s <- reactHere . (SET :>:) =<< bquoteHere ty
+>     return $ div_ <! class_ "goal" $ do
+>         h
+>         "Programming: "
+>         s
+> showGoal ty = do
+>     s <- reactHere . (SET :>:) =<< bquoteHere ty
+>     return $ div_ <! class_ "goal" $ do
+>         "Goal: "
+>         s
 
 > handleSelectPane :: Pane
 >                  -> Pane
@@ -150,7 +185,9 @@ View ====
 > proofCtxDisplay :: StatefulReact (Bwd ProofContext) ()
 > proofCtxDisplay = div_ <! class_ "ctx-display" $ do
 >     _ :< ctx <- getState
->     pureNest $ fst $ runProofState reactProofState ctx
+>     pureNest $ case runProofState reactProofState ctx of
+>         Left err -> err
+>         Right (display, _) -> display
 
 > tacticList :: PureReact
 > tacticList = div_ <! class_ "tactic-list" $
@@ -165,7 +202,7 @@ We start out here. Main calls \`cochon emptyContext\`.
 > cochon loc = do
 >     Just e <- elemById "inject"
 >     let pc = B0 :< loc
->         startState = InteractionState pc "" [] showPrompt Visible Log
+>         startState = InteractionState pc "" [] undefined Visible Log
 >     validateDevelopment pc
 >     render startState e page
 
@@ -198,40 +235,6 @@ length - surely this can be expressed more compactly
 >                   putStrLn "*** Warning: definition failed to type-check! ***"
 >                   putStrLn $ renderHouseStyle $ prettyStackError ss
 >               _ -> return ()
-
-TODO(joel) - this is really weird:
-* it's a bit of a holdover
-* naming indicates it shows the user their current prompt, but `prompt` does
-  that.
-* this really just shows one of the user's interactions
-* it's also the start proofstate
-
-> showPrompt :: ProofState PureReact
-> showPrompt = do
->     mty <- optional' getHoleGoal
->     case mty of
->         Just (_ :=>: ty) -> showGoal ty
->         Nothing          -> return ""
->     showInputLine
->   where
->     showGoal :: TY -> ProofState PureReact
->     showGoal ty@(LABEL _ _) = do
->         h <- infoHypotheses
->         s <- prettyHere . (SET :>:) =<< bquoteHere ty
->         return $ h >> (fromString ("\nProgramming: " ++ show s ++ "\n"))
->     showGoal ty = do
->         s <- prettyHere . (SET :>:) =<< bquoteHere ty
->         return $ fromString $ "Goal: " ++ show s ++ "\n"
->
->     -- TODO(joel) - this shouldn't even be here
->     showInputLine :: ProofState PureReact
->     showInputLine = do
->         mn <- optional' getCurrentName
->         return $ do
->             fromString $ case mn of
->                 Just n   -> showName n
->                 Nothing  -> ""
->             i_ <! class_ "icon ion-ios-arrow-forward" $ ""
 
 > describePFailure :: PFailure a -> ([a] -> String) -> String
 > describePFailure (PFailure (ts, fail)) f =
@@ -286,26 +289,26 @@ Given a proof state command and a context, we can run the command with
 command or the error message) and `Maybe` a new proof context.
 
 > runProofState
->     :: ProofState PureReact
+>     :: ProofState a
 >     -> ProofContext
->     -> (PureReact, Maybe ProofContext)
+>     -> Either PureReact (a, ProofContext)
 > runProofState m loc =
 >     case runStateT (m `catchError` catchUnprettyErrors) loc of
->         Right (s, loc') -> (s, Just loc')
+>         Right (s, loc') -> Right (s, loc')
 >         Left ss         ->
->             (fromString $ renderHouseStyle $ prettyStackError ss, Nothing)
+>             Left $ fromString $ renderHouseStyle $ prettyStackError ss
 
 > simpleOutput :: ProofState PureReact -> PageM ()
 > simpleOutput eval = do
 >     locs :< loc <- getCtx
->     case runProofState (eval <* startScheduler) loc of -- ACK
->         (s, Just loc') -> do
->             setCtx (locs :< loc :< loc')
->             displayUser s
->         (s, Nothing) -> do
+>     case runProofState (eval <* startScheduler) loc of
+>         Left err -> do
 >             setCtx (locs :< loc)
 >             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
->             displayUser s
+>             displayUser err
+>         Right (msg, loc') -> do
+>             setCtx (locs :< loc :< loc')
+>             displayUser msg
 
 We have some shortcuts for building common kinds of tactics: |simpleCT|
 builds a tactic that works in the proof state, and there are various
