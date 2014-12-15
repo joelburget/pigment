@@ -1,4 +1,4 @@
-.PHONY: build debug clean server docs
+.PHONY: build debug clean server docs web
 
 build:
 	cd src; hastec Main.lhs --with-js=js/react-stubs.js; say done; cd -
@@ -11,7 +11,10 @@ clean:
 	cd src; rm -rf main; cd -
 
 server:
-	python -m SimpleHTTPServer 8765
+	cd src; python -m SimpleHTTPServer 8765
+
+web:
+	cp -r src/{index.html,css,js,Main.js} web
 
 # docs:
 # 	rm -rf docs
