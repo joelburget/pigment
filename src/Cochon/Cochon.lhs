@@ -4,16 +4,21 @@ Cochon (Command-line Interface)
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
 >     DeriveFunctor, DeriveFoldable, DeriveTraversable, OverloadedStrings,
->     CPP #-}
+>     CPP, NamedFieldPuns #-}
+
 > module Cochon.Cochon where
+
 > import Control.Applicative
-> import Control.Monad.State
 > import Control.Monad.Except
+> import Control.Monad.State
+> import Control.Monad.Writer
 > import Data.Foldable as Foldable
 > import Data.List hiding (find)
+> import Data.Monoid
 > import Data.Ord
 > import Data.String
 > import Data.Traversable
+
 > import NameSupply.NameSupply
 > import Evidences.Eval hiding (($$))
 > import qualified Evidences.Eval (($$))
@@ -70,7 +75,7 @@ Cochon (Command-line Interface)
 > import Kit.Parsley
 > import Kit.MissingLibrary
 >
-> import Haste hiding (fromString, prompt)
+> import Haste hiding (fromString, prompt, focus)
 > import Haste.JSON
 > import Haste.Prim
 > import Lens.Family2
@@ -253,7 +258,7 @@ A Cochon tactic consists of:
 > data CochonTactic = CochonTactic
 >     { ctName   :: String
 >     , ctParse  :: Parsley Token (Bwd CochonArg)
->     , ctxTrans :: [CochonArg] -> PageM ()
+>     , ctxTrans :: [CochonArg] -> Cmd ()
 >     , ctHelp   :: PureReact
 >     }
 
@@ -276,88 +281,129 @@ A Cochon tactic consists of:
 > toggleVisibility Visible = Invisible
 > toggleVisibility Invisible = Visible
 
-An interaction is a tactic with arguments and the context it operates on.
+A `Command` is a tactic with arguments and the context it operates on. Also the
+resulting output.
 
 > type CTData = (CochonTactic, [CochonArg])
 
-> data Interaction
->     = Command String CTData (Bwd ProofContext)
->     | Output PureReact
-> type InteractionHistory = Fwd Interaction
+> data Command = Command
+>     { commandStr :: String
+>     , commandCtx :: (Bwd ProofContext)
+
+Derivative fields - these are less fundamental and can be derived from the
+first two fields.
+
+>     , commandParsed :: Either String CTData -- is this really necessary?
+>     , commandOutput :: PureReact
+>     }
+
+> data ListZip a = ListZip
+>     { later  :: Bwd a
+>     , focus  :: a
+>     , earlier :: Fwd a
+>     }
+
+> listZipFromList :: Fwd a -> Maybe (ListZip a)
+> listZipFromList (a :> as) = Just (ListZip B0 a as)
+> listZipFromList _  = Nothing
+
+> moveEarlier :: ListZip a -> Maybe (ListZip a)
+> moveEarlier (ListZip late a (a' :> early)) =
+>     Just (ListZip (late :< a) a' early)
+> moveEarlier _ = Nothing
+
+> moveLater :: ListZip a -> Maybe (ListZip a)
+> moveLater (ListZip (late :< a') a early) =
+>     Just (ListZip late a' (a :> early))
+> moveLater _ = Nothing
+
+> instance Functor ListZip where
+>     fmap f (ListZip late focus early) =
+>         ListZip (fmap f late) (f focus) (fmap f early)
+
+> instance Foldable ListZip where
+>     foldMap f (ListZip late focus early) =
+>         foldMap f late <> f focus <> foldMap f early
+
+we presently need to be able to add a latest, move to earlier / later, and get
+the current value
+
+> type InteractionHistory = Fwd Command
+
+> data CommandFocus
+>     = InHistory
+>         { deferred :: String
+>         , current :: (ListZip Command)
+>         }
+>     | InPresent String
 
 > data InteractionState = InteractionState
 >     { _proofCtx :: Bwd ProofContext
->     , _userInput :: String
->     -- TODO(joel) - make this [(String, PureReact)] so we can display input
->     -- and output. Better yet, include the context so we can time travel.
+
+There are two fields dealing with the command history.
+
+* `_commandFocus` - the user moves around this by pressing the up and down
+  arrows. Up moves back in time and down moves forward in time. Exactly the
+  same as your shell command history. When the user reaches a command they like
+  and starts to edit it, they're instantly moved forward in time to the
+  present.
+* `_interactions` - a list of all the things the user has ever typed and
+  pigment's responses.
+
+>     , _commandFocus :: CommandFocus
 >     , _interactions :: InteractionHistory
+
+Two fields dealing with the right pane (`_currentPane`) is a bit of a misnomer.
+It should perhaps be called something like `_currentRightPaneTab` but that's
+quite cumbersome.
+
 >     , _rightPaneVisible :: Visibility
 >     , _currentPane :: Pane
 >     }
 
 > proofCtx :: Lens' InteractionState (Bwd ProofContext)
-> proofCtx f (InteractionState p u o v pn) =
->     (\p' -> InteractionState p' u o v pn) <$> f p
+> proofCtx f state@(InteractionState _proofCtx _ _ _ _) =
+>     (\x -> state{_proofCtx=x}) <$> f _proofCtx
 
-> userInput :: Lens' InteractionState String
-> userInput f (InteractionState p u o v pn) =
->     (\u' -> InteractionState p u' o v pn) <$> f u
+> commandFocus :: Lens' InteractionState CommandFocus
+> commandFocus f state@(InteractionState _ _commandFocus _ _ _) =
+>     (\x -> state{_commandFocus=x}) <$> f _commandFocus
 
 > interactions :: Lens' InteractionState InteractionHistory
-> interactions f (InteractionState p u o v pn) =
->     (\o' -> InteractionState p u o' v pn) <$> f o
+> interactions f state@(InteractionState _ _ _interactions _ _) =
+>     (\x -> state{_interactions=x}) <$> f _interactions
 
 > rightPaneVisible :: Lens' InteractionState Visibility
-> rightPaneVisible f (InteractionState p u o v pn) =
->     (\v' -> InteractionState p u o v' pn) <$> f v
+> rightPaneVisible f state@(InteractionState _ _ _ _rightPaneVisible _) =
+>     (\x -> state{_rightPaneVisible=x}) <$> f _rightPaneVisible
 
 > currentPane :: Lens' InteractionState Pane
-> currentPane f (InteractionState p u o v pn) =
->     (\pn' -> InteractionState p u o v pn') <$> f pn
+> currentPane f state@(InteractionState _ _ _ _ _currentPane) =
+>     (\x -> state{_currentPane=x}) <$> f _currentPane
 
-> data SpecialKey
->     = Enter
->     deriving Show
+> userInput :: InteractionState -> String
+> userInput (InteractionState _ _commandFocus _ _ _) = case _commandFocus of
+>     (InHistory _ current) -> let Command str _ _ _ = focus current in str
+>     InPresent str -> str
 
 Controller Helpers
 ==================
 
-Should this be part of a transformer stack including Maybe and IO?
+TODO(joel) - give this a [CochonArg] reader?
 
-> newtype PageM a = PageM (InteractionState -> (a, InteractionState))
+> type Cmd a = WriterT PureReact (State (Bwd ProofContext)) a
 
-> instance Monad PageM where
->     return a = PageM $ \state -> (a, state)
->     (PageM fa) >>= interact = PageM $ \state ->
->         let (a, state') = fa state
->             PageM fb = interact a
->         in fb state'
+> setCtx :: Bwd ProofContext -> Cmd ()
+> setCtx = put
 
-> unPageM :: PageM a -> InteractionState -> InteractionState
-> unPageM (PageM f) = snd . f
+> getCtx :: Cmd (Bwd ProofContext)
+> getCtx = get
 
-> setCtx :: Bwd ProofContext -> PageM ()
-> setCtx ctx = PageM $ \state -> ((), state{_proofCtx=ctx})
+> displayUser :: PureReact -> Cmd ()
+> displayUser = tell
 
-> getCtx :: PageM (Bwd ProofContext)
-> getCtx = PageM $ \state -> (_proofCtx state, state)
-
-> displayUser :: PureReact -> PageM ()
-> displayUser react = PageM $ \state ->
->     ((), state{_interactions=(Output react):>(_interactions state)})
-
-> tellUser :: String -> PageM ()
+> tellUser :: String -> Cmd ()
 > tellUser = displayUser . fromString
-
-> resetUserInput :: PageM ()
-> resetUserInput = PageM $ \state -> ((), state{_userInput=""})
-
-> logCommand :: String -> CTData -> PageM ()
-> logCommand cmdStr cmd = PageM $ \state ->
->     let ctx = _proofCtx state
->         interactions' = _interactions state
->         cmd' = Command cmdStr cmd ctx
->     in ((), state{_interactions=cmd' :> interactions'})
 
 The `reactBKind` function reactifies a `ParamKind` if supplied with an
 element representing its name and type.
@@ -529,13 +575,13 @@ View ====
 
 > prompt :: InteractionReact
 > prompt = div_ <! class_ "prompt" $ do
->     InteractionState{_userInput=v} <- getState
+>     state <- getState
 >     promptArr
 >     input_ <! class_ "prompt-input"
->            <! value_ (toJSStr v)
+>            <! value_ (toJSStr (userInput state))
 >            <! autofocus_ True
->            <! onChange handleChange
->            <! onKeyPress handleKey
+>            <! onChange handleCmdChange
+>            <! onKeyDown handleKey
 
 > workingOn :: InteractionReact
 > workingOn = div_ <! class_ "working-on" $ do
@@ -580,37 +626,82 @@ View ====
 > handleToggleRightPane :: InteractionState -> MouseEvent -> InteractionState
 > handleToggleRightPane state _ = state & rightPaneVisible %~ toggleVisibility
 
-> handleChange :: InteractionState -> ChangeEvent -> InteractionState
-> handleChange state evt = state{_userInput=(fromJSStr (targetValue evt))}
+TODO(joel) - use SpecialKey, etc for state transitions
+
+> data SpecialKey
+>     = Enter
+>     | UpArrow
+>     | DownArrow
+>     deriving Show
 
 > handleKey :: InteractionState -> KeyboardEvent -> InteractionState
-> handleKey state KeyboardEvent{React.key="Enter"} = do
->     let cmdStr = _userInput state
->         action = case parseCmd (_userInput state) of
->             Left err -> tellUser err
->             -- XXX parseCmd returns a list but why would there ever be more
->             -- than one?
->             Right (cmd:_) -> do
->                 resetUserInput
->                 let (tac, args) = cmd
->                 -- this is kind of gross, but we want the command log to
->                 -- appear above the command output so it must come after
->                 -- running the command (because things appear bottom to top).
->                 ctxTrans tac args
->                 logCommand cmdStr cmd
->     unPageM action state
-> handleKey state _ = state
+> handleKey state KeyboardEvent{React.key="Enter"} =
+>     runAndLogCmd (userInput state) state
+> handleKey state KeyboardEvent{React.key="ArrowUp"} =
+>     upArrowTransition state
+> handleKey state KeyboardEvent{React.key="ArrowDown"} =
+>     downArrowTransition state
+> handleKey state a = state
+
+> upArrowTransition :: InteractionState -> InteractionState
+> upArrowTransition state = state{_commandFocus=focus'} where
+>     hist = _commandFocus state
+>     focus' = case hist of
+>         (InHistory _ _) -> case moveEarlier (current hist) of
+>             Just current' -> hist{current=current'}
+>             Nothing -> hist
+>         InPresent str -> case listZipFromList (_interactions state) of
+>             Just listZip -> InHistory str listZip
+>             Nothing -> hist
+
+> downArrowTransition :: InteractionState -> InteractionState
+> downArrowTransition state = state{_commandFocus=focus'} where
+>     hist = _commandFocus state
+>     focus' = case hist of
+>         InHistory _ _ -> case moveLater (current hist) of
+>             Just current' -> hist{current=current'}
+>             Nothing -> InPresent (deferred hist)
+>         InPresent str -> hist
+
+> runCmd :: Cmd a -> Bwd ProofContext -> (PureReact, Bwd ProofContext)
+> runCmd cmd ctx =
+>     let ((_, react), ctx') = runState (runWriterT cmd) ctx
+>     in (react, ctx')
+
+> runAndLogCmd :: String
+>              -> InteractionState
+>              -> InteractionState
+> runAndLogCmd cmdStr state =
+>     let ctx = state^.proofCtx
+>         parsed = parseCmd cmdStr
+>         -- XXX parseCmd returns a list in the right side, but we only take
+>         -- notice of the first. This is really gross.
+>         parsed' = case parsed of
+>             Left err -> Left err
+>             Right (a:as) -> Right a
+>         (output, newCtx) = case parsed' of
+>             Left err -> (fromString err, ctx)
+>             Right (tac, args) -> runCmd (ctxTrans tac args) ctx
+>         cmd' = Command cmdStr ctx parsed' output
+>
+>     in state & proofCtx .~ newCtx
+>              & commandFocus .~ InPresent ""
+>              & interactions %~ (cmd' :>)
+
+> handleCmdChange :: InteractionState -> ChangeEvent -> InteractionState
+> handleCmdChange state evt =
+>     let str = fromJSStr (targetValue evt)
+>     in state{_commandFocus=InPresent str}
 
 > interactionLog :: StatefulReact InteractionHistory ()
 > interactionLog = div_ <! class_ "interaction-log" $ do
 >     logs <- getState
->     Foldable.forM_ logs $ \interact -> div_ <! class_ "log-elem" $ do
->         case interact of
->             (Command cmdStr (tac, args) _) -> do
->                 promptArr
->                 " "
->                 fromString cmdStr
->             (Output elem) -> pureNest elem
+>     pureNest $ Foldable.forM_ logs $ \(Command cmdStr _ _ out) ->
+>         div_ <! class_ "log-elem" $ do
+>             promptArr
+>             " "
+>             fromString cmdStr
+>             out
 
 > proofCtxDisplay :: StatefulReact (Bwd ProofContext) ()
 > proofCtxDisplay = div_ <! class_ "ctx-display" $ do
@@ -632,11 +723,12 @@ We start out here. Main calls \`cochon emptyContext\`.
 > cochon loc = do
 >     Just e <- elemById "inject"
 >     let pc = B0 :< loc
->         startState = InteractionState pc "" F0 Visible Log
+>         startState = InteractionState pc (InPresent "") F0 Visible Log
 >     validateDevelopment pc
 >     render startState e page
 
 TODO refactor / rename this
+XXX parseCmd why would ther ever be more than one returned command?
 
 > parseCmd :: String -> Either String [CTData]
 > parseCmd l = case parse tokenize l of
@@ -655,7 +747,8 @@ length - surely this can be expressed more compactly
 
 > validateDevelopment :: Bwd ProofContext -> IO ()
 > validateDevelopment locs@(_ :< loc) = if veryParanoid
->     then Foldable.mapM_ validateCtxt locs -- XXX: there must be a better way to do that
+>     -- XXX: there must be a better way to do that
+>     then Foldable.mapM_ validateCtxt locs
 >     else if paranoid
 >         then validateCtxt loc
 >         else return ()
@@ -704,7 +797,7 @@ command or the error message) and `Maybe` a new proof context.
 >         Left ss         ->
 >             Left $ fromString $ renderHouseStyle $ prettyStackError ss
 
-> simpleOutput :: ProofState PureReact -> PageM ()
+> simpleOutput :: ProofState PureReact -> Cmd ()
 > simpleOutput eval = do
 >     locs :< loc <- getCtx
 >     case runProofState (eval <* startScheduler) loc of
