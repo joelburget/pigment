@@ -25,6 +25,10 @@
 .log-elem {
     margin: 10px 0;
 }
+.log-prompt {
+}
+.log-output {
+}
 
 /* make the prompt line up with the text */
 .log-elem .icon.ion-ios-arrow-forward {

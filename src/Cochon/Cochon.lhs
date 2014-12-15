@@ -570,13 +570,13 @@ View ====
 >         Commands -> pureNest tacticList
 >         Settings -> "TODO(joel) - settings"
 
-> promptArr :: StatefulReact a ()
-> promptArr = i_ <! class_ "icon ion-ios-arrow-forward" $ ""
+> promptArrow :: StatefulReact a ()
+> promptArrow = i_ <! class_ "icon ion-ios-arrow-forward" $ ""
 
 > prompt :: InteractionReact
 > prompt = div_ <! class_ "prompt" $ do
 >     state <- getState
->     promptArr
+>     promptArrow
 >     input_ <! class_ "prompt-input"
 >            <! value_ (toJSStr (userInput state))
 >            <! autofocus_ True
@@ -698,10 +698,11 @@ TODO(joel) - use SpecialKey, etc for state transitions
 >     logs <- getState
 >     pureNest $ Foldable.forM_ logs $ \(Command cmdStr _ _ out) ->
 >         div_ <! class_ "log-elem" $ do
->             promptArr
->             " "
->             fromString cmdStr
->             out
+>             div_ <! class_ "log-prompt" $ do
+>                 promptArrow
+>                 " "
+>                 fromString cmdStr
+>             div_ <! class_ "log-output" $ out
 
 > proofCtxDisplay :: StatefulReact (Bwd ProofContext) ()
 > proofCtxDisplay = div_ <! class_ "ctx-display" $ do
@@ -715,7 +716,8 @@ TODO(joel) - use SpecialKey, etc for state transitions
 >     Foldable.forM_ cochonTactics $ \tactic ->
 >         div_ <! class_ "tactic-info" $ ctHelp tactic
 
-Controller ==========
+Controller
+==========
 
 We start out here. Main calls \`cochon emptyContext\`.
 
