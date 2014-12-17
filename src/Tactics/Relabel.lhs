@@ -88,7 +88,7 @@ Once the refinement has been made, we need to introduce the hypotheses
 using their new names. The `introLambdas` command takes a relabelling
 and the references from the entries that were abstracted over, and
 introduces a hypothesis corresponding to each reference with the
-reference’s new name.
+reference's new name.
 
 > introLambdas :: Relabelling -> [REF] -> ProofState ()
 > introLambdas rl [] = return ()

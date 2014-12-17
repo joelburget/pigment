@@ -251,9 +251,9 @@ To update a closed definition (|Defined|), we must:
 
 For paranoia purposes, the following test might be helpful:
 
-\< mc \<- withNSupply (inCheck \$ check (tyv’ :\>: tmL’)) \< mc
+\< mc \<- withNSupply (inCheck \$ check (tyv' :\>: tmL')) \< mc
 ‘catchEither‘ unlines [“tellEntry ” ++ showName name ++ “:”, \< show
-tmL’, “is not of type”, show ty’ ]
+tmL', “is not of type”, show ty' ]
 
 >     let ref = name := DEFN (evTm tmL') :<: tyv'
 >     return  (addNews (ref, GoodNews {-min (min n n') n''-}) news,

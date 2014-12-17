@@ -129,7 +129,7 @@ Evaluator
 
 Putting the above pieces together, plus some machinery, we are finally
 able to implement an evaluator. On a technical note, we are working in
-the Applicative |-\> ENV| and use She’s notation for writing
+the Applicative |-\> ENV| and use She's notation for writing
 applicatives.
 
 The evaluator is typed as follow: provided with a term and a variable
@@ -172,14 +172,14 @@ interpreter defined above with the empty environment.
 Alpha-conversion on the fly
 ---------------------------
 
-Here’s a bit of a dirty trick which sometimes results in better name
+Here's a bit of a dirty trick which sometimes results in better name
 choices. We firstly need the notion of a textual substitution from
 Tm.lhs.
 
 \< type TXTSUB = [(Char, String)] – renaming plan
 
-That’s a plan for mapping characters to strings. We apply them to
-strings like this, with no change to characters which aren’t mapped.
+That's a plan for mapping characters to strings. We apply them to
+strings like this, with no change to characters which aren't mapped.
 
 > txtSub :: TXTSUB -> String -> String
 > txtSub ts = foldMap blat where blat c = fromMaybe [c] $ lookup c ts
@@ -192,10 +192,10 @@ The renaming scheme is amended every time we instantiate a bound
 variable with a free variable. Starting from the right, each characte of
 the bound name is mapped to the corresponding character of the free
 name. The first character of the bound name is mapped to the whole
-remaining prefix. So instantiating `“xys”` with `“monks”` maps `’y’` to
-|“k”| and `’x’` to `“mon”`. The idea is that matching the target of an
+remaining prefix. So instantiating `“xys”` with `“monks”` maps `'y'` to
+|“k”| and `'x'` to `“mon”`. The idea is that matching the target of an
 eliminator in this way will give good names to the variables bound in
-its methods, if we’re lucky and well prepared.
+its methods, if we're lucky and well prepared.
 
 > naming :: String -> VAL -> TXTSUB -> TXTSUB
 > naming x (N (P y)) rho

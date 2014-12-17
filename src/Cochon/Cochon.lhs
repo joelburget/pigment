@@ -12,8 +12,8 @@ Cochon (Command-line Interface)
 > import Control.Monad.Except
 > import Control.Monad.State
 > import Control.Monad.Writer
-> import Data.Foldable as Foldable
-> import Data.List hiding (find)
+> import qualified Data.Foldable as Foldable
+> import Data.List hiding (elem)
 > import Data.Monoid
 > import Data.Ord
 > import Data.String
@@ -259,7 +259,7 @@ A Cochon tactic consists of:
 >     { ctName   :: String
 >     , ctParse  :: Parsley Token (Bwd CochonArg)
 >     , ctxTrans :: [CochonArg] -> Cmd ()
->     , ctHelp   :: PureReact
+>     , ctHelp   :: Either PureReact TacticHelp
 >     }
 
 > instance Show CochonTactic where
@@ -270,6 +270,22 @@ A Cochon tactic consists of:
 
 > instance Ord CochonTactic where
 >     compare = comparing ctName
+
+The help for a tactic is:
+* a template showing the syntax of the command
+* an example use
+* a summary of what the command does
+* help for each individual argument (yes, they're named)
+
+> data TacticHelp = TacticHelp
+>     { template :: PureReact -- TODO highlight each piece individually
+>     , example :: String
+>     , summary :: String
+>
+>     -- maps from the name of the arg to its help
+>     -- this is not a map because it's ordered
+>     , argHelp :: [(String, String)]
+>     }
 
 > type InteractionReact = StatefulReact InteractionState ()
 
@@ -303,9 +319,12 @@ first two fields.
 >     , earlier :: Fwd a
 >     }
 
-> listZipFromList :: Fwd a -> Maybe (ListZip a)
-> listZipFromList (a :> as) = Just (ListZip B0 a as)
-> listZipFromList _  = Nothing
+> listZipFromFwd :: Fwd a -> Maybe (ListZip a)
+> listZipFromFwd (a :> as) = Just (ListZip B0 a as)
+> listZipFromFwd _  = Nothing
+
+> listZipFromList :: [a] -> Maybe (ListZip a)
+> listZipFromList = listZipFromFwd . fwdList
 
 > moveEarlier :: ListZip a -> Maybe (ListZip a)
 > moveEarlier (ListZip late a (a' :> early)) =
@@ -323,7 +342,7 @@ first two fields.
 
 > instance Foldable ListZip where
 >     foldMap f (ListZip late focus early) =
->         foldMap f late <> f focus <> foldMap f early
+>         Foldable.foldMap f late <> f focus <> Foldable.foldMap f early
 
 we presently need to be able to add a latest, move to earlier / later, and get
 the current value
@@ -336,6 +355,11 @@ the current value
 >         , current :: (ListZip Command)
 >         }
 >     | InPresent String
+
+> data AutocompleteState
+>     = CompletingTactics (ListZip CochonTactic)
+>     | CompletingParams CochonTactic
+>     | Stowed
 
 > data InteractionState = InteractionState
 >     { _proofCtx :: Bwd ProofContext
@@ -352,6 +376,7 @@ There are two fields dealing with the command history.
 
 >     , _commandFocus :: CommandFocus
 >     , _interactions :: InteractionHistory
+>     , _autocomplete :: AutocompleteState
 
 Two fields dealing with the right pane (`_currentPane`) is a bit of a misnomer.
 It should perhaps be called something like `_currentRightPaneTab` but that's
@@ -361,28 +386,35 @@ quite cumbersome.
 >     , _currentPane :: Pane
 >     }
 
+> startState :: Bwd ProofContext -> InteractionState
+> startState pc = InteractionState pc (InPresent "") F0 Stowed Visible Log
+
 > proofCtx :: Lens' InteractionState (Bwd ProofContext)
-> proofCtx f state@(InteractionState _proofCtx _ _ _ _) =
+> proofCtx f state@(InteractionState _proofCtx _ _ _ _ _) =
 >     (\x -> state{_proofCtx=x}) <$> f _proofCtx
 
 > commandFocus :: Lens' InteractionState CommandFocus
-> commandFocus f state@(InteractionState _ _commandFocus _ _ _) =
+> commandFocus f state@(InteractionState _ _commandFocus _ _ _ _) =
 >     (\x -> state{_commandFocus=x}) <$> f _commandFocus
 
 > interactions :: Lens' InteractionState InteractionHistory
-> interactions f state@(InteractionState _ _ _interactions _ _) =
+> interactions f state@(InteractionState _ _ _interactions _ _ _) =
 >     (\x -> state{_interactions=x}) <$> f _interactions
 
+> autocomplete :: Lens' InteractionState AutocompleteState
+> autocomplete f state@(InteractionState _ _ _ _autocomplete _ _) =
+>     (\x -> state{_autocomplete=x}) <$> f _autocomplete
+
 > rightPaneVisible :: Lens' InteractionState Visibility
-> rightPaneVisible f state@(InteractionState _ _ _ _rightPaneVisible _) =
+> rightPaneVisible f state@(InteractionState _ _ _ _ _rightPaneVisible _) =
 >     (\x -> state{_rightPaneVisible=x}) <$> f _rightPaneVisible
 
 > currentPane :: Lens' InteractionState Pane
-> currentPane f state@(InteractionState _ _ _ _ _currentPane) =
+> currentPane f state@(InteractionState _ _ _ _ _ _currentPane) =
 >     (\x -> state{_currentPane=x}) <$> f _currentPane
 
 > userInput :: InteractionState -> String
-> userInput (InteractionState _ _commandFocus _ _ _) = case _commandFocus of
+> userInput (InteractionState _ _commandFocus _ _ _ _) = case _commandFocus of
 >     (InHistory _ current) -> let Command str _ _ _ = focus current in str
 >     InPresent str -> str
 
@@ -530,6 +562,7 @@ View ====
 >     div_ <! class_ "left-pane" $ do
 >         div_ <! class_ "top-pane" $ nest proofCtx proofCtxDisplay
 >         div_ <! class_ "bottom-pane" $ do
+>             nest autocomplete autocompleteView
 >             prompt
 >             workingOn
 >     rightPane
@@ -569,6 +602,30 @@ View ====
 >         Log -> nest interactions interactionLog
 >         Commands -> pureNest tacticList
 >         Settings -> "TODO(joel) - settings"
+
+> autocompleteView :: StatefulReact AutocompleteState ()
+> autocompleteView = do
+>     mtacs <- getState
+>     pureNest $ case mtacs of
+>         Stowed -> ""
+>         CompletingTactics tacs -> div_ <! class_ "autocomplete" $
+>             innerAutocomplete tacs
+>         CompletingParams tac -> case (ctHelp tac) of
+>             Left react -> div_ <! class_ "tactic-help" $ react
+>             Right tacticHelp -> longHelp tacticHelp
+
+> innerAutocomplete :: ListZip CochonTactic -> PureReact
+> innerAutocomplete (ListZip early focus late) = do
+>     let desc tacs = pureNest $
+>             Foldable.forM_ tacs (div_ . fromString . ctName)
+>
+>     desc early
+>
+>     div_ <! class_ "autocomplete-focus" $ do
+>         div_ $ fromString $ ctName focus
+>         div_ $ pureNest $ renderHelp $ ctHelp focus
+>
+>     desc late
 
 > promptArrow :: StatefulReact a ()
 > promptArrow = i_ <! class_ "icon ion-ios-arrow-forward" $ ""
@@ -635,29 +692,69 @@ TODO(joel) - use SpecialKey, etc for state transitions
 >     deriving Show
 
 > handleKey :: InteractionState -> KeyboardEvent -> InteractionState
+
+Enter can mean:
+* complete the currently autocompleted tactic
+* run the command
+
+> handleKey state@InteractionState{_autocomplete=(CompletingTactics zip)}
+>           KeyboardEvent{React.key="Enter"} =
+>     completeTactic (focus zip) state
+
+TODO(joel) maybe run it too if it doesn't take any parameters
+
 > handleKey state KeyboardEvent{React.key="Enter"} =
 >     runAndLogCmd (userInput state) state
+
+TODO(joel) handle focus here
+
+> handleKey state@InteractionState{_autocomplete=(CompletingTactics zip)}
+>           KeyboardEvent{React.key="Tab"} =
+>     completeTactic (focus zip) state
+
+> handleKey state@InteractionState{_autocomplete=(CompletingTactics zip)}
+>           KeyboardEvent{React.key="ArrowUp"} = autocompleteUpArrow state
 > handleKey state KeyboardEvent{React.key="ArrowUp"} =
->     upArrowTransition state
+>     historyUpArrow state
+
+> handleKey state@InteractionState{_autocomplete=(CompletingTactics zip)}
+>           KeyboardEvent{React.key="ArrowDown"} = autocompleteDownArrow state
 > handleKey state KeyboardEvent{React.key="ArrowDown"} =
->     downArrowTransition state
+>     historyDownArrow state
 > handleKey state a = state
 
-> upArrowTransition :: InteractionState -> InteractionState
-> upArrowTransition state = state{_commandFocus=focus'} where
->     hist = _commandFocus state
->     focus' = case hist of
+> autocompleteUpArrow :: InteractionState -> InteractionState
+> autocompleteUpArrow state = state & autocomplete %~ \auto -> case auto of
+>     CompletingTactics zip -> case moveEarlier zip of
+>         Just zip' -> CompletingTactics zip'
+>         Nothing -> auto
+>     _ -> auto
+
+TODO(joel) prevent cursor from moving to beginning / end
+
+> autocompleteDownArrow :: InteractionState -> InteractionState
+> autocompleteDownArrow state = state & autocomplete %~ \auto -> case auto of
+>     CompletingTactics zip -> case moveLater zip of
+>         Just zip' -> CompletingTactics zip'
+>         Nothing -> auto
+>     _ -> auto
+
+> completeTactic :: CochonTactic -> InteractionState -> InteractionState
+> completeTactic tac state = state
+>     & commandFocus .~ InPresent (ctName tac ++ " ")
+>     & autocomplete .~ CompletingParams tac
+
+> historyUpArrow :: InteractionState -> InteractionState
+> historyUpArrow state = state & commandFocus %~ \hist -> case hist of
 >         (InHistory _ _) -> case moveEarlier (current hist) of
 >             Just current' -> hist{current=current'}
 >             Nothing -> hist
->         InPresent str -> case listZipFromList (_interactions state) of
+>         InPresent str -> case listZipFromFwd (_interactions state) of
 >             Just listZip -> InHistory str listZip
 >             Nothing -> hist
 
-> downArrowTransition :: InteractionState -> InteractionState
-> downArrowTransition state = state{_commandFocus=focus'} where
->     hist = _commandFocus state
->     focus' = case hist of
+> historyDownArrow :: InteractionState -> InteractionState
+> historyDownArrow state = state & commandFocus %~ \hist -> case hist of
 >         InHistory _ _ -> case moveLater (current hist) of
 >             Just current' -> hist{current=current'}
 >             Nothing -> InPresent (deferred hist)
@@ -674,24 +771,31 @@ TODO(joel) - use SpecialKey, etc for state transitions
 > runAndLogCmd cmdStr state =
 >     let ctx = state^.proofCtx
 >         parsed = parseCmd cmdStr
->         -- XXX parseCmd returns a list in the right side, but we only take
->         -- notice of the first. This is really gross.
->         parsed' = case parsed of
->             Left err -> Left err
->             Right (a:as) -> Right a
->         (output, newCtx) = case parsed' of
+>         (output, newCtx) = case parsed of
 >             Left err -> (fromString err, ctx)
 >             Right (tac, args) -> runCmd (ctxTrans tac args) ctx
->         cmd' = Command cmdStr ctx parsed' output
+>         cmd' = Command cmdStr ctx parsed output
 >
 >     in state & proofCtx .~ newCtx
 >              & commandFocus .~ InPresent ""
 >              & interactions %~ (cmd' :>)
+>              & autocomplete .~ Stowed
 
 > handleCmdChange :: InteractionState -> ChangeEvent -> InteractionState
 > handleCmdChange state evt =
 >     let str = fromJSStr (targetValue evt)
->     in state{_commandFocus=InPresent str}
+>     in state & commandFocus .~ InPresent str
+>              & autocomplete .~ findCompletion str
+
+> findCompletion :: String -> AutocompleteState
+> findCompletion str = if ' ' `elem` str
+>     then let name = head (words str)
+>          in case find ((== name) . ctName) cochonTactics of
+>         Nothing -> Stowed
+>         Just tac -> CompletingParams tac
+>     else case listZipFromList $ take 10 $ tacticsMatching str of
+>         Just listZip -> CompletingTactics listZip
+>         Nothing -> Stowed
 
 > interactionLog :: StatefulReact InteractionHistory ()
 > interactionLog = div_ <! class_ "interaction-log" $ do
@@ -711,10 +815,32 @@ TODO(joel) - use SpecialKey, etc for state transitions
 >         Left err -> err
 >         Right (display, _) -> display
 
+> longHelp :: TacticHelp -> PureReact
+> longHelp (TacticHelp template example summary args) =
+>     div_ <! class_ "tactic-help" $ do
+>         div_ <! class_ "tactic-template" $ template
+>
+>         div_ <! class_ "tactic-example" $ do
+>             div_ <! class_ "tactic-help-title" $ "Example"
+>             div_ <! class_ "tactic-help-body" $ fromString example
+>
+>         div_ <! class_ "tactic-summary" $ do
+>             div_ <! class_ "tactic-help-title" $ "Summary"
+>             div_ <! class_ "tactic-help-body" $ fromString summary
+>
+>         Foldable.forM_ args $ \(argName, argSummary) ->
+>             div_ <! class_ "tactic-arg-help" $ do
+>                 div_ <! class_ "tactic-help-title" $ fromString argName
+>                 div_ <! class_ "tactic-help-body" $ fromString argSummary
+
+> renderHelp :: Either PureReact TacticHelp -> PureReact
+> renderHelp (Left react) = react
+> renderHelp (Right (TacticHelp _ _ summary _)) = fromString summary
+
 > tacticList :: PureReact
 > tacticList = div_ <! class_ "tactic-list" $
 >     Foldable.forM_ cochonTactics $ \tactic ->
->         div_ <! class_ "tactic-info" $ ctHelp tactic
+>         div_ <! class_ "tactic-info" $ renderHelp $ ctHelp tactic
 
 Controller
 ==========
@@ -724,22 +850,18 @@ We start out here. Main calls \`cochon emptyContext\`.
 > cochon :: ProofContext -> IO ()
 > cochon loc = do
 >     Just e <- elemById "inject"
->     let pc = B0 :< loc
->         startState = InteractionState pc (InPresent "") F0 Visible Log
->     validateDevelopment pc
->     render startState e page
+>     let startCtx = B0 :< loc
+>     validateDevelopment startCtx
+>     render (startState startCtx) e page
 
-TODO refactor / rename this
-XXX parseCmd why would ther ever be more than one returned command?
-
-> parseCmd :: String -> Either String [CTData]
+> parseCmd :: String -> Either String CTData
 > parseCmd l = case parse tokenize l of
->     Left  pf -> Left ("Tokenize failure: " ++ describePFailure pf id)
->     Right ts -> case parse pCochonTactics ts of
+>     Left  pf -> Left $ "Tokenize failure: " ++ describePFailure pf id
+>     Right ts -> case parse pCochonTactic ts of
 >         Left pf -> Left $
 >             "Parse failure: " ++
 >             describePFailure pf (intercalate " " . map crushToken)
->         Right cds -> Right cds
+>         Right ctdata -> Right ctdata
 
 > paranoid = False
 > veryParanoid = False
@@ -775,12 +897,10 @@ length - surely this can be expressed more compactly
 >     in errMsg ++ sucMsg
 
 The `tacticsMatching` function identifies Cochon tactics that match the
-given string, either exactly or as a prefix.
+given string as a prefix.
 
 > tacticsMatching :: String -> [CochonTactic]
-> tacticsMatching x = case find ((x ==) . ctName) cochonTactics of
->     Just ct  -> [ct]
->     Nothing  -> filter (isPrefixOf x . ctName) cochonTactics
+> tacticsMatching x = filter (isPrefixOf x . ctName) cochonTactics
 
 > tacticNames :: [CochonTactic] -> String
 > tacticNames = intercalate ", " . map ctName
@@ -815,17 +935,20 @@ We have some shortcuts for building common kinds of tactics: |simpleCT|
 builds a tactic that works in the proof state, and there are various
 specialised versions of it for nullary and unary tactics.
 
-> simpleCT :: String -> Parsley Token (Bwd CochonArg)
->     -> ([CochonArg] -> ProofState PureReact) -> String -> CochonTactic
+> simpleCT :: String
+>          -> Parsley Token (Bwd CochonArg)
+>          -> ([CochonArg] -> ProofState PureReact)
+>          -> Either PureReact TacticHelp
+>          -> CochonTactic
 > simpleCT name parser eval help = CochonTactic
 >     {  ctName = name
 >     ,  ctParse = parser
 >     ,  ctxTrans = simpleOutput . eval
->     ,  ctHelp = fromString help
+>     ,  ctHelp = help
 >     }
 
 > nullaryCT :: String -> ProofState PureReact -> String -> CochonTactic
-> nullaryCT name eval help = simpleCT name (pure B0) (const eval) help
+> nullaryCT name eval help = simpleCT name (pure B0) (const eval) (Left (fromString help))
 
 > unaryExCT :: String -> (DExTmRN -> ProofState PureReact) -> String -> CochonTactic
 > unaryExCT name eval help = simpleCT
@@ -833,14 +956,14 @@ specialised versions of it for nullary and unary tactics.
 >     (| (B0 :<) tokenExTm
 >      | (B0 :<) tokenAscription |)
 >     (eval . argToEx . head)
->     help
+>     (Left (fromString help))
 
 > unaryInCT :: String -> (DInTmRN -> ProofState PureReact) -> String -> CochonTactic
 > unaryInCT name eval help = simpleCT
 >     name
 >     (| (B0 :<) tokenInTm |)
 >     (eval . argToIn . head)
->     help
+>     (Left (fromString help))
 
 > unDP :: DExTm p x -> x
 > unDP (DP ref ::$ []) = ref
@@ -850,7 +973,7 @@ specialised versions of it for nullary and unary tactics.
 >     name
 >     (| (B0 :<) tokenName |)
 >     (eval . unDP . argToEx . head)
->     help
+>     (Left (fromString help))
 
 > unaryStringCT :: String
 >               -> (String -> ProofState PureReact)
@@ -860,7 +983,7 @@ specialised versions of it for nullary and unary tactics.
 >     name
 >     (| (B0 :<) tokenString |)
 >     (eval . argToStr . head)
->     help
+>     (Left (fromString help))
 
 The master list of Cochon tactics.
 
@@ -875,6 +998,9 @@ Construction tactics:
 >       "done - solves the goal with the last entry in the development."
 >   : unaryInCT "give" (\tm -> elabGiveNext tm >> return "Thank you.")
 >       "give <term> - solves the goal with <term>."
+
+TODO(joel) - rename lambda
+
 >   : simpleCT
 >         "lambda"
 >          (| (|bwdList (pSep (keyword KwComma) tokenString) (%keyword KwAsc%)|) :< tokenInTm
@@ -888,8 +1014,16 @@ Construction tactics:
 >               _         -> Data.Traversable.mapM (lambdaParam . argToStr) args
 >                                >> return "Made lambda!"
 >            )
->          ("lambda <labels> - introduces one or more hypotheses.\n"++
->           "lambda <labels> : <type> - introduces new module parameters or hypotheses.")
+>          (Right (TacticHelp
+>              "lambda <labels> [ : <type> ]"
+>              "lambda X, Y : Set"
+>              -- TODO(joel) - better description
+>              "introduce new module parameters or hypotheses"
+>              [ ("<labels>", "One or more names to introduce")
+>              , ("<type>", "(optional) their type")
+>              ]
+>          ))
+
 >   : simpleCT
 >         "let"
 >         (| (| (B0 :< ) tokenString |) :< tokenScheme |)
@@ -898,7 +1032,16 @@ Construction tactics:
 >             optional' problemSimplify
 >             optional' seekGoal
 >             return (fromString $ "Let there be " ++ x ++ "."))
->         "let <label> <scheme> : <type> - set up a programming problem with a scheme."
+>         (Right (TacticHelp
+>             "let <label> <scheme> : <type>"
+>             "let A (m : Nat) : Nat -> Nat"
+>             -- TODO(joel) - better description
+>             "introduce new module parameters or hypotheses"
+>             [ ("<labels>", "One or more names to introduce")
+>             , ("<type>", "(optional) their type")
+>             ]
+>         ))
+
 >   : simpleCT
 >         "make"
 >         (| (|(B0 :<) tokenString (%keyword KwAsc%)|) :< tokenInTm
@@ -916,20 +1059,47 @@ Construction tactics:
 >                 elabGive tm
 >                 return "Made."
 >         )
->        ("make <x> : <type> - creates a new goal of the given type.\n"
->            ++ "make <x> := <term> - adds a definition to the context.")
+>         (Right (TacticHelp
+>             "make <x> : <type> OR make <x> := <term> : <type>"
+>             "make A := ? : Set"
+>             -- TODO(joel) - better description
+>             "the first form creates a new goal of the given type; the second adds a definition to the context"
+>             [ ("<x>", "New name to introduce")
+>             , ("<term>", "its definition (this could be a hole (\"?\"))")
+>             , ("<type>", "its type (this could be a hole (\"?\"))")
+>             ]
+>         ))
+
 >   : unaryStringCT "module" (\s -> makeModule s >> goIn >> return "Made module.")
 >       "module <x> - creates a module with name <x>."
+
 >   : simpleCT
 >         "pi"
 >          (| (|(B0 :<) tokenString (%keyword KwAsc%)|) :< tokenInTm |)
 >         (\ [StrArg s, InArg ty] -> elabPiParam (s :<: ty) >> return "Made pi!")
->         "pi <x> : <type> - introduces a pi."
+>         (Right (TacticHelp
+>             "pi <x> : <type>"
+>             "pi A : Set"
+>             -- TODO(joel) - better description
+>             "introduce a pi (what's a pi?)"
+>             [ ("<x>", "Pi to introduce")
+>             , ("<type>", "its type")
+>             ]
+>         ))
+
 >   : simpleCT
 >       "program"
 >       (|bwdList (pSep (keyword KwComma) tokenString)|)
 >       (\ as -> elabProgram (map argToStr as) >> return "Programming.")
->       "program <labels>: set up a programming problem."
+>       (Right (TacticHelp
+>           "program <labels>"
+>           "(make plus : Nat -> Nat -> Nat) ; program x, y ;"
+>           -- TODO(joel) - better description
+>           "set up a programming problem"
+>           [ ("<labels>", "One or more names to introduce")
+>           ]
+>       ))
+
 >   : nullaryCT "ungawa" (ungawa >> return "Ungawa!")
 >       "ungawa - tries to solve the current goal in a stupid way."
 
@@ -975,7 +1145,12 @@ Miscellaneous tactics:
 >                    B0  -> tellUser "Cannot undo."  >> setCtx (locs :< loc)
 >                    _   -> tellUser "Undone."       >> setCtx locs
 >          )
->         ,  ctHelp = fromString "undo - goes back to a previous state."
+>         ,  ctHelp = Right (TacticHelp
+>                "undo"
+>                "undo"
+>                "goes back to a previous state."
+>                []
+>            )
 >         }
 >     : nullaryCT "validate" (validateHere >> return "Validated.")
 >         "validate - re-checks the definition at the current location."
@@ -999,23 +1174,49 @@ Miscellaneous tactics:
 >               elabData nom (argList (argPair argToStr argToIn) pars)
 >                            (argList (argPair argToStr argToIn) cons)
 >               return "Data'd.")
->         ,  ctHelp = "data <name> [<para>]* := [(<con> : <ty>) ;]* - builds a data type for thee."
+>         ,  ctHelp = Right (TacticHelp
+>                "data <name> [<para>]* := [(<con> : <ty>) ;]*"
+>                "data Tree (X : Set) := ('nil : List X) ; ('cons : X -> List X -> List X) ;"
+>                "Create a new data type"
+>                [ ("<name>", "Choose the name of your datatype carefully")
+>                , ("<para>", "Type parameters")
+>                , ("<con : ty>", "Give each constructor a unique name and a type")
+>                ]
+>            )
 >         }
 >   : (simpleCT
 >     "eliminate"
 >     (|(|(B0 :<) (tokenOption tokenName)|) :< (|id tokenExTm
 >                                               |id tokenAscription |)|)
 >     (\[n,e] -> elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
->     "eliminate [<comma>] <eliminator> - eliminates with a motive.")
+>     (Right (TacticHelp
+>         "eliminate [<comma>] <eliminator>"
+>         "eliminate induction NatD m"
+>         -- TODO(joel) - better description
+>         "eliminate with a motive (same as <=)"
+>         [ ("<comma>", "TODO(joel)")
+>         , ("<eliminator>", "TODO(joel)")
+>         ]
+>     )))
+
 >   : unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Ta.")
 >       "= <term> - solves the programming problem by returning <term>."
+
 >   : (simpleCT
 >      "define"
 >      (| (| (B0 :<) tokenExTm |) :< (%keyword KwDefn%) tokenInTm |)
 >      (\ [ExArg rl, InArg tm] -> defineCTactic rl tm)
->      "define <prob> := <term> - relabels and solves <prob> with <term>.")
+>     (Right (TacticHelp
+>         "define <prob> := <term>"
+>         "define vappend 'zero 'nil k bs := bs"
+>         -- TODO(joel) - better description
+>         "relabel and solve <prob> with <term>"
+>         [ ("<prob>", "pattern to match and define")
+>         , ("<term>", "solution to the problem")
+>         ]
+>     )))
 
-The By gadget, written `\<=`, invokes elimination with a motive, then
+The By gadget, written `<=`, invokes elimination with a motive, then
 simplifies the methods and moves to the first subgoal remaining.
 
 >   : (simpleCT
@@ -1023,7 +1224,15 @@ simplifies the methods and moves to the first subgoal remaining.
 >     (|(|(B0 :<) (tokenOption tokenName)|) :< (|id tokenExTm
 >                                               |id tokenAscription |)|)
 >     (\ [n,e] -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
->     "<= [<comma>] <eliminator> - eliminates with a motive.")
+>     (Right (TacticHelp
+>         "<= [<comma>] <eliminator>"
+>         "<= induction NatD m"
+>         -- TODO(joel) - better description
+>         "eliminate with a motive (same as eliminate)"
+>         [ ("<comma>", "TODO(joel)")
+>         , ("<eliminator>", "TODO(joel)")
+>         ]
+>     )))
 
 The Refine gadget relabels the programming problem, then either defines
 it or eliminates with a motive.
@@ -1038,8 +1247,18 @@ it or eliminates with a motive.
 >     (\ [ExArg rl, arg] -> case arg of
 >         InArg tm -> defineCTactic rl tm
 >         ExArg tm -> relabel rl >> byCTactic Nothing tm)
->     ("refine <prob> =  <term> - relabels and solves <prob> with <term>.\n" ++
->      "refine <prob> <= <eliminator> - relabels and eliminates with a motive."))
+>     (Right (TacticHelp
+>         "refine <prob> = <term> OR refine <prob> <= <eliminator>"
+>         "refine plus 'zero n = n"
+>         -- TODO(joel) - better description
+>         "relabel and solve or eliminate with a motive"
+>         [ ("<prob>", "TODO(joel)")
+>         , ("<term>", "TODO(joel)")
+>         , ("<prob>", "TODO(joel)")
+>         , ("<eliminator>", "TODO(joel)")
+>         ]
+>     )))
+
 >     : simpleCT
 >         "solve"
 >         (| (| (B0 :<) tokenName |) :< tokenInTm |)
@@ -1051,7 +1270,16 @@ it or eliminates with a motive.
 >             solveHole ref tm'
 >             return "Solved."
 >           )
->         "solve <name> <term> - solves the hole <name> with <term>."
+>         (Right (TacticHelp
+>             "solve <name> <term>"
+>             "solve a hole"
+>             -- TODO(joel) - better description
+>             "make A := ? : Set; solve A Set"
+>             [ ("<name>", "The name of the hole to solve")
+>             , ("<term>", "Its solution")
+>             ]
+>         ))
+
 >   : CochonTactic
 >         {  ctName = "idata"
 >         ,  ctParse = do
@@ -1076,7 +1304,16 @@ it or eliminates with a motive.
 >                     ielabData nom (argList (argPair argToStr argToIn) pars)
 >                      (argToIn indty) (argList (argPair argToStr argToIn) cons)
 >                       >> return "Data'd.")
->         ,  ctHelp = "idata <name> [<para>]* : <inx> -> Set  := [(<con> : <ty>) ;]* - builds a data type for thee."
+>         , ctHelp = Right (TacticHelp
+>                "idata <name> [<para>]* : <inx> -> Set  := [(<con> : <ty>) ;]*"
+>                "idata Vec (A : Set) : Nat -> Set := ('cons : (n : Nat) -> (a : A) -> (as : Vec A n) -> Vec A ('suc n)) ;"
+>                "Create a new indexed data type"
+>                [ ("<name>", "Choose the name of your datatype carefully")
+>                , ("<para>", "Type parameters")
+>                , ("<inx>", "??")
+>                , ("<con : ty>", "Give each constructor a unique name and a type")
+>                ]
+>            )
 >         }
 >   : unaryExCT "elm" elmCT "elm <term> - elaborate <term>, stabilise and print type-term pair."
 >   : unaryExCT "elaborate" infoElaborate
@@ -1119,23 +1356,40 @@ resulting substitution.
 >      )
 >      (\ [pars, ExArg a, InArg b] ->
 >          matchCTactic (argList (argPair argToStr argToIn) pars) a b)
->      "match [<para>]* ; <term> ; <term> - match parameters in first term against second."
+>     (Right (TacticHelp
+>         "match [<para>]* ; <term> ; <term>"
+>         "TODO(joel)"
+>         -- TODO(joel) - better description
+>         "match parameters in first term against second."
+>         [ ("<para>", "TODO(joel)")
+>         , ("<term>", "TODO(joel)")
+>         ]
+>     ))
 >    )
+
 >   : nullaryCT "simplify" (problemSimplify >> optional' seekGoal >> return "Simplified.")
 >       "simplify - simplifies the current problem."
 
 TODO(joel) - how did this ever work? pars is not bound here either
 https://github.com/joelburget/pigment/blob/bee79687c30933b8199bd9ae6aaaf8048a0c1cf9/src/Tactics/Record.lhs
 
-\< : CochonTactic \< <span> ctName = “record” \< , ctParse = do \< nom
-\<- tokenString \< keyword KwDefn \< scs \<- tokenListArgs (bracket
-Round \$ tokenPairArgs \< tokenString \< (keyword KwAsc) \< tokenInTm)
-\< (keyword KwSemi) \< return \$ B0 :\< nom :\< pars :\< scs \< , ctIO =
-( [StrArg nom, pars, cons] -\> simpleOutput \$ \< elabRecord nom
-(argList (argPair argToStr argToIn) pars) \< (argList (argPair argToStr
-argToIn) cons) \< \>\> return “Record’d.”) \< , ctHelp = “record
-\<name\> [\<para\>]\* := [(\<label\> : \<ty\>) ;]\* - builds a record
-type.” \< </span>
+<   : CochonTactic
+<         {  ctName = "record"
+<         ,  ctParse = do
+<              nom <- tokenString
+<              keyword KwDefn
+<              scs <- tokenListArgs (bracket Round $ tokenPairArgs
+<                tokenString
+<                (keyword KwAsc)
+<                tokenInTm)
+<               (keyword KwSemi)
+<              return $ B0 :< nom :< pars :< scs
+<         , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
+<                     elabRecord nom (argList (argPair argToStr argToIn) pars)
+<                                    (argList (argPair argToStr argToIn) cons)
+<                       >> return "Record'd.")
+<         ,  ctHelp = "record <name> [<para>]* := [(<label> : <ty>) ;]* - builds a record type."
+<         }
 
 >   : unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
 >       "relabel <pattern> - changes names of arguments in label to pattern"
@@ -1145,12 +1399,14 @@ type.” \< </span>
 The `propSimplify` tactic attempts to simplify the type of the current
 goal, which should be propositional. Usually one will want to use
 |simplify| instead, or simplification will happen automatically (with
-the `let` and `\<=` tactics), but this is left for backwards
+the `let` and `<=` tactics), but this is left for backwards
 compatibility.
 
->   : nullaryCT "propsimplify" propSimplifyTactic
->       "propsimplify - applies propositional simplification to the current goal."
+<   : nullaryCT "propsimplify" propSimplifyTactic
+<       "propsimplify - applies propositional simplification to the current goal."
+
 >   : [] )
+
 > elimCTactic :: Maybe RelName -> DExTmRN -> ProofState PureReact
 > elimCTactic c r = do
 >     c' <- traverse resolveDiscard c
@@ -1158,6 +1414,7 @@ compatibility.
 >     elim c' (elimTy :>: e)
 >     toFirstMethod
 >     return "Eliminated. Subgoals awaiting work..."
+
 > matchCTactic :: [(String, DInTmRN)]
 >              -> DExTmRN
 >              -> DInTmRN
@@ -1175,6 +1432,7 @@ compatibility.
 >         tt  <- elaborate' (SET :>: t)
 >         r   <- assumeParam (s :<: tt)
 >         return (r, Nothing)
+
 > propSimplifyTactic :: ProofState PureReact
 > propSimplifyTactic = do
 >     subs <- propSimplifyHere
@@ -1184,7 +1442,7 @@ compatibility.
 >             subStrs <- traverse prettyType subs
 >             nextGoal
 >             return $ fromString ("Simplified to:\n" ++
->                 foldMap (\s -> s ++ "\n") subStrs)
+>                 Foldable.foldMap (\s -> s ++ "\n") subStrs)
 >   where
 >     prettyType :: INTM -> ProofState String
 >     prettyType ty = prettyHere (SET :>: ty) >>= return . renderHouseStyle
@@ -1204,36 +1462,6 @@ compatibility.
 >     optional' seekGoal                  -- jump to goal
 >     return "Eliminated and simplified."
 
-> tokenizeCommands :: Parsley Char [String]
-> tokenizeCommands = (|id ~ [] (% pEndOfStream %)
->                     |id (% oneLineComment %)
->                         (% consumeUntil' endOfLine %)
->                         tokenizeCommands
->                     |id (% openBlockComment %)
->                         (% (eatNestedComments 0) %)
->                         tokenizeCommands
->                     |id (spaces *> endOfLine *> tokenizeCommands)
->                     |consumeUntil' endOfCommand :
->                      tokenizeCommands
->                     |)
->     where endOfCommand = tokenEq ';' *> spaces *> endOfLine
->                      <|> pEndOfStream *> pure ()
->           endOfLine = tokenEq (head "\n") <|> pEndOfStream
->           oneLineComment = tokenEq '-' *> tokenEq '-'
->           openBlockComment = tokenEq '{' *> tokenEq '-'
->           closeBlockComment = tokenEq '-' *> tokenEq '}'
->           spaces = many $ tokenEq ' '
->           eatNestedComments (-1) = (|id ~ ()|)
->           eatNestedComments i = (|id  (% openBlockComment %)
->                                       (eatNestedComments (i+1))
->                                  |id (% closeBlockComment %)
->                                      (eatNestedComments (i-1))
->                                  |id (% nextToken %)
->                                      (eatNestedComments i) |)
-
-> pCochonTactics :: Parsley Token [CTData]
-> pCochonTactics = pSepTerminate (keyword KwSemi) pCochonTactic
-
 > pCochonTactic :: Parsley Token CTData
 > pCochonTactic  = do
 >     x <- (|id ident
@@ -1245,4 +1473,4 @@ compatibility.
 >             return (ct, trail args)
 >         [] -> fail "unknown tactic name."
 >         cts -> fail $
->             "ambiguous tactic name (could be " ++ tacticNames cts ++ ").")
+>             "ambiguous tactic name (could be " ++ tacticNames cts ++ ")."

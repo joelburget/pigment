@@ -34,7 +34,7 @@ namespace.
 Similarly, `forkNSupply` is a safe wrapper around `freshName` and
 |freshNSpace|: |forkNSupply subname child dad| runs the `child` with the
 current namespace extended with `subname`, then, `dad` gets the result
-of `child`’s work and can go ahead with a fresh variable index.
+of `child`'s work and can go ahead with a fresh variable index.
 
 >     forkNSupply  :: String -> m s -> (s -> m t) -> m t
 

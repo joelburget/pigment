@@ -33,7 +33,7 @@ printed, and should return a document representation of `x`.
 >     pretty :: x -> Size -> Doc
 
 The `wrapDoc` operator takes a document, its size and the size it should
-be printed at. If the document’s size is larger than the current size,
+be printed at. If the document's size is larger than the current size,
 it is wrapped in parentheses.
 
 > wrapDoc :: Doc -> Size -> Size -> Doc

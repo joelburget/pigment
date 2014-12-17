@@ -60,7 +60,7 @@ scope* as a list of `Entries`.
 >     return (DANCHOR u displayTs :=>: evTm x)
 
 The following cases turn vaguely list-like data into actual lists. We
-don’t want this in general, but it is useful in special cases (when the
+don't want this in general, but it is useful in special cases (when the
 data type is really supposed to be a list, as in |EnumD|).
 
 > distill _ (MU (Just (ANCHOR (TAG r) _ _)) _ :>: CON (PAIR ZE VOID)) | r == "EnumU" =

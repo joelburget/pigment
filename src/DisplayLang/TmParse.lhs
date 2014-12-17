@@ -49,6 +49,7 @@ The `pDExTm` and `pDInTm` functions start parsing at the maximum size.
 
 > pDExTm :: Parsley Token DExTmRN
 > pDExTm = sizedDExTm maxBound
+
 > pDInTm :: Parsley Token DInTmRN
 > pDInTm = sizedDInTm maxBound
 
@@ -59,6 +60,7 @@ appropriate type annotation.
 
 > pAscription :: Parsley Token (DInTmRN :<: DInTmRN)
 > pAscription = (| pDInTm (%keyword KwAsc%) :<: pDInTm |)
+
 > pAscriptionTC :: Parsley Token DExTmRN
 > pAscriptionTC = (| typeAnnot pDInTm (%keyword KwAsc%) pDInTm |)
 >   where typeAnnot tm ty = DType ty ::$ [A tm]
@@ -73,17 +75,22 @@ of parsers defined in the following subsection.
 > sizedDExTm z = (|(::$ []) (specialHead z) |) <|>
 >       (if z > minBound  then pLoop (sizedDExTm (pred z)) (moreDExTm z)
 >                         else bracket Round pDExTm)
+
 > sizedDInTm :: Size -> Parsley Token DInTmRN
 > sizedDInTm z = specialDInTm z <|> (| (DN . (::$ [])) (specialHead z) |) <|>
 >       (if z > minBound  then pLoop (sizedDInTm (pred z)) (moreInEx z)
 >                         else bracket Round pDInTm)
+
 > specialHead :: Size -> Parsley Token DHEAD
 > specialHead = sizeListParse headParsers
+
 > specialDInTm :: Size -> Parsley Token DInTmRN
 > specialDInTm = sizeListParse inDTmParsersSpecial
+
 > moreInEx :: Size -> DInTmRN -> Parsley Token DInTmRN
 > moreInEx z (DN e)  = (| DN (moreDExTm z e) |) <|> moreDInTm z (DN e)
 > moreInEx z t       = moreDInTm z t
+
 > moreDExTm :: Size -> DExTmRN -> Parsley Token DExTmRN
 > moreDExTm s e = (| (e $::$) (sizeListParse elimParsers s) |)
 > moreDInTm :: Size -> DInTmRN -> Parsley Token DInTmRN
@@ -128,6 +135,7 @@ features can extend the parser.
 >    (ArgSize, (| DType (bracket Round (keyword KwAsc *> pDInTm))|)) :
 >    (ArgSize, (| DP nameParse |)) :
 >    []
+
 > elimParsers :: SizedParserList (Elim DInTmRN)
 > elimParsers = arrange [
 >     (AppSize, (| Call (%keyword KwCall%) ~DU |)),
@@ -136,6 +144,7 @@ features can extend the parser.
 >     (AppSize, (| Out (%keyword KwOut%) |)),
 >     (AppSize, (| A (sizedDInTm ArgSize) |))
 >     ]
+
 > inDTmParsersSpecial :: SizedParserList DInTmRN
 > inDTmParsersSpecial = arrange [
 >   (AndSize, (|(DMU Nothing) (%keyword KwMu%) (sizedDInTm ArgSize)|)),
@@ -181,6 +190,7 @@ features can extend the parser.
 >                    | (uncurry mkDALLV) (%keyword KwImp%) |)
 >                   pDInTm |))
 >     ]
+
 > inDTmParsersMore :: ParamParserList DInTmRN DInTmRN
 > inDTmParsersMore = arrange [
 >     (EqSize, \ t -> (| DEqBlue  (pFilter isEx (pure t)) (%keyword KwEqBlue%)
@@ -197,38 +207,48 @@ Parser support code
 > mkNum 0 Nothing = DZE
 > mkNum 0 (Just t) = t
 > mkNum n t = DSU (mkNum (n-1) t)
+
 > isEx :: DInTmRN -> Maybe DExTmRN
 > isEx (DN tm)  = Just tm
 > isEx _        = Nothing
+
 > tuple :: Parsley Token DInTmRN
 > tuple =
 >     (|DPAIR (sizedDInTm ArgSize) (| id (%keyword KwComma%) pDInTm
 >                                   | id tuple |)
 >      |DVOID (% pEndOfStream %)
 >      |)
+
 > sigma :: Parsley Token DInTmRN
 > sigma = (|mkSigma (optional (ident <* keyword KwAsc)) pDInTm sigmaMore
 >          |DUNIT (% pEndOfStream %)
 >          |)
+
 > sigmaMore :: Parsley Token DInTmRN
 > sigmaMore = (|id (% keyword KwSemi %) (sigma <|> pDInTm)
 >              |(\p s -> mkSigma Nothing (DPRF p) s) (% keyword KwPrf %) pDInTm sigmaMore
 >              |(\x -> DPRF x) (% keyword KwPrf %) pDInTm
 >              |)
+
 > mkSigma :: Maybe String -> DInTmRN -> DInTmRN -> DInTmRN
 > mkSigma Nothing s t = DSIGMA s (DL (DK t))
 > mkSigma (Just x) s t = DSIGMA s (DL (x ::. t))
+
 > questionFilter :: String -> Maybe String
 > questionFilter ('?':s)  = Just s
 > questionFilter _        = Nothing
+
 > underscore :: Parsley Token String
 > underscore = keyword KwUnderscore >> pure "_"
+
 > mkDLAV :: String -> DInTmRN -> DInTmRN
 > mkDLAV "_"  t = DL (DK t)
 > mkDLAV x    t = DLAV x t
+
 > mkDPIV :: String -> DInTmRN -> DInTmRN -> DInTmRN
 > mkDPIV   "_"  s t = DPI s (DL (DK t))
 > mkDPIV   x    s t = DPIV x s t
+
 > mkDALLV :: String -> DInTmRN -> DInTmRN -> DInTmRN
 > mkDALLV  "_"  s p = DALL s (DL (DK p))
 > mkDALLV  x    s p = DALLV x s p

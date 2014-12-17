@@ -199,7 +199,7 @@ Identifiying the motive
 -----------------------
 
 The `introElim` command has generated a subgoal for the motive and left
-us inside it. That’s a good thing because this is what we are going to
+us inside it. That's a good thing because this is what we are going to
 do.
 
 Overview
@@ -209,7 +209,7 @@ question, the best is still to read the Sanctified Papers
 @mcbride:motive [@mcbride:pattern_matching]. If you can bear with me,
 here is my strawman explanation.
 
-First try: life’s too short, the paper’s too long.
+First try: life's too short, the paper's too long.
 
 Remember that the eliminator will evaluate to the following term:
 
@@ -292,8 +292,8 @@ Fifth try: simplifying equations.
 
 Although the previous version would be morally correct, the user will
 appreciate if we simplify some trivial equations by directly
-instantiating them. Our motto being “the user is king” (don’t quote me
-on that), let’s simplify.
+instantiating them. Our motto being “the user is king” (don't quote me
+on that), let's simplify.
 
 Hence, if we have $\xi_i : \Xi_i == t_i : T_i$ with $\Xi_i == T_i$ and
 $t_i$ a term defined in the context $\Delta_1'$, then we can replace
@@ -308,7 +308,7 @@ rename the previously discovered constraints, as they might mention the
 simplified term.
 
 This concludes our overview. Now, we have to implement the last
-proposal. That’s not for the faint of heart.
+proposal. That's not for the faint of heart.
 
 Finding parametric hypotheses
 
@@ -379,7 +379,7 @@ Finding removable hypotheses
 We need to do something like this to find removable hypotheses (those
 about which we gain no information and hence might as well not abstract
 over). However, the problem is more complex than just dependency
-analysis, because of labelled types. The `shouldKeep` function doesn’t
+analysis, because of labelled types. The `shouldKeep` function doesn't
 work properly and should be replaced with a proper type-directed
 traversal for this to make sense.
 
@@ -633,7 +633,7 @@ Building the motive
 
 Finally, we can make the motive, hence closing the subgoal. This simply
 consists in chaining the commands above, and give the computed term.
-Unless we’ve screwed things up, `giveOutBelow` should always be happy.
+Unless we've screwed things up, `giveOutBelow` should always be happy.
 
 > makeMotive ::  TY -> INTM -> Bwd (REF :<: INTM) -> Bwd INTM -> TY ->
 >                ProofState (Bwd (REF :<: INTM), [Binder])

@@ -24,7 +24,7 @@ its construction.
 > globalScope pc = foldMap aboveEntries (pcLayers pc)
 
 The `inScope` function returns all parameters and definitions above the
-cursor. These are all entries rightfully usable at the cursor’s
+cursor. These are all entries rightfully usable at the cursor's
 location.
 
 > inScope :: ProofContext -> Entries

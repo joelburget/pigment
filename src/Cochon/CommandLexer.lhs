@@ -94,7 +94,9 @@ Tokenizer combinators
 >                                        -> Parsley Token CochonArg
 > tokenEither p q = (| LeftArg p | RightArg q |)
 
-> tokenListArgs :: Parsley Token CochonArg -> Parsley Token () -> Parsley Token CochonArg
+> tokenListArgs :: Parsley Token CochonArg
+>               -> Parsley Token ()
+>               -> Parsley Token CochonArg
 > tokenListArgs p sep = (| ListArgs (pSep sep p) |)
 
 > tokenPairArgs :: Parsley Token CochonArg -> Parsley Token () ->

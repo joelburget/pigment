@@ -20,7 +20,7 @@ definition of a development:
 
 \< type Dev = (f (Entry f), Tip, NameSupply)
 
-We \`\`unzip\`\` (cf. Huet’s Zipper @huet:zipper) this type to produce a
+We \`\`unzip\`\` (cf. Huet's Zipper @huet:zipper) this type to produce a
 type representing its one-hole context. This allows us to keep track of
 the location of a working development and perform local navigation
 easily.
@@ -51,7 +51,7 @@ is a record with the following fields:
 >  deriving Show
 
 The derivative makes sense only for definitions and modules, which have
-sub-developments. Parameters being childless, they ‘derive to 0’. Hence,
+sub-developments. Parameters being childless, they ‘derive to 0'. Hence,
 the data about the working development is the derivative of the
 Definition and Module data-types defined in
 Section [subsubsec:ProofState.Structure.Developments.entry].

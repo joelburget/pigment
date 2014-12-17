@@ -10,7 +10,7 @@ Operator DSL
 > import Evidences.Tm
 > import {-# SOURCE #-} Evidences.Eval
 
-Based on, but not quite the same as Edwin’s experimental operator DSEL,
+Based on, but not quite the same as Edwin's experimental operator DSEL,
 try this.
 
 > data OpTree

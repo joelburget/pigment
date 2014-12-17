@@ -13,7 +13,7 @@ brackets: we never use left-over brackets, and it is much simpler to
 work with well-parenthesized expressions when parsing terms. Brackets
 are round, square, or curly, and you can make fancy brackets by wedging
 an identifier between open-and-bar, or bar-and-close without whitespace.
-Sequences of non-whitespace are identifiers unless they’re keywords.
+Sequences of non-whitespace are identifiers unless they're keywords.
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeSynonymInstances #-}
@@ -37,9 +37,9 @@ We lex into tokens, classified as follows.
 Brackets are the structuring tokens. We have:
 
 > data Bracket
->   =  Round  | RoundB String    -- `(` or `(foo|`|
->   |  Square | SquareB String   -- `[` or `[foo|`|
->   |  Curly  | CurlyB String    -- `{` or `{foo|`|
+>   =  Round  | RoundB String    -- `(` or `(foo|`
+>   |  Square | SquareB String   -- `[` or `[foo|`
+>   |  Curly  | CurlyB String    -- `{` or `{foo|`
 >      deriving (Eq, Show)
 
 As we are very likely to look at our tokens all too often, let us
@@ -67,7 +67,7 @@ implement a function to crush tokens down to strings.
 Lexer {#lexer}
 -----
 
-We implement the tokenizer as a `Parsley` on `Char`s. That’s a cheap
+We implement the tokenizer as a `Parsley` on `Char`s. That's a cheap
 solution for what we have to do. The previous implementation was running
 other the string of characters, wrapped in a `StateT` monad transformer.
 
@@ -107,7 +107,7 @@ Parsing words
 
 As an intermediary step before keyword, identifier, and brackets, let us
 introduce a parser for words. A word is any non-empty string of
-characters that doesn’t include a space, a bracketting symbol, or one of
+characters that doesn't include a space, a bracketting symbol, or one of
 the protected symbols. A protected symbol is, simply, a one-character
 symbol which can be prefix or suffix a word, but will not be merged into
 the parsed word. For example, “foo,” lexes into first |Idenfitier foo|
@@ -263,7 +263,7 @@ found in the `keywords` list.
 Lexing identifiers
 
 Hence, parsing an identifier simply consists in successfully parsing a
-word – which is not a keyword – and saying “oh! it’s an `Identifier`”.
+word – which is not a keyword – and saying “oh! it's an `Identifier`”.
 
 > parseIdent = (|id (%parseKeyword%) (|)
 >               |Identifier parseWord |)
@@ -277,12 +277,12 @@ Brackets, open and closed, are one of the following.
 > closeBracket = "}])"
 > bracketChars = "|" ++ openBracket ++ closeBracket
 
-Parsing brackets, as you would expect, requires a monad: we’re not
+Parsing brackets, as you would expect, requires a monad: we're not
 context-free my friend. This is slight variation around the |pLoop|
 combinator.
 
 First, we use `parseOpenBracket` to match an opening bracket, and get
-it’s code. Thanks to this code, we can already say that we hold a
+it's code. Thanks to this code, we can already say that we hold a
 |Brackets|. We are left with tokenizing the content of the bracket, up
 to parsing the corresponding closing bracket.
 
@@ -342,6 +342,7 @@ Parsing an identifier or a number is as simple as:
 > ident = pFilter filterIdent nextToken
 >     where filterIdent (Identifier s) | not (isDigit $ head s) = Just s
 >           filterIdent _ = Nothing
+
 > digits :: Parsley Token String
 > digits = pFilter filterInt nextToken
 >     where filterInt (Identifier s) | all isDigit s = Just s

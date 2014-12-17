@@ -110,10 +110,14 @@
 >         , "Sig Set h"                  -- neutral sigma
 >         , "_"                          -- underscore
 >         ]
+
 > test :: (Pretty x, Show x) => Parsley Token x -> String -> IO ()
 > test p x =
->   let (Right tox) = parse tokenize x in
->     case parse p tox of
->       Left err -> putStrLn ("[FAILED] " ++ x ++ "\t==>\t" ++ show tox ++ "\t==>\t" ++ show err)
->       Right tm -> putStrLn ("[PASSED] " ++ x ++ "\t==>\t" ++ renderHouseStyle (pretty tm maxBound))
+>     let (Right tox) = parse tokenize x in
+>     in case parse p tox of
+>         Left err -> putStrLn $ "[FAILED] " ++
+>             x ++ "\t==>\t" ++ show tox ++ "\t==>\t" ++ show err
+>         Right tm -> putStrLn $ "[PASSED] " ++
+>             x ++ "\t==>\t" ++ renderHouseStyle (pretty tm maxBound)
+
 > main = foldMap (test pDInTm) tests

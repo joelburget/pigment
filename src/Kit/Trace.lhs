@@ -24,7 +24,7 @@ We then can switch each one on or off individually:
 > traceEnabled SchedTrace  = False
 > traceEnabled ElabTrace   = True
 
-That’s fairly trivial, yet I’m pretty sure this goddamn laziness won’t
+That's fairly trivial, yet I'm pretty sure this goddamn laziness won't
 skip some traces (ML programmer speaking here).
 
 > monadTrace :: Monad m => Trace -> String -> m ()

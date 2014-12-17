@@ -18,7 +18,7 @@ $\eta$-expansion, it just brings the term in $\beta$-normal form.
 Therefore, the code is much more simpler than `quote`, although the idea
 is the same.
 
-It is important to note that we are in a `NameSupplier` and we don’t
+It is important to note that we are in a `NameSupplier` and we don't
 require a specially crafted `NameSupply` (unlike `quote` and |quop|).
 Because of that, we have to maintain the variables we have generated and
 to which De Bruijn index they correspond. This is the role of the
@@ -31,7 +31,7 @@ Apart from that, this is a standard $\beta$-quotation:
 > bquote :: NameSupplier m => Bwd REF -> Tm {d,VV} REF -> m (Tm {d,TT} REF)
 
 If binded by one of our lambda, we bind the free variables to the right
-lambda. We don’t do anything otherwise.
+lambda. We don't do anything otherwise.
 
 > bquote  refs (P x) =
 >     case x `elemIndex` refs of
@@ -47,7 +47,7 @@ quotation is just renaming.
 
 > -- bquote refs (L (x :. t)) = (| (refs -|| L (x :. t)) |)
 
-For all other lambdas, it’s the usual story: we create a fresh variable,
+For all other lambdas, it's the usual story: we create a fresh variable,
 evaluate the applied term, quote the result, and bring everyone under a
 binder.
 

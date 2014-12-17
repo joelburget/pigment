@@ -465,7 +465,7 @@ of the equation.
 > flexiProofLeft wrk (_T :>: N t) (_S :>: s) = do
 >     guard =<< withNSupply (equal (SET :>: (_S, _T)))
 
-\< (q’ :=\>: q, ~)~ \<- simplifyProof False (EQBLUE (SET :\>: ~S~) (SET
+\< (q' :=\>: q, ~)~ \<- simplifyProof False (EQBLUE (SET :\>: ~S~) (SET
 :\>: ~T~))
 
 >     ref  <- stripShared t
@@ -476,7 +476,7 @@ of the equation.
 >     let  p      = EQBLUE (_T   :>: N t   ) (_S   :>: s   )
 >          p'     = EQBLUE (_T'  :>: N t'  ) (_S'  :>: s'  )
 
-\< N (coe :@ [~S~’, ~T~’, q’, s’]) :=\>: Just (coe @@ [~S~, ~T~, q, s])
+\< N (coe :@ [~S~', ~T~', q', s']) :=\>: Just (coe @@ [~S~, ~T~, q, s])
 
 >          eprob  = WaitSolve ref (s' :=>: Just s) ElabHope
 >     suspendThis wrk ("eq" :<: PRF p' :=>: PRF p) eprob

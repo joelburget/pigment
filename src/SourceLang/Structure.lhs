@@ -10,8 +10,8 @@ Structure {#sec:SourceLang.Structure}
 > import DisplayLang.Name
 
 This is an implementation of the proposed @.epi@ file structure, based
-on Conor’s notes. Everything is parameterised by a type for terms, so we
-get a bunch of traversable functors. This means we can’t easily enforce
+on Conor's notes. Everything is parameterised by a type for terms, so we
+get a bunch of traversable functors. This means we can't easily enforce
 invariants on term direction, but the resulting simplification is
 probably worth it.
 

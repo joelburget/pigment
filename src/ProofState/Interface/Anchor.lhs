@@ -29,7 +29,7 @@ To cope with shadowing, we will need some form of `RelativeAnchor`:
 
 \< type RelativeAnchor = (Anchor, Int)
 
-With shadowing punished by De Bruijn. Meanwhile, let’s keep it simple.
+With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 
 > resolveAnchor :: String -> ProofStateT e (Maybe REF)
 > resolveAnchor anchor = do
@@ -56,7 +56,7 @@ Find the entry corresponding to the given anchor:
 > findAnchor :: String -> ProofState ()
 > findAnchor = undefined
 
-Redefine the entry corresponding from the given anchor, so that’s name
+Redefine the entry corresponding from the given anchor, so that's name
 is the second anchor:
 
 > renameAnchor :: String -> String -> ProofState ()

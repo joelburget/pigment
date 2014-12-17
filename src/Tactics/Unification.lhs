@@ -38,7 +38,7 @@ state (but not the cursor position) and returns there afterwards.
 >     goTo here
 >     return r
 
-The `solveHole’` command actually fills in the hole, accumulating a list
+The `solveHole'` command actually fills in the hole, accumulating a list
 of dependencies (references the solution depends on) as it passes them.
 It moves the dependencies to before the hole by creating new holes
 earlier in the proof state and inserting a news bulletin that solves the

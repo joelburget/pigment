@@ -28,7 +28,7 @@ relative name (component) and @f~0~@ for an absolute name (component).
 
 A `BScopeContext` contains information from the `ProofContext` required
 for name resolution: a list of the above entries and last component of
-the current entry’s name for each layer, along with the entries in the
+the current entry's name for each layer, along with the entries in the
 current development.
 
 > type BScopeContext =  (Bwd (Entries, (String, Int)), Entries)
@@ -72,9 +72,9 @@ Resolving relative names to references
 
 We need to resolve local longnames as references. We resolve
 <span>*f.x.y.z*</span> by searching outwards for <span>*f*</span>, then
-inwards for a child <span>*x*</span>, <span>*x*</span>’s child
-<span>*y*</span>, <span>*y*</span>’s child <span>*z*</span>. References
-are fully $\lambda$-lifted, but as <span>*f*</span>’s parameters are
+inwards for a child <span>*x*</span>, <span>*x*</span>'s child
+<span>*y*</span>, <span>*y*</span>'s child <span>*z*</span>. References
+are fully $\lambda$-lifted, but as <span>*f*</span>'s parameters are
 held in common with the point of reference, we automatically supply
 them.
 
@@ -125,7 +125,7 @@ from) the root of the tree to the cursor position.
 
 We start off in `resolve`, which calls `lookUp` (for <span>*\^*</span>)
 or `lookDown` (for <span>*\_*</span>) to find the first name element.
-Then `lookFor` and `lookFor’` recursively call each other and |lookDown|
+Then `lookFor` and `lookFor'` recursively call each other and |lookDown|
 until we find the target name, in which case we stop, or we reach the
 local part of the context, in which case `lookLocal` is called. Finally,
 |lookLocal| calls `huntLocal` with an appropriate list of entries, so it
@@ -247,10 +247,10 @@ human friendly, (hah!) relative offset form. Consider:
 How should we print the computer name @X~0~.f~0~.g~0~@ ? A first
 approximation would be <span>*g*</span> since this is the bit that
 differs from the name of the development we are in (@X~0~.f~0~@). And,
-indeed we will always have to print this bit of the name. But there’s
+indeed we will always have to print this bit of the name. But there's
 more to it, here we are assuming that we are applying @g@ to the same
 spine of parameters as the parameters we are currently working under,
-which isn’t always true. We need to be able to refer to, for instance,
+which isn't always true. We need to be able to refer to, for instance,
 <span>*f.g*</span>, which would have type |(b : B) -\> T|. So we must
 really resolve names with their spines compared to the current name and
 parameters spine. So:
@@ -286,18 +286,18 @@ even though @X~0~.f~1~@ is not in scope.
 2) Counting back to the top
 
 When we start looking for the first part of the name we need to print,
-we can’t possibly know what it is, so we can’t count how many times it
+we can't possibly know what it is, so we can't count how many times it
 is shadowed (without writing a circular program) This requires us to
 make two passes through the proof state. If we name @X~0~.f~0~ a@ in the
 2nd example above, we must 1st work out the first part of the name is
 <span>*f*</span> and then go back out work out how many
-<span>*f*</span>’s we jump over to get there.
+<span>*f*</span>'s we jump over to get there.
 
 3) Counting down from the top
 
 Consider naming @X~0~.f~1~.g~0~@ with no spine (again in the 2nd example
-dev) how do we render @f~1~@. It’s my contention that or reference point
-cannot be where the cursor is, since we’ve escaped that context, instead
+dev) how do we render @f~1~@. It's my contention that or reference point
+cannot be where the cursor is, since we've escaped that context, instead
 we should name it absolutely, counting down from @X@, so we should print
 <span>*X.f\_1.g*</span>. Note that <span>*f\_1*</span> as a relative
 name component has a different meaning from @f~1~@ as an absolute name
@@ -327,7 +327,7 @@ We must only print the last part of the 1st, and we must print the 2nd
 absolutely. As far as I remember the naming of these three parts is
 dealt with by (respectively) `nomTop`, `nomAbs` and `nomRel`.
 
-4) Don’t snap your spine
+4) Don't snap your spine
 
 Final problem! Consider this dev:
 

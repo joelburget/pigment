@@ -128,7 +128,7 @@ with the `eElab` instruction, providing a syntactic representation.
 >                            (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
 
 Since we frequently pattern-match on the goal type when elaborating |In|
-terms, we abstract it out. Thus `makeElab’` actually implements
+terms, we abstract it out. Thus `makeElab'` actually implements
 elaboration.
 
 > makeElab :: Loc -> DInTmRN -> Elab (INTM :=>: VAL)
@@ -271,7 +271,7 @@ There are a few possibilities for elaborating $\lambda$-abstractions. If
 both the range and term are constants, then we simply |makeElab|
 underneath. This avoids creating some trivial children.
 
-subElab :: Loc -\> (TY :\>: DInTmRN) -\> Elab (INTM :=\>: VAL) makeElab’
+subElab :: Loc -\> (TY :\>: DInTmRN) -\> Elab (INTM :=\>: VAL) makeElab'
 :: Loc -\> (TY :\>: DInTmRN) -\> Elab (INTM :=\>: VAL) DK :: DInTm p
 x -\> DScope p x – constant K :: Tm <span>In, p</span> x -\> Scope p x –
 constant pattern LK t = L (K t) – Lambda (with constant)

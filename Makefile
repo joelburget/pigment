@@ -16,8 +16,10 @@ server:
 web:
 	cp -r src/{index.html,css,js,Main.js} web
 
+# *caution*
 # docs:
 # 	rm -rf docs
+# 	mkdir docs
 # 	cd src; rsync -R $(wildcard **.lhs) ../docs; cd -
 # 	cd docs; find . -name "*.lhs" -exec rename -v 's/\.lhs$$/\.md/i' "{}" ";"; cd -
 # 	mkdocs

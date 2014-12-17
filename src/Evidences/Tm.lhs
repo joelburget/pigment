@@ -38,7 +38,7 @@ We also distinguish the representations of `TT` terms and `VV` values.
 
 > data Phase  = TT | VV
 
-And, of course, we’re polymorphic in the representation of free
+And, of course, we're polymorphic in the representation of free
 variables, like your mother always told you. This gives the following
 signature for a term:
 
@@ -147,55 +147,55 @@ binding complicates the definition. Note the presence of the @import@
 She-ism: this means that canonical constructors can be later plugged in
 using a She aspect.
 
-> data Can :: * -> * where
->     Set   :: Can t                                   -- set of sets
->     Pi    :: t -> t -> Can t                         -- functions
->     Con   :: t -> Can t                              -- packing
->     Anchors  ::  Can t
->     Anchor   ::  t -> t -> t -> Can t
->     AllowedBy :: t -> Can t
+> data Can           :: * -> * where
+>     Set            :: Can t                                   -- set of sets
+>     Pi             :: t -> t -> Can t                         -- functions
+>     Con            :: t -> Can t                              -- packing
+>     Anchors        :: Can t
+>     Anchor         :: t -> t -> t -> Can t
+>     AllowedBy      :: t -> Can t
 >     AllowedEpsilon :: Can t
->     AllowedCons :: t -> t -> t -> t -> t -> Can t
->     Mu     :: Labelled Id t -> Can t
->     EnumT  :: t -> Can t
->     Ze     :: Can t
->     Su     :: t -> Can t
->     EqBlue :: (t :>: t) -> (t :>: t) -> Can t
->     Monad     :: t -> t -> Can t
->     Return    :: t -> Can t
->     Composite :: t -> Can t
->     IMu     :: Labelled (Id :*: Id) t -> t -> Can t
->     Label  :: t -> t -> Can t
->     LRet   :: t -> Can t
->     Nu :: Labelled Id t -> Can t
->     CoIt :: t -> t -> t -> t -> Can t
->     Prob       :: Can t
->     ProbLabel  :: t -> t -> t -> Can t
->     PatPi      :: t -> t -> t -> Can t
->     Sch        :: Can t
->     SchTy      :: t -> Can t
->     SchExpPi   :: t -> t -> Can t
->     SchImpPi    :: t -> t -> Can t
->     Prop    :: Can t
->     Prf     :: t -> Can t
->     All     :: t -> t -> Can t
->     And     :: t -> t -> Can t
->     Trivial :: Can t
->     Absurd  :: Can t
->     Box     :: Irr t -> Can t
->     Inh     :: t -> Can t
->     Wit     :: t -> Can t
->     Quotient :: t -> t -> t -> Can t
->     Record  :: Labelled Id t -> Can t
->     REmpty  :: Can t
->     RCons   :: t -> t -> t -> Can t
->     RSig    :: Can t
->     Unit   :: Can t
->     Void   :: Can t
->     Sigma  :: t -> t -> Can t
->     Pair   :: t -> t -> Can t
->     UId    :: Can t
->     Tag    :: String -> Can t
+>     AllowedCons    :: t -> t -> t -> t -> t -> Can t
+>     Mu             :: Labelled Id t -> Can t
+>     EnumT          :: t -> Can t
+>     Ze             :: Can t
+>     Su             :: t -> Can t
+>     EqBlue         :: (t :>: t) -> (t :>: t) -> Can t
+>     Monad          :: t -> t -> Can t
+>     Return         :: t -> Can t
+>     Composite      :: t -> Can t
+>     IMu            :: Labelled (Id :*: Id) t -> t -> Can t
+>     Label          :: t -> t -> Can t
+>     LRet           :: t -> Can t
+>     Nu             :: Labelled Id t -> Can t
+>     CoIt           :: t -> t -> t -> t -> Can t
+>     Prob           :: Can t
+>     ProbLabel      :: t -> t -> t -> Can t
+>     PatPi          :: t -> t -> t -> Can t
+>     Sch            :: Can t
+>     SchTy          :: t -> Can t
+>     SchExpPi       :: t -> t -> Can t
+>     SchImpPi       :: t -> t -> Can t
+>     Prop           :: Can t
+>     Prf            :: t -> Can t
+>     All            :: t -> t -> Can t
+>     And            :: t -> t -> Can t
+>     Trivial        :: Can t
+>     Absurd         :: Can t
+>     Box            :: Irr t -> Can t
+>     Inh            :: t -> Can t
+>     Wit            :: t -> Can t
+>     Quotient       :: t -> t -> t -> Can t
+>     Record         :: Labelled Id t -> Can t
+>     REmpty         :: Can t
+>     RCons          :: t -> t -> t -> Can t
+>     RSig           :: Can t
+>     Unit           :: Can t
+>     Void           :: Can t
+>     Sigma          :: t -> t -> Can t
+>     Pair           :: t -> t -> Can t
+>     UId            :: Can t
+>     Tag            :: String -> Can t
 >   deriving (Show, Eq)
 
 The `Con` object is used and abused in many circumstances. However, all
@@ -208,7 +208,7 @@ $$\Rule{desc x (Mu x) \ni y}
 Eliminators
 
 The `Elim` functor explains how eliminators are constructed from their
-sub-objects. It’s a sort of logarithm @hancock:amen. Projective
+sub-objects. It's a sort of logarithm @hancock:amen. Projective
 eliminators for types with $\eta$-laws go here.
 
 > data Elim :: * -> * where
@@ -436,7 +436,7 @@ Syntactic Equality {#subsec:Evidences.Tm.syntactic-equality}
 ------------------
 
 In the following, we implement definitional equality on terms. In this
-case, it’s mainly structural.
+case, it's mainly structural.
 
 > instance Eq x => Eq (Tm {d, p} x) where
 

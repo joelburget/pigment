@@ -94,7 +94,7 @@
 >                 sequence_ $ map (putStrLn . show) targets)
 >     testCheckElimTerms2
 
-These are not quite motive signature, but that’s fine for this test:
+These are not quite motive signature, but that's fine for this test:
 
 > testCheckMotiveTerms = [ "(N : *)(n : N) -> *"
 >                        , "(N : *)(n : N)(m : N) -> *"

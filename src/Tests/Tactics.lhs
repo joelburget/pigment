@@ -23,7 +23,7 @@ branches is supposed to build the following term:
 >                              (branchesOp @@ [e' , L (H (B0 :< p) 
 >                                                      "" (N (V 1 :$ A ((C (Su (N (V 0))))))))])
 
-Let’s test it:
+Let's test it:
 
 > testBranches = equal (typ :>: (fromRight $ withTac, orig)) (B0,3)
 >     where t = N (P ([("",0)] := DECL :<: UID))
@@ -41,7 +41,7 @@ switch is supposed to build the following term:
 >                 , ps $$ Snd
 >                 , n ]
 
-Let’s test it:
+Let's test it:
 
 > testSwitch = equal (typ :>: (fromRight $ withTac, orig)) (B0,5)
 >     where t = N (P ([("",0)] := DECL :<: UID))
@@ -63,7 +63,7 @@ Desc on Arg is supposed to build this term:
 >              (N (descOp :@ [y $# [a],NV z]))
 >              ]] $ B0 :< x :< y :< z
 
-Let’s test it:
+Let's test it:
 
 > testDescArg = equal (typ :>: (fromRight $ withTac, orig)) (B0,3)
 >     where x = N (P ([("",0)] := DECL :<: SET))
@@ -77,7 +77,7 @@ Ind is supposed to build this term:
 
 > indDescRun x y z = TIMES (ARR x z) (descOp @@ [y,z])
 
-Let’s test it:
+Let's test it:
 
 > testDescInd = equal (typ :>: (fromRight $ withTac, orig)) (B0,3)
 >     where x = N (P ([("",0)] := DECL :<: SET))
@@ -99,7 +99,7 @@ Box on an Arg is supposed to build this term:
 
 > boxArgRun a f d p v = boxOp @@ [f $$ A (v $$ Fst),d,p,v $$ Snd] 
 
-Let’s test it:
+Let's test it:
 
 > testBoxArg = equal (typ :>: (fromRight $ withTac, orig)) (B0,5)
 >     where a = N (P ([("",0)] := DECL :<: SET))
@@ -120,7 +120,7 @@ Box on an Ind is supposed to build this term:
 >                   (N (boxOp :@ [NV x,NV d,NV p,N (V v :$ Snd)]))
 >              ] $ B0 :< h :< x :< d :< p :< v
 
-Let’s test it:
+Let's test it:
 
 > testBoxInd = equal (typ :>: (fromRight $ withTac, orig)) (B0,5)
 >     where h = N (P ([("",0)] := DECL :<: SET))
@@ -147,7 +147,7 @@ Mapbox on an Arg is supposed to build this term:
 > mapboxArgRun a f d bp p v =
 >   mapBoxOp @@ [f $$ (A (v $$ Fst)),d,bp,p,v $$ Snd]
 
-Let’s test it:
+Let's test it:
 
 > testMapboxArg = equal (typ :>: (fromRight $ withTac, orig)) (B0,6)
 >     where a = N (P ([("",0)] := DECL :<: SET))
@@ -214,7 +214,7 @@ elimOp is supposed to build this term:
 >                               ] $ B0 :< d :< bp :< p
 >                         ,v])
 
-Let’s test now:
+Let's test now:
 
 > testElim = equal (typ :>: (fromRight $ withTac, orig)) (B0,6)
 >     where d = N (P ([("",0)] := DECL :<: DESC))
@@ -244,7 +244,7 @@ Be green on a Pi:
 >         ]]]
 >         $ B0 :< s1 :< t1 :< f1 :< s2 :< t2 :< f2
 
-I don’t believe it:
+I don't believe it:
 
 > testEqGreenPi = equal (typ :>: (fromRight $ withTac, orig)) (B0,6)
 >     where s1 = N (P ([("",0)] := DECL :<: SET))

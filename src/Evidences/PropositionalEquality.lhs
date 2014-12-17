@@ -12,7 +12,7 @@ Observational Equality
 > import Evidences.Operators
 > import Evidences.TypeChecker
 
-Let’s have some observational equality, now!
+Let's have some observational equality, now!
 @altenkirch_mcbride_swierstra:obs_equality
 
 The `eqGreen` operator, defined in section [sec:Features.Equality],
@@ -71,7 +71,7 @@ equal.
 >     Right t0'  = canTy (\tx@(t :>: x) -> Right (tx :=>: x)) (ty0 :>: t0)
 >     Right t1'  = canTy (\tx@(t :>: x) -> Right (tx :=>: x)) (ty1 :>: t1)
 
-If we are trying to equate a function and a canonical value, we don’t
+If we are trying to equate a function and a canonical value, we don't
 have much hope.
 
 > opRunEqGreen [_,     L _,   _,     C _   ] = Right ABSURD

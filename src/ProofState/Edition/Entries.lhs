@@ -36,7 +36,7 @@ of a `Layer`: on one hand, `aboveEntries` go `Bwd`; on the other hand,
 |belowEntries| go `Fwd` with news. Therefore, when moving the cursor, we
 sometimes need to change the structure that contains entries.
 
-We define such ‘rearranging’ function by mutual induction on |Entry f|
+We define such ‘rearranging' function by mutual induction on |Entry f|
 and |Dev f|:
 
 > rearrangeEntry ::  (Traversable f, Traversable g) =>

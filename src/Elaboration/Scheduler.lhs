@@ -166,8 +166,8 @@ otherwise we hope for a proof of their equality.
 >               schedTrace "resume: WaitSolve failed!" >> resume tt prob
 
 \< else throwErrorS \< [ err “resume: hole” \< , errRef ref \< , err
-“has been solved with” \< , errTyVal (tmv’ :\<: ty) \< , err “but I
-wanted to solve it with” \< , errTyVal (valueOf stt’ :\<: ty) \< ]
+“has been solved with” \< , errTyVal (tmv' :\<: ty) \< , err “but I
+wanted to solve it with” \< , errTyVal (valueOf stt' :\<: ty) \< ]
 
 > resume tt (ElabSchedule prob) = resume tt prob
 

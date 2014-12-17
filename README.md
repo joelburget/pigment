@@ -3,7 +3,7 @@
 [Pigment](http://pigment.io) is an experiment in programming language design. It's built on top of
 the incredible Epigram programming language.
 
-The fundamental design consideration behind Pigment is *cooperation*. The programmer and the programming environment should both do the things that they're good at,  to build programs together.
+The fundamental design consideration behind Pigment is *cooperation*. The programmer and the programming environment should both do the things that they're good at, to build programs together.
 
 A few examples of things I think the computer is better at than me:
 

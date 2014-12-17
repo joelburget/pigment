@@ -63,7 +63,7 @@ it to `exQuote`. Simplification is discussed in greater length below. To
 give an intuition, it consists in transforming stuck terms into
 equivalent, yet simpler, stuck terms. Typically, we use this opportunity
 to turn some laws (monad law, functor law, etc.) to hold
-*definitionally*. This is known as Boutillier’s
+*definitionally*. This is known as Boutillier's
 trick @boutillier:report.
 
 > inQuote (_ :>: N n)      r = N t

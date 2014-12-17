@@ -19,13 +19,13 @@ to be works of literature.”* Donald Knuth, 1992.
 
 This document is intended to realise this lofty aim for the
 implementation of Epigram. Although, given that it is being written by
-several different people at once, the plot changes constantly, and it’s
+several different people at once, the plot changes constantly, and it's
 currently pushing 300 pages even though it has barely been started, I
-don’t expect it’ll be a best seller.
+don't expect it'll be a best seller.
 
 Epigram is a many faceted beast whose facets are constructed roughly one
 on top of the other. This document starts by describing its bowels: the
-core type theory which serves as Epigram’s language of evidence and into
+core type theory which serves as Epigram's language of evidence and into
 which programs are elaborated. We then proceed outwards and upwards
 until we reach its snorting, wild eyed, and rabid face, a.k.a. the
 high-level language.
@@ -44,8 +44,8 @@ eliminators in the underlying theory. An implementation of Epigram 1 was
 written by Conor and with its idiosyncratic emacs interface with 2d
 syntax, one could make small experiments. Unfortunately this prototype
 implementation proved unscalable and unmaintainable. Since then Agda 2
-and Coq’s Russell language have assimilated many of Epigram 1’s features
-and many of Epigram’s programs can be written in these two other
+and Coq's Russell language have assimilated many of Epigram 1's features
+and many of Epigram's programs can be written in these two other
 languages.
 
 Epigram 2 is not just an attempt at a better implementation of Epigram
@@ -65,9 +65,9 @@ ETT @chapman:ett.
 
 Normalization is achieved by evaluation @dybjer:nbe
 [@dybjer:dependent_types_work]. The implementation has been described in
-James Chapman’s work @chapman:phd. A graspable introduction to both
+James Chapman's work @chapman:phd. A graspable introduction to both
 normalization by evaluation and bidirectional type-checking à la Epigram
-can be found in Boutillier’s report @boutillier:report.
+can be found in Boutillier's report @boutillier:report.
 
 The story for names has been told by McBride and
 McKinna @mcbride:free_variable. *Ite messa est*.
@@ -78,7 +78,7 @@ the moment.
 Concerning the `Desc` universe, Morris et al. @morris:spf wrote a clear
 article, covering that topic and much more. In particular, they show why
 and how `Box` and `mapBox` can automatically derived from `Desc`.
-Conor’s work on Ornamemts @mcbride:ornaments builds up from a simplified
+Conor's work on Ornamemts @mcbride:ornaments builds up from a simplified
 `Desc` universe: some insights can be found there too. Finally, the
 authoritative source shall be cited: Dybjer et al. on
 induction-recursion @dybjer:ir_axiom [@dybjer:ir_algebra; @dybjer:iir].

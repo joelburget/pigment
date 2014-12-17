@@ -192,3 +192,53 @@
     color: white;
     padding: 10px;
 }
+
+.autocomplete, .tactic-help {
+    /* TODO is there a cleaner way for ths to line up with the user's typing?*/
+    bottom: 65px;
+    left: 21px;
+
+    background-color: white;
+    border: 1px solid rgb(230, 230, 230);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    font-size: 17px;
+    position: absolute;
+    width: 350px;
+}
+
+.autocomplete {
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.autocomplete div {
+    margin: 0;
+    padding: 5px 10px;
+}
+
+.autocomplete-focus {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-focus div {
+    margin: 0;
+    padding: 0;
+}
+
+.tactic-help {
+    font-size: 14px;
+}
+.tactic-template {
+    background-color: rgb(247, 247, 247);
+    border-bottom: 1px solid rgb(190, 190, 190);
+    padding: 10px;
+}
+.tactic-example, .tactic-summary, .tactic-arg-help {
+    margin: 10px;
+}
+.tactic-help-title {
+    color: gray;
+    margin-bottom: 2px;
+}
+.tactic-help-body {
+}

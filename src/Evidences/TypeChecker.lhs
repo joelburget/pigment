@@ -238,7 +238,7 @@ is type-safe, we are given back the eliminator enclosing the result of
 it computes the type of the argument, ie. the eliminator, in |Elim (s
 :=\>: VAL)| and the type of the result in `TY`.
 
-Carefully bring t into scope (we don’t really care about m and s) so we
+Carefully bring t into scope (we don't really care about m and s) so we
 can refer to it in \`ErrorItem t\`, which disambiguates an instance -
 \`ErrorList a =\> Error [a]\` vs \`Error [ErrorItem INTM]\`, which we
 want.
@@ -282,7 +282,7 @@ VAL) -\> Elim t -\> Check s (Elim (s :=\>: VAL),TY)
 Operators
 
 The `opTy` function explains how to interpret the telescope `opTyTel`:
-it labels the operator’s arguments with the types they must have and
+it labels the operator's arguments with the types they must have and
 delivers the type of the whole application. To do that, one must be able
 to evaluate arguments. It is vital to type-check the sub-terms (left to
 right) before trusting the type at the end. This corresponds to the
@@ -351,7 +351,7 @@ evaluate the well-typed terms.
 >   return $ C ctm :=>: (C $ fmap valueOf cc')
 
 As for lambda, it is simple too. We wish the code was simple too. But,
-hey, it isn’t. The formal typing rule is the following:
+hey, it isn't. The formal typing rule is the following:
 $$\Rule{x : S \vdash T x \ni t}
      {\Pi S\ T \ni \lambda x . t}$$
 
