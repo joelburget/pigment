@@ -3,8 +3,11 @@ Operator DSL
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
+>     PatternSynonyms #-}
+>
 > module Evidences.OperatorDSL where
+>
 > import Control.Applicative
 > import Control.Monad.Except
 > import Evidences.Tm
@@ -21,24 +24,34 @@ try this.
 >   | OSet (Can VAL -> OpTree)
 >   | ORet VAL
 >   | OBarf
+
 > oData :: [OpTree] -> OpTree
 > oData = OCon . OPr . OCase
+
 > class OLams t where
 >   oLams :: t -> OpTree
+
 > instance OLams OpTree where
 >   oLams = id
+
 > instance OLams t => OLams (() -> t) where
 >   oLams f = OLam $ \ _ -> oLams (f ())
+
 > instance OLams t => OLams (VAL -> t) where
 >   oLams = OLam . (oLams .)
+
 > class OTup t where
 >   oTup :: t -> OpTree
+
 > instance OTup OpTree where
 >   oTup = OLam . const
+
 > instance OTup t => OTup (() -> t) where
 >   oTup f = OPr . OLam $ \ _ -> oTup (f ())
+
 > instance OTup t => OTup (VAL -> t) where
 >   oTup = OPr . OLam . (oTup .)
+
 > runOpTree :: OpTree -> [VAL] -> Either NEU VAL
 > runOpTree (OLam f)  (x : xs)  = runOpTree (f x) xs
 > runOpTree (OPr f)   (v : xs)  = runOpTree f (v $$ Fst : v $$ Snd : xs)

@@ -2,8 +2,10 @@ Matching {#sec:Tactics.Matching}
 ========
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}
+
 > module Tactics.Matching where
+
 > import Prelude hiding (any, elem)
 > import Control.Applicative
 > import Control.Monad

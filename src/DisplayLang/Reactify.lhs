@@ -3,8 +3,10 @@ Pretty-printing {#sec:DisplayLang.Reactify}
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
->     TypeSynonymInstances, OverloadedStrings #-}
+>     TypeSynonymInstances, OverloadedStrings, PatternSynonyms #-}
+
 > module DisplayLang.Reactify where
+
 > import Data.List
 > import Data.String (fromString)
 > import ProofState.Structure.Developments

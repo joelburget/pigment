@@ -2,8 +2,10 @@ Using the `Elab` language {#sec:Elaboration.MakeElab}
 =========================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, TupleSections #-}
+> {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternSynonyms #-}
+
 > module Elaboration.MakeElab where
+
 > import Control.Applicative
 > import Control.Monad.Except
 > import NameSupply.NameSupplier

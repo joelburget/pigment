@@ -3,8 +3,10 @@ Relabelling
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards,
->              FlexibleContexts #-}
+>              FlexibleContexts, PatternSynonyms #-}
+
 > module Tactics.Relabel where
+
 > import Control.Applicative
 > import Control.Monad
 > import Control.Monad.Except

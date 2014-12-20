@@ -3,8 +3,11 @@ Equality and Quotation {#sec:Evidences.DefinitionalEquality}
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
+>     PatternSynonyms #-}
+
 > module Evidences.DefinitionalEquality where
+
 > import Control.Applicative
 > import Kit.BwdFwd
 > import Kit.MissingLibrary

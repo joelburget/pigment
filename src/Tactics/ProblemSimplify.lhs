@@ -1,7 +1,9 @@
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, FlexibleInstances,
->              PatternGuards, TupleSections #-}
+>              PatternGuards, TupleSections, PatternSynonyms #-}
+
 > module Tactics.ProblemSimplify where
+
 > import Prelude hiding (any, foldl, elem)
 > import Control.Applicative
 > import Control.Monad.Except

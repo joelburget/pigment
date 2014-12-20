@@ -2,8 +2,10 @@ Unification
 ===========
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternSynonyms #-}
+
 > module Tactics.Unification where
+
 > import Prelude hiding (any, elem)
 > import Control.Monad.Except
 > import Data.Foldable

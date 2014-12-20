@@ -3,8 +3,10 @@ Solving goals
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
+>              GADTs, RankNTypes, PatternSynonyms #-}
+
 > module ProofState.Interface.Solving where
+
 > import Control.Applicative
 > import Control.Monad.Except
 > import Kit.MissingLibrary

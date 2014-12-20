@@ -3,8 +3,10 @@ Making Parameters
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
+>              GADTs, RankNTypes, PatternSynonyms #-}
+
 > module ProofState.Interface.Parameter where
+
 > import Control.Monad.Except
 > import Kit.MissingLibrary
 > import NameSupply.NameSupplier

@@ -2,8 +2,11 @@ Elimination with a Motive
 =========================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternGuards #-}
+> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternGuards,
+>     PatternSynonyms #-}
+
 > module Tactics.Elimination where
+
 > import Prelude hiding (elem)
 > import Control.Applicative
 > import Control.Monad

@@ -4,8 +4,10 @@ Type-checker {#sec:Evidences.TypeChecker}
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, FlexibleInstances,
 >     TypeSynonymInstances, FlexibleContexts, PatternGuards,
->     MultiParamTypeClasses, ScopedTypeVariables #-}
+>     MultiParamTypeClasses, ScopedTypeVariables, PatternSynonyms #-}
+
 > module Evidences.TypeChecker where
+
 > import Control.Applicative
 > import Control.Monad.Except
 > import Data.Monoid ((<>))

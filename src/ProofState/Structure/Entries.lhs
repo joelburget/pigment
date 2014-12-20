@@ -2,8 +2,11 @@ Managing Entries in a Development {#sec:ProofState.Structure.Entries}
 =================================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving #-}
+> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
+>     PatternSynonyms #-}
+
 > module ProofState.Structure.Entries where
+
 > import Data.Traversable
 > import NameSupply.NameSupply
 > import Evidences.Tm
@@ -67,7 +70,7 @@ Changing the type of the carrier is possible for parameters, in which
 case we return a |Right entry|. It is not possible for definitions and
 modules, in which case we return an unchanged |Left dev|.
 
-> entryCoerce ::  (Traversable f, Traversable g) => 
+> entryCoerce ::  (Traversable f, Traversable g) =>
 >                 Entry f -> Either (Dev f) (Entry g)
 > entryCoerce (EPARAM ref xn k ty anchor)  =  Right $ EPARAM ref xn k ty anchor
 > entryCoerce (EDEF _ _ _ dev _ _)    =  Left dev

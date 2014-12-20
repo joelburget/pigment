@@ -2,8 +2,10 @@ The distiller {#sec:Distillation.Distiller}
 =============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}
+
 > module Distillation.Distiller where
+
 > import Control.Monad.State
 > import Text.PrettyPrint.HughesPJ (Doc)
 > import Kit.BwdFwd

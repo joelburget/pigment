@@ -3,8 +3,10 @@ Wire Service {#sec:Elaboration.Wire}
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes, PatternGuards #-}
+>              GADTs, RankNTypes, PatternGuards, PatternSynonyms #-}
+
 > module Elaboration.Wire where
+
 > import Control.Applicative
 > import Control.Monad.Except
 > import Kit.BwdFwd

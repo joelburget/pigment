@@ -2,8 +2,11 @@ Invoking the Elaborator {#sec:Elaborator.Elaborator}
 =======================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards #-}
+> {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards,
+>     PatternSynonyms #-}
+
 > module Elaboration.Elaborator where
+
 > import Control.Applicative
 > import Control.Monad.Except
 > import Control.Monad.Identity

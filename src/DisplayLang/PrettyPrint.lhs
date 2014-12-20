@@ -3,8 +3,10 @@ Pretty-printing {#sec:DisplayLang.PrettyPrint}
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
->     TypeSynonymInstances #-}
+>     TypeSynonymInstances, PatternSynonyms #-}
+
 > module DisplayLang.PrettyPrint where
+
 > import Data.List
 > import Text.PrettyPrint.HughesPJ
 > import ProofState.Structure.Developments

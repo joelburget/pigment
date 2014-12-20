@@ -4,7 +4,9 @@ Developments {#sec:ProofState.Structure.Developments}
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
 >     PatternSynonyms #-}
+>
 > module ProofState.Structure.Developments where
+>
 > import Data.List
 > import Data.Traversable
 > import Kit.BwdFwd

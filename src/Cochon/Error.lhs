@@ -3,8 +3,10 @@ Cochon error prettier
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
->     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+>     DeriveFunctor, DeriveFoldable, DeriveTraversable, PatternSynonyms #-}
+
 > module Cochon.Error where
+
 > import Control.Monad.Except
 > import Text.PrettyPrint.HughesPJ
 > import Evidences.Tm hiding (In)

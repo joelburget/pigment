@@ -3,8 +3,10 @@ Managing Entries in a Proof Context
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes, StandaloneDeriving #-}
+>              GADTs, RankNTypes, StandaloneDeriving, PatternSynonyms #-}
+
 > module ProofState.Edition.Entries where
+
 > import Data.Traversable
 > import NameSupply.NameSupply
 > import ProofState.Structure.Developments
@@ -42,14 +44,14 @@ and |Dev f|:
 > rearrangeEntry ::  (Traversable f, Traversable g) =>
 >                    (forall a. f a -> g a) -> Entry f -> Entry g
 > rearrangeEntry h (EPARAM ref xn k ty a)    =  EPARAM ref xn k ty a
-> rearrangeEntry h (EDEF ref xn k dev ty a)  = 
+> rearrangeEntry h (EDEF ref xn k dev ty a)  =
 >     EDEF ref xn k (rearrangeDev h dev) ty a
 > rearrangeEntry h (EModule n d)             =  EModule n (rearrangeDev h d)
 > rearrangeDev :: (Traversable f, Traversable g) =>
 >     (forall a. f a -> g a) -> Dev f -> Dev g
 > rearrangeDev h d@(Dev {devEntries=xs}) = d{devEntries=rearrangeEntries h xs}
 >     where  rearrangeEntries ::  (Traversable f, Traversable g) =>
->                                 (forall a. f a -> g a) -> 
+>                                 (forall a. f a -> g a) ->
 >                                 f (Entry f) -> g (Entry g)
 >            rearrangeEntries h xs = h (fmap (rearrangeEntry h) xs)
 

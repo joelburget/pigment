@@ -3,8 +3,10 @@ Scope management
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes, StandaloneDeriving #-}
+>              GADTs, RankNTypes, StandaloneDeriving, PatternSynonyms #-}
+
 > module ProofState.Edition.Scope where
+
 > import Data.Foldable
 > import ProofState.Structure.Developments
 > import ProofState.Edition.ProofContext

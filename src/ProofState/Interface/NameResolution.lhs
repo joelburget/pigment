@@ -2,8 +2,10 @@ Resolving and unresolving names {#sec:ProofState.Interface.NameResolution}
 ===============================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, PatternGuards #-}
+> {-# LANGUAGE GADTs, PatternGuards, PatternSynonyms #-}
+
 > module ProofState.Interface.NameResolution where
+
 > import Control.Applicative
 > import Control.Monad.State
 > import Data.Foldable hiding (elem, find)

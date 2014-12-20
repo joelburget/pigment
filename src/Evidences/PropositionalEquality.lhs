@@ -3,8 +3,11 @@ Observational Equality
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
+>     PatternSynonyms #-}
+
 > module Evidences.PropositionalEquality where
+
 > import Control.Applicative
 > import Kit.MissingLibrary
 > import Evidences.Tm

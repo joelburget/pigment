@@ -2,8 +2,10 @@ The Scheduler {#sec:Elaboration.Scheduler}
 =============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, TupleSections #-}
+> {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternSynonyms #-}
+
 > module Elaboration.Scheduler where
+
 > import Control.Applicative
 > import NameSupply.NameSupply
 > import Evidences.Tm

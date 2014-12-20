@@ -3,8 +3,11 @@ Evaluation
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
+>     PatternSynonyms, PatternGuards #-}
+
 > module Evidences.Eval where
+
 > import Control.Applicative
 > import Data.Foldable
 > import Data.Maybe

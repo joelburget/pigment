@@ -2,8 +2,10 @@ Datatype declaration
 ====================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs #-}
+> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternSynonyms #-}
+
 > module Tactics.Data where
+
 > import Control.Applicative
 > import Control.Monad.Except
 > import Control.Monad.Identity

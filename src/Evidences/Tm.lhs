@@ -6,7 +6,9 @@ Tm
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
 >     FlexibleContexts, ScopedTypeVariables, ConstraintKinds,
 >     GeneralizedNewtypeDeriving, PatternSynonyms #-}
+>
 > module Evidences.Tm where
+>
 > import Prelude hiding (foldl)
 > import Control.Applicative
 > import Control.Monad.Error
@@ -391,9 +393,9 @@ We have some type synonyms for commonly occurring instances of `Tm`.
 > type TXTSUB = [(Char, String)]        -- renaming plan
 
 We have special pairs for types going into and coming out of stuff. We
-write |typ :\>: thing| to say that `typ` accepts the term `thing`,
-i.e. we can push the `typ` in the `thing`. Conversely, we write |thing
-:\<: typ| to say that `thing` is of inferred type `typ`, i.e.we can pull
+write `typ :\>: thing` to say that `typ` accepts the term `thing`,
+i.e. we can push the `typ` in the `thing`. Conversely, we write `thing
+:\<: typ` to say that `thing` is of inferred type `typ`, i.e.we can pull
 the type `typ` out of the `thing`. Therefore, we can read `:\>:` as
 “accepts” and `:\<:` as “has inferred type”.
 

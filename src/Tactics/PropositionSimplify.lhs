@@ -3,8 +3,10 @@ Propositional Simplification {#sec:Tactics.PropositionSimplify}
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, FlexibleInstances,
->              PatternGuards, TupleSections #-}
+>              PatternGuards, TupleSections, PatternSynonyms #-}
+
 > module Tactics.PropositionSimplify where
+
 > import Prelude hiding (any, foldl)
 > import Control.Applicative
 > import Control.Monad.Except

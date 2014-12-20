@@ -4,8 +4,10 @@ Utilities
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
->     ScopedTypeVariables #-}
+>     ScopedTypeVariables, PatternSynonyms #-}
+
 > module Evidences.Utilities where
+
 > import Prelude hiding (elem)
 > import Data.Foldable
 > import NameSupply.NameSupplier
@@ -70,7 +72,7 @@ binder is used. For `dischargeAll`, the initial term must be in the form
 
 > dischargeAll :: Bwd (REF :<: INTM) -> INTM -> INTM
 > dischargeAll = dischargeF f
->   where 
+>   where
 >     f :: Bool -> String -> INTM -> INTM -> INTM
 >     f False  x (PRF p)  (PRF q) = PRF (IMP p q)
 >     f _      x s        (PRF q) = PRF (ALLV x s q)

@@ -1,7 +1,9 @@
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, FlexibleInstances,
->              PatternGuards, TupleSections #-}
+>              PatternGuards, TupleSections, PatternSynonyms #-}
+
 > module Tactics.ShowHaskell where
+
 > import Prelude hiding (any, foldl)
 > import Data.List
 > import Data.String (fromString)
