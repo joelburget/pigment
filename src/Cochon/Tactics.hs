@@ -333,6 +333,7 @@ jumpTac = unaryNameCT "jump" (\ x -> do
 
 -- Miscellaneous tactics
 
+-- TODO visual display of previous states
 undoTac = CochonTactic
     {  ctName = "undo"
     ,  ctParse = pure B0

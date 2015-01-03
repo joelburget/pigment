@@ -52,6 +52,7 @@ Datatype declaration
 >                                  (N (P idescREF :$ A (N indty))),y))
 >   goOut
 >   return (s, tyi, x, y)
+
 > ity2desc :: EXTM -> REF -> [Elim VAL] -> VAL -> VAL -> ProofState (INTM,[String])
 > ity2desc indty r ps ind (PI a b) = do
 >             let anom = fortran b
@@ -77,6 +78,7 @@ Datatype declaration
 >             i''' <- bquoteHere i'
 >             return (ICONST (PRF (EQBLUE (N indty :>: i'') (N indty :>: i'''))),[])
 > ity2desc _ _ _ _ _ = throwError (sErr "If you think this should work maybe you should have a chat with Dr Morris about it.")
+
 > ity2h :: EXTM -> REF -> [Elim VAL] -> VAL -> ProofState INTM
 > ity2h indty r ps (PI a b) = do
 >   a' <- bquoteHere a
@@ -93,6 +95,7 @@ Datatype declaration
 >   i'' <- bquoteHere i'
 >   return (IVAR i'')
 > ity2h _ _ _ _ = throwError (sErr "If you think this should work maybe you should have a chat with Dr Morris about it.")
+
 > imkAllowed :: (String, EXTM, INTM) -> [(String, EXTM, REF)] -> (INTM, INTM)
 > imkAllowed (s, ty, i) = foldr mkAllowedHelp ((ARR (N ty) SET,
 >                                              ALLOWEDCONS  (N ty)
@@ -202,6 +205,7 @@ tests for equality, so it doesn't catch the wrong `MU`s.
 > isetLabel l (L (K t)) = L (K (isetLabel l t))
 > isetLabel l (C c) = C (fmap (isetLabel l) c)
 > isetLabel l (N n) = N (isetLabelN l n)
+
 > isetLabelN :: INTM -> EXTM -> EXTM
 > isetLabelN l (P x) = P x
 > isetLabelN l (V n) = V n

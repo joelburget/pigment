@@ -11,6 +11,7 @@
 
 .top-pane {
     flex: 1;
+    overflow: scroll;
 }
 
 .bottom-pane {

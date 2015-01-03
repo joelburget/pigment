@@ -23,10 +23,10 @@ compare two values, we first bring them to their normal form. Then, it
 is a simple matter of syntactic equality, as defined in Section
 [subsec:Evidences.Tm.syntactic-equality], to compare the normal forms.
 
-> equal :: (TY :>: (VAL,VAL)) -> NameSupply -> Bool
+> equal :: (TY :>: (VAL, VAL)) -> NameSupply -> Bool
 > equal (ty :>: (v1,v2)) r = quote (ty :>: v1) r == quote (ty :>: v2) r
 
-|quote| is a type-directed operation that returns a normal form |INTM|
+`quote` is a type-directed operation that returns a normal form `INTM`
 by recursively evaluating the value `VAL` of type `TY`.
 
 > quote :: (TY :>: VAL) -> NameSupply -> INTM
@@ -36,10 +36,10 @@ are no $\beta$-redexes present and all possible $\eta$-expansions have
 been performed.
 
 This is achieved by two mutually recursive functions, `inQuote` and
-|exQuote|:
+`exQuote`:
 
-\< inQuote :: (TY :\>: VAL) -\> NameSupply -\> INTM \< exQuote ::
-NEU -\> NameSupply -\> (EXTM :\<: TY)
+< inQuote :: (TY :>: VAL) -> NameSupply -> INTM
+< exQuote :: NEU -> NameSupply -> (EXTM :<: TY)
 
 Where `inQuote` quotes values and `exQuote` quotes neutral terms. As we
 are initially provided with a value, we quote it with `inQuote`, in a
@@ -54,7 +54,7 @@ Quoting a value consists in, if possible, $\eta$-expanding it. So it
 goes:
 
 > inQuote :: (TY :>: VAL) -> NameSupply -> INTM
-> inQuote (C ty :>: v)          r | Just t    <- etaExpand (ty :>: v) r = t
+> inQuote (C ty :>: v) r | Just t <- etaExpand (ty :>: v) r = t
 
 Needless to say, we can always $\eta$-expand a closure. Therefore, if
 $\eta$-expansion has failed, there are two possible cases: either we are
@@ -183,9 +183,11 @@ Simplification of stuck terms
 
 > simplify :: NEU -> NameSupply -> NEU
 > simplify n r = exSimp n r
+
 > inSimp :: VAL -> NameSupply -> VAL
 > inSimp (N n) = (| N (exSimp n) |)
 > inSimp v     = (| v |)
+
 > exSimp :: NEU -> NameSupply -> NEU
 > exSimp (P x)      = (| (P x) |)
 > exSimp (n :$ el)  = (| exSimp n :$ (inSimp ^$ el) |)

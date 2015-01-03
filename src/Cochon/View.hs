@@ -262,6 +262,7 @@ renderReact aus me = do
                     tip' <- reactTip
                     return $ div_ <! className "empty-tip" $
                         reactKword KwDefn >> " " >> tip'
+
         reactEs :: PureReact
                 -> Fwd (Entry Bwd)
                 -> ProofState PureReact
@@ -270,6 +271,7 @@ renderReact aus me = do
             putEntryAbove e
             ed <- reactE e
             reactEs (d >> ed) es
+
         reactE :: Entry Bwd -> ProofState PureReact
         reactE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
             ty' <- bquoteHere ty

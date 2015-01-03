@@ -145,9 +145,7 @@ Canonical objects
 The `Can` functor explains how canonical objects are constructed from
 sub-objects (terms or values, as appropriate). Lambda is not included
 here: morally, it belongs; practically, adapting `Can` to support
-binding complicates the definition. Note the presence of the @import@
-She-ism: this means that canonical constructors can be later plugged in
-using a She aspect.
+binding complicates the definition.
 
 > data Can           :: * -> * where
 >     Set            :: Can t                                   -- set of sets
@@ -393,22 +391,27 @@ We have some type synonyms for commonly occurring instances of `Tm`.
 > type TXTSUB = [(Char, String)]        -- renaming plan
 
 We have special pairs for types going into and coming out of stuff. We
-write `typ :\>: thing` to say that `typ` accepts the term `thing`,
+write `typ :>: thing` to say that `typ` accepts the term `thing`,
 i.e. we can push the `typ` in the `thing`. Conversely, we write `thing
-:\<: typ` to say that `thing` is of inferred type `typ`, i.e.we can pull
-the type `typ` out of the `thing`. Therefore, we can read `:\>:` as
-“accepts” and `:\<:` as “has inferred type”.
+:<: typ` to say that `thing` is of inferred type `typ`, i.e. we can pull
+the type `typ` out of the `thing`. Therefore, we can read `:>:` as
+“accepts” and `:<:` as “has inferred type”.
 
 > data ty :>: tm = ty :>: tm  deriving (Show,Eq)
 > infix 4 :>:
+
 > data tm :<: ty = tm :<: ty  deriving (Show,Eq)
 > infix 4 :<:
+
 > fstIn :: (a :>: b) -> a
 > fstIn (x :>: _) = x
+
 > sndIn :: (a :>: b) -> b
 > sndIn (_ :>: x) = x
+
 > fstEx :: (a :<: b) -> a
 > fstEx (x :<: _) = x
+
 > sndEx :: (a :<: b) -> b
 > sndEx (_ :<: x) = x
 

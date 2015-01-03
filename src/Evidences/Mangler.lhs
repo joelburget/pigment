@@ -4,7 +4,9 @@ Variable Manipulation
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, ScopedTypeVariables #-}
+
 > module Evidences.Mangler where
+
 > import Control.Applicative
 > import Control.Monad.Identity
 > import Kit.BwdFwd
@@ -12,23 +14,22 @@ Variable Manipulation
 > import Kit.MissingLibrary
 
 Variable manipulation, in all its forms, ought be handled by the
-mangler. A |Mangle f x y| is a record that describes how to deal with
+mangler. A `Mangle f x y` is a record that describes how to deal with
 parameters of type `x`, variables and binders, producing terms with
 parameters of type `y` and wrapping the results in some applicative
 functor `f`.
 
 It contains three fields:
 
-<span>`mangP`</span> describes what to do with parameters. It takes a
-parameter value and a spine (a list of eliminators) that this parameter
-is applied to (handy for christening); it must produce an appropriate
-term.
+`mangP` describes what to do with parameters. It takes a parameter value and a
+spine (a list of eliminators) that this parameter is applied to (handy for
+christening); it must produce an appropriate term.
 
-<span>`mangV`</span> describes what to do with variables. It takes a de
-Brujin index and a spine as before, and must produce a term.
+`mangV` describes what to do with variables. It takes a de Brujin index and a
+spine as before, and must produce a term.
 
-<span>`mangB`</span> describes how to update the `Mangle` in response to
-a given binder name.
+`mangB` describes how to update the `Mangle` in response to a given binder
+name.
 
 > data Mangle f x y = Mang
 >   {  mangP :: x -> f (Spine {TT} y) -> f (ExTm y)
@@ -36,10 +37,10 @@ a given binder name.
 >   ,  mangB :: String -> Mangle f x y
 >   }
 
-The interpretation of a `Mangle` is given by the |This mangles a term,
-produing a term with the appropriate parameter type in the relevant
-idiom. This is basically a traversal, but calling the appropriate fields
-of `Mangle` for each parameter, variable or binder encountered.
+The interpretation of a `Mangle` is given by the `%` operator. This mangles a
+term, produing a term with the appropriate parameter type in the relevant
+idiom. This is basically a traversal, but calling the appropriate fields of
+`Mangle` for each parameter, variable or binder encountered.
 
 > (%) :: Applicative f => Mangle f x y -> Tm {In, TT} x -> f (Tm {In, TT} y)
 > m % L (K t)      = (|L (|K (m % t)|)|)
@@ -53,21 +54,22 @@ The corresponding behaviour for `ExTm`s is implemented by `exMang`.
 >            Tm {Ex, TT} x -> f [Elim (Tm {In, TT} y)] -> f (Tm {Ex, TT} y)
 > exMang m (P x)     es = mangP m x es
 > exMang m (V i)     es = mangV m i es
-> exMang m (o :@ a)  es = (|(| (o :@) ((m %) ^$ a) |) $:$ es|) 
+> exMang m (o :@ a)  es = (|(| (o :@) ((m %) ^$ a) |) $:$ es|)
 > exMang m (t :$ e)  es = exMang m t (|((m %) ^$ e) : es|)
 > exMang m (t :? y)  es = (|(|(m % t) :? (m % y)|) $:$ es|)
 
-The |
+The `%%` and `%%#` operators apply mangles that use the identity functor.
 
 > (%%) :: Mangle Identity x y -> Tm {In, TT} x -> Tm {In, TT} y
 > m %% t = runIdentity $ m % t
+
 > (%%#) :: Mangle Identity x y -> Tm {Ex, TT} x -> Tm {Ex, TT} y
 > m %%# t = runIdentity $ exMang m t (| [] |)
 
 The `under` mangle
 ------------------
 
-The |under i y| mangle binds the variable with de Brujin index `i` to
+The `under i y` mangle binds the variable with de Brujin index `i` to
 the parameter `y` and leaves the term otherwise unchanged.
 
 > under :: Int -> x -> Mangle Identity x x
@@ -123,7 +125,7 @@ target term, it substitutes the terms for the references in the target.
 >       ,  mangV = \ i ies -> (|(V i $:$) ies|)
 >       ,  mangB = \ _ -> substMangle bs vs
 >       }
->     
+>
 >     help :: Bwd (REF :<: INTM) -> Bwd INTM -> REF -> EXTM
 >     help B0 B0 x = P x
 >     help (bs :< (y :<: ty)) (vs :< v) x
