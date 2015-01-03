@@ -66,7 +66,7 @@ entries below the cursor are (lazily) notified of the good news.
 >         _  -> throwError $ sErr "give: only possible for incomplete goals."
 
 For convenience, we combine giving a solution and moving. Indeed, after
-|give|, the cursor stands in a rather boring position: under a |Defined|
+`give`, the cursor stands in a rather boring position: under a `Defined`
 entry, with no work to do. So, a first variant is `giveOutBelow` that
 gives a solution and moves just below the now-defined entry. A second
 variant is `giveNext` that gives as well and moves to the next goal, if
@@ -74,6 +74,7 @@ one is available.
 
 > giveOutBelow :: INTM -> ProofState (EXTM :=>: VAL)
 > giveOutBelow tm = give tm <* goOutBelow
+
 > giveNext :: INTM -> ProofState (EXTM :=>: VAL)
 > giveNext tm = give tm <* (nextGoal <|> goOut)
 

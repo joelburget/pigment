@@ -45,7 +45,7 @@ such as `Hoping` or `Crying`.
 >                         , errTm (DTIN ty)
 >                         , err " is not a set."
 >                         ])
->     -- Make a name for the goal, from |name|
+>     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
 >     goalName <- pickName "Goal" name
 >     let  n  =  mkName nsupply goalName

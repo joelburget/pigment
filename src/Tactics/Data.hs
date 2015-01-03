@@ -66,7 +66,7 @@ ty2desc r ps (PI a b) = do
     if occurs r a'
       then do
         (a'', i) <- ty2h r ps a
-        (b', j, k, c) <- freshRef (fortran b:<:a) $ \s -> do
+        (b', j, k, c) <- freshRef (fortran b :<: a) $ \s -> do
             ret@(b', _, _, _) <- ty2desc r ps (b $$ A (N (P s)))
             when (occurs s b') $ throwError (sErr "Bad dependency")
             return ret
@@ -161,57 +161,77 @@ mkAllowed :: [(String, EXTM, REF)] -> (INTM, INTM)
 mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
     mkAllowedHelp (x, ty, r) (allowingTy, allowedTy) =
         let allowingTy' = L $ x :. (capM r 0 %% allowingTy)
-        in (
-            PI (N ty) allowingTy',
-            ALLOWEDCONS (N ty)
-                        allowingTy'
-                        (N (P refl :$ A SET :$ A (PI (N ty) allowingTy')))
-                        (NP r)
-                        allowedTy
-        )
+            allowingTy'' = PI (N ty) allowingTy',
+            allowedBy = ALLOWEDCONS
+                (N ty)
+                allowingTy'
+                (N (P refl :$ A SET :$ A (PI (N ty) allowingTy')))
+                (NP r)
+                allowedTy
+        in (allowingTy'', allowedBy)
 
 elabData :: String -> [ (String , DInTmRN) ] ->
                       [ (String , DInTmRN) ] -> ProofState (EXTM :=>: VAL)
 elabData nom pars scs = do
       oldaus <- (| paramSpine getInScope |)
+
+      -- start by making a module named after the type of what we're
+      -- building
       makeModule nom
+
+      -- we're going to be working inside of the module for the rest of
+      -- this function
       goIn
+
+      -- make a goal to solve the type of each parameter
       pars' <- for pars $ \(x, y) -> do
           make $ (x ++ "ParTy") :<: SET
           goIn
           yt :=>: yv <- elabGive y
           r <- assumeParam (x :<: (N yt :=>: yv))
           return (x, yt, r)
+
       moduleToGoal SET
+
+      -- we need to figure out the type of all the constructors
       cs <- for scs $
           elabCons nom
                    (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
                           SET
                           pars')
                    (map (\(_,_,r) -> A (NP r)) pars')
+
+      -- and constructor names
       make ("ConNames" :<: NP enumREF)
       goIn
       (e :=>: ev) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE scs)
+
+      -- ... constructor descriptions?
       make ("ConDescs" :<: N (branchesOp :@ [ N e, L $ K (NP descREF)])) -- ARR (ENUMT (N e)) (NP descREF)
       goIn
       (cs' :=>: _) <- giveOutBelow $ foldr PAIR VOID $ map conDesc cs
+
       makeKinded (Just nom) Waiting ("DataDesc" :<: NP descREF)
       goIn
       (d :=>: dv) <- giveOutBelow
           (SUMD (N e)
                 (L ("s" :. N (switchDOp :@ [N e, N cs', NV 0]))))
-      lt :=>: _ <- getFakeCurrentEntry
+      -- lt :=>: _ <- getFakeCurrentEntry XXX
+
+      -- the type of the data type we just created is Set
       make ("DataTy" :<: SET)
       goIn
       let (allowingTy, allowedBy) = mkAllowed pars'
           anchor = ANCHOR (TAG nom) allowingTy allowedBy
       (dty :=>: dtyv) <- giveOutBelow (MU (Just anchor) (N d))
       EEntity r _ _ _ _ <- getEntryAbove
+
+      -- make the constructors
       for cs $ makeCon (N e) (N (P r $:$ oldaus))
 
--- We specialise the induction operator to this datatype, ensuring the
--- label is assigned throughout, so the label will be preserved when
--- eliminating by induction.
+      -- We specialise the induction operator to this datatype, ensuring
+      -- the label is assigned throughout, so the label will be preserved
+      -- when eliminating by induction.
 
       makeModule "Ind"
       goIn

@@ -4,6 +4,7 @@ Fake references
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
+
 > module ProofState.Edition.FakeRef where
 > import ProofState.Edition.ProofContext
 > import ProofState.Edition.Scope
@@ -21,6 +22,7 @@ global scope, but it is then applied to them (as shared parameters).
 > getFakeRef = do
 >    CDefinition _  (cEntryName := HOLE _ :<: ty) _ _ _ <- getCurrentEntry
 >    return $ cEntryName := FAKE :<: ty
+
 > getFakeCurrentEntry :: ProofState (EXTM :=>: VAL)
 > getFakeCurrentEntry = do
 >    r <- getFakeRef

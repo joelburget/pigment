@@ -278,7 +278,7 @@ renderReact aus me = do
             tyd <- reactHereAt (SET :>: ty')
             return $ reactBKind k $ div_ <! className "entry" $ do
                 div_ <! class_ "tm-name" $ fromString x
-                -- TODO(joel) - show anchor in alomst same way as below?
+                -- TODO(joel) - show anchor in almost same way as below?
                 reactKword KwAsc
                 div_ <! class_ "ty" $ tyd
         reactE e = do
