@@ -110,6 +110,7 @@ ProofState usage.
 > prettySchemeHere sch = do
 >     sch' <- distillSchemeHere sch
 >     return $ pretty sch' maxBound
+
 > reactSchemeHere :: Scheme INTM -> ProofState PureReact
 > reactSchemeHere sch = do
 >     sch' <- distillSchemeHere sch

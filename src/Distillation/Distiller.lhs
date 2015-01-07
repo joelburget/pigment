@@ -382,8 +382,10 @@ passes it to the pretty-printer.
 > prettyHereAt size tt = do
 >     dtm :=>: _ <- distillHere tt
 >     return (pretty dtm size)
+
 > reactHere :: (TY :>: INTM) -> ProofState PureReact
 > reactHere = reactHereAt
+
 > reactHereAt :: (TY :>: INTM) -> ProofState PureReact
 > reactHereAt tt = do
 >     dtm :=>: _ <- distillHere tt

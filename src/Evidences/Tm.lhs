@@ -424,10 +424,11 @@ with the associated projections:
 
 > valueOf :: (t :=>: v) -> v
 > valueOf (_ :=>: v) = v
+
 > termOf :: (t :=>: v) -> t
 > termOf (t :=>: _) = t
 
-Intuitively, |t :=\>: v| can be read as “the term `t` reduces to the
+Intuitively, `t :=>: v` can be read as “the term `t` reduces to the
 value `v`”.
 
 We use `(??)` as a smart constructor for type ascriptions that omits
