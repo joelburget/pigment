@@ -56,7 +56,9 @@ cochon loc = do
     Just e <- elemById "inject"
     let startCtx = B0 :< loc
     validateDevelopment startCtx
-    render e page (flip dispatch) (startState startCtx)
+    cls <- createClass page animDispatch (startState startCtx) () []
+    render e cls
+    return ()
 
 paranoid = False
 veryParanoid = False

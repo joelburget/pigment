@@ -24,7 +24,7 @@ The `reactKword` function gives a react element representing a
 
 > reactKword :: Keyword -> PureReact
 > reactKword kw =
->     span_ <! class_ (fromString (show kw)) $ fromString (key kw)
+>     span_ [ class_ (fromString (show kw)) ] $ fromString (key kw)
 > parens :: PureReact -> PureReact
 > parens r = "(" >> r >> ")"
 

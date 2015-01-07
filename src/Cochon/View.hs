@@ -1,4 +1,5 @@
-{-# LANGUAGE PatternSynonyms, OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
+  MultiParamTypeClasses #-}
 module Cochon.View where
 
 import Control.Applicative
@@ -9,6 +10,7 @@ import qualified Data.Foldable as Foldable
 import Data.List
 import Data.String
 import Data.Traversable
+import Data.Void
 
 import Cochon.CommandLexer
 import Cochon.Controller
@@ -69,17 +71,22 @@ import Haste.Prim
 import Lens.Family2
 import React
 
-type InteractionReact = React Transition ()
-
 page :: InteractionState -> InteractionReact
-page state = div_ <! class_ "page" $ do
-    div_ <! class_ "left-pane" $ do
-        div_ <! class_ "top-pane" $ proofCtxDisplay $ _proofCtx state
-        div_ <! class_ "bottom-pane" $ do
+page state = div_ [ class_ "page" ] $ do
+    div_ [ class_ "left-pane" ] $ do
+        div_ [ class_ "top-pane" ] $ proofCtxDisplay $ _proofCtx state
+        div_ [ class_ "bottom-pane" ] $ do
             locally (autocompleteView (_autocomplete state))
             prompt state
             workingOn state
     rightPane state
+
+-- The autocomplete overlay
+data Autocomplete
+instance ReactKey Autocomplete where
+    type ClassState Autocomplete = AutocompleteState
+    type AnimationState Autocomplete = ()
+    type Signal Autocomplete = Void
 
 rightPane :: InteractionState -> InteractionReact
 rightPane s = do
@@ -87,68 +94,74 @@ rightPane s = do
     paneToggle s
 
 paneToggle :: InteractionState -> InteractionReact
-paneToggle s = button_ <! class_ "pane-bar"
-                       <! onClick handleToggleRightPane $ do
+paneToggle s = button_ [ class_ "pane-bar"
+                       , onClick handleToggleRightPane
+                       ] $ do
     let cls = case s^.rightPaneVisible of
           Invisible -> "icon ion-arrow-left-b"
           Visible   -> "icon ion-arrow-right-b"
-    i_ <! class_ cls $ ""
+    i_ [ class_ cls ] ""
 
 choosePaneButtons :: Pane -> InteractionReact
-choosePaneButtons pane = div_ <! class_ "choose-pane" $ do
+choosePaneButtons pane = div_ [ class_ "choose-pane" ] $ do
     let go x = if x == pane then "selected-pane" else ""
-    div_ <! class_ (go Log)
-         <! onClick (handleSelectPane Log) $ "Command Log"
-    div_ <! class_ (go Commands)
-         <! onClick (handleSelectPane Commands) $ "Commands"
-    div_ <! class_ (go Settings)
-         <! onClick (handleSelectPane Settings) $ "Settings"
+    div_ [ class_ (go Log)
+         , onClick (handleSelectPane Log)
+         ] "Command Log"
+    div_ [ class_ (go Commands)
+         , onClick (handleSelectPane Commands)
+         ] "Commands"
+    div_ [ class_ (go Settings)
+         , onClick (handleSelectPane Settings)
+         ] "Settings"
 
 innerRightPane :: InteractionState -> InteractionReact
 innerRightPane InteractionState{_currentPane=pane, _interactions=ixs} =
-    div_ <! class_ "right-pane" $ do
+    div_ [ class_ "right-pane" ] $ do
         choosePaneButtons pane
         locally $ case pane of
             Log -> interactionLog ixs
             Commands -> tacticList
             Settings -> "TODO(joel) - settings"
 
-autocompleteView :: AutocompleteState -> PureReact
+autocompleteView :: AutocompleteState -> React Autocomplete ()
 autocompleteView mtacs = case mtacs of
     Stowed -> ""
-    CompletingTactics tacs -> div_ <! class_ "autocomplete" $
+    CompletingTactics tacs -> div_ [ class_ "autocomplete" ] $
         innerAutocomplete tacs
-    CompletingParams tac -> case (ctHelp tac) of
-        Left react -> div_ <! class_ "tactic-help" $ react
+    CompletingParams tac -> locally $ case (ctHelp tac) of
+        Left react -> div_ [ class_ "tactic-help" ] react
         Right tacticHelp -> longHelp tacticHelp
 
-innerAutocomplete :: ListZip CochonTactic -> PureReact
+innerAutocomplete :: ListZip CochonTactic -> React Autocomplete ()
 innerAutocomplete (ListZip early focus late) = do
-    let desc tacs = Foldable.forM_ tacs (div_ . fromString . ctName)
+    let desc :: Foldable a => a CochonTactic -> React Autocomplete ()
+        desc tacs = Foldable.forM_ tacs (div_ . fromString . ctName)
 
     desc early
 
-    div_ <! class_ "autocomplete-focus" $ do
+    locally $ div_ [ class_ "autocomplete-focus" ] $ do
         div_ $ fromString $ ctName focus
         div_ $ renderHelp $ ctHelp focus
 
     desc late
 
 promptArrow :: PureReact
-promptArrow = i_ <! class_ "icon ion-ios-arrow-forward" $ ""
+promptArrow = i_ [ class_ "icon ion-ios-arrow-forward" ] ""
 
 prompt :: InteractionState -> InteractionReact
-prompt state = div_ <! class_ "prompt" $ do
+prompt state = div_ [ class_ "prompt" ] $ do
     locally promptArrow
-    input_ <! class_ "prompt-input"
-           <! value_ (toJSStr (userInput state))
-           <! autofocus_ True
-           <! onChange handleCmdChange
-           <! onKeyDown handleKey
+    input_ [ class_ "prompt-input"
+           , value_ (toJSStr (userInput state))
+           , autofocus_ True
+           , onChange handleCmdChange
+           , onKeyDown handleKey
+           ]
 
 workingOn :: InteractionState -> InteractionReact
 workingOn InteractionState{_proofCtx=_ :< loc} = locally $
-    div_ <! class_ "working-on" $ do
+    div_ [ class_ "working-on" ] $ do
         let runner = do
                 mty <- optional' getHoleGoal
                 goal <- case mty of
@@ -170,58 +183,59 @@ showGoal :: TY -> ProofState PureReact
 showGoal ty@(LABEL _ _) = do
     h <- infoHypotheses
     s <- reactHere . (SET :>:) =<< bquoteHere ty
-    return $ div_ <! class_ "goal" $ do
+    return $ div_ [ class_ "goal" ] $ do
         h
         "Programming: "
         s
 showGoal ty = do
     s <- reactHere . (SET :>:) =<< bquoteHere ty
-    return $ div_ <! class_ "goal" $ do
+    return $ div_ [ class_ "goal" ] $ do
         "Goal: "
         s
 
 interactionLog :: InteractionHistory -> PureReact
-interactionLog logs = div_ <! class_ "interaction-log" $
+interactionLog logs = div_ [ class_ "interaction-log" ] $
     Foldable.forM_ logs $ \(Command cmdStr _ _ out) ->
-        div_ <! class_ "log-elem" $ do
-            div_ <! class_ "log-prompt" $ do
+        div_ [ class_ "log-elem" ] $ do
+            div_ [ class_ "log-prompt" ] $ do
                 promptArrow
                 " "
                 fromString cmdStr
-            div_ <! class_ "log-output" $ out
+            div_ [ class_ "log-output" ] $ out
 
 proofCtxDisplay :: Bwd ProofContext -> InteractionReact
-proofCtxDisplay (_ :< ctx) = div_ <! class_ "ctx-display" $
-    locally $ case runProofState reactProofState ctx of
-        Left err -> err
-        Right (display, _) -> display
+proofCtxDisplay (_ :< ctx) = locally $
+    div_ [ class_ "ctx-display" ] $
+        case runProofState reactProofState ctx of
+            Left err -> err
+            Right (display, _) -> display
 
 longHelp :: TacticHelp -> PureReact
 longHelp (TacticHelp template example summary args) =
-    div_ <! class_ "tactic-help" $ do
-        div_ <! class_ "tactic-template" $ template
+    div_ [ class_ "tactic-help" ] $ do
+        div_ [ class_ "tactic-template" ] template
 
-        div_ <! class_ "tactic-example" $ do
-            div_ <! class_ "tactic-help-title" $ "Example"
-            div_ <! class_ "tactic-help-body" $ fromString example
+        div_ [ class_ "tactic-example" ] $ do
+            div_ [ class_ "tactic-help-title" ] "Example"
+            div_ [ class_ "tactic-help-body" ] $ fromString example
 
-        div_ <! class_ "tactic-summary" $ do
-            div_ <! class_ "tactic-help-title" $ "Summary"
-            div_ <! class_ "tactic-help-body" $ fromString summary
+        div_ [ class_ "tactic-summary" ] $ do
+            div_ [ class_ "tactic-help-title" ] "Summary"
+            div_ [ class_ "tactic-help-body" ] $ fromString summary
 
         Foldable.forM_ args $ \(argName, argSummary) ->
-            div_ <! class_ "tactic-arg-help" $ do
-                div_ <! class_ "tactic-help-title" $ fromString argName
-                div_ <! class_ "tactic-help-body" $ fromString argSummary
+            div_ [ class_ "tactic-arg-help" ] $ do
+                div_ [ class_ "tactic-help-title" ] $ fromString argName
+                div_ [ class_ "tactic-help-body" ] $ fromString argSummary
 
 renderHelp :: Either PureReact TacticHelp -> PureReact
 renderHelp (Left react) = react
 renderHelp (Right (TacticHelp _ _ summary _)) = fromString summary
 
 tacticList :: PureReact
-tacticList = div_ <! class_ "tactic-list" $
+tacticList = div_ [ class_ "tactic-list" ] $
     Foldable.forM_ cochonTactics $ \tactic ->
-        div_ <! class_ "tactic-info" $ renderHelp $ ctHelp tactic
+        div_ [ class_ "tactic-info" ] $ renderHelp $ ctHelp tactic
 
 -- The `reactProofState` command generates a reactified representation of
 -- the proof state at the current location.
@@ -248,19 +262,19 @@ renderReact aus me = do
             tip <- reactTip
             putEntriesAbove es
             putBelowCursor cs
-            return $ div_ <! class_ "proof-state" $ do
-                div_ <! class_ "proof-state-inner" $ d'
+            return $ div_ [ class_ "proof-state" ] $ do
+                div_ [ class_ "proof-state-inner" ] $ d'
                 tip
     where
         reactEmptyTip :: ProofState PureReact
         reactEmptyTip = do
             tip <- getDevTip
             case tip of
-                Module -> return $ div_ <! className "empty-empty-tip" $
-                    "[empty]"
+                Module -> return $ div_ [ class_ "empty-empty-tip" ]
+                                        "[empty]"
                 _ -> do
                     tip' <- reactTip
-                    return $ div_ <! className "empty-tip" $
+                    return $ div_ [ class_ "empty-tip" ] $
                         reactKword KwDefn >> " " >> tip'
 
         reactEs :: PureReact
@@ -276,18 +290,18 @@ renderReact aus me = do
         reactE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
             ty' <- bquoteHere ty
             tyd <- reactHereAt (SET :>: ty')
-            return $ reactBKind k $ div_ <! className "entry" $ do
-                div_ <! class_ "tm-name" $ fromString x
+            return $ reactBKind k $ div_ [ class_ "entry" ] $ do
+                div_ [ class_ "tm-name" ] $ fromString x
                 -- TODO(joel) - show anchor in almost same way as below?
                 reactKword KwAsc
-                div_ <! class_ "ty" $ tyd
+                div_ [ class_ "ty" ] tyd
         reactE e = do
             goIn
             d <- renderReact aus me
             goOut
-            return $ div_ <! className "entry" $ do
-                div_ <! class_ "tm-name" $ fromString (fst (entryLastName e))
-                div_ <! class_ "anchor" $
+            return $ div_ [ class_ "entry" ] $ do
+                div_ [ class_ "tm-name" ] $ fromString (fst (entryLastName e))
+                div_ [ class_ "anchor" ] $
                     maybe "" (\x -> "[[" >> fromString x >> "]]") $
                         entryAnchor e
                 d
@@ -298,18 +312,18 @@ reactTip :: ProofState PureReact
 reactTip = do
     tip <- getDevTip
     case tip of
-        Module -> return $ div_ <! className "tip" $ ""
+        Module -> return $ div_ [ class_ "tip" ] $ ""
         Unknown (ty :=>: _) -> do
             hk <- getHoleKind
             tyd <- reactHere (SET :>: ty)
-            return $ div_ <! className "tip" $ do
+            return $ div_ [ class_ "tip" ] $ do
                 reactHKind hk
                 reactKword KwAsc
                 tyd
         Suspended (ty :=>: _) prob -> do
             hk <- getHoleKind
             tyd <- reactHere (SET :>: ty)
-            return $ div_ <! className "tip" $ do
+            return $ div_ [ class_ "tip" ] $ do
                 fromString $ "(SUSPENDED: " ++ show prob ++ ")"
                 reactHKind hk
                 reactKword KwAsc
@@ -317,11 +331,11 @@ reactTip = do
         Defined tm (ty :=>: tyv) -> do
             tyd <- reactHere (SET :>: ty)
             tmd <- reactHereAt (tyv :>: tm)
-            return $ div_ <! className "tip" $
+            return $ div_ [ class_ "tip" ] $
                 (tmd >> reactKword KwAsc >> tyd)
 
 reactHKind :: HKind -> PureReact
-reactHKind kind = span_ <! class_ "hole" $ case kind of
+reactHKind kind = span_ [ class_ "hole" ] $ case kind of
     Waiting    -> "?"
     Hoping     -> "HOPE?"
     (Crying s) -> fromString ("CRY <<" ++ s ++ ">>")

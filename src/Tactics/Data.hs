@@ -106,7 +106,7 @@ ty2h r ps (PI a b) = do
         (b',i) <- freshRef (fortran b :<: a)
                    (\s -> ty2h r ps (b $$ A (NP s)) >>= \(x,y) ->
                                  (| (L $ "a" :. (capM s 0 %% x),y) |))
-        return case i of
+        return $ case i of
           0 -> (a' , 1)
           _ -> (SIGMA a' b', i + 1)
 ty2h r ps x = do
@@ -161,7 +161,7 @@ mkAllowed :: [(String, EXTM, REF)] -> (INTM, INTM)
 mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
     mkAllowedHelp (x, ty, r) (allowingTy, allowedTy) =
         let allowingTy' = L $ x :. (capM r 0 %% allowingTy)
-            allowingTy'' = PI (N ty) allowingTy',
+            allowingTy'' = PI (N ty) allowingTy'
             allowedBy = ALLOWEDCONS
                 (N ty)
                 allowingTy'

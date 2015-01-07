@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies #-}
 
 module Cochon.Controller where
 
@@ -73,6 +73,15 @@ import Haste.Prim
 import React hiding (key)
 import qualified React
 
+-- The top level page
+data Cochon
+instance ReactKey Cochon where
+    type ClassState Cochon = InteractionState
+    type AnimationState Cochon = ()
+    type Signal Cochon = Transition
+
+type InteractionReact = React Cochon ()
+
 data SpecialKey
     = Enter
     | Tab
@@ -101,6 +110,11 @@ handleKey _ = Nothing
 
 handleCmdChange :: ChangeEvent -> Maybe Transition
 handleCmdChange = Just . CommandTyping . fromJSStr . targetValue
+
+animDispatch :: Transition
+             -> InteractionState
+             -> (InteractionState, [AnimConfig Cochon])
+animDispatch trans st = (dispatch trans st, [])
 
 dispatch :: Transition -> InteractionState -> InteractionState
 dispatch (SelectPane pane) state = state & currentPane .~ pane
