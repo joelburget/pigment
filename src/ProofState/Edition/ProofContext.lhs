@@ -9,6 +9,7 @@ Proof Context {#sec:ProofState.Edition.ProofContext}
 > import Data.Foldable
 > import Data.List
 > import Data.Traversable
+
 > import NameSupply.NameSupply
 > import ProofState.Structure.Developments
 > import ProofState.Edition.News
@@ -20,12 +21,12 @@ definition of a development:
 
 \< type Dev = (f (Entry f), Tip, NameSupply)
 
-We \`\`unzip\`\` (cf. Huet's Zipper @huet:zipper) this type to produce a
+We `unzip` (cf. Huet's Zipper @huet:zipper) this type to produce a
 type representing its one-hole context. This allows us to keep track of
 the location of a working development and perform local navigation
 easily.
 
-The derivative: |Layer|
+The derivative: `Layer`
 -----------------------
 
 Hence, we define `Layer` by unzipping `Dev`. Each `Layer` of the zipper
@@ -56,8 +57,9 @@ the data about the working development is the derivative of the
 Definition and Module data-types defined in
 Section [subsubsec:ProofState.Structure.Developments.entry].
 
-> data CurrentEntry  =  CDefinition DefKind REF (String, Int) INTM (Maybe String)
->                    |  CModule Name
+> data CurrentEntry
+>     = CDefinition DefKind REF (String, Int) INTM EntityAnchor
+>     | CModule Name
 >     deriving Show
 
 One would expect the `belowEntries` to be an `Entries`, just as the
@@ -75,18 +77,22 @@ NewsBulletin| functors, and use this functor for defining the type of
 > type NewsyEntries = NewsyFwd (Entry NewsyFwd)
 
 Note that `aboveEntries` are `Entries`, that is `Bwd` list.
-|belowEntries| are `NewsyEntries`, hence `Fwd` list. This justifies some
+`belowEntries` are `NewsyEntries`, hence `Fwd` list. This justifies some
 piece of kit to deal with this global context.
 
 > deriving instance Show (Dev NewsyFwd)
+
 > instance Show (NewsyFwd (Entry NewsyFwd)) where
 >     show (NF ls) = show ls
+
 > instance Show (Entry NewsyFwd) where
 >     show (EEntity ref xn e t a) = intercalate " " ["E", show ref, show xn, show e, show t, show a]
 >     show (EModule n d) = intercalate " " ["M", show n, show d]
+
 > instance Show (Entity NewsyFwd) where
 >     show (Parameter k) = "Param " ++ show k
 >     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
+
 > instance Traversable NewsyFwd where
 >     traverse g (NF x) = -- NF <$> traverse (traverse g) x
 >         let a = traverse g
@@ -94,13 +100,13 @@ piece of kit to deal with this global context.
 >             c = b x
 >         in NF <$> c
 
-The Zipper: |ProofContext|
+The Zipper: `ProofContext`
 --------------------------
 
 Once we have the derivative, the zipper is almost here. The proof
-context is represented by a stack of layers (|pcLayers|), ending with
-the working development (|pcAboveCursor|) above the cursor and the
-entries below the cursor (|pcBelowCursor|)..
+context is represented by a stack of layers (`pcLayers`), ending with
+the working development (`pcAboveCursor`) above the cursor and the
+entries below the cursor (`pcBelowCursor`)..
 
 > data ProofContext = PC
 >     {  pcLayers       :: Bwd Layer

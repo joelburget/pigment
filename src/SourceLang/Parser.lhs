@@ -13,16 +13,16 @@ Parser {#sec:SourceLang.Parser}
 > import SourceLang.Structure
 > import Kit.Parsley
 
-For the moment, we set aside the question of how to get an |EpiDoc
-Lexed| and just explain how to parse the terms inside. Parsing documents
+For the moment, we set aside the question of how to get an `EpiDoc
+Lexed` and just explain how to parse the terms inside. Parsing documents
 has yet to be implemented: we should first lex the file to a string of
 tokens,
 
-\< lex :: String -\> Either String [Token]
+< lex :: String -> Either String [Token]
 
 then organise the tokens into a list of constructions,
 
-\< firstParse :: [Token] -\> Either String (EpiDoc Lexed)
+< firstParse :: [Token] -> Either String (EpiDoc Lexed)
 
 and finally invoke the following to parse the terms within the
 constructions. (We might also want a better representation of parse

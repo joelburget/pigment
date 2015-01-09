@@ -376,7 +376,7 @@ dataTac = CochonTactic
           return "Data'd.")
     ,  ctHelp = Right (TacticHelp
            "data <name> [<para>]* := [(<con> : <ty>) ;]*"
-           "data Tree (X : Set) := ('nil : List X) ; ('cons : X -> List X -> List X) ;"
+           "data List (X : Set) := ('nil : List X) ; ('cons : X -> List X -> List X) ;"
            "Create a new data type"
            [ ("<name>", "Choose the name of your datatype carefully")
            , ("<para>", "Type parameters")

@@ -33,10 +33,16 @@ The `pickName` command takes a prefix suggestion and a name suggestion
 (either of which may be empty), and returns a more-likely-to-be-unique
 name if the name suggestion is empty.
 
-> pickName :: String -> String -> ProofState String
+XXX(joel)
+
+> pickName :: String -> EntityAnchor -> ProofState String
 > pickName "" s = pickName "x" s
-> pickName prefix ""  = do
+> pickName prefix AnchNo = pickName' prefix
+> pickName prefix (AnchStr "") = pickName' prefix
+> pickName _ s   = return (show s)
+
+> pickName' :: String -> ProofState String
+> pickName' prefix = do
 >     m <- getCurrentName
 >     r <- getDevNSupply
 >     return $ prefix ++ show (foldMap snd m + snd r)
-> pickName _ s   = return s

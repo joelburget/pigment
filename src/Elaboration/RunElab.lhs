@@ -116,7 +116,7 @@ task.
 
 > runElab wrk (ty :>: EWait s tyWait f) = do
 >     tyWait' <- bquoteHere tyWait
->     tt <- make (s :<: tyWait')
+>     tt <- make (AnchStr s :<: tyWait')
 >     runElab wrk (ty :>: f tt)
 
 |EElab| contains a syntactic representation of an elaboration problem.
@@ -191,8 +191,8 @@ elaboration task to `runElab`.
 > runElabNewGoal (ty :>: elab) = do
 >     -- Make a dummy definition
 >     ty' <- bquoteHere ty
->     x <- pickName "h" ""
->     make (x :<: ty')
+>     x <- pickName' "h"
+>     make (AnchStr x :<: ty')
 >     -- Enter its development
 >     goIn
 >     (tm :=>: tmv, status) <- runElab WorkCurrentGoal (ty :>: elab)
@@ -512,7 +512,7 @@ but do not always spot them.
 >     return . (, ElabSuspended) =<< neutralise =<< getCurrentDefinition
 > lastHope WorkElsewhere ty = do
 >     ty' <- bquoteHere ty
->     return . (, ElabSuccess) =<< neutralise =<< makeKinded Nothing Hoping ("hope" :<: ty')
+>     return . (, ElabSuccess) =<< neutralise =<< makeKinded AnchNo Hoping (AnchHope :<: ty')
 
 Suspending computation {#subsec:Elaboration.RunElab.suspending}
 ----------------------
@@ -525,7 +525,7 @@ will restart if it is unstable.
 > suspend :: (String :<: INTM :=>: TY) -> EProb -> ProofState (EXTM :=>: VAL)
 > suspend (x :<: tt) prob = do
 >     -- Make a hole
->     r <- make (x :<: termOf tt)
+>     r <- make (AnchStr x :<: termOf tt)
 >     -- Store the suspended problem
 >     Just (EDEF ref xn dkind dev@(Dev {devTip=Unknown utt}) tm anchor) <- removeEntryAbove
 >     putEntryAbove (EDEF ref xn dkind (dev{devTip=Suspended utt prob}) tm anchor)

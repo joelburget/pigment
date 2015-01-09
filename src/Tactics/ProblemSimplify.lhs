@@ -28,6 +28,7 @@
 > import ProofState.Interface.Parameter
 > import ProofState.Interface.Solving
 > import ProofState.Interface.Lifting
+> import ProofState.Structure.Developments
 > import Tactics.Elimination
 > import Tactics.PropositionSimplify
 
@@ -85,7 +86,7 @@ a new goal.
 >     g'  <- bquoteHere g
 >     es  <- getEntriesAbove
 >     cursorAboveLambdas
->     make ("tsg" :<: liftType es g')
+>     make (AnchStr "tsg" :<: liftType es g')
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -225,7 +226,7 @@ subgoal.
 >     g' <- bquoteHere g
 >     es <- getEntriesAbove
 >     cursorAboveLambdas
->     make ("pig" :<: liftType es g')
+>     make (AnchStr "pig" :<: liftType es g')
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -249,7 +250,7 @@ we can just invoke propositional simplification...
 > simplifyGoal False g@(PRF _) = do
 >     simpTrace "PRF not"
 >     g' <- bquoteHere g
->     make ("prg" :<: g')
+>     make (AnchStr "prg" :<: g')
 >     goIn
 >     x :=>: xv <- simplifyGoal True g
 >     goOut

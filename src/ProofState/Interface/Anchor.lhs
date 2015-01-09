@@ -18,9 +18,10 @@ Anchor resolution
 > isAnchor :: Traversable f => Entry f -> Bool
 > isAnchor (EEntity _ _ _ _ (Just _))  = True
 > isAnchor _                           = False
+
 > anchorsInScope :: ProofState Entries
 > anchorsInScope = do
->   scope <- getInScope 
+>   scope <- getInScope
 >   return $ foldMap anchors scope
 >       where anchors t | isAnchor t = B0 :< t
 >                       | otherwise  = B0
@@ -39,16 +40,16 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 >     _ :< ref -> return $ Just ref
 >     where seekAnchor :: Entries -> Bwd REF
 >           seekAnchor B0 = (|)
->           seekAnchor (scope :< EPARAM ref _ _ _ (Just anchor')) 
+>           seekAnchor (scope :< EPARAM ref _ _ _ (Just anchor'))
 >                            | anchor' == anchor = B0 :< ref
 >           seekAnchor (scope :< EPARAM ref _ _ _ Nothing) = seekAnchor scope
 >           seekAnchor (scope :< EDEF ref _ _ dev _ (Just anchor'))
 >                            | anchor' == anchor = B0 :< ref
->           seekAnchor (scope :< EDEF ref _ _ dev _ Nothing) = 
->                         seekAnchor (devEntries dev) 
+>           seekAnchor (scope :< EDEF ref _ _ dev _ Nothing) =
+>                         seekAnchor (devEntries dev)
 >                         <+> seekAnchor scope
->           seekAnchor (scope :< EModule _ dev) = 
->                         seekAnchor (devEntries dev) 
+>           seekAnchor (scope :< EModule _ dev) =
+>                         seekAnchor (devEntries dev)
 >                         <+> seekAnchor scope
 
 Find the entry corresponding to the given anchor:

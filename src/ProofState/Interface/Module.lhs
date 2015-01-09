@@ -24,7 +24,7 @@ A module is a pretty dull thing: it is just a name and a development. As
 far as I know, there are three usages of modules. The first one is the
 one we are used to: introducing namespaces and avoiding name clashes.
 This is mostly used at the programming level. For making modules, we use
-|makeModule|.
+`makeModule`.
 
 > makeModule :: String -> ProofState Name
 > makeModule s = do
@@ -55,7 +55,7 @@ Section [subsec:Tactics.Elimination.analysis].
 >     inScope <- getInScope
 >     let  ty' = liftType inScope ty
 >          ref = n := HOLE Waiting :<: evTm ty'
->     putCurrentEntry $ CDefinition LETG ref (last n) ty' Nothing
+>     putCurrentEntry $ CDefinition LETG ref (last n) ty' AnchNo
 >     putDevTip $ Unknown (ty :=>: tyv)
 >     return $ applySpine ref inScope
 

@@ -50,7 +50,7 @@ elabCons :: String
          -> (String , DInTmRN)
          -> ProofState ElabResult
 elabCons nom ty ps (s, t) = do
-    make ((s ++ "Ty") :<: ARR ty SET)
+    make ((AnchTy s) :<: ARR ty SET)
     goIn
     r <- lambdaParam nom
     (tyi :=>: v) <- elabGive' t
@@ -148,9 +148,9 @@ uncur i v t = uncur (i - 1) (v :$ A (N (t :$ Fst))) (t :$ Snd)
 
 makeCon :: INTM -> INTM -> ElabResult -> ProofState ()
 makeCon e t (ElabResult s ty _ i _ body) = do
-    make (s :<: N (ty :$ A t))
+    make (AnchConName s :<: N (ty :$ A t))
     goIn
-    make ("conc" :<: ENUMT e)
+    make (AnchConc :<: ENUMT e)
     goIn
     c :=>: _ <- elabGive (DTAG s)
     rs <- for i lambdaParam
@@ -185,7 +185,7 @@ elabData nom pars scs = do
 
       -- make a goal to solve the type of each parameter
       pars' <- for pars $ \(x, y) -> do
-          make $ (x ++ "ParTy") :<: SET
+          make $ (AnchParTy x) :<: SET
           goIn
           yt :=>: yv <- elabGive y
           r <- assumeParam (x :<: (N yt :=>: yv))
@@ -202,16 +202,16 @@ elabData nom pars scs = do
                    (map (\(_,_,r) -> A (NP r)) pars')
 
       -- and constructor names
-      make ("ConNames" :<: NP enumREF)
+      make (AnchConNames :<: NP enumREF)
       goIn
       (e :=>: ev) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE scs)
 
       -- ... constructor descriptions?
-      make ("ConDescs" :<: N (branchesOp :@ [ N e, L $ K (NP descREF)])) -- ARR (ENUMT (N e)) (NP descREF)
+      make (AnchConDescs :<: N (branchesOp :@ [ N e, L $ K (NP descREF)])) -- ARR (ENUMT (N e)) (NP descREF)
       goIn
       (cs' :=>: _) <- giveOutBelow $ foldr PAIR VOID $ map conDesc cs
 
-      makeKinded (Just nom) Waiting ("DataDesc" :<: NP descREF)
+      makeKinded (AnchStr nom) Waiting (AnchDataDesc :<: NP descREF)
       goIn
       (d :=>: dv) <- giveOutBelow
           (SUMD (N e)
@@ -219,7 +219,7 @@ elabData nom pars scs = do
       -- lt :=>: _ <- getFakeCurrentEntry XXX
 
       -- the type of the data type we just created is Set
-      make ("DataTy" :<: SET)
+      make (AnchDataTy :<: SET)
       goIn
       let (allowingTy, allowedBy) = mkAllowed pars'
           anchor = ANCHOR (TAG nom) allowingTy allowedBy

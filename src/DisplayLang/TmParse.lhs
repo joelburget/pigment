@@ -22,7 +22,7 @@ Names
 -----
 
 A relative name is a list of idents separated by dots, and possibly with
-|^|^ or `~`~ symbols (for relative or absolute offsets).
+`^` or `_` symbols (for relative or absolute offsets).
 
 > nameParse :: Parsley Token RelName
 > nameParse = do
@@ -30,15 +30,19 @@ A relative name is a list of idents separated by dots, and possibly with
 >     case parse pName s of
 >         Right rn  -> return rn
 >         Left e    -> fail "nameParse failed"
+
 > pName :: Parsley Char RelName
 > pName = (| pNamePart : (many (tokenEq '.' *> pNamePart)) |)
+
 > pNamePart :: Parsley Char (String, Offs)
 > pNamePart = (|(,) pNameWord (%tokenEq '^'%) (| Rel (| read pNameOffset |) |)
 >              |(,) pNameWord (%tokenEq '_'%) (| Abs (| read pNameOffset |) |)
 >              |(,) pNameWord ~(Rel 0)
 >              |)
+
 > pNameWord :: Parsley Char String
 > pNameWord = some (tokenFilter (\c -> not (c `elem` "_^.")))
+
 > pNameOffset :: Parsley Char String
 > pNameOffset = some (tokenFilter isDigit)
 

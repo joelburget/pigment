@@ -14,7 +14,7 @@ Managing Entries in a Proof Context
 > import Evidences.Tm
 > import Kit.BwdFwd
 
-Manipulating the |CurrentEntry|
+Manipulating the `CurrentEntry`
 
 As with entries in Section [sec:ProofState.Structure.Entries], we need
 some kit operating on any kind of `CurrentEntry`. So far, this is

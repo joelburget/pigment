@@ -57,10 +57,10 @@ performance purposes.
 >   | Defined INTM (INTM :=>: TY)
 >   deriving Show
 
-|Entry|
+`Entry`
 
 As mentioned above, a `Dev` is a kind of tree. The branches are
-introduced by the container |f (Entry f)| where `f` is Traversable,
+introduced by the container `f (Entry f)` where `f` is Traversable,
 typically a backward list.
 
 An `Entry` leaves a choice of shape for the branches. Indeed, it can
@@ -73,21 +73,45 @@ either be:
 -   a module, ie. a `Name` associated with a `Dev` that has no type or
     value
 
+> data EntityAnchor
+>     = AnchConc
+>     | AnchConNames
+>     | AnchConName String
+>     | AnchConDescs
+>     | AnchDataDesc
+>     | AnchDataTy
+>     | AnchInd
+>     | AnchIndTy
+>     | AnchTy String
+>     | AnchParTy String
+>     | AnchRefine
+>     | AnchMotive
+>     | AnchMethod
+>     | AnchSig
+>     | AnchHope
+>     | AnchElabInferFully
+>     | AnchTau
+>     -- Anchors with cryptic names I don't understand
+>     | AnchStr String
+>     -- "Nothing"
+>     | AnchNo
+>     deriving Show
+
 > data Entry f
 >   =  EEntity  { ref       :: REF
 >               , lastName  :: (String, Int)
 >               , entity    :: Entity f
 >               , term      :: INTM
->               , anchor    :: Maybe String }
+>               , anchor    :: EntityAnchor }
 >   |  EModule  { name      :: Name
 >               , dev       :: (Dev f) }
 
 In the Module case, we have already tied the knot, by defining `M` with
 a sub-development. In the Entity case, we give yet another choice of
-shape, thanks to the |Entity f| constructor. This constructor is defined
+shape, thanks to the `Entity f` constructor. This constructor is defined
 in the next section.
 
-Typically, we work with developments that use backwards lists, hence |f|
+Typically, we work with developments that use backwards lists, hence `f`
 is `Bwd`:
 
 > type Entries = Bwd (Entry Bwd)
@@ -95,6 +119,7 @@ is `Bwd`:
 > instance Show (Entry Bwd) where
 >     show (EEntity ref xn e t a) = intercalate " " ["E", show ref, show xn, show e, show t, show a]
 >     show (EModule n d) = intercalate " " ["M", show n, show d]
+
 > instance Show (Entry Fwd) where
 >     show (EEntity ref xn e t a) = intercalate " " ["E", show ref, show xn, show e, show t, show a]
 >     show (EModule n d) = intercalate " " ["M", show n, show d]
@@ -111,10 +136,10 @@ information asks for traversing the whole `Name` up to the last element:
 As we will need it quite frequently for display purposes, we extract it
 once and for all with `lastName` and later rely on the cached version.
 
-|Entity|
+`Entity`
 
-An `Entity` is either a `Parameter` or a `Definition`. A |Definition|
-can have children, that is sub-developments, whereas a |Parameter|
+An `Entity` is either a `Parameter` or a `Definition`. A `Definition`
+can have children, that is sub-developments, whereas a `Parameter`
 cannot.
 
 > data Entity f
@@ -133,10 +158,10 @@ Kinds of Definitions:
 
 A *definition* eventually constructs a term, by a (possibly empty)
 development of sub-objects. The `Tip` of this sub-development will be
-|Unknown|, `Suspended` or `Defined`.
+`Unknown`, `Suspended` or `Defined`.
 
 A programming problem is a special kind of definition: it follows a type
-|Scheme| (Section [sec:DisplayLang.Scheme]), the high-level type of the
+`Scheme` (Section [sec:DisplayLang.Scheme]), the high-level type of the
 function we are implementing.
 
 > data DefKind = LETG |  PROG (Scheme INTM)

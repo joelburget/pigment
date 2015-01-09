@@ -301,9 +301,10 @@ renderReact aus me = do
             goOut
             return $ div_ [ class_ "entry" ] $ do
                 div_ [ class_ "tm-name" ] $ fromString (fst (entryLastName e))
-                div_ [ class_ "anchor" ] $
-                    maybe "" (\x -> "[[" >> fromString x >> "]]") $
-                        entryAnchor e
+                div_ [ class_ "anchor" ] $ do
+                    "[["
+                    fromString $ show $ entryAnchor e
+                    "]]"
                 d
 
 -- “Developments can be of different nature: this is indicated by the Tip”

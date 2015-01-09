@@ -110,12 +110,12 @@ Spines of eliminators are just like in the evidence language:
 Embedding evidence terms
 
 The `DT` and `DTEx` constructors allow evidence terms to be treated as
-|In| and `Ex` display terms, respectively. This is useful for
+`In` and `Ex` display terms, respectively. This is useful for
 elaboration, because it allows the elaborator to combine finished terms
 with display syntax and continue elaborating. Such terms cannot be
 pretty-printed, however, so they should not be used in the distiller.
 
-To make |deriving Traversable| work properly, we have to `newtype`-wrap
+To make `deriving Traversable` work properly, we have to `newtype`-wrap
 them and manually give trivial `Traversable` instances for the wrappers.
 The instantiation code is hidden in the literate document.
 
@@ -145,8 +145,10 @@ first argument, as well as its second.
 >   (| DEqBlue (traverseDTEX f t) (traverseDTEX f u) |)
 > traverseDTIN f (DIMu s i) = (|DIMu (traverse (traverseDTIN f) s) (traverseDTIN f i)|)
 > traverseDTIN f (DTag s xs) = (|(DTag s) (traverse (traverseDTIN f) xs)|)
+
 > traverseDTEX :: Applicative f => (p -> f q) -> DExTm p x -> f (DExTm q x)
 > traverseDTEX f (h ::$ as) = (|(traverseDHead f h) ::$ (traverse (traverse (traverseDTIN f)) as)|)
+
 > traverseDHead :: Applicative f => (p -> f q) -> DHead p x -> f (DHead q x)
 > traverseDHead f (DP x) = (|(DP x)|)
 > traverseDHead f (DType tm) = (|DType (traverseDTIN f tm)|)
@@ -156,7 +158,7 @@ Type annotations
 
 Because type ascriptions are horrible things to parse[^1], in the
 display language we use type annotations instead. The type annotation
-|DType ty| gets elaborated to the identity function for type `ty`,
+`DType ty` gets elaborated to the identity function for type `ty`,
 thereby pushing the type into its argument. The distiller removes type
 ascriptions and replaces them with appropriate type annotations if
 necessary.
@@ -256,8 +258,8 @@ we output. In increasing order, the sizes are:
 
 When a higher-size term has to be put in a lower-size position, it must
 be wrapped in parentheses. For example, an application has `AppSize` but
-its arguments have `ArgSize`, so |g (f x)| cannot be written |g f x|,
-whereas `EqSize` is bigger than `AppSize` so |f x == g x| means the same
-thing as |(f x) == (g x)|.
+its arguments have `ArgSize`, so `g (f x)` cannot be written `g f x`,
+whereas `EqSize` is bigger than `AppSize` so `f x == g x` means the same
+thing as `(f x) == (g x)`.
 
 [^1]: Left nesting is not really a friend of our damn parser

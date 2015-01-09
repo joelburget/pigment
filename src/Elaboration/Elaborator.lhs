@@ -70,12 +70,12 @@ $\lambda$-lift terms.
 
 Sometimes (for example, if we are about to apply elimination with a
 motive) we really want elaboration to proceed as much as possible. The
-|elabInferFully| command creates a definition for the argument,
+`elabInferFully` command creates a definition for the argument,
 elaborates it and runs the scheduler.
 
 > elabInferFully :: DExTmRN -> ProofState (EXTM :=>: VAL :<: TY)
 > elabInferFully tm = do
->     make ("eif" :<: sigSetTM)
+>     make (AnchElabInferFully :<: sigSetTM)
 >     goIn
 >     (tm :=>: _, status) <- runElab WorkCurrentGoal (sigSetVAL :>: makeElabInfer (Loc 0) tm)
 >     when (status == ElabSuccess) (ignore (give tm))
@@ -176,7 +176,7 @@ the following proof state:
 First we need to elaborate the scheme so it contains evidence terms,
 then convert the module into a goal with the scheme assigned.
 
->     make (x ++ "-type" :<: SET)
+>     make (AnchStr (x ++ "-type") :<: SET)
 >     goIn
 >     (sch', ty :=>: _) <- elabLiftedScheme sch
 >     moduleToGoal (N ty)
@@ -192,7 +192,7 @@ recursive call.
 >     let schCall = makeCall (P $ mnom := FAKE :<: ty) 0 sch'
 >     us <- getParamsInScope
 >     let schCallLocal = applyScheme schCall us
->     make (x :<: schemeToInTm schCallLocal)
+>     make (AnchStr x :<: schemeToInTm schCallLocal)
 >     goIn
 >     putCurrentScheme schCall
 >     refs <- traverse lambdaParam (schemeNames schCallLocal)
@@ -233,7 +233,7 @@ will give a proof state of:
 >     (gUnlifted :=>: _) <- getHoleGoal
 >     newty <- withNSupply $ pity (mkTel (unN $ valueOf pn) (evTm gUnlifted) [] args)
 >     newty'       <- bquoteHere newty
->     impl :=>: _  <- make (magicImplName :<: newty')
+>     impl :=>: _  <- make (AnchStr magicImplName :<: newty')
 >     argrefs      <- traverse lambdaParam args
 >     let  fcall  = termOf pn $## (map NP argrefs)
 >          call   = impl $## (map NP argrefs) :$ Call (N fcall)
@@ -271,7 +271,7 @@ Elaborating schemes
 >     tt <- giveOutBelow ty'
 >     return (SchType (es -| ty'), tt)
 > elabScheme es (SchExplicitPi (x :<: s) t) = do
->     make ("tau" :<: SET)
+>     make (AnchTau :<: SET)
 >     goIn
 >     (s', ty :=>: _) <- elabScheme es s
 >     piParam (x :<: N ty)

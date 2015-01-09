@@ -28,6 +28,7 @@ Datatype declaration
 > import ProofState.Interface.Parameter
 > import ProofState.Interface.Solving
 > import ProofState.Interface.NameResolution
+> import ProofState.Structure.Developments
 > import Elaboration.Elaborator
 > import DisplayLang.Name
 > import DisplayLang.DisplayTm
@@ -41,7 +42,7 @@ Datatype declaration
 >                           , [String]
 >                           )
 > ielabCons nom ty (indty :=>: indtyv) ps (s , t) = do
->   make ((s ++ "Ty") :<: ARR ty SET)
+>   make (AnchTy s :<: ARR ty SET)
 >   goIn
 >   r <- lambdaParam nom
 >   (tyi :=>: v) <- elabGive' t
@@ -115,12 +116,12 @@ Datatype declaration
 >   makeModule nom
 >   goIn
 >   pars' <- traverse (\(x,y) -> do
->     make ((x ++ "ParTy") :<: SET)
+>     make (AnchParTy x :<: SET)
 >     goIn
 >     (yt :=>: yv) <- elabGive y
 >     r <- assumeParam (x :<: (N yt :=>: yv))
 >     return (x,yt,r)) pars
->   make ("indTy" :<: SET)
+>   make (AnchIndTy :<: SET)
 >   goIn
 >   indty'@(indtye :=>: indtyv) <- elabGive indty
 >   moduleToGoal (ARR (N indtye) SET)
@@ -129,10 +130,10 @@ Datatype declaration
 >                             PI (N s) (L $ x :.
 >                               (capM r 0 %% t))) (ARR (N indtye) SET) pars')
 >                   indty' (map (\(_,_,r) -> A (NP r)) pars')) scs
->   make ("ConNames" :<: NP enumREF)
+>   make (AnchConNames :<: NP enumREF)
 >   goIn
 >   (e :=>: ev) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE scs)
->   make ("ConDescs" :<:
+>   make (AnchConDescs :<:
 >           ARR (N indtye) (N (branchesOp
 >                               :@ [ N e
 >                                  , L $ K (N (P idescREF :$ A (N indtye)))
@@ -140,7 +141,7 @@ Datatype declaration
 >   goIn
 >   i <- lambdaParam "i"
 >   (cs' :=>: _) <- giveOutBelow (foldr PAIR VOID (map (\(_,_,c,_) -> N (c :$ A (NP i))) cs))
->   make ("DataTy" :<: ARR (N indtye) SET)
+>   make (AnchDataTy :<: ARR (N indtye) SET)
 >   goIn
 >   i <- lambdaParam "i"
 >   let d = L $ "i" :.IFSIGMA (N e) (N (cs' :$ A (NV 0)))
@@ -188,7 +189,7 @@ principles (:
 >     (do let indTm = P (lookupOpRef iinductionOp) :$ A (N indtye) :$ A d
 >         indV :<: indTy <- inferHere indTm
 >         indTy' <- bquoteHere indTy
->         make ("Ind" :<: isetLabel (L $ "i" :. [.i. label]) indTy')
+>         make (AnchInd :<: isetLabel (L $ "i" :. [.i. label]) indTy')
 >         goIn
 >         giveOutBelow (N indTm)
 >         return ())

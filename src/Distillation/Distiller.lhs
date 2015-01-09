@@ -30,10 +30,10 @@ The distiller {#sec:Distillation.Distiller}
 > import Evidences.DefinitionalEquality
 > import React
 
-The distiller, like the elaborator, is organized on a `check|/`infer|
+The distiller, like the elaborator, is organized on a `check` / `infer`
 basis, following the type-checker implementation in
 Section [subsec:Evidences.TypeChecker.type-checking]. `distill` mirrors
-|check| — distilling `INTM`s, while `distillInfer` mirrors `infer` —
+`check` — distilling `INTM`s, while `distillInfer` mirrors `infer` —
 distilling `EXTM`s.
 
 Distilling `INTM`s {#subsec:Distillation.Distiller.intm}
@@ -196,7 +196,7 @@ not be necessary.)
 >         ])
 >     tm' :=>: _ <-  freshRef (x :<: dom) $ \ref ->
 >                    distill  (entries :< EPARAM  ref (mkLastName ref) kind
->                                                 (error "distill: type undefined") Nothing)
+>                                                 (error "distill: type undefined") AnchNo)
 >                             (cod (pval ref) :>: underScope sc ref)
 >     return $ DL (convScope sc x tm') :=>: (evTm $ L sc)
 >   where

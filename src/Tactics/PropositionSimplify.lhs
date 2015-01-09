@@ -29,6 +29,7 @@ Propositional Simplification {#sec:Tactics.PropositionSimplify}
 > import ProofState.Interface.Name
 > import ProofState.Interface.Definition
 > import ProofState.Interface.Solving
+> import ProofState.Structure.Developments
 
 Setting the Scene
 -----------------
@@ -498,6 +499,6 @@ the type of the given reference, and returns its term representation.
 
 >     makeSubgoal :: REF :<: INTM -> ProofState INTM
 >     makeSubgoal (ref :<: q') = do
->         x         <- pickName "q" (fst (last (refName ref)))
->         t :=>: _  <- make (x :<: q')
+>         x         <- pickName "q" (AnchStr (fst (last (refName ref))))
+>         t :=>: _  <- make (AnchStr x :<: q')
 >         return (N t)

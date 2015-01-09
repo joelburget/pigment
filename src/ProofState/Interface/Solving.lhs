@@ -99,7 +99,7 @@ are therefore left to `give` this definition. This is the role of the
 
 Slightly more sophisticated is the well-known `apply` tactic in Coq: we
 are trying to solve a goal of type `T` while we have a definition of
-type |Pi S T|. We can therefore solve the goal `T` provided we can solve
+type `Pi S T`. We can therefore solve the goal `T` provided we can solve
 the goal `S`. We have this tactic too and, guess what, it is `apply`.
 
 > apply :: ProofState (EXTM :=>: VAL)
@@ -110,10 +110,10 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 >         -- The entry above is a proof of |Pi S T|
 >         -- Ask for a proof of |S|
 >         _STm <- bquoteHere _S
->         sTm :=>: s <- make $ "s" :<: _STm
+>         sTm :=>: s <- make $ (AnchStr "s") :<: _STm
 >         -- Make a proof of |T|
 >         _TTm <- bquoteHere $ _T $$ A s
->         make $ "t" :<: _TTm
+>         make $ (AnchStr "t") :<: _TTm
 >         goIn
 >         giveOutBelow $ N $ P f :$ A (N sTm)
 >     _ -> throwError $ sErr  $ "apply: last entry in the development"
@@ -137,7 +137,7 @@ scope.
 > refineProofState :: INTM -> (EXTM -> INTM) -> ProofState ()
 > refineProofState ty realiser = do
 >     cursorTop
->     t :=>: _ <- make ("refine" :<: ty)
+>     t :=>: _ <- make (AnchRefine :<: ty)
 >     cursorBottom
 >     give (realiser t)
 >     cursorTop

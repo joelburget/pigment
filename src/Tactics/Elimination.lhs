@@ -33,6 +33,7 @@ Elimination with a Motive
 > import ProofState.Interface.Definition
 > import ProofState.Interface.Parameter
 > import ProofState.Interface.Solving
+> import ProofState.Structure.Developments
 > import DisplayLang.Name
 
 Elimination with a motive works on a goal prepared *by the user* in the
@@ -138,7 +139,7 @@ Make a goal for the motive:
 
 >     motiveTypeTm           <- bquoteHere motiveType
 >     -- telTypeTm              <- bquoteHere telType
->     motive :=>: motiveVal  <- make $ "motive" :<: motiveTypeTm
+>     motive :=>: motiveVal  <- make $ AnchMotive :<: motiveTypeTm
 
 Make goals for the methods and find the return type:
 
@@ -174,7 +175,7 @@ consummed.
 > makeMethods :: Bwd INTM -> TY -> ProofState (Bwd INTM, INTM)
 > makeMethods ms (PI s t) = do
 >     sTm        <- bquoteHere s
->     m :=>: mv  <- make $ "method" :<: sTm
+>     m :=>: mv  <- make $ AnchMethod :<: sTm
 >     makeMethods (ms :< N m) (t $$ A mv)
 > makeMethods ms target = do
 >     targetTm <- bquoteHere target
@@ -549,7 +550,7 @@ variable, because if so we might be able to simplify its constraint.
 >     let mtFresh  = currySigma dFresh rFresh tFresh
 >     let mtTarg   = currySigma dTarg rTarg tTarg
 >     mtFresh' <- bquoteHere mtFresh
->     b :=>: _  <- make ("sig" :<: mtFresh')
+>     b :=>: _  <- make (AnchSig :<: mtFresh')
 >     ref       <- lambdaParam (fortran tFresh)
 >     give (N (b :$ A (N (P ref :$ Fst)) :$ A (N (P ref :$ Snd))))
 >     goIn
@@ -737,7 +738,7 @@ methods:
 >     goOut  -- to makeE
 >     goOut  -- to the original goal
 >     cursorTop
->     liftedMethods <- traverse (make . ("lm" :<:)) methodTypes
+>     liftedMethods <- traverse (make . (AnchStr "lm" :<:)) methodTypes
 
 Then we return to the methods and solve them with the lifted versions:
 

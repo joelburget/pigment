@@ -22,8 +22,8 @@ Making Definitions
 The `make` command adds a named goal of the given type above the cursor.
 The meat is actually in `makeKinded`, below.
 
-> make :: (String :<: INTM) -> ProofState (EXTM :=>: VAL)
-> make = makeKinded Nothing Waiting
+> make :: (EntityAnchor :<: INTM) -> ProofState (EXTM :=>: VAL)
+> make = makeKinded AnchNo Waiting
 
 When making a new definition, the reference to this definition bears a
 *hole kind* (Section [subsec:Evidences.Tm.references]). User-generated
@@ -34,9 +34,9 @@ Elaboration for instance (Section [sec:Elaborator.Elaborator]), the
 proof system will insert goals itself, with a somewhat changing mood
 such as `Hoping` or `Crying`.
 
-> makeKinded :: Maybe String ->  HKind -> (String :<: INTM) ->
+> makeKinded :: EntityAnchor ->  HKind -> (EntityAnchor :<: INTM) ->
 >                                ProofState (EXTM :=>: VAL)
-> makeKinded manchor holeKind (name :<: ty) = do
+> makeKinded anchor holeKind (name :<: ty) = do
 >     -- Check that the type is indeed a type
 >     _ :=>: tyv <- checkHere (SET :>: ty)
 >                     `pushError`
@@ -48,7 +48,7 @@ such as `Hoping` or `Crying`.
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
 >     goalName <- pickName "Goal" name
->     let  n  =  mkName nsupply goalName
+>     let n = mkName nsupply goalName
 >     -- Make a reference for the goal, with a lambda-lifted type
 >     inScope <- getInScope
 >     let  liftedTy  =  liftType inScope ty
@@ -60,6 +60,6 @@ such as `Hoping` or `Crying`.
 >                   , devSuspendState  =  SuspendNone }
 >     -- Put the entry in the proof context
 >     putDevNSupply $ freshName nsupply
->     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy manchor
+>     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy anchor
 >     -- Return a reference to the goal
 >     return $ applySpine ref inScope

@@ -51,15 +51,60 @@ function js_set_field(obj, field, value) {obj[field] = value;}
 function js_set_field_True(obj, field, value) {obj[field] = true;}
 function js_set_field_False(obj, field, value) {obj[field] = false;}
 
-function js_set_onClick(cb, attrs) {attrs.onClick = function(e) {B(A(cb,[[0,e],0]));};}
-function js_set_onDoubleClick(cb, attrs) {attrs.onDoubleClick = function(e) {B(A(cb,[[0,e],0]));};}
-function js_set_onChange(cb, attrs) {attrs.onChange = function(e) {B(A(cb,[[0,e],0]));};}
-function js_set_onKeyUp(cb, attrs) {attrs.onKeyUp = function(e) {B(A(cb,[[0,e],0]));};}
-function js_set_onKeyPress(cb, attrs) {attrs.onKeyPress = function(e) {B(A(cb,[[0,e],0]));};}
-function js_set_onKeyDown(cb, attrs) {attrs.onKeyDown = function(e) { B(A(cb,[[0,e],0]));};}
-function js_set_onBlur(cb, attrs) {attrs.onBlur = function(e) {B(A(cb,[[0,e],0]));};}
-function js_set_onMouseEnter(cb, attrs) {attrs.onMouseEnter = function(e) {B(A(cb,[[0,e],0]));};}
-function js_set_onMouseLeave(cb, attrs) {attrs.onMouseLeave = function(e) {B(A(cb,[[0,e],0]));};}
+function js_set_onClick(cb, attrs) {
+    attrs.onClick = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onDoubleClick(cb, attrs) {
+    attrs.onDoubleClick = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onChange(cb, attrs) {
+    attrs.onChange = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onKeyUp(cb, attrs) {
+    attrs.onKeyUp = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onKeyPress(cb, attrs) {
+    attrs.onKeyPress = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onKeyDown(cb, attrs) {
+    attrs.onKeyDown = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onBlur(cb, attrs) {
+    attrs.onBlur = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onMouseEnter(cb, attrs) {
+    attrs.onMouseEnter = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
+function js_set_onMouseLeave(cb, attrs) {
+    attrs.onMouseLeave = function(e) {
+        e.persist();
+        B(A(cb,[[0,e],0]));
+    };
+}
 
 function js_React_DOM(tagName, attrs) {return React.DOM[tagName](attrs);}
 
@@ -240,4 +285,54 @@ function js_parseMouseEvent(raw) {
         raw.screenX,
         raw.screenY,
     ];
+}
+
+// polyfill from http://www.paulirish.com/2011/requestanimationframe-for-smart-animating/
+(function() {
+    var lastTime = 0;
+    var vendors = ['webkit', 'moz'];
+    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+        window.cancelAnimationFrame =
+          window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+    }
+
+    if (!window.requestAnimationFrame)
+        window.requestAnimationFrame = function(callback, element) {
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+              timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
+
+    if (!window.cancelAnimationFrame)
+        window.cancelAnimationFrame = function(id) {
+            clearTimeout(id);
+        };
+}());
+
+function js_raf(cb) {
+    return window.requestAnimationFrame(function(time) {
+        B(A(cb,[[0,time],0]));
+    });
+}
+
+function js_createClass(render, setState) {
+    return React.createClass({
+        render: render,
+    });
+}
+
+function js_bezier(x0, y0, x1, y1, x) {
+    return BezierEasing(x0, y0, x1, y1)(x);
+}
+
+function js_render(e, r){
+    React.render(e, r);
+}
+
+function js_cancelRaf(id) {
+    window.cancelAnimationFrame(id);
 }

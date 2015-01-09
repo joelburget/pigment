@@ -65,13 +65,13 @@ well supply it, though it should not be inspected.
 >     freshRef (x :<: evTm s') $ \ref -> do
 >         -- Distill the codomain
 >         (schT', t') <- distillScheme
->                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' Nothing)
+>                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' AnchNo)
 >                          (refs :< ref)
 >                          schT
 >         return (SchExplicitPi (x :<: schS') schT', PIV x s' t')
 
 On an implicit $\Pi$, the operation is fairly similar. Instead of
-|distillScheme|-ing the domain, we proceed as for ground types — it is
+`distillScheme`-ing the domain, we proceed as for ground types — it is
 one.
 
 > distillScheme entries refs (SchImplicitPi (x :<: s) schT) = do
@@ -82,7 +82,7 @@ one.
 >     freshRef (x :<: sv) $ \ref -> do
 >         -- Distill the domain
 >         (schT', t') <- distillScheme
->                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' Nothing)
+>                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' AnchNo)
 >                          (refs :< ref)
 >                          schT
 >         return (SchImplicitPi (x :<: sd) schT', PIV x s' t')
