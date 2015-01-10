@@ -31,3 +31,7 @@ Please do! I assure you you'll have no problem finding bugs. The easiest way to 
 # License
 
 Pigment is [MIT licensed](http://opensource.org/licenses/MIT).
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/joelburget/pigment/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
