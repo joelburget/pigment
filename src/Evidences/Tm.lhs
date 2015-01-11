@@ -72,22 +72,22 @@ And we can infer types from:
 >   Yuk   :: Tm {In, VV} x                        -> Tm {Ex, TT}  x -- dirty
 
 To put some flesh on these bones, we define and use the `Scope`, `Can`,
-|Op|, and `Elim` data-types. Their role is described below. Before that,
+`Op`, and `Elim` data-types. Their role is described below. Before that,
 let us point out an important invariant. Non-implementers are advised to
 skip the following.
 
 [Neutral terms and Operators]
 
-In the world of values, i.e. |Tm <span>In, VV</span> p|, the neutral
-terms are exactly the |N t| terms. Enforcing this invariant requires
+In the world of values, i.e. `Tm <span>In, VV</span> p`, the neutral
+terms are exactly the `N t` terms. Enforcing this invariant requires
 some caution in the way we deal with operators and how we turn them into
 values, so this statement relies on the hypothesis that the evaluation
 of operators is correct: it is not enforced by Haskell type-system.
 
-To prove that statement, we first show that any |Tm <span>In, VV</span>
-p| which is not a |N t| is not a neutral term. This is obvious as we are
+To prove that statement, we first show that any `Tm <span>In, VV</span>
+p` which is not a `N t` is not a neutral term. This is obvious as we are
 left with lambda and canonicals, which cannot be stuck. Then, we have to
-prove that a |N t| in |Tm <span>In, VV</span> p| form is a stuck term.
+prove that a `N t` in `Tm <span>In, VV</span> p` form is a stuck term.
 We do so by case analysis on the term `t` inside the `N`:
 
 -   Typing and variables will not let you get values, so a neutral value
@@ -101,7 +101,7 @@ We do so by case analysis on the term `t` inside the `N`:
     eliminator is stuck too.
 
 -   The case for fully applied operator is more problematic: we need one
-    of the arguments to be a |N t|, and to be used by `Op`. This way,
+    of the arguments to be a `N t`, and to be used by `Op`. This way,
     the operation is indeed a neutral term. We can hardly enforce this
     constraint in Haskell type system, so we have to deal with this
     approximation.
@@ -125,15 +125,15 @@ for no good reason.
 Scopes
 
 A `Scope` represents the body of a binder, but the representation
-differs with phase. In *terms*, |x :. t| is a *binder*: the `t` is a de
+differs with phase. In *terms*, `x :. t` is a *binder*: the `t` is a de
 Bruijn term with a new bound variable 0, and the old ones incremented.
 The `x` is just advice for display name selection.
 
 It is important to ensure that `body` computes to a fully evaluated
 value, otherwise say “good bye” to strong normalisation.
 
-In both cases, we represent constant functions with |K t|, equivalent of
-| \_ -\> t |.
+In both cases, we represent constant functions with `K t`, equivalent of
+`\_ -> t`.
 
 > data Scope :: {Phase} -> * -> * where
 >   (:.)  :: String -> Tm {In, TT} x           -> Scope p{-TT-} x  -- binding
@@ -199,9 +199,10 @@ binding complicates the definition.
 >   deriving (Show, Eq)
 
 The `Con` object is used and abused in many circumstances. However, all
-ilts usages share the same pattern: `Con` is used whenever we need to
+its usages share the same pattern: `Con` is used whenever we need to
 ”pack” an object `t` into something else, to avoid ambiguities. For
 example, we use `Con` in the following case:
+
 $$\Rule{desc x (Mu x) \ni y}
      {Mu x \ni Con y}$$
 
@@ -514,7 +515,11 @@ however.
 >   (x := _) == (y := _) = x == y
 
 > instance Show REF where
->   show (name := kt) = intercalate "." (map (\(x,n) -> x ++ "_" ++ show n) name) ++ " := " ++ show kt
+>   show (name := kt) = unwords
+>       [ intercalate "." (map (\(x,n) -> x ++ "_" ++ show n) name)
+>       , ":="
+>       , show kt
+>       ]
 
 A `REF` can be of one of four kinds:
 
@@ -577,7 +582,7 @@ it computing.
 >   = Maybe t :?=: f t
 >   deriving (Show)
 
-For example, labels are used in the presentation of the |Enum|
+For example, labels are used in the presentation of the `Enum`
 (Section [sec:Features.Enum]) and `Desc` (Section [sec:Features.Desc])
 data-types. These data-types are themselves implemented as fix-points of
 non human-readable descriptions, hence we hide the details behind a
@@ -626,7 +631,7 @@ It is sometimes useful to construct the identity function:
 > f $# xs = N (foldl (\ g x -> g :$ A (NV x)) (V f) xs)
 
 The aptly named `\$\#\#` operator applies an `ExTm` to a list of
-|InTm|s.
+`InTm`s.
 
 > ($##) :: (Functor t, Foldable t) => ExTm x -> t (InTm x) -> ExTm x
 > f $## xs = foldl (\ v w -> v :$ A w) f xs
@@ -635,9 +640,9 @@ Sensible name advice is a hard problem. The `fortran` function tries to
 extract a useful name from a binder.
 
 > fortran :: Tm {In, p} x -> String
-> fortran (L (x :. _))   | not (null x) = x
-> fortran (L (H _ x _))   | not (null x) = x
-> fortran _ = "xf"
+> fortran (L (x :. _))  | not (null x) = x
+> fortran (L (H _ x _)) | not (null x) = x
+> fortran _ = "xf" -- XXX(joel) this is unacceptable
 
 Similarly, it is useful to extract name advice from a `REF`.
 

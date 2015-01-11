@@ -44,6 +44,7 @@ import Cochon.Tactics
 import Kit.BwdFwd
 
 import Haste hiding (fromString, prompt, focus)
+import Haste.DOM (withElem)
 import Haste.JSON
 import Haste.Prim
 import React hiding (key)
@@ -52,8 +53,7 @@ import qualified React
 -- We start out here. Main calls `cochon emptyContext`.
 
 cochon :: ProofContext -> IO ()
-cochon loc = do
-    Just e <- elemById "inject"
+cochon loc = withElem "inject" $ \e -> do
     let startCtx = B0 :< loc
     validateDevelopment startCtx
     cls <- createClass page animDispatch (startState startCtx) () []

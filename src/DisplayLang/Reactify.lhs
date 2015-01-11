@@ -17,14 +17,17 @@ Pretty-printing {#sec:DisplayLang.Reactify}
 > import Evidences.Tm
 > import Kit.BwdFwd
 > import Kit.MissingLibrary hiding ((<+>))
+
+> import Haste.Prim
 > import React hiding (key)
 
-The `reactKword` function gives a react element representing a
-|Keyword|.
+The `reactKword` function gives a react element representing a `Keyword`.
 
 > reactKword :: Keyword -> PureReact
 > reactKword kw =
->     span_ [ class_ (fromString (show kw)) ] $ fromString (key kw)
+>     span_ [ class_ (catJSStr "" ["kw ", fromString (show kw)]) ] $
+>         fromString (key kw)
+
 > parens :: PureReact -> PureReact
 > parens r = "(" >> r >> ")"
 
@@ -104,7 +107,7 @@ elements.
 
 The `reactPi` function takes a term and the current size. It accumulates
 domains until a non(dependent) $\Pi$-type is found, then calls
-|reactPiMore| to produce the final element.
+`reactPiMore` to produce the final element.
 
 > reactPi :: PureReact -> DInTmRN -> PureReact
 > reactPi bs (DPI s (DL (DK t))) = reactPiMore bs
@@ -124,9 +127,6 @@ and a codomain, and represents them appropriately for the current size.
 
 > reactPiMore :: PureReact -> PureReact -> PureReact
 > reactPiMore bs d = bs >> reactKword KwArr >> d
-
-– \> | isEmpty bs = wrapDoc d PiSize – \> | otherwise = wrapDoc (bs \>\>
-reactKword KwArr \>\> d) PiSize
 
 To reactify a scope, we accumulate arguments until something other than
 a $\lambda$-term is reached.
@@ -156,7 +156,11 @@ a $\lambda$-term is reached.
 >         reactify d
 >         reactify i
 >     reactify (DAnchor name _)  = fromString name
->     -- reactify (DTag name tms) = name
+>     reactify (DTAG name)        = reactKword KwTag >> fromString name
+>     reactify (DTag name tms) = do
+>         reactKword KwTag
+>         fromString name
+>         mapM_ reactify tms
 >     reactify indtm           = fromString $ show $ indtm
 
 > instance Reactive DExTmRN where

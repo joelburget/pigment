@@ -1,7 +1,6 @@
 Relative Names
 ==============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > module DisplayLang.Name where
 > import Data.List
 > import NameSupply.NameSupply
@@ -9,12 +8,12 @@ Relative Names
 > import DisplayLang.DisplayTm
 
 For display and storage purposes, we have a system of local longnames
-for referring to entries. Any component of a local name may have a \^|n|
-or `~n~` suffix, where `n` is an integer, representing a relative or
-absolute offset. A relative offset \^`n` refers to the $n^\mathrm{th}$
-occurrence of the name encountered when searching upwards, so `x|\^`0|
-refers to the same reference as `x`, but `x|\^|1` skips past it and
-refers to the next thing named `x`. An absolute offset `~n~`, by
+for referring to entries. Any component of a local name may have a `^n`
+or `_n` suffix, where `n` is an integer, representing a relative or
+absolute offset. A relative offset `^n` refers to the $n^\mathrm{th}$
+occurrence of the name encountered when searching upwards, so `x^0`
+refers to the same reference as `x`, but `x^1` skips past it and
+refers to the next thing named `x`. An absolute offset `_n`, by
 contrast, refers to the exact numerical component of the name.
 
 > data Offs = Rel Int | Abs Int deriving (Show, Eq)

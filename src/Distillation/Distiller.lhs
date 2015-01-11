@@ -45,7 +45,7 @@ peforms christening at the same time, turning absolute names into
 relative names.
 
 The distiller first tries to apply Feature-specific rules. These rules
-contain the inteligence of the distiller, aiming at making a concise
+contain the intelligence of the distiller, aiming at making a concise
 Display term. If unsuccessful, the distiller falls back to the generic
 rules in `distillBase`.
 
@@ -63,10 +63,10 @@ scope* as a list of `Entries`.
 
 The following cases turn vaguely list-like data into actual lists. We
 don't want this in general, but it is useful in special cases (when the
-data type is really supposed to be a list, as in |EnumD|).
+data type is really supposed to be a list, as in `EnumD`).
 
-> distill _ (MU (Just (ANCHOR (TAG r) _ _)) _ :>: CON (PAIR ZE VOID)) | r == "EnumU" =
->     return (DVOID :=>: CON (PAIR ZE VOID))
+> distill _ (MU (Just (ANCHOR (TAG r) _ _)) _ :>: CON (PAIR ZE VOID))
+>     | r == "EnumU" = return (DVOID :=>: CON (PAIR ZE VOID))
 > distill es (C ty@(Mu (Just (ANCHOR (TAG r) _ _) :?=: _)) :>:
 >     C c@(Con (PAIR (SU ZE) (PAIR _ (PAIR _ VOID)))))
 >     | r == "EnumU" = do
@@ -74,7 +74,7 @@ data type is really supposed to be a list, as in |EnumD|).
 >                                                            (ty :>: c)
 >       return ((DPAIR s t) :=>: CON v)
 
-If we have a canonical value in |MU s|, where `s` starts with a finite
+If we have a canonical value in `MU s`, where `s` starts with a finite
 sum, then we can (probably) turn it into a tag applied to some
 arguments.
 
@@ -378,6 +378,7 @@ passes it to the pretty-printer.
 
 > prettyHere :: (TY :>: INTM) -> ProofState Doc
 > prettyHere = prettyHereAt maxBound
+
 > prettyHereAt :: Size -> (TY :>: INTM) -> ProofState Doc
 > prettyHereAt size tt = do
 >     dtm :=>: _ <- distillHere tt

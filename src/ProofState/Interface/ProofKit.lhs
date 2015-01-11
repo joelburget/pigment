@@ -23,7 +23,7 @@ The proof state lives on a rich substrate of operations, inherited from
 the `ProofContext` as well as the `ProofState` monad. In this module, we
 export these operations as part of the Interface.
 
-Accessing the |NameSupply|
+Accessing the `NameSupply`
 --------------------------
 
 By definition of the `Development` in

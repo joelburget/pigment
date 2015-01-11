@@ -10,3 +10,4 @@ dist/
 *.pdf
 src/main/
 *.iml
+node_modules

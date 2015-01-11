@@ -95,8 +95,10 @@ the current goal (applied to the appropriate shared parameters).
 
 > elabGive :: DInTmRN -> ProofState (EXTM :=>: VAL)
 > elabGive tm = elabGive' tm <* startScheduler <* goOut
+
 > elabGiveNext :: DInTmRN -> ProofState (EXTM :=>: VAL)
 > elabGiveNext tm = elabGive' tm <* startScheduler <* (nextGoal <|> goOut)
+
 > elabGive' :: DInTmRN -> ProofState (EXTM :=>: VAL)
 > elabGive' tm = do
 >     tip <- getDevTip
@@ -136,6 +138,7 @@ type, and creates a $\Pi$ with that type.
 > elabPiParam (s :<: ty) = do
 >     tt <- elaborate' (SET :>: ty)
 >     piParamUnsafe (s :<: tt)
+
 > elabLamParam :: (String :<: DInTmRN) -> ProofState REF
 > elabLamParam (s :<: ty) = do
 >     tt <- elaborate' (SET :>: ty)
@@ -145,7 +148,7 @@ Elaborating programming problems {#subsec:Elaborator.Elaborator.elab-prog-proble
 --------------------------------
 
 The `elabLet` command sets up a programming problem, given a name and
-scheme. The command |let plus (m : Nat)(n : Nat) : Nat| should result in
+scheme. The command `let plus (m : Nat)(n : Nat) : Nat` should result in
 the following proof state:
 
     plus

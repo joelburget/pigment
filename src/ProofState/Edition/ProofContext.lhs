@@ -19,7 +19,7 @@ Proof Context {#sec:ProofState.Edition.ProofContext}
 Recall from Section [sec:ProofState.Structure.Developments] the
 definition of a development:
 
-\< type Dev = (f (Entry f), Tip, NameSupply)
+    type Dev = (f (Entry f), Tip, NameSupply)
 
 We `unzip` (cf. Huet's Zipper @huet:zipper) this type to produce a
 type representing its one-hole context. This allows us to keep track of
@@ -63,15 +63,15 @@ Section [subsubsec:ProofState.Structure.Developments.entry].
 >     deriving Show
 
 One would expect the `belowEntries` to be an `Entries`, just as the
-|aboveEntries|. However, the `belowEntries` needs to be a richer
+`aboveEntries`. However, the `belowEntries` needs to be a richer
 structure to support the news infrastructure
 (Section [sec:ProofState.Edition.News]). Indeed, we propagate reference
 updates lazily, by pushing news bulletin below the current cursor.
 
 Hence, the `belowEntries` are not only normal entries but also contain
-news. We define a `newtype` for the composition of the `Fwd` and |Either
-NewsBulletin| functors, and use this functor for defining the type of
-|belowEntries|.
+news. We define a `newtype` for the composition of the `Fwd` and `Either
+NewsBulletin` functors, and use this functor for defining the type of
+`belowEntries`.
 
 > newtype NewsyFwd x = NF { unNF :: Fwd (Either NewsBulletin x) }
 > type NewsyEntries = NewsyFwd (Entry NewsyFwd)

@@ -25,8 +25,8 @@ Resolving and unresolving names {#sec:ProofState.Interface.NameResolution}
 > import Evidences.Tm
 > import Evidences.Operators
 
-Typographical note: in this section, we write <span>*f*</span> for a
-relative name (component) and @f~0~@ for an absolute name (component).
+Typographical note: in this section, we write *f* for a
+relative name (component) and `f_0` for an absolute name (component).
 
 A `BScopeContext` contains information from the `ProofContext` required
 for name resolution: a list of the above entries and last component of
@@ -127,14 +127,14 @@ from) the root of the tree to the cursor position.
 
 We start off in `resolve`, which calls `lookUp` (for <span>*\^*</span>)
 or `lookDown` (for <span>*\_*</span>) to find the first name element.
-Then `lookFor` and `lookFor'` recursively call each other and |lookDown|
+Then `lookFor` and `lookFor'` recursively call each other and `lookDown`
 until we find the target name, in which case we stop, or we reach the
 local part of the context, in which case `lookLocal` is called. Finally,
-|lookLocal| calls `huntLocal` with an appropriate list of entries, so it
+`lookLocal` calls `huntLocal` with an appropriate list of entries, so it
 looks up or down until it finds the target name.
 
 The `resolve` function starts the name resolution process: if the name
-is a primitive we are done, otherwise it invokes `lookUp` or |lookDown|
+is a primitive we are done, otherwise it invokes `lookUp` or `lookDown`
 as appropriate then continues with `lookFor`.
 
 > resolve :: RelName -> BScopeContext -> Either (StackError t) ResolveResult
@@ -376,7 +376,7 @@ monad and `failNom` will be called if unresolution fails.
 
 If the reference is a `DECL`, then it had better be a parameter above,
 and we do not need to worry about shared parameters. We simply call
-|nomTop| to find it.
+`nomTop` to find it.
 
 >                 (_, DECL) ->  do
 >                     (x, ms) <- nomTop tar (mesus, mes <+> les)
@@ -490,11 +490,13 @@ current location but the spine is different.
 >     j -> (| ((x,Abs j) : nom', ms) |)
 > nomAbs [] _ = Just ([], Nothing)
 > nomAbs _ _ = Nothing
+
 > countF :: String -> Fwd (Entry Bwd) -> Int
 > countF x F0 = 0
 > countF x (EModule n _ :> es) | (fst . last $ n) == x = 1 + countF x es
 > countF x (EEntity _ (y,_) _ _ _ :> es) | y == x = 1 + countF x es
 > countF x (_ :> es) = countF x es
+
 > findF :: Int -> (String,Int) -> Fwd (Entry Bwd)
 >              -> Maybe ((String,Offs), Maybe (Scheme INTM))
 > findF i u (EModule n _ :> es) | (last $ n) == u =
@@ -520,6 +522,7 @@ match the current location.
 >   (i,es',ms) <- nomRel' 0 x es
 >   (nom',ms') <- nomRel nom es' ms
 >   return ((fst x,Rel i):nom',ms')
+
 > nomRel' :: Int -> (String,Int) -> Entries
 >                -> Maybe (Int,Entries, Maybe (Scheme INTM))
 > nomRel' o (x,i) (es:< EModule n (Dev {devEntries=es'})) | (fst . last $ n) == x  =

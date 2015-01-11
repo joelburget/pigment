@@ -71,6 +71,30 @@ import Haste.Prim
 import Lens.Family2
 import React
 
+
+instance Reactive EntityAnchor where
+    reactify x = span_ [ class_ "anchor" ] $ reactify' x where
+        reactify' AnchConc = "conc"
+        reactify' AnchConNames = "constructor names"
+        reactify' (AnchConName str) = fromString str
+        reactify' AnchConDescs = "constructor descriptions"
+        reactify' AnchDataDesc = "data description"
+        reactify' AnchDataTy = "data type"
+        reactify' AnchInd = "ind"
+        reactify' AnchIndTy = "ind type"
+        reactify' (AnchTy str) = fromString str
+        reactify' (AnchParTy str) = fromString str
+        reactify' AnchRefine = "refine"
+        reactify' AnchMotive = "motive"
+        reactify' AnchMethod = "method"
+        reactify' AnchSig = "sig"
+        reactify' AnchHope = "hope"
+        reactify' AnchElabInferFully = "elab infer fully"
+        reactify' AnchTau = "tau"
+        reactify' (AnchStr str) = fromString str
+        reactify' AnchNo = "AnchNo"
+
+
 page :: InteractionState -> InteractionReact
 page state = div_ [ class_ "page" ] $ do
     div_ [ class_ "left-pane" ] $ do
@@ -98,7 +122,7 @@ paneToggle s = button_ [ class_ "pane-bar"
                        , onClick handleToggleRightPane
                        ] $ do
     let cls = case s^.rightPaneVisible of
-          Invisible -> "icon ion-arrow-left-b"
+          Invisible -> "pane-bar-icon icon ion-arrow-left-b"
           Visible   -> "icon ion-arrow-right-b"
     i_ [ class_ cls ] ""
 
@@ -239,73 +263,78 @@ tacticList = div_ [ class_ "tactic-list" ] $
 
 -- The `reactProofState` command generates a reactified representation of
 -- the proof state at the current location.
-
 reactProofState :: ProofState PureReact
-reactProofState = do
-    inScope <- getInScope
-    me <- getCurrentName
-    renderReact inScope me
+reactProofState = renderReact
 
-renderReact :: Entries -> Name -> ProofState PureReact
-renderReact aus me = do
+-- Render a bunch of entries!
+renderReact :: ProofState PureReact
+renderReact = do
+    me <- getCurrentName
     es <- replaceEntriesAbove B0
     cs <- putBelowCursor F0
     case (es, cs) of
         (B0, F0) -> reactEmptyTip
         _ -> do
-            d <- reactEs "" (es <>> F0)
+            d <- reactEntries (es <>> F0)
             d' <- case cs of
                 F0 -> return d
                 _ -> do
-                    d'' <- reactEs "" cs
+                    d'' <- reactEntries cs
                     return (d >> "---" >> d'')
             tip <- reactTip
             putEntriesAbove es
             putBelowCursor cs
             return $ div_ [ class_ "proof-state" ] $ do
+                div_ [ class_ "entries-name" ] $ do
+                    "Entries name: "
+                    fromString $
+                        let nm = showName me
+                        in if nm == "" then "(no name)" else nm
                 div_ [ class_ "proof-state-inner" ] $ d'
                 tip
-    where
-        reactEmptyTip :: ProofState PureReact
-        reactEmptyTip = do
-            tip <- getDevTip
-            case tip of
-                Module -> return $ div_ [ class_ "empty-empty-tip" ]
-                                        "[empty]"
-                _ -> do
-                    tip' <- reactTip
-                    return $ div_ [ class_ "empty-tip" ] $
-                        reactKword KwDefn >> " " >> tip'
 
-        reactEs :: PureReact
-                -> Fwd (Entry Bwd)
-                -> ProofState PureReact
-        reactEs d F0 = return d
-        reactEs d (e :> es) = do
-            putEntryAbove e
-            ed <- reactE e
-            reactEs (d >> ed) es
+-- reactHereAt
+-- replaceEntriesAbove
+-- putBelowCursor
+-- putEntryAbove
 
-        reactE :: Entry Bwd -> ProofState PureReact
-        reactE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
-            ty' <- bquoteHere ty
-            tyd <- reactHereAt (SET :>: ty')
-            return $ reactBKind k $ div_ [ class_ "entry" ] $ do
-                div_ [ class_ "tm-name" ] $ fromString x
-                -- TODO(joel) - show anchor in almost same way as below?
-                reactKword KwAsc
-                div_ [ class_ "ty" ] tyd
-        reactE e = do
-            goIn
-            d <- renderReact aus me
-            goOut
-            return $ div_ [ class_ "entry" ] $ do
-                div_ [ class_ "tm-name" ] $ fromString (fst (entryLastName e))
-                div_ [ class_ "anchor" ] $ do
-                    "[["
-                    fromString $ show $ entryAnchor e
-                    "]]"
-                d
+reactEmptyTip :: ProofState PureReact
+reactEmptyTip = do
+    tip <- getDevTip
+    case tip of
+        Module -> return $ div_ [ class_ "empty-empty-tip" ]
+                                "[empty]"
+        _ -> do
+            tip' <- reactTip
+            return $ div_ [ class_ "empty-tip" ] $
+                reactKword KwDefn >> " " >> tip'
+
+reactEntries :: Fwd (Entry Bwd) -> ProofState PureReact
+reactEntries F0 = return ""
+reactEntries (e :> es) = do
+    putEntryAbove e
+    (>>) <$> reactEntry e <*> reactEntries es
+
+reactEntry :: Entry Bwd -> ProofState PureReact
+reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
+    ty' <- bquoteHere ty
+    tyd <- reactHereAt (SET :>: ty')
+    return $ reactBKind k $ div_ [ class_ "entry" ] $ do
+        div_ [ class_ "tm-name" ] $ fromString x
+        -- TODO(joel) - show anchor in almost same way as below?
+        reactKword KwAsc
+        div_ [ class_ "ty" ] tyd
+reactEntry e = do
+    goIn
+    d <- renderReact
+    goOut
+    return $ div_ [ class_ "entry" ] $ do
+        div_ [ class_ "tm-name" ] $ fromString (fst (entryLastName e))
+        -- div_ [ class_ "anchor" ] $ do
+        --     "[["
+        --     reactify $ entryAnchor e
+        --     "]]"
+        d
 
 -- “Developments can be of different nature: this is indicated by the Tip”
 
@@ -313,7 +342,7 @@ reactTip :: ProofState PureReact
 reactTip = do
     tip <- getDevTip
     case tip of
-        Module -> return $ div_ [ class_ "tip" ] $ ""
+        Module -> return $ div_ [ class_ "tip" ] $ "(module)"
         Unknown (ty :=>: _) -> do
             hk <- getHoleKind
             tyd <- reactHere (SET :>: ty)

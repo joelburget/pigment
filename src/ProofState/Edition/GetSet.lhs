@@ -21,14 +21,14 @@ The Get Set
 > import Debug.Trace
 
 We provide various functions to get information from the proof state and
-store updated information, providing a friendlier interface than |get|
+store updated information, providing a friendlier interface than `get`
 and `put`. The rule of thumb for naming these functions is to prefix the
-name of a field by the action (|get|, `put`, `remove`, or |replace|).
+name of a field by the action (`get`, `put`, `remove`, or `replace`).
 
 Getters
 -------
 
-Getting in |ProofContext|
+Getting in `ProofContext`
 
 > getLayers :: ProofStateT e (Bwd Layer)
 > getLayers = gets pcLayers
@@ -48,7 +48,7 @@ And some specialized versions:
 >         _ :< l  -> return l
 >         _ -> throwErrorStr "couldn't get layer"
 
-Getting in |AboveCursor|
+Getting in `AboveCursor`
 
 > getEntriesAbove :: ProofStateT e Entries
 > getEntriesAbove = do
@@ -88,7 +88,7 @@ And some specialized versions:
 >   (_ :=>: goal) <- getGoal "withGoal"
 >   f goal
 
-Getting in the |Layers|
+Getting in the `Layers`
 
 > getCurrentEntry :: ProofStateT e CurrentEntry
 > getCurrentEntry = do
@@ -97,7 +97,7 @@ Getting in the |Layers|
 >         _ :< l  -> return (currentEntry l)
 >         B0      -> return (CModule [])
 
-Getting in the |CurrentEntry|
+Getting in the `CurrentEntry`
 
 > getCurrentName :: ProofStateT e Name
 > getCurrentName = do
@@ -145,7 +145,7 @@ Getting the Scopes
 Putters
 -------
 
-Putting in |ProofContext|
+Putting in `ProofContext`
 
 > putLayers :: Bwd Layer -> ProofStateT e ()
 > putLayers ls = do
@@ -176,7 +176,7 @@ And some specialized versions:
 >     putBelowCursor (e :> below)
 >     return ()
 
-Putting in |AboveCursor|
+Putting in `AboveCursor`
 
 > putEntriesAbove :: Entries -> ProofStateT e ()
 > putEntriesAbove es = do
@@ -205,7 +205,7 @@ And some specialized versions:
 >     dev <- getAboveCursor
 >     putAboveCursor dev{devEntries = devEntries dev :< e}
 
-Putting in the |Layers|
+Putting in the `Layers`
 
 > putCurrentEntry :: CurrentEntry -> ProofStateT e ()
 > putCurrentEntry m = do
@@ -219,9 +219,9 @@ Putting in the |Layers|
 >     replaceLayer l{belowEntries = NF (Left news :> unNF (belowEntries l))}
 >     return ()
 
-Putting in the |CurrentEntry|
+Putting in the `CurrentEntry`
 
-Putting in the `PROG`\
+Putting in the `PROG`
 
 > putCurrentScheme :: Scheme INTM -> ProofState ()
 > putCurrentScheme sch = do
@@ -238,7 +238,7 @@ Putting in the `HOLE`\
 Removers
 --------
 
-Remove in |ProofContext|
+Remove in `ProofContext`
 
 > removeLayer :: ProofStateT e Layer
 > removeLayer = do
@@ -247,7 +247,7 @@ Remove in |ProofContext|
 >         PC{pcLayers=ls :< l} -> put pc{pcLayers=ls} >> return l
 >         _ -> throwErrorStr "couldn't remove layer"
 
-Removing in |AboveEntries|
+Removing in `AboveEntries`
 
 > removeEntryAbove :: ProofStateT e (Maybe (Entry Bwd))
 > removeEntryAbove = do
@@ -261,7 +261,7 @@ Removing in |AboveEntries|
 Replacers
 ---------
 
-Replacing into |ProofContext|
+Replacing into `ProofContext`
 
 > replaceAboveCursor :: Dev Bwd -> ProofStateT e (Dev Bwd)
 > replaceAboveCursor dev = do
@@ -277,7 +277,7 @@ And some specialized version:
 >     putLayers (ls :< l)
 >     return l'
 
-Replacing in |AboveCursor|
+Replacing in `AboveCursor`
 
 > replaceEntriesAbove :: Entries -> ProofStateT e Entries
 > replaceEntriesAbove es = do

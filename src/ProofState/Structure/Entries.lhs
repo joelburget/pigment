@@ -1,7 +1,6 @@
 Managing Entries in a Development {#sec:ProofState.Structure.Entries}
 =================================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
 >     PatternSynonyms #-}
 
@@ -13,7 +12,7 @@ Managing Entries in a Development {#sec:ProofState.Structure.Entries}
 > import DisplayLang.Scheme
 > import ProofState.Structure.Developments
 
-Looking into an |Entry|
+Looking into an `Entry`
 -----------------------
 
 In the following, we define a bunch of helper functions to access
@@ -33,8 +32,8 @@ Hence, we have:
 > entryName (EModule n _)             = n
 
 > entryLastName :: Traversable f => Entry f -> (String, Int)
-> entryLastName (EEntity _ xn _ _ _)  = xn
-> entryLastName (EModule n _)       = last n
+> entryLastName (EEntity _ xn _ _ _) = xn
+> entryLastName (EModule n _)        = last n
 
 > entryScheme :: Traversable f => Entry f -> Maybe (Scheme INTM)
 > entryScheme (EDEF _ _ (PROG sch) _ _ _)  = Just sch

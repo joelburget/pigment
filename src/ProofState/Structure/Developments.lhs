@@ -117,17 +117,19 @@ is `Bwd`:
 > type Entries = Bwd (Entry Bwd)
 
 > instance Show (Entry Bwd) where
->     show (EEntity ref xn e t a) = intercalate " " ["E", show ref, show xn, show e, show t, show a]
+>     show (EEntity ref xn e t a) = intercalate " "
+>         ["E", show ref, show xn, show e, show t, show a]
 >     show (EModule n d) = intercalate " " ["M", show n, show d]
 
 > instance Show (Entry Fwd) where
->     show (EEntity ref xn e t a) = intercalate " " ["E", show ref, show xn, show e, show t, show a]
+>     show (EEntity ref xn e t a) = intercalate " "
+>         ["E", show ref, show xn, show e, show t, show a]
 >     show (EModule n d) = intercalate " " ["M", show n, show d]
 
 [Name caching]
 
-We have mentionned above that an Entity `E` caches the last component of
-its `Name` in the |(String, Int)| field. Indeed, grabing that
+We have mentioned above that an Entity `E` caches the last component of
+its `Name` in the `(String, Int)` field. Indeed, grabbing that
 information asks for traversing the whole `Name` up to the last element:
 
 > mkLastName :: REF -> (String, Int)

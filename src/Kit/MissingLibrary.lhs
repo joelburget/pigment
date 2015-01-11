@@ -5,11 +5,6 @@ Missing Library
 > {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeFamilies, TypeOperators, UndecidableInstances, TypeSynonymInstances #-}
 > module Kit.MissingLibrary where
 > import Control.Applicative
-> import Control.Monad
-> import Control.Monad.Except
-> import Control.Monad.Identity
-> import Control.Monad.State
-> import Control.Monad.Reader
 > import Control.Monad.Writer
 > import Data.Foldable
 > import Data.Traversable
@@ -20,6 +15,7 @@ Renaming
 > trail :: (Applicative f, Foldable t, Monoid (f a)) => t a -> f a
 > trail = foldMap pure
 
+> -- TODO(joel) get rid of this
 > (<+>) :: Monoid x => x -> x -> x
 > (<+>) = mappend
 
@@ -116,7 +112,7 @@ Functor Kit
 >   fmap f (Id x) = Id (f x)
 
 > instance Functor (Ko a) where
->   fmap f (Ko a) = Ko a
+>   fmap _ (Ko a) = Ko a
 
 > instance (Functor p, Functor q) => Functor (p :+: q) where
 >   fmap f (Le px)  = Le (fmap f px)
@@ -154,7 +150,7 @@ Functor Kit
 >   hiding instance Foldable id
 
 > instance Traversable (Ko a) where
->   traverse f (Ko c) = pure (Ko c)
+>   traverse _ (Ko c) = pure (Ko c)
 >   hiding instance Functor (Ko a)
 >   hiding instance Foldable (Ko a)
 
@@ -176,7 +172,7 @@ Functor Kit
 
 > instance Monoid c => Applicative (Ko c) where-- makes crush from traverse
 >   -- pure :: x -> K c x
->   pure x = Ko mempty
+>   pure _ = Ko mempty
 >   -- (<*>) :: K c (s -> t) -> K c s -> K c t
 >   Ko f <*> Ko s = Ko (mappend f s)
 >   hiding instance Functor (Ko c)

@@ -110,8 +110,8 @@ introduce a parser for words. A word is any non-empty string of
 characters that doesn't include a space, a bracketting symbol, or one of
 the protected symbols. A protected symbol is, simply, a one-character
 symbol which can be prefix or suffix a word, but will not be merged into
-the parsed word. For example, “foo,” lexes into first |Idenfitier foo|
-then |Keyword ,|. In `Parsley`, this translates to:
+the parsed word. For example, “foo,” lexes into first `Idenfitier foo`
+then `Keyword ,`. In `Parsley`, this translates to:
 
 > parseWord :: Parsley Char String
 > parseWord = (|id (some $ tokenFilter (\t -> not $ elem t $ space ++ bracketChars ++ protected))
@@ -247,7 +247,7 @@ things...
 > key KwCon         = "con"
 > key KwOut         = "%"
 
-\< key k = error (“key: missing keyword ” ++ show k)
+    key k = error (“key: missing keyword ” ++ show k)
 
 It is straightforward to make a translation table, `keywords`:
 

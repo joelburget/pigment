@@ -20,10 +20,11 @@ Let's have some observational equality, now!
 
 The `eqGreen` operator, defined in section [sec:Features.Equality],
 computes the proposition that two values are equal if their containing
-sets are equal. We write `\<-\>` for application of this operator.
+sets are equal. We write `<->` for application of this operator.
 
 > (<->) :: (TY :>: VAL) -> (TY :>: VAL) -> VAL
 > (y0 :>: t0) <-> (y1 :>: t1) = eqGreen @@ [y0,t0,y1,t1]
+
 > (<:-:>) :: (INTM :>: INTM) -> (INTM :>: INTM) -> INTM
 > (y0 :>: t0) <:-:> (y1 :>: t1) = N $ eqGreen :@ [y0,t0,y1,t1]
 

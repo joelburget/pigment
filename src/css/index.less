@@ -1,3 +1,27 @@
+@transparent: rgba(0, 0, 0, 0);
+@transparent1: rgba(0, 0, 0, 0.1);
+@transparent3: rgba(0, 0, 0, 0.3);
+
+@bottomBackground: #454545;
+@bottomBorderColor: #778bc7;
+
+@rightPaneBackground: #3d3d3d;
+@paneBarBorderColor: #676767;
+@rightPaneBorderColor: #676767;
+@rightPaneColor: #dadada;
+
+@tacticTemplateBackgroundColor: #f7f7f7;
+@tacticTemplateBorderColor: #bebebe;
+@tacticHelpBorderColor: #e6e6e6;
+
+@selectedPaneBlueUnderline: #90bced;
+
+@entryBlue: #a6d6ff;
+@tipOrange: #ffb66f;
+@holeYellow: #ffde35;
+@anchorGreen: #c5e7c5;
+@tmPurple: rgb(192, 202, 255);
+
 .page {
     display: flex;
     font-family: "Inconsolata", sans-serif;
@@ -15,8 +39,8 @@
 }
 
 .bottom-pane {
-    background-color: rgb(69, 69, 69);
-    border-top: 2px solid rgb(119, 139, 199);
+    background-color: @bottomBackground;
+    border-top: 2px solid @bottomBorderColor;
     display: flex;
     height: 100px;
 }
@@ -64,7 +88,7 @@
     width: 95%;
     height: 55px;
     border: none;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: @transparent;
 }
 
 .prompt-input:focus {
@@ -79,7 +103,7 @@
 }
 
 .entry {
-    border-left: 5px solid rgb(166, 214, 255);
+    border-left: 5px solid @entryBlue;
     clear: both;
     margin: 10px 0;
 }
@@ -89,7 +113,7 @@
 }
 
 .tip {
-    border-left: 5px solid rgba(255, 182, 111);
+    border-left: 5px solid @tipOrange;
 }
 
 .empty-tip {
@@ -99,22 +123,33 @@
 }
 
 .hole {
-    background-color: rgb(255, 222, 53);
+    background-color: @holeYellow;
 }
 
 .tm-name {
+    background-color: @tmPurple;
     padding-left: 5px;
 }
 
 .ty {
+    display: table-cell;
     padding-left: 5px;
 }
 
+.kw {
+    display: table-cell;
+}
+
 .anchor {
+    background-color: @anchorGreen;
 }
 
 .tm-name, .anchor, .empty-tip, .tip, .hole, .entry span {
     display: table-cell;
+}
+
+.entries-name {
+    font-size: 125%;
 }
 
 .left-pane {
@@ -124,23 +159,22 @@
 }
 
 .pane-bar {
-    /* vertically center the arrow */
     cursor: pointer;
     width: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* align-items: center; */
+    /* justify-content: center; */
 
     font-size: 150%;
-    background-color: rgb(61, 61, 61);
-    color: rgb(190, 190, 190);
+    background-color: @rightPaneBackground;
+    color: @tacticTemplateBorderColor;
 
     /* button styles */
     box-shadow: none;
     outline: 0;
     border-top: 0;
-    border-left: 3px solid rgb(103, 103, 103);
+    border-left: 3px solid @paneBarBorderColor;
     border-right: 0;
     border-bottom: 0;
 }
@@ -149,12 +183,17 @@
     color: white;
 }
 
+.pane-bar-icon {
+    margin-bottom: auto;
+    margin-top: auto;
+}
+
 .right-pane {
     padding: 20px;
-    background-color: rgb(61,61,61);
-    border-left: 3px solid rgb(103, 103, 103);
+    background-color: @rightPaneBackground;
+    border-left: 3px solid @rightPaneBorderColor;
     box-sizing: border-box;
-    color: rgb(218, 218, 218);
+    color: @rightPaneColor;
     display: table-cell;
     overflow: scroll;
     width: 300px;
@@ -186,7 +225,7 @@
 }
 
 .selected-pane {
-    border-bottom: 3px solid rgb(144, 188, 237);
+    border-bottom: 3px solid @selectedPaneBlueUnderline;
 }
 
 .working-on {
@@ -200,7 +239,8 @@
     left: 21px;
 
     background-color: white;
-    border: 1px solid rgb(230, 230, 230);
+    border: 1px solid @tacticHelpBorderColor;
+    box-shadow: 0 2px 5px @transparent3;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     font-size: 17px;
     position: absolute;
@@ -218,7 +258,7 @@
 }
 
 .autocomplete-focus {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: @transparent1;
 }
 
 .autocomplete-focus div {
@@ -230,8 +270,8 @@
     font-size: 14px;
 }
 .tactic-template {
-    background-color: rgb(247, 247, 247);
-    border-bottom: 1px solid rgb(190, 190, 190);
+    background-color: @tacticTemplateBackgroundColor;
+    border-bottom: 1px solid @tacticTemplateBorderColor;
     padding: 10px;
 }
 .tactic-example, .tactic-summary, .tactic-arg-help {

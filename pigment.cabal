@@ -1,16 +1,30 @@
 name:           pigment
 version:        0.1
-cabal-version:  >= 1.2
+cabal-version:  >= 1.6
 license:        MIT
-author:         The Epigram Posse
+license-file:   LICENSE
+category:       Language
+description:    Cooperative / Humane Programming
+author:         The Epigram Posse, Joel Burget
+maintainer:     joelburget@gmail.com
 synopsis:       Interactively program dependent types online.
 build-type:     Simple
 
+homepage: https://github.com/joelburget/pigment
+bug-reports: https://github.com/joelburget/pigment/issues
+
+source-repository head
+  type: git
+  location: https://github.com/joelburget/pigment.git
+
 executable pigment
   build-depends:
-      base == 4.6.*,
-      lens-family,
+      base >= 4.6,
+      lens-family == 1.2.0,
       mtl >= 2.2,
-      pretty
+      void >= 0.7,
+      pretty == 1.1.1.*,
+      haste-lib == 0.5,
+      react-haskell == 1.3.0.0
   main-is:        Main.lhs
   hs-source-dirs: src

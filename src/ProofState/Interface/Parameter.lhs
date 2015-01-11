@@ -16,14 +16,14 @@ Making Parameters
 > import ProofState.Interface.ProofKit
 > import Evidences.Tm
 
-|-abstraction
--------------
+`\`-abstraction
+---------------
 
 When working at solving a goal, we might be able to introduce an
 hypothesis. For instance, if the goal type is $\Nat \To \Nat \To
 \Nat$, we can introduce two hypotheses $\V{x}$ and $\V{y}$. Further, the
 type of the goal governs the kind of the parameter (a lambda, or a
-forall) and its type. This automation is implemented by |lambdaParam|
+forall) and its type. This automation is implemented by `lambdaParam`
 that lets you introduce a parameter above the cursor while working on a
 goal.
 
@@ -70,10 +70,10 @@ provided type under the given module.
 >           return ref
 >       _    -> throwError $ sErr "assumeParam: only possible for modules."
 
-|Pi|-abstraction
+`Pi`-abstraction
 ----------------
 
-When working at defining a type (an object in |Set|), we can freely
+When working at defining a type (an object in `Set`), we can freely
 introduce `Pi`-abstractions. This is precisely what `piParam` let us do.
 
 > piParam :: (String :<: INTM) -> ProofState REF
@@ -89,7 +89,7 @@ indeed a type, so it requires further attention.
 >     tip <- getDevTip
 >     case tip of
 >         Unknown (_ :=>: SET) ->
->           -- Working on a goal of type |Set|
+>           -- Working on a goal of type `Set`
 >           freshRef (s :<: ty) $ \ref -> do
 >             -- Simply introduce the parameter
 >             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm AnchNo
