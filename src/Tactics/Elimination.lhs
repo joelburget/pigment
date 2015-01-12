@@ -606,7 +606,7 @@ binders, constraints and term.
 >             let  (post', us)  = renameBinders [(p', x)] B0 post
 >                  cs'          = renameConstraints us B0 cs
 >                  tm'          = renameTM us tm
->             simplifyMotive (pre <+> post') (cs' <>> F0) tm'
+>             simplifyMotive (pre <> post') (cs' <>> F0) tm'
 
 If the conditions do not hold, we simply have to go past the constraint
 by turning it into a binder:

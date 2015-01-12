@@ -18,7 +18,7 @@ Cochon error prettier
 > import Distillation.Distiller
 > import Distillation.Moonshine
 
-Catching the gremlins before they leave |ProofState|
+Catching the gremlins before they leave `ProofState`
 ----------------------------------------------------
 
 > catchUnprettyErrors :: StackError DInTmRN -> ProofState a
@@ -45,7 +45,7 @@ Pretty-printing the stack trace
 > prettyStackError :: StackError DInTmRN -> Doc
 > prettyStackError (StackError e) =
 >     vcat $
->     fmap (text "Error:" <+>) $
+>     fmap (text "Error:" <>) $
 >     fmap hsep $
 >     fmap -- on the stack
 >     (fmap -- on the token

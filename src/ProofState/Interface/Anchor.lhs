@@ -47,10 +47,10 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 >                            | anchor' == anchor = B0 :< ref
 >           seekAnchor (scope :< EDEF ref _ _ dev _ Nothing) =
 >                         seekAnchor (devEntries dev)
->                         <+> seekAnchor scope
+>                         <> seekAnchor scope
 >           seekAnchor (scope :< EModule _ dev _) =
 >                         seekAnchor (devEntries dev)
->                         <+> seekAnchor scope
+>                         <> seekAnchor scope
 
 Find the entry corresponding to the given anchor:
 

@@ -16,7 +16,7 @@ Pretty-printing {#sec:DisplayLang.Reactify}
 > import DisplayLang.Lexer
 > import Evidences.Tm
 > import Kit.BwdFwd
-> import Kit.MissingLibrary hiding ((<+>))
+> import Kit.MissingLibrary hiding ((<>))
 
 > import Haste.Prim
 > import React hiding (key)
@@ -204,7 +204,7 @@ a $\lambda$-term is reached.
 > -- reactifyAllMore :: PureReact -> PureReact -> PureReact
 > -- reactifyAllMore bs d
 > --   | isEmpty bs  = wrapDoc d PiSize
-> --   | otherwise   = wrapDoc (bs <+> kword KwImp <+> d) PiSize
+> --   | otherwise   = wrapDoc (bs <> kword KwImp <> d) PiSize
 
 > reactifyAllMore :: PureReact -> PureReact -> PureReact
 > reactifyAllMore bs d = bs >> reactKword KwImp >> d
@@ -235,7 +235,7 @@ a $\lambda$-term is reached.
 > -- reactifySigmaDone :: PureReact -> PureReact -> PureReact
 > -- reactifySigmaDone s t
 > --   | isEmpty s  = wrapDoc t AppSize
-> --   | otherwise  = wrapDoc (kword KwSig <+> parens (s <+> t)) AppSize
+> --   | otherwise  = wrapDoc (kword KwSig <> parens (s <> t)) AppSize
 
 The `Elim` functor is straightforward.
 

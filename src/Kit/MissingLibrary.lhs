@@ -15,10 +15,6 @@ Renaming
 > trail :: (Applicative f, Foldable t, Monoid (f a)) => t a -> f a
 > trail = foldMap pure
 
-> -- TODO(joel) get rid of this
-> (<+>) :: Monoid x => x -> x -> x
-> (<+>) = mappend
-
 > (^$) :: (Traversable f, Applicative i) => (s -> i t) -> f s -> i (f t)
 > (^$) = traverse
 

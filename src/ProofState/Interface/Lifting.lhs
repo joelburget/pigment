@@ -42,7 +42,7 @@ entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
 >             INTM {- $\Gamma, \Delta, \nabla$ -} ->
 >             INTM {- $\Gamma$ -}
 > parBind delta nabla t = help delnab nabla (delnab -| t) where
->     delnab = delta <+> nabla
+>     delnab = delta <> nabla
 >     help B0                                        B0            t = t
 >     help (delta   :< EPARAM _ (x, _)  _ _ _)       B0            t =
 >         help delta B0 (L (x :. t))
