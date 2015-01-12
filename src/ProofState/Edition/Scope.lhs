@@ -30,7 +30,7 @@ cursor. These are all entries rightfully usable at the cursor's
 location.
 
 > inScope :: ProofContext -> Entries
-> inScope pc@PC{pcAboveCursor=Dev{devEntries = es}} = globalScope pc <+> es
+> inScope pc@PC{pcAboveCursor=Dev{devEntries = es}} = globalScope pc <> es
 
 The `definitionsToImpl` function lists the entries above the cursor that
 have been issued during elaboration of a programming problem

@@ -47,7 +47,7 @@ Pretty-printing the stack trace
 > prettyStackError :: StackError DInTmRN -> Doc
 > prettyStackError (StackError e) =
 >     vcat $
->     fmap (text "Error:" <+>) $
+>     fmap (text "Error:" <>) $
 >     fmap hsep $
 >     fmap -- on the stack
 >     (fmap -- on the token

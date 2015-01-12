@@ -60,7 +60,7 @@ flattens it to produce a list of entries.
 
 > flat :: Bwd (Entries, (String,Int)) -> Entries -> Entries
 > flat B0 es = es
-> flat (esus :< (es',_)) es = flat esus (es' <+> es)
+> flat (esus :< (es',_)) es = flat esus (es' <> es)
 
 The `flatNom` function produces a name by prepending its second argument
 with the name components from the backwards list.
@@ -373,15 +373,15 @@ and we do not need to worry about shared parameters. We simply call
 `nomTop` to find it.
 
 >                 (_, DECL) ->  do
->                     (x, ms) <- nomTop tar (mesus, mes <+> les)
+>                     (x, ms) <- nomTop tar (mesus, mes <> les)
 >                     return ([x], 0, ms)
 >                 (Just (xs, Just (top, nom, sp, es)), _) -> do
 >                     let  (top', nom', i, fsc) = matchUp (xs :<
 >                                                   (top, nom, sp, (F0, F0))) tas
 >                          mnom = take (length nom' - length nom) nom'
->                     (tn,  tms)  <- nomTop top' (mesus, mes <+> les)
+>                     (tn,  tms)  <- nomTop top' (mesus, mes <> les)
 >                     (an,  ams)  <- nomAbs mnom fsc
->                     (rn,  rms)  <- nomRel nom (es <+> les) Nothing
+>                     (rn,  rms)  <- nomRel nom (es <> les) Nothing
 >                     let ms = case  (null nom,  null mnom) of
 >                                    (True,      True)   -> tms
 >                                    (True,      False)  -> ams
@@ -389,7 +389,7 @@ and we do not need to worry about shared parameters. We simply call
 >                     return ((tn : an) ++ rn, i, ms)
 >                 (Just (xs, Nothing), FAKE) -> do
 >                     let (top', nom', i, fsc) = matchUp xs tas
->                     (tn, tms) <- nomTop top' (mesus, mes <+> les)
+>                     (tn, tms) <- nomTop top' (mesus, mes <> les)
 >                     (an, ams) <- nomAbs nom' fsc
 >                     return ((tn : an), i, if null nom' then tms else ams)
 

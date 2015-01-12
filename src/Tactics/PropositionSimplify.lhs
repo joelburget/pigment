@@ -165,8 +165,8 @@ pre-compose the proofs with `Fst` or `Snd` as appropriate.
 >         Simply pis pgs ph  -> forkSimplify delta q $
 >             \ qr -> case fst qr of
 >                 SimplyAbsurd qx    -> return $ SimplyAbsurd (qx . (:$ Snd))
->                 Simply qis qgs qh  -> return $ Simply (pis <+> qis)
->                     (fmap (. (:$ Fst)) pgs <+> (fmap (. (:$ Snd)) qgs))
+>                 Simply qis qgs qh  -> return $ Simply (pis <> qis)
+>                     (fmap (. (:$ Fst)) pgs <> (fmap (. (:$ Snd)) qgs))
 >                     (PAIR ph qh)
 
 To simplify $\ALL{x}{\prf{P}} L x$, we first try to simplify $P$:
@@ -205,7 +205,7 @@ simplifying the proposition to itself.
 >     antecedent x@(Simply pis pgs ph, simplifiedP) = do
 >         let q = l $$ A (evTm ph)
 >         guard (simplifiedP || not (q == ABSURD))
->         forkSimplify (delta <+> fmap fstEx pis) q (consequent x)
+>         forkSimplify (delta <> fmap fstEx pis) q (consequent x)
 >     consequent :: (Simplify, Bool) -> (Simplify, Bool) -> Simplifier Simplify
 
 If $Q$ is absurd, then the simplified proposition is an implication from
@@ -290,7 +290,7 @@ value.
 >             SimplyAbsurd prf  -> return $ SimplyAbsurd (prf . (:$ A n))
 >             Simply qs2 gs2 h2  -> do
 >                 let gs2' = fmap (. (:$ A n)) gs2
->                 process (qs1 <+> qs2) (gs1 <+> gs2') (hs1 :< h2)
+>                 process (qs1 <> qs2) (gs1 <> gs2') (hs1 :< h2)
 >                         (SU n :=>: SU nv) ts
 
 To simplify $\ALL{x}{S} L x$ where $S$ is not of the form $\prf{P}$, we

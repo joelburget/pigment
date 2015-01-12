@@ -514,7 +514,7 @@ development.
 >                 putBelowCursor F0
 >                 -- Set focus on this definition
 >                 let belowE = NF  $    visitedBelow
->                                  <+>  (Right (reverseEntry currentE) :> below)
+>                                  <>  (Right (reverseEntry currentE) :> below)
 >                 replaceLayer $ l  {  aboveEntries  =  aboveE
 >                                   ,  currentEntry  =  mkCurrentEntry e
 >                                   ,  belowEntries  =  belowE}
@@ -559,7 +559,7 @@ way.
 >                   -- Leave our current position
 >                   currentE <- getLeaveCurrent
 >                   -- Set focus on this definition
->                   let aboveE = (above :< currentE) <+> visitedAbove
+>                   let aboveE = (above :< currentE) <> visitedAbove
 >                   replaceLayer $ l  {  aboveEntries  =  aboveE
 >                                     ,  currentEntry  =  mkCurrentEntry e
 >                                     ,  belowEntries  =  NF belowNE }
