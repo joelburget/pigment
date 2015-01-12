@@ -25,7 +25,7 @@ News
 |News| represents possible changes to references. At the moment, it may
 be `GoodNews` (the reference has become more defined) or `NoNews` (even
 better from our perspective, as the reference has not changed). Note
-that `News` is ordered by increasing “niceness”.
+that `News` is ordered by increasing "niceness".
 
 When we come to implement functionality to remove definitions from the
 proof state, we will also need `BadNews` (the reference has changed but

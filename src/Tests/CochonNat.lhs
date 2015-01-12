@@ -38,4 +38,4 @@ You might want to try
 y -\> y) ( r -\> @  h r y -\> suc (h y))] : nat -\> nat -\> nat \< make
 x := (f two two) : nat \< elab x \< compile x foo
 
-and run the “foo” executable.
+and run the "foo" executable.

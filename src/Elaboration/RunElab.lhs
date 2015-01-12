@@ -350,8 +350,8 @@ We might have to go inside branches (essentially finite $\Pi$-types).
 >               seekIn (rs :< eRef) (switchOp :@ [e', NP eRef, p', N tm])
 >                   (p $$ A (pval eRef))
 
-We have reached a label! The question is then “is this the one we are
-looking for?” First we call on the matcher (see
+We have reached a label! The question is then "is this the one we are
+looking for?" First we call on the matcher (see
 section [subsec:Tactics.Matching]) to find values for the fresh
 references, then we generate a substitution from these values and apply
 it to the call term.

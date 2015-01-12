@@ -26,7 +26,7 @@ syntax. A `Scheme` is defined by: $$\begin{array}{rll}
 \end{array}$$
 
 Crucially, an implicit $\Pi$ hides a real type, not another scheme: we
-forbid “higher-schemes” for mental sanity reasons. For the sake of
+forbid "higher-schemes" for mental sanity reasons. For the sake of
 generality, we will parameterise over the exact representation of types:
 
 > data Scheme x  =  SchType x

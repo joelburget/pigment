@@ -55,7 +55,7 @@ Assumptions
 With `lambdaParam`, we can introduce parameters under a proof goal.
 However, when working under a module, we would like to be able to
 introduce hypothesis of some type. This corresponds to some kind of
-“Assume” mechanism, where we assume the existence of an object of the
+"Assume" mechanism, where we assume the existence of an object of the
 provided type under the given module.
 
 > assumeParam :: (String :<: (INTM :=>: TY)) -> ProofState REF

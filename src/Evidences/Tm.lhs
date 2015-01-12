@@ -132,7 +132,7 @@ Bruijn term with a new bound variable 0, and the old ones incremented.
 The `x` is just advice for display name selection.
 
 It is important to ensure that `body` computes to a fully evaluated
-value, otherwise say “good bye” to strong normalisation.
+value, otherwise say "good bye" to strong normalisation.
 
 In both cases, we represent constant functions with `K t`, equivalent of
 `\_ -> t`.
@@ -202,7 +202,7 @@ binding complicates the definition.
 
 The `Con` object is used and abused in many circumstances. However, all
 its usages share the same pattern: `Con` is used whenever we need to
-”pack” an object `t` into something else, to avoid ambiguities. For
+"pack" an object `t` into something else, to avoid ambiguities. For
 example, we use `Con` in the following case:
 
 $$\Rule{desc x (Mu x) \ni y}
@@ -398,7 +398,7 @@ write `typ :>: thing` to say that `typ` accepts the term `thing`,
 i.e. we can push the `typ` in the `thing`. Conversely, we write `thing
 :<: typ` to say that `thing` is of inferred type `typ`, i.e. we can pull
 the type `typ` out of the `thing`. Therefore, we can read `:>:` as
-“accepts” and `:<:` as “has inferred type”.
+"accepts" and `:<:` as "has inferred type".
 
 > data ty :>: tm = ty :>: tm  deriving (Show,Eq)
 > infix 4 :>:
@@ -418,7 +418,7 @@ the type `typ` out of the `thing`. Therefore, we can read `:>:` as
 > sndEx :: (a :<: b) -> b
 > sndEx (_ :<: x) = x
 
-As we are discussing syntactic sugar, we define the “reduces to” symbol:
+As we are discussing syntactic sugar, we define the "reduces to" symbol:
 
 > data t :=>: v = t :=>: v deriving (Show, Eq)
 > infix 5 :=>:
@@ -431,8 +431,8 @@ with the associated projections:
 > termOf :: (t :=>: v) -> t
 > termOf (t :=>: _) = t
 
-Intuitively, `t :=>: v` can be read as “the term `t` reduces to the
-value `v`”.
+Intuitively, `t :=>: v` can be read as "the term `t` reduces to the
+value `v`".
 
 We use `(??)` as a smart constructor for type ascriptions that omits
 them when the term is in fact neutral.
@@ -540,13 +540,13 @@ A `REF` can be of one of four kinds:
 >   |  FAKE
 >   deriving Show
 
-A hole will be in one of three “Buddy Holly” states:
+A hole will be in one of three "Buddy Holly" states:
 
 -   `Crying`: the elaboration strategy intended to solve the hole has
     gone wrong.
 
 -   `Waiting`: a solution strategy exists for the hole (including the
-    “strategy” of waiting for the user to solve it).
+    "strategy" of waiting for the user to solve it).
 
 -   `Hoping`: no solution strategy is assigned to the hole, so it will
     take any value that you can give it.

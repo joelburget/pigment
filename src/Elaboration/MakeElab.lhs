@@ -255,8 +255,8 @@ a function from a pair.
 >                     :=>: tmv $$ A (NP x $$ Fst) $$ A (NP x $$ Snd)
 > makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s
 
-We use underscores `DU` in elaboration to mean “figure this out
-yourself”, while question marks `DQ` require us to wait for a
+We use underscores `DU` in elaboration to mean "figure this out
+yourself", while question marks `DQ` require us to wait for a
 user-provided value.
 
 > makeElab' loc (ty :>: DU) = eHope

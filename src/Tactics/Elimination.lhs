@@ -44,8 +44,8 @@ external hypotheses, $\Delta$ is the list of internal hypotheses and $T$
 is the goal to solve. The difference between external and internal
 hypotheses is the following. External hypotheses scope over the whole
 problem, that is the current goal and later sub-goals. They are the
-“same” in all subgoals. On the other hand, internal hypotheses are
-consumed by the eliminator, hence are “different” in all subgoals.
+"same" in all subgoals. On the other hand, internal hypotheses are
+consumed by the eliminator, hence are "different" in all subgoals.
 
 We need a way to identify where to divide the context into $\Gamma$ and
 $\Delta$. One way to do that is to ask the user to pass in the reference
@@ -103,8 +103,6 @@ danger) of manually renaming those references.
 
 The way we actually proceed is the following. The trick consists of
 rebuilding the eliminator in the current development:
-
-<span>6cm</span>
 
 `[ `$(\Gamma)$` `$\rightarrow$\
 `  `$(\Delta)$` `$\rightarrow$\
@@ -240,7 +238,7 @@ constraints on the value that their arguments can take.
 
 Third try: the problem with inductive eliminators.
 
-This definition would work for the ”non-inductive” eliminators, that is
+This definition would work for the "non-inductive" eliminators, that is
 eliminators for which the method types are all of the following form:
 
 $$M P \equiv \Pi \Delta_S \rightarrow P \vec{s}$$
@@ -248,7 +246,7 @@ $$M P \equiv \Pi \Delta_S \rightarrow P \vec{s}$$
 These eliminators are simply doing a case analysis, without refering to
 an induction principle.
 
-However, for “inductive” eliminators, this motive is too weak. An
+However, for "inductive" eliminators, this motive is too weak. An
 eliminator will be inductive-ish if a method is using the motive
 anywhere else than as a target. If this is the case, we would like to be
 able to appeal to some induction principle: we need the freedom to apply
@@ -296,7 +294,7 @@ Fifth try: simplifying equations.
 
 Although the previous version would be morally correct, the user will
 appreciate if we simplify some trivial equations by directly
-instantiating them. Our motto being “the user is king” (don't quote me
+instantiating them. Our motto being "the user is king" (don't quote me
 on that), let's simplify.
 
 Hence, if we have $\xi_i : \Xi_i == t_i : T_i$ with $\Xi_i == T_i$ and
@@ -445,7 +443,7 @@ To symbolically remove a $\Pi$, we remove the corresponding `Binder`.
 When simplification ends, we simply introduce the $\Pi$s corresponding
 to the remaining binders.
 
-Let us implement the “search and symbolic removal” operation
+Let us implement the "search and symbolic removal" operation
 `lookupBinders`: we are given a reference, which may or may not belong
 to the binders. If the reference belongs to the binders, we return the
 binders before it, and the binders after it (which might depend on it);

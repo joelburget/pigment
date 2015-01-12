@@ -49,8 +49,8 @@ $$\begin{aligned}
 
 The rules [eqn:Evidences.Rules.elim-cstt] and
 [eqn:Evidences.Rules.elim-bind] are standard lambda calculus stories.
-Rule [eqn:Evidences.Rules.elim-con] is the expected “unpacking the
-packer” rule. Rule [eqn:Evidences.Rules.elim-stuck] is justified as
+Rule [eqn:Evidences.Rules.elim-con] is the expected "unpacking the
+packer" rule. Rule [eqn:Evidences.Rules.elim-stuck] is justified as
 follow: if no application rule applies, this means that we are stuck.
 This can happen if and only if the application is itself stuck. The
 stuckness therefore propagates to the whole elimination.
@@ -195,8 +195,8 @@ The renaming scheme is amended every time we instantiate a bound
 variable with a free variable. Starting from the right, each characte of
 the bound name is mapped to the corresponding character of the free
 name. The first character of the bound name is mapped to the whole
-remaining prefix. So instantiating `“xys”` with `“monks”` maps `'y'` to
-|“k”| and `'x'` to `“mon”`. The idea is that matching the target of an
+remaining prefix. So instantiating `"xys"` with `"monks"` maps `'y'` to
+|"k"| and `'x'` to `"mon"`. The idea is that matching the target of an
 eliminator in this way will give good names to the variables bound in
 its methods, if we're lucky and well prepared.
 

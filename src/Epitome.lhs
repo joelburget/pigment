@@ -13,9 +13,9 @@ title: An Epigram Implementation
 Introduction
 ============
 
-*”I believe that the time is ripe for significantly better documentation
+*"I believe that the time is ripe for significantly better documentation
 of programs, and that we can best achieve this by considering programs
-to be works of literature.”* Donald Knuth, 1992.
+to be works of literature."* Donald Knuth, 1992.
 
 This document is intended to realise this lofty aim for the
 implementation of Epigram. Although, given that it is being written by
@@ -34,8 +34,8 @@ In the beginning
 ----------------
 
 In the beginning there was Epigram 1. The Epigram 1 language was
-designed by Conor McBride and James McKinna in their weighty paper “The
-view from the left”@conor.james:viewfromleft. It descibes a programming
+designed by Conor McBride and James McKinna in their weighty paper "The
+view from the left"@conor.james:viewfromleft. It descibes a programming
 language with support for inductive families and dependent pattern
 matching. Notably pattern matching is an added extra to the type theory.
 Instead, pattern matching programs in the high level language are

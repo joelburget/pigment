@@ -24,7 +24,7 @@ implementer.
 Discharging entries in a term
 -----------------------------
 
-The “discharge into” operator `(-|)` takes a list of entries and a
+The "discharge into" operator `(-|)` takes a list of entries and a
 term, and changes the term so that parameters in the list of entries are
 represented by de Brujin indices. It makes key use of the `(-||)` mangler.
 

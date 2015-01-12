@@ -167,9 +167,9 @@ otherwise we hope for a proof of their equality.
 >         else  runElabHope WorkElsewhere (PRF (EQBLUE (ty :>: tmv') (ty :>: stv))) >>
 >               schedTrace "resume: WaitSolve failed!" >> resume tt prob
 
-\< else throwErrorS \< [ err “resume: hole” \< , errRef ref \< , err
-“has been solved with” \< , errTyVal (tmv' :\<: ty) \< , err “but I
-wanted to solve it with” \< , errTyVal (valueOf stt' :\<: ty) \< ]
+\< else throwErrorS \< [ err "resume: hole" \< , errRef ref \< , err
+"has been solved with" \< , errTyVal (tmv' :\<: ty) \< , err "but I
+wanted to solve it with" \< , errTyVal (valueOf stt' :\<: ty) \< ]
 
 > resume tt (ElabSchedule prob) = resume tt prob
 

@@ -78,7 +78,7 @@ Let us start with some gymnastic. We implement `prevStep` and `nextStep`
 that respectively looks for the previous and the next definition in the
 proof context. By *previous*, we mean contained in an entry directly
 above, or, if there is none, to the enclosing development. In other
-words, it has been defined “just *previously*”. The definition
+words, it has been defined "just *previously*". The definition
 transposes to the case of `nextStep`.
 
 > prevStep :: ProofState ()

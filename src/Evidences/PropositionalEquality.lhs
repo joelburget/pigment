@@ -300,4 +300,4 @@ Sadly we cannot do the following, because it is not safe to invent a
 name supply.
 
 \< partialEq s t \_ = bquote B0 s ns == bquote B0 t ns \< where ns = (B0
-:\< (“\_\_partialEq”, 0), 0) :: NameSupply
+:\< ("\_\_partialEq", 0), 0) :: NameSupply

@@ -97,7 +97,7 @@ there is one).
 
 The `resolveHere` command resolves a relative name to a reference, a
 spine of shared parameters to which it should be applied, and possibly a
-scheme. If the name ends with “./”, the scheme will be discarded, so all
+scheme. If the name ends with "./", the scheme will be discarded, so all
 parameters can be provided explicitly.
 
 > resolveHere :: RelName -> ProofState ResolveResult

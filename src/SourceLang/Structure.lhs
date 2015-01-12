@@ -16,7 +16,7 @@ invariants on term direction, but the resulting simplification is
 probably worth it.
 
 A *document* is a list of *constructions* (using slightly different
-terminology because we use “development” to mean something else in the
+terminology because we use "development" to mean something else in the
 proof state).
 
 > type EpiDoc t = [Construction t]
