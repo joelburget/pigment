@@ -45,7 +45,6 @@ take place. Consider the following development presented in
 Figure [fig:ProofState.Edition.Navigation.devpmt]: we have that the
 development `B` is in focus, with `y` above the cursor and `z` below it.
 
-<span>3.3cm</span>
 
     [
       A [
@@ -78,7 +77,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-example]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -111,7 +109,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-cursorUp]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -144,7 +141,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-cursordown]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -177,7 +173,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-goin]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -210,7 +205,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-goout]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -243,7 +237,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-gooutbelow]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -276,7 +269,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-goup]
 
-<span>3.3cm</span>
 
     [
       A [

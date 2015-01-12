@@ -105,13 +105,13 @@ Elaborating `DInTm`s
 --------------------
 
 We use the `Elab` language to describe how to elaborate a display term
-to produce an evidence term. The `makeElab` and |makeElabInfer|
-functions read a display term and use the capabilities of the |Elab|
+to produce an evidence term. The `makeElab` and `makeElabInfer`
+functions read a display term and use the capabilities of the `Elab`
 monad to produce a corresponding evidence term.
 
 When part of the display syntax needs to be elaborated as a subproblem,
 we call `subElab` or `subElabInfer` rather than `makeElab` or
-|makeElabInfer| to ensure that elaboration does not take place at the
+`makeElabInfer` to ensure that elaboration does not take place at the
 top level. This means that if the subproblem needs to modify the proof
 state (for example, to introduce a $\lambda$) it will create a new
 definition to work in. It also ensures that the subproblem can terminate
@@ -119,8 +119,10 @@ with the `eElab` instruction, providing a syntactic representation.
 
 > subElab :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
 > subElab loc (ty :>: tm) = eCompute (ty :>: makeElab loc tm)
+
 > subElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
 > subElabInfer loc tm = eCompute (sigSetVAL :>: makeElabInfer loc tm)
+
 > inductionOpLabMethodType = L $ "l" :. [.l.
 >                    L $ "d" :. [.d.
 >                    L $ "P" :. [._P.
@@ -129,7 +131,7 @@ with the `eElab` instruction, providing a syntactic representation.
 >                        ARR (N $ boxOp :@ [NV d, MU (|(NV l)|) (NV d), NV _P, NV x])
 >                            (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
 
-Since we frequently pattern-match on the goal type when elaborating |In|
+Since we frequently pattern-match on the goal type when elaborating `In`
 terms, we abstract it out. Thus `makeElab'` actually implements
 elaboration.
 
@@ -156,7 +158,7 @@ not work in general.
 >     makeElab' loc (MU l d :>: DCON (foldr DPAIR DVOID (DTAG s : xs)))
 
 The following case exists only for backwards compatibility (gah). It
-allows functions on inductive types to be constructed by writing |con|
+allows functions on inductive types to be constructed by writing `con`
 in the right places. It can disappear as soon as someone bothers to
 update the test suite.
 
@@ -227,8 +229,8 @@ tag in the enumeration to determine the appropriate index.
 >     d' :=>: _ <- eQuote d
 >     makeElab' loc (NU l d :>: DCOIT (DTIN d') sty f s)
 
-As a bit of syntactic sugar, we elaborate `con` as `COMPOSITE` and |[x]|
-as |CLASS x|.
+As a bit of syntactic sugar, we elaborate `con` as `COMPOSITE` and `[x]`
+as `CLASS x`.
 
 > makeElab' loc (MONAD d x :>: DCON t) =
 >     makeElab' loc (MONAD d x :>: DCOMPOSITE t)
@@ -262,21 +264,13 @@ user-provided value.
 
 Elaborating a canonical term with canonical type is a job for `canTy`.
 
-canTy :: (Alternative m, MonadError (StackError t) m) =\> (TY :\>: t -\>
-m (s :=\>: VAL)) -\> (Can VAL :\>: Can t) -\> m (Can (s :=\>: VAL))
-
 > makeElab' loc (C ty :>: DC tm) = do
 >     v <- canTy (subElab loc) (ty :>: tm)
 >     return $ (C $ fmap termOf v) :=>: (C $ fmap valueOf v)
 
 There are a few possibilities for elaborating $\lambda$-abstractions. If
-both the range and term are constants, then we simply |makeElab|
+both the range and term are constants, then we simply `makeElab`
 underneath. This avoids creating some trivial children.
-
-subElab :: Loc -\> (TY :\>: DInTmRN) -\> Elab (INTM :=\>: VAL) makeElab'
-:: Loc -\> (TY :\>: DInTmRN) -\> Elab (INTM :=\>: VAL) DK :: DInTm p
-x -\> DScope p x – constant K :: Tm <span>In, p</span> x -\> Scope p x –
-constant pattern LK t = L (K t) – Lambda (with constant)
 
 > makeElab' loc (PI s (L (K t)) :>: DL (DK dtm)) = do
 >     tm :=>: tmv <- subElab loc (t :>: dtm)
@@ -327,13 +321,13 @@ Elaborating `DExTm`s
 --------------------
 
 The `makeElabInfer` command is to `infer` in
-subsection [subsec:Evidences.TypeChecker.type-inference] as |makeElab|
+subsection [subsec:Evidences.TypeChecker.type-inference] as `makeElab`
 is to `check`. It elaborates the display term and infers its type to
 produce a type-term pair in the evidence language.
 
 The result of `makeElabInfer` is of type $\SIGMA{\V{X}}{\Set}{X}$, which
-we can represent as an evidence term or value (|sigSetTM| or
-|sigSetVAL|, respectively).
+we can represent as an evidence term or value (`sigSetTM` or
+`sigSetVAL`, respectively).
 
 > sigSetVAL :: Tm {In,p} x
 > sigSetVAL = SIGMA SET (idVAL "ssv")
@@ -373,7 +367,7 @@ function at the given type.
 
 Now we can implement `makeElabInfer`. We use `makeElabInferHead` to
 elaborate the head of the neutral term, then call `handleArgs` or
-|handleSchemeArgs| to process the spine of eliminators.
+`handleSchemeArgs` to process the spine of eliminators.
 
 > makeElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
 > makeElabInfer loc (t ::$ ss) = do
@@ -394,7 +388,7 @@ handle insertion of implicit arguments.
 >         EXTM :=>: VAL :<: TY -> DSPINE -> Elab (INTM :=>: VAL)
 
 If the scheme is just a type, then we call on the non-scheme
-|handleArgs|.
+`handleArgs`.
 
 >     handleSchemeArgs es (SchType _) ttt as = handleArgs ttt as
 
@@ -474,7 +468,7 @@ returned type.
 >         handleArgs (t :$ Call l' :=>: v $$ Call l :<: ty) as
 
 For all other eliminators, assuming the type is canonical we can use
-|elimTy|.
+`elimTy`.
 
 >     handleArgs (t :=>: v :<: C cty) (a : as) = do
 >         (a', ty') <- elimTy (subElab loc) (v :<: cty) a

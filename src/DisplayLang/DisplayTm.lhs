@@ -16,7 +16,7 @@ Display Terms
 Structure of Display Terms
 --------------------------
 
-Display terms mirror and extend the |Tm <span>d, TT</span>| terms of the
+Display terms mirror and extend the `Tm {d, TT}` terms of the
 Evidence language. While the Evidence language is the language of the
 type-checker, the Display language is the one of humans in an
 interactive development. Hence, in addition to the terms from the
@@ -40,9 +40,9 @@ However, we have removed the following:
 -   Operators, replaced by a parameter containing the corresponding
     reference in `primitives` (Section [sec:Evidences.Operators])
 
-Because of a limitation of GHC |deriving Traversable|, we define two
+Because of a limitation of GHC `deriving Traversable`, we define two
 mutually recursive data types instead of taking a `Dir` parameter.
-Thanks to this hack, we can use |deriving Traversable|.
+Thanks to this hack, we can use `deriving Traversable`.
 
 > data DInTm :: * -> * -> * where
 >     DL     :: DScope p x       ->  DInTm p x -- \(\lambda\)
