@@ -61,15 +61,13 @@ the *motive* of the elimination, $\Xi$ the *indices*, $\vec{m}$ the
 
 We will define `elim` this way:
 
-\< elim :: Maybe REF -\> (TY :\>: INTM) -\> ProofState () \< elim comma
-eliminator = (...)
+< elim :: Maybe REF -> (TY :>: INTM) -> ProofState ()
+< elim comma eliminator = (...)
 
 Analyzing the eliminator {#subsec:Tactics.Elimination.analysis}
 ------------------------
 
 Presented as a development, `elim` is called in the context
-
-<span>5cm</span>
 
 `[ `$(\Gamma)$` `$\rightarrow$\
 `  `$(\Delta)$` `$\rightarrow$\
@@ -414,7 +412,7 @@ Representing the context as `Binder`s
 As we have seen, simplifying the motive will involve considering the
 non-parametric context $\Delta_1$ and, as we go along, remove some of
 its components. We will work with $\Delta_1$ in the following form. A
-|Binder| is a reference with the `INTM` representation of its type, and
+`Binder` is a reference with the `INTM` representation of its type, and
 a corresponding argument term that will be used when applying the
 motive.
 
@@ -446,7 +444,7 @@ When simplification ends, we simply introduce the $\Pi$s corresponding
 to the remaining binders.
 
 Let us implement the “search and symbolic removal” operation
-|lookupBinders|: we are given a reference, which may or may not belong
+`lookupBinders`: we are given a reference, which may or may not belong
 to the binders. If the reference belongs to the binders, we return the
 binders before it, and the binders after it (which might depend on it);
 if not, we return `Nothing`.
@@ -503,7 +501,7 @@ We will be renaming references when we solve constraints, but we need to
 keep track of the original terms (without renaming) for use when
 constructing arguments to the eliminator (the second component of the
 binders, which are in the scope of the original context). We use the
-type |a : \>: b| for a pair in which `a` is not updated and `b` is
+type `a :~>: b` for a pair in which `a` is not updated and `b` is
 updated.
 
 > data a :~>: b = a :~>: b
@@ -569,8 +567,8 @@ variable, because if so we might be able to simplify its constraint.
 >     introMotive (tFresh $$ A (NP ref)) (tTarg $$ A (evTm x)) xs (cs :< c) n
 > introMotive SET SET [] cs n = return (cs, n)
 
-If |PI (SIGMA d r) t| is the type of functions whose domain is a
-sigma-type, then |currySigma d r t| is the curried function type that
+If `PI (SIGMA d r) t` is the type of functions whose domain is a
+sigma-type, then `currySigma d r t` is the curried function type that
 takes the projections separately.
 
 > currySigma :: VAL -> VAL -> VAL -> VAL

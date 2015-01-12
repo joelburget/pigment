@@ -29,7 +29,7 @@ Section [sec:ProofState.Edition.ProofContext], the `ProofContext`. At
 this stage, we have a notion of *movement* in the proof context.
 
 However, we had to postpone the development of navigation commands to
-this stage, where we have the ability to *edit* the |ProofState|
+this stage, where we have the ability to *edit* the `ProofState`
 (Section [sec:ProofState.Edition.ProofState]). Indeed, when moving down,
 we might hit a news bulletin. A news bulletin is a lazy edition process.
 In order to move, we have to propogate the news, hence effectively
@@ -39,13 +39,12 @@ One-step navigation
 -------------------
 
 We shall now develop this navigation kit, comfortably installed in the
-|ProofState| monad. First, some vocabulary. The *focus* is the current
+`ProofState` monad. First, some vocabulary. The *focus* is the current
 development; it contains a *cursor* which is the point at which changes
 take place. Consider the following development presented in
 Figure [fig:ProofState.Edition.Navigation.devpmt]: we have that the
 development `B` is in focus, with `y` above the cursor and `z` below it.
 
-<span>3.3cm</span>
 
     [
       A [
@@ -78,7 +77,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-example]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -111,7 +109,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-cursorUp]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -144,7 +141,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-cursordown]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -177,7 +173,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-goin]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -210,7 +205,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-goout]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -243,7 +237,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-gooutbelow]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -276,7 +269,6 @@ development `B` is in focus, with `y` above the cursor and `z` below it.
 
 [fig:navigation-devpmt-goup]
 
-<span>3.3cm</span>
 
     [
       A [
@@ -315,9 +307,9 @@ The navigation commands are the following:
 
 -   Current entry navigation:
 
-    -   |putEnterCurrent|
+    -   `putEnterCurrent`
 
-    -   |leaveEnterCurrent|
+    -   `leaveEnterCurrent`
 
 -   Cursor navigation:
 
@@ -402,7 +394,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 >     case above of
 >         aboveE :< e -> do
 >             below <- getBelowCursor
->             -- Move `e` from `above` to |below|
+>             -- Move `e` from `above` to `below`
 >             putEntriesAbove aboveE
 >             putBelowCursor $ e :> below
 >             return ()
@@ -417,7 +409,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 >     below <- getBelowCursor
 >     case below of
 >         e :> belowE -> do
->             -- Move `e` from `below` to |above|
+>             -- Move `e` from `below` to `above`
 >             putEntriesAbove (above :< e)
 >             putBelowCursor belowE
 >             return ()

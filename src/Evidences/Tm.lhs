@@ -80,16 +80,16 @@ skip the following.
 
 [Neutral terms and Operators]
 
-In the world of values, i.e. `Tm <span>In, VV</span> p`, the neutral
+In the world of values, i.e. `Tm {In, VV} p`, the neutral
 terms are exactly the `N t` terms. Enforcing this invariant requires
 some caution in the way we deal with operators and how we turn them into
 values, so this statement relies on the hypothesis that the evaluation
 of operators is correct: it is not enforced by Haskell type-system.
 
-To prove that statement, we first show that any `Tm <span>In, VV</span>
+To prove that statement, we first show that any `Tm {In, VV}
 p` which is not a `N t` is not a neutral term. This is obvious as we are
 left with lambda and canonicals, which cannot be stuck. Then, we have to
-prove that a `N t` in `Tm <span>In, VV</span> p` form is a stuck term.
+prove that a `N t` in `Tm {In, VV} p` form is a stuck term.
 We do so by case analysis on the term `t` inside the `N`:
 
 -   Typing and variables will not let you get values, so a neutral value

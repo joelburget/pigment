@@ -72,16 +72,14 @@ with the name components from the backwards list.
 Resolving relative names to references
 --------------------------------------
 
-We need to resolve local longnames as references. We resolve
-<span>*f.x.y.z*</span> by searching outwards for <span>*f*</span>, then
-inwards for a child <span>*x*</span>, <span>*x*</span>'s child
-<span>*y*</span>, <span>*y*</span>'s child <span>*z*</span>. References
-are fully $\lambda$-lifted, but as <span>*f*</span>'s parameters are
-held in common with the point of reference, we automatically supply
-them.
+We need to resolve local longnames as references. We resolve `f.x.y.z` by
+searching outwards for `f`, then inwards for a child `x`, `x`'s child `y`,
+`y`'s child `z`. References are fully $\lambda$-lifted, but as `f`'s
+parameters are held in common with the point of reference, we automatically
+supply them.
 
 When in the process of resolving a relative name, we keep track of a
-|ResolveState|.
+`ResolveState`.
 
 > type ResolveState =  (  Either FScopeContext Entries
 >                      ,  [REF]
@@ -120,18 +118,16 @@ discarding any shared parameters it should be applied to.
 > resolveDiscard :: RelName -> ProofState REF
 > resolveDiscard x = resolveHere x >>= (\ (r, _, _) -> return r)
 
-There are four stages relating to whether we are looking up or down
-(<span>*\^*</span> or <span>*\_*</span>) and whether or nor we are
-navigating the part of the proof state which is on the way back to (or
-from) the root of the tree to the cursor position.
+There are four stages relating to whether we are looking up or down (`^` or
+`_`) and whether or nor we are navigating the part of the proof state which is
+on the way back to (or from) the root of the tree to the cursor position.
 
-We start off in `resolve`, which calls `lookUp` (for <span>*\^*</span>)
-or `lookDown` (for <span>*\_*</span>) to find the first name element.
-Then `lookFor` and `lookFor'` recursively call each other and `lookDown`
-until we find the target name, in which case we stop, or we reach the
-local part of the context, in which case `lookLocal` is called. Finally,
-`lookLocal` calls `huntLocal` with an appropriate list of entries, so it
-looks up or down until it finds the target name.
+We start off in `resolve`, which calls `lookUp` (for `^`) or `lookDown` (for
+`_`) to find the first name element.  Then `lookFor` and `lookFor'` recursively
+call each other and `lookDown` until we find the target name, in which case we
+stop, or we reach the local part of the context, in which case `lookLocal` is
+called. Finally, `lookLocal` calls `huntLocal` with an appropriate list of
+entries, so it looks up or down until it finds the target name.
 
 The `resolve` function starts the name resolution process: if the name
 is a primitive we are done, otherwise it invokes `lookUp` or `lookDown`
@@ -231,8 +227,8 @@ to lifted references which can be seen locally. For example, here
       g => t : T
       ] => g : T
 
-@g@ is actually represented as @f.g f.x@, but should be displayed as,
-er, <span>*g*</span>.
+`g` is actually represented as `f.g f.x`, but should be displayed as,
+er, `g`.
 
 In more detail
 
@@ -247,24 +243,23 @@ human friendly, (hah!) relative offset form. Consider:
          ] => ? : S
        ]
 
-How should we print the computer name @X~0~.f~0~.g~0~@ ? A first
-approximation would be <span>*g*</span> since this is the bit that
-differs from the name of the development we are in (@X~0~.f~0~@). And,
-indeed we will always have to print this bit of the name. But there's
-more to it, here we are assuming that we are applying @g@ to the same
-spine of parameters as the parameters we are currently working under,
-which isn't always true. We need to be able to refer to, for instance,
-<span>*f.g*</span>, which would have type |(b : B) -\> T|. So we must
-really resolve names with their spines compared to the current name and
-parameters spine. So:
+How should we print the computer name `X_0.f_0.g_0` ? A first approximation
+would be `g` since this is the bit that differs from the name of the
+development we are in (`X_0.f_0`). And, indeed we will always have to print
+this bit of the name. But there's more to it, here we are assuming that we are
+applying `g` to the same spine of parameters as the parameters we are currently
+working under, which isn't always true. We need to be able to refer to, for
+instance, `f.g`, which would have type `(b : B) -> T`. So we must really
+resolve names with their spines compared to the current name and parameters
+spine. So:
 
--   @X~0~.f~0~.g~0~ a b@ resoves to <span>*g*</span>
+-   `X_0.f_0.g_0 a b` resoves to `g`
 
--   @X~0~.f~0~.g~0~ a@ resolves to <span>*f.g*</span>
+-   `X_0.f_0.g_0 a` resolves to `f.g`
 
--   @X~0~.f~0~.g~0~ a c@ resolves to <span>*f.g c*</span>
+-   `X_0.f_0.g_0 a c` resolves to `f.g c`
 
--   @X~0~.f~0~.g~0~@ resoves to <span>*X.f.g*</span>
+-   `X_0.f_0.g_0` resoves to `X.f.g`
 
 The job of naming boils down to unwinding the current name and spine
 until both are a prefix of the name we want to print, and its spine. We
@@ -281,30 +276,27 @@ So, far, so simple, but there are complications:
          ] => ? : S
        ]
 
-We never want the current development to be in scope, but with this
-naming scheme, we need to be very careful since <span>*f.g*</span> is a
-valid name. Thus we must call @X~0~.f~0~@ by the name <span>*f1*</span>
-even though @X~0~.f~1~@ is not in scope.
+We never want the current development to be in scope, but with this naming
+scheme, we need to be very careful since `f.g` is a valid name. Thus we must
+call `X_0.f_0` by the name `f1` even though `X_0.f_1` is not in scope.
 
 2) Counting back to the top
 
-When we start looking for the first part of the name we need to print,
-we can't possibly know what it is, so we can't count how many times it
-is shadowed (without writing a circular program) This requires us to
-make two passes through the proof state. If we name @X~0~.f~0~ a@ in the
-2nd example above, we must 1st work out the first part of the name is
-<span>*f*</span> and then go back out work out how many
-<span>*f*</span>'s we jump over to get there.
+When we start looking for the first part of the name we need to print, we can't
+possibly know what it is, so we can't count how many times it is shadowed
+(without writing a circular program) This requires us to make two passes
+through the proof state. If we name `X_0.f_0 a` in the 2nd example above, we
+must 1st work out the first part of the name is `f` and then go back out work
+out how many `f`'s we jump over to get there.
 
 3) Counting down from the top
 
-Consider naming @X~0~.f~1~.g~0~@ with no spine (again in the 2nd example
-dev) how do we render @f~1~@. It's my contention that or reference point
-cannot be where the cursor is, since we've escaped that context, instead
-we should name it absolutely, counting down from @X@, so we should print
-<span>*X.f\_1.g*</span>. Note that <span>*f\_1*</span> as a relative
-name component has a different meaning from @f~1~@ as an absolute name
-component, and in:
+Consider naming `X_0.f_1.g_0` with no spine (again in the 2nd example dev)
+how do we render `f_1`. It's my contention that or reference point cannot be
+where the cursor is, since we've escaped that context, instead we should name
+it absolutely, counting down from `X`, so we should print `X.f_1.g`. Note that
+`f_1` as a relative name component has a different meaning from `f_1` as an
+absolute name component, and in:
 
     X [ \ a : A
        f [] => ? : U
@@ -315,7 +307,7 @@ component, and in:
          ] => ? : S
        ]
 
-@X~0~.f~2~.g~0~@ also resolves to <span>*X.f\_1.g*</span>.
+`X_0.f_2.g_0` also resolves to `X.f_1.g`.
 
 We can split the name into 3 parts:
 
@@ -342,11 +334,10 @@ Final problem! Consider this dev:
          ] => ? : S
        ]
 
-How should we render @X~0~.f~0~.g~0~ a@?. Clearly there is some sharing
-of the spine with the current position, but we must still print
-<span>*f.g a*</span> since <span>*f.g*</span> should have type |(a : A)
-(b : B) -\> T|. Thus we must only compare spines when we unwind a
-section from the name of the current development.
+How should we render `X_0.f_0.g_0 a`?. Clearly there is some sharing of the
+spine with the current position, but we must still print `f.g a` since `f.g`
+should have type `(a : A) (b : B) -> T`. Thus we must only compare spines when
+we unwind a section from the name of the current development.
 
 Here goes...
 
@@ -360,7 +351,7 @@ there is one).
 >                   -> Entries -> (RelName, Int, Maybe (Scheme INTM))
 > unresolve tar rk tas msc@(mesus, mes) les =
 
-We first check if the name refers to an element of the |primitives|
+We first check if the name refers to an element of the `primitives`
 list:
 
 >     case find ((tar ==) . refName . snd) primitives of
@@ -369,7 +360,7 @@ If so, we return its short name with no shared parameters and no scheme.
 
 >         Just (s, _)  -> ([(s, Rel 0)], 0, Nothing)
 
-Otherwise, we actually have to do some work. We work in the |Maybe|
+Otherwise, we actually have to do some work. We work in the `Maybe`
 monad and `failNom` will be called if unresolution fails.
 
 >         Nothing      -> maybe (failNom tar, 0, Nothing) id $

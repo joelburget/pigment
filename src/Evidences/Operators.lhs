@@ -602,19 +602,6 @@ any auxiliary code.
 >       "p" :<: (iinductionOpMethodType _I _D _P) :-: \p ->
 >       Target (_P $$ A (PAIR i v))
 
-\< callOp = Op \< <span> opName = “call” \< , opArity = 3 \< , opTy =
-callOpTy \< , opRun = callOpRun \< , opSimp = callOpSimp \< </span>
-where \< callOpTy chev [ty, lbl, tm] = do \< tytv@(ty :=\>: tyv) \<-
-chev (SET :\>: ty) \< lbltv@(lbl :=\>: lblv) \<- chev (tytv :\>: lbl) \<
-tmtv@(tm :=\>: tmv) \<- chev (LABEL lbltv tytv :\>: tm) \< return
-([tytv, lbltv, tmtv], tyv)
-
-\< callOpRun :: [VAL] -\> Either NEU VAL \< callOpRun [ty, lbl, LRET t]
-= Right t \< callOpRun [ty, lbl, N t] = Left t
-
-\< callOpSimp :: Alternative m =\> [VAL] -\> NameSupply -\> m NEU \<
-callOpSimp \_ \_ = empty
-
 > argsOp = Op
 >   {  opName = "args"
 >   ,  opArity = 1
