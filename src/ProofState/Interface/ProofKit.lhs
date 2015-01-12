@@ -5,7 +5,9 @@ The `ProofState` Kit {#sec:ProofState.Interface.ProofKit}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
 > module ProofState.Interface.ProofKit where
+
 > import Control.Monad.Except
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import NameSupply.NameSupply
@@ -15,9 +17,9 @@ The `ProofState` Kit {#sec:ProofState.Interface.ProofKit}
 > import ProofState.Edition.GetSet
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
+> import Evidences.Eval
 > import Evidences.Tm
 > import Evidences.TypeChecker
-> import Evidences.BetaQuotation
 
 The proof state lives on a rich substrate of operations, inherited from
 the `ProofContext` as well as the `ProofState` monad. In this module, we

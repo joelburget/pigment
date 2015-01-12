@@ -24,7 +24,6 @@ The distiller {#sec:Distillation.Distiller}
 > import Evidences.Tm
 > import Evidences.Mangler
 > import Evidences.TypeChecker
-> import Evidences.BetaQuotation
 > import Evidences.Eval
 > import Evidences.Operators
 > import Evidences.DefinitionalEquality

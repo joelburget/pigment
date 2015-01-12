@@ -23,7 +23,6 @@ Propositional Simplification {#sec:Tactics.PropositionSimplify}
 > import Evidences.Mangler
 > import Evidences.Eval
 > import Evidences.Operators
-> import Evidences.BetaQuotation
 > import Evidences.DefinitionalEquality
 > import Evidences.Utilities
 > import ProofState.Edition.ProofState

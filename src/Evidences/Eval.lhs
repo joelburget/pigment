@@ -10,11 +10,14 @@ Evaluation
 
 > import Control.Applicative
 > import Data.Foldable
+> import Data.Traversable
 > import Data.Maybe
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Evidences.Tm
 > import Evidences.Operators
+> import NameSupply.NameSupplier
 
 In this section, we implement an interpreter for Epigram. As one would
 expect, it will become handy during type-checking. We assume that
@@ -110,7 +113,7 @@ Evaluation under binders needs to distinguish two cases:
 
 -   the binder ignores its argument, or
 
--   a variable `x` is defined and bound in a term |t|
+-   a variable `x` is defined and bound in a term `t`
 
 In the first case, we can trivially go under the binder and innocently
 evaluate. In the second case, we turn the binding – a term – into a
@@ -132,7 +135,7 @@ Evaluator
 
 Putting the above pieces together, plus some machinery, we are finally
 able to implement an evaluator. On a technical note, we are working in
-the Applicative |-\> ENV| and use She's notation for writing
+the Applicative `-> ENV and use She's notation for writing
 applicatives.
 
 The evaluator is typed as follow: provided with a term and a variable
@@ -179,7 +182,7 @@ Here's a bit of a dirty trick which sometimes results in better name
 choices. We firstly need the notion of a textual substitution from
 Tm.lhs.
 
-\< type TXTSUB = [(Char, String)] – renaming plan
+< type TXTSUB = [(Char, String)] – renaming plan
 
 That's a plan for mapping characters to strings. We apply them to
 strings like this, with no change to characters which aren't mapped.
@@ -192,11 +195,11 @@ variable name advice string that we encounter as we go: the deed is done
 in `body`, above.
 
 The renaming scheme is amended every time we instantiate a bound
-variable with a free variable. Starting from the right, each characte of
+variable with a free variable. Starting from the right, each character of
 the bound name is mapped to the corresponding character of the free
 name. The first character of the bound name is mapped to the whole
 remaining prefix. So instantiating `“xys”` with `“monks”` maps `'y'` to
-|“k”| and `'x'` to `“mon”`. The idea is that matching the target of an
+`“k”` and `'x'` to `“mon”`. The idea is that matching the target of an
 eliminator in this way will give good names to the variables bound in
 its methods, if we're lucky and well prepared.
 
@@ -215,10 +218,68 @@ Util
 
 The `sumlike` function determines whether a value representing a
 description is a sum or a sigma from an enumerate. If so, it returns
-|Just| the enumeration and a function from the enumeration to
+`Just` the enumeration and a function from the enumeration to
 descriptions.
 
 > sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
 > sumlike (SUMD e b)            = Just (e, (b $$) . A)
 > sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
 > sumlike _                     = Nothing
+
+
+$\beta$-Quotation
+=================
+
+As we are in the quotation business, let us define $\beta$-quotation,
+ie. `bquote`. Unlike `quote`, `bquote` does not perform
+$\eta$-expansion, it just brings the term in $\beta$-normal form.
+Therefore, the code is much more simpler than `quote`, although the idea
+is the same.
+
+It is important to note that we are in a `NameSupplier` and we don't
+require a specially crafted `NameSupply` (unlike `quote` and `quop`).
+Because of that, we have to maintain the variables we have generated and
+to which De Bruijn index they correspond. This is the role of the
+backward list of references. Note also that we let the user provide an
+initial environment of references: this is useful to discharge a bunch
+of assumptions inside a term.
+
+Apart from that, this is a standard $\beta$-quotation:
+
+> bquote :: NameSupplier m => Bwd REF -> Tm {d,VV} REF -> m (Tm {d,TT} REF)
+
+If binded by one of our lambda, we bind the free variables to the right
+lambda. We don't do anything otherwise.
+
+> bquote  refs (P x) =
+>     case x `elemIndex` refs of
+>       Just i -> pure $ V i
+>       Nothing -> pure $ P x
+
+Constant lambdas are painlessly structural.
+
+> bquote refs (L (K t))   = (| LK (bquote refs t) |)
+
+When we see a syntactic lambda value, we are very happy, because
+quotation is just renaming.
+
+> -- bquote refs (L (x :. t)) = (| (refs -|| L (x :. t)) |)
+
+For all other lambdas, it's the usual story: we create a fresh variable,
+evaluate the applied term, quote the result, and bring everyone under a
+binder.
+
+> bquote refs f@(L _) =
+>     (|(L . (x :.))
+>       (freshRef  (x :<: error "bquote: type undefined")
+>                  (\x -> bquote  (refs :< x)
+>                                 (f $$ A (pval x))))|)
+>     where x = fortran f
+
+For the other constructors, we simply go through and do as much damage
+as we can. Simple, easy.
+
+> bquote refs (C c)       = (| C (traverse (bquote refs) c) |)
+> bquote refs (N n)       = (| N (bquote refs n) |)
+> bquote refs (n :$ v)    = (| (bquote refs n) :$ (traverse (bquote refs) v) |)
+> bquote refs (op :@ vs)  = (| (op :@) (traverse (bquote refs) vs) |)

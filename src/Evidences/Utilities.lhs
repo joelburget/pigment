@@ -13,15 +13,14 @@ Utilities
 > import NameSupply.NameSupplier
 > import Evidences.Tm
 > import Evidences.Mangler
-> import Evidences.BetaQuotation
 > import Evidences.Eval
 > import Kit.BwdFwd
 
 From `EXTM` to `INTM` and back again
 ------------------------------------
 
-Various commands yield an |EXTM :=\>: VAL|, and we sometimes need to
-convert this to an |INTM :=\>: VAL|.
+Various commands yield an `EXTM :=>: VAL`, and we sometimes need to
+convert this to an `INTM :=>: VAL`.
 
 > neutralise :: Monad m => (EXTM :=>: VAL) -> m (INTM :=>: VAL)
 > neutralise (n :=>: v) = return $ N n :=>: v

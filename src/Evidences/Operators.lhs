@@ -13,13 +13,8 @@ Operators and primitives {#sec:Evidences.Operators}
 > import Evidences.OperatorDSL
 > import {-# SOURCE #-} Evidences.DefinitionalEquality
 > import {-# SOURCE #-} Evidences.PropositionalEquality
-> import {-# SOURCE #-} Evidences.BetaQuotation
 > import NameSupply.NameSupply
 > import NameSupply.NameSupplier
-
-In this section, we weave some She aspects. In particular, we bring
-inside @Rules.lhs@ the `operators` defined by feature files, along with
-any auxiliary code.
 
 > operators :: [Op]
 > operators = [

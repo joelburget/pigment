@@ -13,7 +13,6 @@ Using the `Elab` language {#sec:Elaboration.MakeElab}
 > import Evidences.TypeChecker
 > import Evidences.Eval
 > import Evidences.Operators
-> import Evidences.BetaQuotation
 > import Evidences.DefinitionalEquality
 > import Evidences.Utilities
 > import ProofState.Edition.ProofState
