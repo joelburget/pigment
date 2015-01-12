@@ -9,7 +9,9 @@ Navigating in the Proof Context {#sec:Proofstate.Edition.Navigation}
 
 > import Control.Applicative
 > import Control.Monad.Except
+> import Data.Monoid
 > import Data.Traversable
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import ProofState.Structure.Developments

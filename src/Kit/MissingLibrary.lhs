@@ -214,6 +214,7 @@ understood `untilA`, it won't take you long to understand `whileA`.
 > untilA :: Alternative f => f () -> f a -> f a
 > g `untilA` test = g *> try
 >     where try = test <|> (g *> try)
+
 > whileA :: Alternative f => f () -> f a -> f a
 > g `whileA` test = try
 >     where try = test <|> (g *> try)
