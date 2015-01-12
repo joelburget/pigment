@@ -71,29 +71,8 @@ import Haste.Prim
 import Lens.Family2
 import React
 
-
 instance Reactive EntityAnchor where
-    reactify x = span_ [ class_ "anchor" ] $ reactify' x where
-        reactify' AnchConc = "conc"
-        reactify' AnchConNames = "constructor names"
-        reactify' (AnchConName str) = fromString str
-        reactify' AnchConDescs = "constructor descriptions"
-        reactify' AnchDataDesc = "data description"
-        reactify' AnchDataTy = "data type"
-        reactify' AnchInd = "ind"
-        reactify' AnchIndTy = "ind type"
-        reactify' (AnchTy str) = fromString str
-        reactify' (AnchParTy str) = fromString str
-        reactify' AnchRefine = "refine"
-        reactify' AnchMotive = "motive"
-        reactify' AnchMethod = "method"
-        reactify' AnchSig = "sig"
-        reactify' AnchHope = "hope"
-        reactify' AnchElabInferFully = "elab infer fully"
-        reactify' AnchTau = "tau"
-        reactify' (AnchStr str) = fromString str
-        reactify' AnchNo = "AnchNo"
-
+    reactify x = span_ [ class_ "anchor" ] $ fromString $ show x
 
 page :: InteractionState -> InteractionReact
 page state = div_ [ class_ "page" ] $ do
@@ -285,11 +264,12 @@ renderReact = do
             putEntriesAbove es
             putBelowCursor cs
             return $ div_ [ class_ "proof-state" ] $ do
-                div_ [ class_ "entries-name" ] $ do
-                    "Entries name: "
-                    fromString $
-                        let nm = showName me
-                        in if nm == "" then "(no name)" else nm
+                -- div_ [ class_ "entries-name" ] $ do
+                --     "Entries name: "
+                --     fromString $
+                --         case me of
+                --             [] -> "(no name)"
+                --             _ -> fst $ last me
                 div_ [ class_ "proof-state-inner" ] $ d'
                 tip
 

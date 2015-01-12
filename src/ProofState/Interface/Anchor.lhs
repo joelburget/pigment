@@ -28,7 +28,7 @@ Anchor resolution
 
 To cope with shadowing, we will need some form of `RelativeAnchor`:
 
-\< type RelativeAnchor = (Anchor, Int)
+< type RelativeAnchor = (Anchor, Int)
 
 With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 
@@ -48,7 +48,7 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 >           seekAnchor (scope :< EDEF ref _ _ dev _ Nothing) =
 >                         seekAnchor (devEntries dev)
 >                         <+> seekAnchor scope
->           seekAnchor (scope :< EModule _ dev) =
+>           seekAnchor (scope :< EModule _ dev _) =
 >                         seekAnchor (devEntries dev)
 >                         <+> seekAnchor scope
 

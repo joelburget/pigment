@@ -19,6 +19,8 @@ Making Definitions
 > import Evidences.Tm
 > import Evidences.Eval
 
+> import Debug.Trace
+
 The `make` command adds a named goal of the given type above the cursor.
 The meat is actually in `makeKinded`, below.
 
@@ -47,8 +49,8 @@ such as `Hoping` or `Crying`.
 >                         ])
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
->     goalName <- pickName "Goal" name
->     let n = mkName nsupply goalName
+>     goalName <- pickName "Goal: " name
+>     let n = trace ("pickName for " ++ show name ++ " = " ++ goalName) $ mkName nsupply goalName
 >     -- Make a reference for the goal, with a lambda-lifted type
 >     inScope <- getInScope
 >     let  liftedTy  =  liftType inScope ty

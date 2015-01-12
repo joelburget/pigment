@@ -29,24 +29,25 @@ a current entry:
 
 > mkCurrentEntry :: Traversable f => Entry f -> CurrentEntry
 > mkCurrentEntry (EDEF ref xn dkind _ ty a)  = CDefinition dkind ref xn ty a
-> mkCurrentEntry (EModule n _)               = CModule n
+> mkCurrentEntry (EModule n _ _)             = CModule n
 
 From Above to Below, and back
 
 The `aboveEntries` and `belowEntries` give a certain twist to the visit
 of a `Layer`: on one hand, `aboveEntries` go `Bwd`; on the other hand,
-|belowEntries| go `Fwd` with news. Therefore, when moving the cursor, we
+`belowEntries` go `Fwd` with news. Therefore, when moving the cursor, we
 sometimes need to change the structure that contains entries.
 
-We define such ‘rearranging' function by mutual induction on |Entry f|
-and |Dev f|:
+We define such ‘rearranging' function by mutual induction on `Entry f`
+and `Dev f`:
 
 > rearrangeEntry ::  (Traversable f, Traversable g) =>
 >                    (forall a. f a -> g a) -> Entry f -> Entry g
 > rearrangeEntry h (EPARAM ref xn k ty a)    =  EPARAM ref xn k ty a
 > rearrangeEntry h (EDEF ref xn k dev ty a)  =
 >     EDEF ref xn k (rearrangeDev h dev) ty a
-> rearrangeEntry h (EModule n d)             =  EModule n (rearrangeDev h d)
+> rearrangeEntry h (EModule n d e)           =  EModule n (rearrangeDev h d) e
+
 > rearrangeDev :: (Traversable f, Traversable g) =>
 >     (forall a. f a -> g a) -> Dev f -> Dev g
 > rearrangeDev h d@(Dev {devEntries=xs}) = d{devEntries=rearrangeEntries h xs}
@@ -60,6 +61,7 @@ variation thereof:
 
 > reverseEntry :: Entry Bwd -> Entry NewsyFwd
 > reverseEntry = rearrangeEntry (NF . (fmap Right) . (<>> F0))
+
 > reverseEntries :: Fwd (Entry Bwd) -> NewsyEntries
 > reverseEntries es = NF $ fmap (Right . reverseEntry) es
 

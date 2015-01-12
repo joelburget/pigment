@@ -60,8 +60,9 @@ us extract such spine from a list of entries:
 > paramREFs :: Entries -> [REF]
 > paramREFs = foldMap param where
 >   param :: Entry Bwd -> [REF]
->   param  (EPARAM r _ _ _ _)   = [r]
+>   param  (EPARAM r _ _ _ _) = [r]
 >   param  _                  = []
+
 > paramSpine :: Entries -> Spine {p} REF
 > paramSpine = fmap (A . N . P) . paramREFs
 

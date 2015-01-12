@@ -25,7 +25,7 @@ Developments can be of different nature: this is indicated by the `Tip`.
 A development also keeps a `NameSupply` at hand, for namespace handling
 purposes. Initially we had the following definition:
 
-\< type Dev = (Bwd Entry, Tip, NameSupply)
+< type Dev = (Bwd Entry, Tip, NameSupply)
 
 but generalised this to allow other `Traversable` functors `f` in place
 of `Bwd`, and to store a `SuspendState`, giving:
@@ -39,12 +39,12 @@ of `Bwd`, and to store a `SuspendState`, giving:
 > deriving instance Show (Dev Fwd)
 > deriving instance Show (Dev Bwd)
 
-|Tip|
+`Tip`
 
 There are two kinds of Developments available: modules and definitions.
 A `Module` is a development that cannot have a type or value, but simply
 packs up some other developments. A development holding a definition can
-be in one of three states: an `Unknown` of the given type, a |Suspended|
+be in one of three states: an `Unknown` of the given type, a `Suspended`
 elaboration problem for producing a value of the type (see
 section [sec:Elaboration.ElabMonad]), or a `Defined` term of the type.
 Note that the type is presented as both a term and a value for
@@ -95,7 +95,27 @@ either be:
 >     | AnchStr String
 >     -- "Nothing"
 >     | AnchNo
->     deriving Show
+
+> instance Show EntityAnchor where
+>     show AnchConc = "conc"
+>     show AnchConNames = "constructor names"
+>     show (AnchConName str) = str
+>     show AnchConDescs = "constructor descriptions"
+>     show AnchDataDesc = "data description"
+>     show AnchDataTy = "data type"
+>     show AnchInd = "ind"
+>     show AnchIndTy = "ind type"
+>     show (AnchTy str) = str
+>     show (AnchParTy str) = str
+>     show AnchRefine = "refine"
+>     show AnchMotive = "motive"
+>     show AnchMethod = "method"
+>     show AnchSig = "sig"
+>     show AnchHope = "hope"
+>     show AnchElabInferFully = "elab infer fully"
+>     show AnchTau = "tau"
+>     show (AnchStr str) = str
+>     show AnchNo = "AnchNo"
 
 > data Entry f
 >   =  EEntity  { ref       :: REF
@@ -104,7 +124,8 @@ either be:
 >               , term      :: INTM
 >               , anchor    :: EntityAnchor }
 >   |  EModule  { name      :: Name
->               , dev       :: (Dev f) }
+>               , dev       :: (Dev f)
+>               , expanded  :: Bool }
 
 In the Module case, we have already tied the knot, by defining `M` with
 a sub-development. In the Entity case, we give yet another choice of
@@ -119,12 +140,12 @@ is `Bwd`:
 > instance Show (Entry Bwd) where
 >     show (EEntity ref xn e t a) = intercalate " "
 >         ["E", show ref, show xn, show e, show t, show a]
->     show (EModule n d) = intercalate " " ["M", show n, show d]
+>     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
 
 > instance Show (Entry Fwd) where
 >     show (EEntity ref xn e t a) = intercalate " "
 >         ["E", show ref, show xn, show e, show t, show a]
->     show (EModule n d) = intercalate " " ["M", show n, show d]
+>     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
 
 [Name caching]
 
@@ -182,7 +203,7 @@ enclosing development.
 >       deriving (Show, Eq)
 
 The link between a type and the kind of parameter allowed is defined by
-|lambdable|:
+`lambdable`:
 
 > lambdable :: TY -> Maybe (ParamKind, TY, VAL -> TY)
 > lambdable (PI s t)         = Just (ParamLam, s, (t $$) . A)

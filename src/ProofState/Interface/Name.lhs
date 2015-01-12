@@ -39,7 +39,7 @@ XXX(joel)
 > pickName "" s = pickName "x" s
 > pickName prefix AnchNo = pickName' prefix
 > pickName prefix (AnchStr "") = pickName' prefix
-> pickName _ s   = return (show s)
+> pickName prefix s   = return $ prefix ++ show s
 
 > pickName' :: String -> ProofState String
 > pickName' prefix = do

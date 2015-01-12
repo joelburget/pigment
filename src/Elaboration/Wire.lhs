@@ -1,7 +1,6 @@
 Wire Service {#sec:Elaboration.Wire}
 ============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes, PatternGuards, PatternSynonyms #-}
 
@@ -32,7 +31,7 @@ Updating a reference
 Here we describe how to handle updates to references in the proof state,
 caused by refinement commands like `give`. The idea is to deal with
 updates lazily, to avoid unnecessary traversals of the proof tree. When
-|updateRef| is called to announce a changed reference (that the current
+`updateRef` is called to announce a changed reference (that the current
 development has already processed), it simply inserts a news bulletin
 below the current development.
 
@@ -143,13 +142,13 @@ more news.
 
 If the entry is a definition, it must be the current entry of the
 current cursor position (i.e. the entry should come from
-|getLeaveCurrent|).
+`getLeaveCurrent`).
 
 > tellEntry :: NewsBulletin -> Entry Bwd -> ProofState (NewsBulletin, Entry Bwd)
 
 Modules carry no type information, so they are easy:
 
-> tellEntry news (EModule n d) = return (news, EModule n d)
+> tellEntry news mod@EModule{} = return (news, mod)
 
 The update of a parameter consists in:
 
@@ -233,7 +232,7 @@ ignore the attached `ElabHope` process.
 >         where tellEProb :: NewsBulletin -> EProb -> EProb
 >               tellEProb news = fmap (getLatest news)
 
-To update a closed definition (|Defined|), we must:
+To update a closed definition (`Defined`), we must:
 
 1.  update the tip type;
 
@@ -253,9 +252,9 @@ To update a closed definition (|Defined|), we must:
 
 For paranoia purposes, the following test might be helpful:
 
-\< mc \<- withNSupply (inCheck \$ check (tyv' :\>: tmL')) \< mc
-‘catchEither‘ unlines [“tellEntry ” ++ showName name ++ “:”, \< show
-tmL', “is not of type”, show ty' ]
+<     mc <- withNSupply (inCheck $ check (tyv' :>: tmL'))
+<     mc `catchEither` unlines ["tellEntry " ++ showName name ++ ":",
+<                                 show tmL', "is not of type", show ty' ]
 
 >     let ref = name := DEFN (evTm tmL') :<: tyv'
 >     return  (addNews (ref, GoodNews {-min (min n n') n''-}) news,

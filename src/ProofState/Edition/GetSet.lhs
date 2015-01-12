@@ -112,7 +112,7 @@ Getting in the `CurrentEntry`
 >     scope <- getGlobalScope
 >     return (applySpine ref scope)
 
-Getting in the `HOLE`\
+Getting in the `HOLE`
 
 > getHoleGoal :: ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do

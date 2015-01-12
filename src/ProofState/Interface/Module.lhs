@@ -30,13 +30,14 @@ This is mostly used at the programming level. For making modules, we use
 > makeModule s = do
 >     nsupply <- getDevNSupply
 >     let n = mkName nsupply s
->     -- Insert a new entry above, the empty module |s|
+>     -- Insert a new entry above, the empty module `s`
 >     let dev = Dev {  devEntries       =  B0
 >                   ,  devTip           =  Module
 >                   ,  devNSupply       =  freshNSpace nsupply s
 >                   ,  devSuspendState  =  SuspendNone }
->     putEntryAbove $ EModule  {  name   =  n
->                              ,  dev    =  dev}
+>     putEntryAbove $ EModule  {  name     =  n
+>                              ,  dev      =  dev
+>                              ,  expanded = True }
 >     putDevNSupply $ freshName nsupply
 >     return n
 
@@ -72,6 +73,6 @@ dangling references is high.
 >     goOutBelow
 >     mm <- removeEntryAbove
 >     case mm of
->         Just (EModule _ _) -> return t
+>         Just (EModule _ _ _) -> return t
 >         _ -> throwError . sErr $ "draftModule: drafty " ++ name
 >                                  ++ " did not end up in the right place!"

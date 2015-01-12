@@ -22,13 +22,15 @@ Tm
 > import Kit.BwdFwd
 > import NameSupply.NameSupply
 
+> import Debug.Trace
+
 Syntax of Terms and Values
 --------------------------
 
 We distinguish `In`Terms (into which we push types) and `Ex`Terms (from
 which we pull types).
 
-> data Dir    = In | Ex
+> data Dir = In | Ex
 
 This is the by-now traditional bidirectional
 type-checking @turner:bidirectional_tc story: there are *checkable*
@@ -624,14 +626,14 @@ It is sometimes useful to construct the identity function:
 
 > idVAL :: String -> Tm {In,p} x
 > idVAL x   = L (x :. (N (V 0)))
+
 > idTM :: String -> INTM
 > idTM = idVAL
 
 > ($#) :: Int -> [Int] -> InTm x
 > f $# xs = N (foldl (\ g x -> g :$ A (NV x)) (V f) xs)
 
-The aptly named `\$\#\#` operator applies an `ExTm` to a list of
-`InTm`s.
+The aptly named `$##` operator applies an `ExTm` to a list of `InTm`s.
 
 > ($##) :: (Functor t, Foldable t) => ExTm x -> t (InTm x) -> ExTm x
 > f $## xs = foldl (\ v w -> v :$ A w) f xs
@@ -640,14 +642,26 @@ Sensible name advice is a hard problem. The `fortran` function tries to
 extract a useful name from a binder.
 
 > fortran :: Tm {In, p} x -> String
-> fortran (L (x :. _))  | not (null x) = x
-> fortran (L (H _ x _)) | not (null x) = x
-> fortran _ = "xf" -- XXX(joel) this is unacceptable
+> fortran x = let str = fortran' x in trace ("fortran: " ++ str) str
+> fortran' :: Tm {In, p} x -> String
+> fortran' (L (x :. _))  | not (null x) = x
+> fortran' (L (H _ x _)) | not (null x) = x
+> fortran' _ = "xf" -- XXX(joel) this is unacceptable
+
+fortran :: Tm {In, p} x -> String
+fortran (L (x :. _))  | not (null x) = x
+fortran (L (H _ x _)) | not (null x) = x
+fortran _ = "xf" -- XXX(joel) this is unacceptable
 
 Similarly, it is useful to extract name advice from a `REF`.
 
 > refNameAdvice :: REF -> String
-> refNameAdvice = fst . last . refName
+> refNameAdvice r = let str = refNameAdvice' r in trace ("refNameAdvice: " ++ str) str
+> refNameAdvice' :: REF -> String
+> refNameAdvice' = fst . last . refName
+
+refNameAdvice :: REF -> String
+refNameAdvice = fst . last . refName
 
 If we have a bunch of references we can make them into a spine:
 

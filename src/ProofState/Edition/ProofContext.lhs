@@ -87,7 +87,7 @@ piece of kit to deal with this global context.
 
 > instance Show (Entry NewsyFwd) where
 >     show (EEntity ref xn e t a) = intercalate " " ["E", show ref, show xn, show e, show t, show a]
->     show (EModule n d) = intercalate " " ["M", show n, show d]
+>     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
 
 > instance Show (Entity NewsyFwd) where
 >     show (Parameter k) = "Param " ++ show k
