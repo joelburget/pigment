@@ -1,7 +1,6 @@
 Anchor resolution
 =================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
 > module ProofState.Interface.Anchor where
@@ -39,7 +38,7 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 >     B0 -> return $ Nothing
 >     _ :< ref -> return $ Just ref
 >     where seekAnchor :: Entries -> Bwd REF
->           seekAnchor B0 = (|)
+>           seekAnchor B0 = empty
 >           seekAnchor (scope :< EPARAM ref _ _ _ (Just anchor') _)
 >                            | anchor' == anchor = B0 :< ref
 >           seekAnchor (scope :< EPARAM ref _ _ _ Nothing _) = seekAnchor scope

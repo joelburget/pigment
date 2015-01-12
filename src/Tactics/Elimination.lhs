@@ -13,7 +13,9 @@ Elimination with a Motive
 > import Control.Monad.Except
 > import Data.Foldable
 > import Data.List hiding (elem)
+> import Data.Monoid
 > import Data.Traversable
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Kit.Trace

@@ -7,12 +7,13 @@ Lambda-lifting and discharging {#sec:ProofState.Interface.Lifting}
 > module ProofState.Interface.Lifting where
 
 > import Data.Foldable
+> import Data.Monoid
+
 > import Evidences.Tm
 > import Evidences.Mangler
 > import ProofState.Edition.Scope
 > import ProofState.Structure.Developments
 > import Kit.BwdFwd
-> import Kit.MissingLibrary
 
 In the following, we define 4 useful functions manipulating terms in a
 context of entries. These functions provide the basic toolkit for

@@ -10,7 +10,9 @@ Resolving and unresolving names {#sec:ProofState.Interface.NameResolution}
 > import Control.Monad.State
 > import Data.Foldable hiding (elem, find)
 > import Data.List
+> import Data.Monoid
 > import Data.Traversable
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import NameSupply.NameSupply

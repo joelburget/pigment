@@ -8,12 +8,13 @@ Scope management
 > module ProofState.Edition.Scope where
 
 > import Data.Foldable
+> import Data.Monoid
+
 > import ProofState.Structure.Developments
 > import ProofState.Edition.ProofContext
 > import Evidences.Tm
 > import Evidences.Eval
 > import Kit.BwdFwd
-> import Kit.MissingLibrary
 
 Extracting scopes as entries
 ----------------------------

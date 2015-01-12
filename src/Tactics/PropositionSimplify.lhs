@@ -12,6 +12,8 @@ Propositional Simplification {#sec:Tactics.PropositionSimplify}
 > import Control.Monad.Except
 > import Control.Monad.Reader
 > import Data.Traversable
+> import Data.Monoid
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Kit.Trace
