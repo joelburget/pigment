@@ -752,6 +752,7 @@ Finally we move back to the bottom of the original development:
 >     goOut
 >     goOut
 >     return liftedMethods
+
 > toMotive :: ProofState ()
 > toMotive = goIn >> goIn >> goTop
 

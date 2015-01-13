@@ -32,36 +32,6 @@ functions.
 >                | PairArgs CochonArg CochonArg
 >                deriving Show
 
-`ShowForCmd` is used in the interaction log to display approximately what the
-user typed.
-
-class ShowForCmd a where
-    showForCmd :: a -> String
-
-showForCmd :: DInTmRN -> String
-showForCmd (DL scope)
-showForCmd (DC can) =
-showForCmd (DN exTm) =
-showForCmd (DQ name) =
-showForCmd DU =
-showForCmd (DT wrap) =
-showForCmd (DAnchor name inTm) =
-showForCmd (DEqBlue exTm exTm) =
-showForCmd (DIMu label inTm) =
-showForCmd (DTag name inTms) =
-
-instance Show CochonArg where
-    show (StrArg str) = str
-    show (InArg intm) = show intm
-    show (ExArg extm) = show extm
-    show (SchemeArg scm) = show scm
-    show (Optional arg) = show arg
-    show NoCochonArg = ""
-    show (ListArgs args) = unwords (map show args)
-    show (LeftArg arg) = show arg
-    show (RightArg arg) = show arg
-    show (PairArgs arg1 arg2) = show arg1 ++ " " ++ show arg2
-
 Tokenizer combinators
 ---------------------
 
