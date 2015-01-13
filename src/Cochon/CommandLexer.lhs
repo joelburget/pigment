@@ -1,10 +1,11 @@
 Cochon Command Lexer
 ====================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
 >     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+
 > module Cochon.CommandLexer where
+
 > import Control.Applicative
 > import Kit.Parsley
 > import DisplayLang.Lexer
@@ -36,42 +37,41 @@ Tokenizer combinators
 ---------------------
 
 > tokenExTm :: Parsley Token CochonArg
-> tokenExTm = (| ExArg pDExTm |)
+> tokenExTm = ExArg <$> pDExTm
 
 > tokenAscription :: Parsley Token CochonArg
-> tokenAscription = (| ExArg pAscriptionTC |)
+> tokenAscription = ExArg <$> pAscriptionTC
 
 > tokenInTm :: Parsley Token CochonArg
-> tokenInTm = (| InArg pDInTm |)
+> tokenInTm = InArg <$> pDInTm
 
 > tokenAppInTm :: Parsley Token CochonArg
-> tokenAppInTm = (| InArg (sizedDInTm AppSize) |)
+> tokenAppInTm = InArg <$> sizedDInTm AppSize
 
 > tokenName :: Parsley Token CochonArg
-> tokenName = (| (ExArg . (::$ []) . DP) nameParse |)
+> tokenName = (ExArg . (::$ []) . DP) <$> nameParse
 
 > tokenString :: Parsley Token CochonArg
-> tokenString = (| StrArg ident |)
+> tokenString = StrArg <$> ident
 
 > tokenScheme :: Parsley Token CochonArg
-> tokenScheme = (| SchemeArg pScheme |)
+> tokenScheme = SchemeArg <$> pScheme
 
 > tokenOption :: Parsley Token CochonArg -> Parsley Token CochonArg
-> tokenOption p = (| Optional (bracket Square p)
->                  | NoCochonArg |)
+> tokenOption p = Optional <$> (bracket Square p) <|> pure NoCochonArg
 
 > tokenEither :: Parsley Token CochonArg -> Parsley Token CochonArg
 >                                        -> Parsley Token CochonArg
-> tokenEither p q = (| LeftArg p | RightArg q |)
+> tokenEither p q = (LeftArg <$> p) <|> (RightArg <$> q)
 
 > tokenListArgs :: Parsley Token CochonArg
 >               -> Parsley Token ()
 >               -> Parsley Token CochonArg
-> tokenListArgs p sep = (| ListArgs (pSep sep p) |)
+> tokenListArgs p sep = ListArgs <$> (pSep sep p)
 
 > tokenPairArgs :: Parsley Token CochonArg -> Parsley Token () ->
 >                  Parsley Token CochonArg -> Parsley Token CochonArg
-> tokenPairArgs p sep q = (| PairArgs p (% sep %) q |)
+> tokenPairArgs p sep q = PairArgs <$> p <* sep *> q
 
 Printers
 --------
