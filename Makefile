@@ -25,4 +25,5 @@ src/css/index.css: src/css/index.less
 # 	mkdir docs
 # 	cd src; rsync -R $(wildcard **.lhs) ../docs; cd -
 # 	cd docs; find . -name "*.lhs" -exec rename -v 's/\.lhs$$/\.md/i' "{}" ";"; cd -
-# 	mkdocs
+# 	cd docs; ls | xargs sed -i '' -e's/^> /    /'; cd -
+# 	mkdocs build
