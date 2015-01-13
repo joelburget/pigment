@@ -55,10 +55,10 @@ entries below the cursor are (lazily) notified of the good news.
 >             above <- getEntriesAbove
 >             let tmv = evTm $ parBind globalScope above tm
 >             -- Update the entry as Defined, together with its definition
->             CDefinition kind (name := _ :<: ty) xn tyTm a <- getCurrentEntry
+>             CDefinition kind (name := _ :<: ty) xn tyTm anchor expanded <- getCurrentEntry
 >             let ref = name := DEFN tmv :<: ty
 >             putDevTip $ Defined tm $ tipTyTm :=>: tipTy
->             putCurrentEntry $ CDefinition kind ref xn tyTm a
+>             putCurrentEntry $ CDefinition kind ref xn tyTm anchor expanded
 >             -- Propagate the good news
 >             updateRef ref
 >             -- Return the reference
@@ -90,7 +90,7 @@ are therefore left to `give` this definition. This is the role of the
 > done = do
 >   devEntry <- getEntryAbove
 >   case devEntry of
->     EDEF ref _ _ _ _ _ -> do
+>     EDEF ref _ _ _ _ _ _ -> do
 >         -- The entry above is indeed a definition
 >         giveOutBelow $ NP ref
 >     _ -> do
@@ -106,7 +106,7 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 > apply = do
 >   devEntry <- getEntryAbove
 >   case devEntry of
->     EDEF f@(_ := _ :<: (PI _S _T)) _ _ _ _ _ -> do
+>     EDEF f@(_ := _ :<: (PI _S _T)) _ _ _ _ _ _ -> do
 >         -- The entry above is a proof of |Pi S T|
 >         -- Ask for a proof of |S|
 >         _STm <- bquoteHere _S

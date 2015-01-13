@@ -224,7 +224,7 @@ elabData nom pars scs = do
       let (allowingTy, allowedBy) = mkAllowed pars'
           anchor = ANCHOR (TAG nom) allowingTy allowedBy
       (dty :=>: dtyv) <- giveOutBelow (MU (Just anchor) (N d))
-      EEntity r _ _ _ _ <- getEntryAbove
+      EEntity r _ _ _ _ _ <- getEntryAbove
 
       -- make the constructors
       for cs $ makeCon (N e) (N (P r $:$ oldaus))

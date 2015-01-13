@@ -58,7 +58,7 @@ has finished.
 Accessing the type-checker
 --------------------------
 
-First off, we can access the $\beta$-normalizer: the |bquoteHere|
+First off, we can access the $\beta$-normalizer: the `bquoteHere`
 command $\beta$-quotes a term using the local name supply.
 
 > bquoteHere :: Tm {d, VV} REF -> ProofStateT e (Tm {d, TT} REF)
@@ -92,7 +92,7 @@ location, which may be useful for paranoia purposes.
 > validateHere = do
 >     m <- getCurrentEntry
 >     case m of
->         CDefinition _ (_ := DEFN tm :<: ty) _ _ _ -> do
+>         CDefinition _ (_ := DEFN tm :<: ty) _ _ _ _ -> do
 >             ty' <- bquoteHere ty
 >             checkHere (SET :>: ty')
 >                 `pushError`  (StackError
@@ -108,7 +108,7 @@ location, which may be useful for paranoia purposes.
 >                     , errTyVal (tm :<: ty)
 >                     ])
 >             return ()
->         CDefinition _ (_ := HOLE _ :<: ty) _ _ _ -> do
+>         CDefinition _ (_ := HOLE _ :<: ty) _ _ _ _ -> do
 >             ty' <- bquoteHere ty
 >             checkHere (SET :>: ty')
 >                 `pushError`  (StackError

@@ -58,8 +58,8 @@ Definition and Module data-types defined in
 Section [subsubsec:ProofState.Structure.Developments.entry].
 
 > data CurrentEntry
->     = CDefinition DefKind REF (String, Int) INTM EntityAnchor
->     | CModule Name
+>     = CDefinition DefKind REF (String, Int) INTM EntityAnchor Bool
+>     | CModule Name Bool
 >     deriving Show
 
 One would expect the `belowEntries` to be an `Entries`, just as the
@@ -86,7 +86,8 @@ piece of kit to deal with this global context.
 >     show (NF ls) = show ls
 
 > instance Show (Entry NewsyFwd) where
->     show (EEntity ref xn e t a) = intercalate " " ["E", show ref, show xn, show e, show t, show a]
+>     show (EEntity ref xn e t a expanded) = intercalate " "
+>         ["E", show ref, show xn, show e, show t, show a, show expanded]
 >     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
 
 > instance Show (Entity NewsyFwd) where
@@ -94,11 +95,7 @@ piece of kit to deal with this global context.
 >     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
 
 > instance Traversable NewsyFwd where
->     traverse g (NF x) = -- NF <$> traverse (traverse g) x
->         let a = traverse g
->             b = traverse a
->             c = b x
->         in NF <$> c
+>     traverse g (NF x) = NF <$> traverse (traverse g) x
 
 The Zipper: `ProofContext`
 --------------------------

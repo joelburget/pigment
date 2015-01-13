@@ -23,7 +23,7 @@ the spine of shared parameters.
 > lookupName name = do
 >     inScope <- getInScope
 >     case find ((name ==) . entryName) inScope of
->       Just (EEntity ref _ _ _ _)  -> return $ Just $ applySpine ref inScope
+>       Just (EEntity ref _ _ _ _ _)  -> return $ Just $ applySpine ref inScope
 >       Nothing             ->
 >         case find ((name ==) . refName . snd) primitives of
 >           Just (_, ref)  -> return $ Just $ applySpine ref inScope

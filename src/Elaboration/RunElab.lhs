@@ -325,7 +325,7 @@ parameters and hands them to `seekIn`.
 >           proofTrace $ "Failed to resolve recursive call to "
 >                            ++ renderHouseStyle s
 >           (|)
->       seekOn (es' :< EPARAM param _ ParamLam _ _)  =
+>       seekOn (es' :< EPARAM param _ ParamLam _ _ _) =
 >           seekIn B0 (P param) (pty param) <|> seekOn es'
 >       seekOn (es' :< _)                            =    seekOn es'
 
@@ -527,8 +527,8 @@ will restart if it is unstable.
 >     -- Make a hole
 >     r <- make (AnchStr x :<: termOf tt)
 >     -- Store the suspended problem
->     Just (EDEF ref xn dkind dev@(Dev {devTip=Unknown utt}) tm anchor) <- removeEntryAbove
->     putEntryAbove (EDEF ref xn dkind (dev{devTip=Suspended utt prob}) tm anchor)
+>     Just (EDEF ref xn dkind dev@(Dev {devTip=Unknown utt}) tm anchor e) <- removeEntryAbove
+>     putEntryAbove (EDEF ref xn dkind (dev{devTip=Suspended utt prob}) tm anchor e)
 >     -- Mark the Suspension state
 >     let ss = if isUnstable prob then SuspendUnstable else SuspendStable
 >     putDevSuspendState ss

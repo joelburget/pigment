@@ -1,4 +1,5 @@
 > module  Tests.DevLoad where
+
 > import Control.Monad.State
 > import Data.List
 > import BwdFwd
@@ -10,7 +11,7 @@
 > import Lexer
 
 > tests =  [ ""
->          , "[ f := * : * ; ]"  
+>          , "[ f := * : * ; ]"
 >          , "[ S [ \\ X : * -> ] * : * ; T := (S *) : * ; ]"
 >          , "[ f [ \\ x : * -> ] ? : (* -> *) [| lambda y ; give x |] ; ]"
 >          , "make a : * ; out ; make f : a -> a ; lambda x ; give x"
@@ -24,7 +25,7 @@
 
 > main = do
 >     Prelude.sequence_ $
->            map (\x -> 
+>            map (\x ->
 >                 let  Right ts = parse tokenize x
 >                      mps = execStateT (devLoad ts) emptyContext
 >                 in putStrLn ("\n" ++ x ++ "\n" ++ show ts ++ "\n" ++ case mps of

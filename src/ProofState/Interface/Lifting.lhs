@@ -23,10 +23,9 @@ implementer.
 Discharging entries in a term
 -----------------------------
 
-The “discharge into” operator `(-||)` takes a list of entries and a
+The “discharge into” operator `(-|)` takes a list of entries and a
 term, and changes the term so that parameters in the list of entries are
-represented by de Brujin indices. It makes key use of the `(-||`|)|
-mangler.
+represented by de Brujin indices. It makes key use of the `(-||)` mangler.
 
 > (-|) :: Entries -> INTM -> INTM
 > es -| tm = (bwdList $ paramREFs es) -|| tm
@@ -44,15 +43,15 @@ entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
 > parBind delta nabla t = help delnab nabla (delnab -| t) where
 >     delnab = delta <+> nabla
 >     help B0                                        B0            t = t
->     help (delta   :< EPARAM _ (x, _)  _ _ _)       B0            t =
+>     help (delta   :< EPARAM _ (x, _)  _ _ _ _)     B0            t =
 >         help delta B0 (L (x :. t))
 >     help (delta   :< _)                            B0            t =
 >         help delta B0 t
->     help (delnab  :< EPARAM _ (x, _)  ParamLam _ _)  (nabla :< _)  t =
+>     help (delnab  :< EPARAM _ (x, _)  ParamLam _ _ _)  (nabla :< _)  t =
 >         help delnab nabla (L (x :. t))
->     help (delnab  :< EPARAM _ (x, _)  ParamAll _ _)  (nabla :< _)  t =
+>     help (delnab  :< EPARAM _ (x, _)  ParamAll _ _ _)  (nabla :< _)  t =
 >         help delnab nabla (L (x :. t))
->     help (delnab  :< EPARAM _ (x, _)  ParamPi s _)   (nabla :< _)  t =
+>     help (delnab  :< EPARAM _ (x, _)  ParamPi s _ _)   (nabla :< _)  t =
 >         help delnab nabla (PI (delnab -| s) (L (x :. t)))
 >     help (delnab  :< _)                            (nabla :< _)  t =
 >         help delnab nabla t
@@ -64,8 +63,9 @@ The `liftType` function $\Pi$-binds a type over a list of entries.
 
 > liftType :: Entries -> INTM -> INTM
 > liftType es = liftType' (bwdList $ foldMap param es)
->   where param (EPARAM r _ _ t _) = [r :<: t]
+>   where param (EPARAM r _ _ t _ _) = [r :<: t]
 >         param _ = []
+
 > liftType' :: Bwd (REF :<: INTM) -> INTM -> INTM
 > liftType' rtys t = pis rs tys (rs -|| t)
 >   where
@@ -85,11 +85,11 @@ a $\Pi$.
 
 > inferGoalType :: Bwd (Entry Bwd) -> INTM -> INTM
 > inferGoalType B0 t = t
-> inferGoalType (es :< EPARAM _ (x,_)  ParamLam  s _)  t        =
+> inferGoalType (es :< EPARAM _ (x,_)  ParamLam  s _ _)  t        =
 >     inferGoalType es (PI (es -| s) (L (x :. t)))
-> inferGoalType (es :< EPARAM _ (x,_)  ParamAll  s _)  (PRF t)  =
+> inferGoalType (es :< EPARAM _ (x,_)  ParamAll  s _ _)  (PRF t)  =
 >     inferGoalType es (PRF (ALL (es -| s) (L (x :. t))))
-> inferGoalType (es :< EPARAM _ (x,_)  ParamPi   s _)  SET      =
+> inferGoalType (es :< EPARAM _ (x,_)  ParamPi   s _ _)  SET      =
 >     inferGoalType es SET
 > inferGoalType (es :< _)                        t        =
 >     inferGoalType es t

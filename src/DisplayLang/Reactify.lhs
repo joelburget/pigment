@@ -23,7 +23,7 @@ Pretty-printing {#sec:DisplayLang.Reactify}
 
 The `reactKword` function gives a react element representing a `Keyword`.
 
-> reactKword :: Keyword -> PureReact
+> reactKword :: Keyword -> React a ()
 > reactKword kw =
 >     span_ [ class_ (catJSStr "" ["kw ", fromString (show kw)]) ] $
 >         fromString (key kw)

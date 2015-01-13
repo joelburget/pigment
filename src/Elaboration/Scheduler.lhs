@@ -73,9 +73,9 @@ search its children from the top.
 > schedulerContinue n = do
 >     cs <- getBelowCursor
 >     case cs of
->         F0                      -> schedulerDone n
->         EPARAM _ _ _ _ _ :> _   -> cursorDown >> schedulerContinue n
->         _ :> _                  -> do
+>         F0                        -> schedulerDone n
+>         EPARAM _ _ _ _ _ _ :> _   -> cursorDown >> schedulerContinue n
+>         _ :> _                    -> do
 >             cursorDown
 >             goIn
 >             resumeCurrentEntry

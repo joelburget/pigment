@@ -1,7 +1,6 @@
 Searching in the Proof Context
 ==============================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
 > module ProofState.Interface.Search where
@@ -13,10 +12,11 @@ Searching in the Proof Context
 > import ProofState.Edition.ProofState
 > import ProofState.Edition.GetSet
 > import ProofState.Edition.Navigation
+> import ProofState.Edition.ProofContext
 > import Evidences.Tm
 > import DisplayLang.Name
 
-In Section [sec:Proofstate.Edition.Navigation], we have developped
+In Section [sec:Proofstate.Edition.Navigation], we have developed
 several commands to navigate in the proof context. Here, we extend these
 to be able *search* in the proof context.
 
@@ -48,10 +48,22 @@ follow this itinerary to reach our destination.
 >     seek :: (String, Int) -> ProofState ()
 >     seek xn = goUp `whileA` (guard . (== xn) . last =<< getCurrentName)
 
+
+> toggleEntryVisibility :: Name -> ProofState ()
+> toggleEntryVisibility name = do
+>     bookmark <- getCurrentName
+>     goTo name
+>     entry <- getCurrentEntry
+>     putCurrentEntry $ case entry of
+>         CModule name e -> CModule name (not e)
+>         CDefinition kind ref lastName tm anchor e ->
+>             CDefinition kind ref lastName tm anchor (not e)
+>     goTo bookmark
+
 Searching for a goal
 --------------------
 
-First off, a *goal* is a development which `Tip` is of the |Unknown|
+First off, a *goal* is a development which `Tip` is of the `Unknown`
 type. Hence, to spot if the focus is set on a goal, we just have the
 check the `Tip`.
 
@@ -62,7 +74,7 @@ check the `Tip`.
 >         Unknown _ -> return ()
 >         _ -> throwErrorStr "couldn't get dev tip"
 
-Let us start with some gymnastic. We implement `prevStep` and |nextStep|
+Let us start with some gymnastic. We implement `prevStep` and `nextStep`
 that respectively looks for the previous and the next definition in the
 proof context. By *previous*, we mean contained in an entry directly
 above, or, if there is none, to the enclosing development. In other
@@ -73,6 +85,7 @@ transposes to the case of `nextStep`.
 > prevStep =  (goUp >> much goIn) <|> goOut
 >             `pushError`
 >             (sErr "prevStep: no previous steps.")
+
 > nextStep :: ProofState ()
 > nextStep =  (goIn >> goTop) <|> goDown <|> (goOut `untilA` goDown)
 >             `pushError`
@@ -85,6 +98,7 @@ steps to steps, looking for a step that would be a goal.
 > prevGoal =  prevStep `untilA` isGoal
 >             `pushError`
 >             (sErr "prevGoal: no previous goals.")
+
 > nextGoal :: ProofState ()
 > nextGoal =  nextStep `untilA` isGoal
 >             `pushError`

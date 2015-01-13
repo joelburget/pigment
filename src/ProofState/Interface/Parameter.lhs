@@ -39,7 +39,7 @@ goal.
 >             freshRef (x :<: s) $ \ref -> do
 >               sTm <- bquoteHere s
 >               -- Insert the parameter above the cursor
->               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind sTm AnchNo
+>               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind sTm AnchNo True
 >               -- Update the Tip
 >               let tipTy = t $ pval ref
 >               tipTyTm <- bquoteHere tipTy
@@ -66,7 +66,7 @@ provided type under the given module.
 >         -- Working under a module
 >         freshRef (x :<: ty) $ \ref -> do
 >           -- Simply make the reference
->           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm AnchNo
+>           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm AnchNo True
 >           return ref
 >       _    -> throwError $ sErr "assumeParam: only possible for modules."
 
@@ -92,7 +92,7 @@ indeed a type, so it requires further attention.
 >           -- Working on a goal of type `Set`
 >           freshRef (s :<: ty) $ \ref -> do
 >             -- Simply introduce the parameter
->             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm AnchNo
+>             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm AnchNo True
 >             return ref
 >         Unknown _  -> throwError $ sErr "piParam: goal is not of type SET."
 >         _          -> throwError $ sErr "piParam: only possible for incomplete goals."

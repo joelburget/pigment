@@ -71,6 +71,8 @@ import Haste.Prim
 import Lens.Family2
 import React
 
+import Kit.Trace
+
 instance Reactive EntityAnchor where
     reactify x = span_ [ class_ "anchor" ] $ fromString $ show x
 
@@ -79,9 +81,9 @@ page state = div_ [ class_ "page" ] $ do
     div_ [ class_ "left-pane" ] $ do
         div_ [ class_ "top-pane" ] $ proofCtxDisplay $ _proofCtx state
         div_ [ class_ "bottom-pane" ] $ do
-            locally (autocompleteView (_autocomplete state))
+            locally $ autocompleteView (_autocomplete state)
             prompt state
-            workingOn state
+            locally $ workingOn state
     rightPane state
 
 -- The autocomplete overlay
@@ -162,25 +164,28 @@ prompt state = div_ [ class_ "prompt" ] $ do
            , onKeyDown handleKey
            ]
 
-workingOn :: InteractionState -> InteractionReact
-workingOn InteractionState{_proofCtx=_ :< loc} = locally $
-    div_ [ class_ "working-on" ] $ do
-        let runner = do
-                mty <- optional' getHoleGoal
-                goal <- case mty of
-                    Just (_ :=>: ty) -> showGoal ty
-                    Nothing          -> return ""
+workingOn :: InteractionState -> PureReact
+workingOn InteractionState{_proofCtx=_ :< loc} =
+    let runner :: ProofState (PureReact, PureReact)
+        runner = do
+            mty <- optional' getHoleGoal
+            goal <- case mty of
+                Just (_ :=>: ty) -> showGoal ty
+                Nothing          -> return ""
 
-                mn <- optional' getCurrentName
-                let name = fromString $ case mn of
-                        Just n   -> showName n
-                        Nothing  -> ""
+            mn <- optional' getCurrentName
+            let name = fromString $ case mn of
+                    Just n   -> showName n
+                    Nothing  -> ""
 
-                return (goal, name)
+            return (goal, name)
 
-        case runProofState runner loc of
+        val :: PureReact
+        val = case runProofState runner loc of
             Left err -> err
             Right ((goal, name), loc') -> goal >> name
+
+    in div_ [ class_ "working-on" ] val
 
 showGoal :: TY -> ProofState PureReact
 showGoal ty@(LABEL _ _) = do
@@ -207,11 +212,10 @@ interactionLog logs = div_ [ class_ "interaction-log" ] $
             div_ [ class_ "log-output" ] $ out
 
 proofCtxDisplay :: Bwd ProofContext -> InteractionReact
-proofCtxDisplay (_ :< ctx) = locally $
-    div_ [ class_ "ctx-display" ] $
-        case runProofState reactProofState ctx of
-            Left err -> err
-            Right (display, _) -> display
+proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
+    case runProofState reactProofState ctx of
+        Left err -> locally err
+        Right (display, _) -> display
 
 longHelp :: TacticHelp -> PureReact
 longHelp (TacticHelp template example summary args) =
@@ -242,19 +246,24 @@ tacticList = div_ [ class_ "tactic-list" ] $
 
 -- The `reactProofState` command generates a reactified representation of
 -- the proof state at the current location.
-reactProofState :: ProofState PureReact
+reactProofState :: ProofState InteractionReact
 reactProofState = renderReact
 
 -- Render a bunch of entries!
-renderReact :: ProofState PureReact
+renderReact :: ProofState InteractionReact
 renderReact = do
     me <- getCurrentName
     es <- replaceEntriesAbove B0
     cs <- putBelowCursor F0
+
     case (es, cs) of
         (B0, F0) -> reactEmptyTip
         _ -> do
             d <- reactEntries (es <>> F0)
+
+            -- this is crazy. shit breaks *unless* we trace right here
+            elabTrace "XXX"
+
             d' <- case cs of
                 F0 -> return d
                 _ -> do
@@ -273,12 +282,7 @@ renderReact = do
                 div_ [ class_ "proof-state-inner" ] $ d'
                 tip
 
--- reactHereAt
--- replaceEntriesAbove
--- putBelowCursor
--- putEntryAbove
-
-reactEmptyTip :: ProofState PureReact
+reactEmptyTip :: ProofState InteractionReact
 reactEmptyTip = do
     tip <- getDevTip
     case tip of
@@ -289,39 +293,65 @@ reactEmptyTip = do
             return $ div_ [ class_ "empty-tip" ] $
                 reactKword KwDefn >> " " >> tip'
 
-reactEntries :: Fwd (Entry Bwd) -> ProofState PureReact
+reactEntries :: Fwd (Entry Bwd) -> ProofState InteractionReact
 reactEntries F0 = return ""
 reactEntries (e :> es) = do
     putEntryAbove e
     (>>) <$> reactEntry e <*> reactEntries es
 
-reactEntry :: Entry Bwd -> ProofState PureReact
-reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor)  = do
+
+reactEntry :: Entry Bwd -> ProofState InteractionReact
+reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor expanded)  = do
     ty' <- bquoteHere ty
     tyd <- reactHereAt (SET :>: ty')
-    return $ reactBKind k $ div_ [ class_ "entry" ] $ do
+
+    return $ reactBKind k $ div_ [ class_ "entry entry-param" ] $ do
         div_ [ class_ "tm-name" ] $ fromString x
         -- TODO(joel) - show anchor in almost same way as below?
         reactKword KwAsc
-        div_ [ class_ "ty" ] tyd
+        div_ [ class_ "ty" ] (locally tyd)
+
 reactEntry e = do
-    goIn
-    d <- renderReact
-    goOut
-    return $ div_ [ class_ "entry" ] $ do
-        div_ [ class_ "tm-name" ] $ fromString (fst (entryLastName e))
-        -- div_ [ class_ "anchor" ] $ do
-        --     "[["
-        --     reactify $ entryAnchor e
-        --     "]]"
-        d
+    description <- if entryExpanded e
+         then do
+            goIn
+            r <- renderReact
+            goOut
+            return r
+         else return ""
+
+    -- anchor :: PureReact <- case entryAnchor e of
+    --      AnchNo -> ""
+    --      otherAnchor -> div_ [ class_ "anchor" ] $ do
+    --          "[["
+    --          reactify $ entryAnchor e
+    --          "]]"
+
+    -- TODO entry-module vs entry-entity
+    return $ div_ [ class_ "entry entry-entity" ] $ do
+        entryHeader e
+        -- locally anchor
+        description
+
+
+entryHeader :: Traversable f => Entry f -> InteractionReact
+entryHeader e = do
+    let displayName = fromString $ fst $ entryLastName e
+        name = entryName e
+    div_ [ class_ "entry-header" ] $ do
+        button_
+            [ onClick (handleToggleEntry name)
+            , class_ "toggle-entry"
+            ] "toggle"
+        div_ [ class_ "tm-name" ] displayName
+
 
 -- “Developments can be of different nature: this is indicated by the Tip”
 
-reactTip :: ProofState PureReact
+reactTip :: ProofState InteractionReact
 reactTip = do
     tip <- getDevTip
-    case tip of
+    locally <$> case tip of
         Module -> return $ div_ [ class_ "tip" ] $ "(module)"
         Unknown (ty :=>: _) -> do
             hk <- getHoleKind
@@ -343,6 +373,7 @@ reactTip = do
             tmd <- reactHereAt (tyv :>: tm)
             return $ div_ [ class_ "tip" ] $
                 (tmd >> reactKword KwAsc >> tyd)
+
 
 reactHKind :: HKind -> PureReact
 reactHKind kind = span_ [ class_ "hole" ] $ case kind of

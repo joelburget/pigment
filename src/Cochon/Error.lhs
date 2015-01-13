@@ -18,15 +18,17 @@ Cochon error prettier
 > import Distillation.Distiller
 > import Distillation.Moonshine
 
-Catching the gremlins before they leave |ProofState|
+Catching the gremlins before they leave `ProofState`
 ----------------------------------------------------
 
 > catchUnprettyErrors :: StackError DInTmRN -> ProofState a
 > catchUnprettyErrors e = do
 >                   e' <- distillErrors e
 >                   throwError e'
+
 > distillErrors :: StackError DInTmRN -> ProofState (StackError DInTmRN)
 > distillErrors (StackError e) = StackError `fmap` (sequence $ fmap (sequence . fmap distillError) e)
+
 > distillError :: ErrorTok DInTmRN -> ProofState (ErrorTok DInTmRN)
 > distillError (ErrorVAL (v :<: mt)) = do
 >     vTm   <- bquoteHere v

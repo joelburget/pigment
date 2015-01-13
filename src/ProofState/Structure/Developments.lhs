@@ -122,7 +122,8 @@ either be:
 >               , lastName  :: (String, Int)
 >               , entity    :: Entity f
 >               , term      :: INTM
->               , anchor    :: EntityAnchor }
+>               , anchor    :: EntityAnchor
+>               , expanded  :: Bool }
 >   |  EModule  { name      :: Name
 >               , dev       :: (Dev f)
 >               , expanded  :: Bool }
@@ -138,13 +139,13 @@ is `Bwd`:
 > type Entries = Bwd (Entry Bwd)
 
 > instance Show (Entry Bwd) where
->     show (EEntity ref xn e t a) = intercalate " "
->         ["E", show ref, show xn, show e, show t, show a]
+>     show (EEntity ref xn e t a expanded) = intercalate " "
+>         ["E", show ref, show xn, show e, show t, show a, show expanded]
 >     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
 
 > instance Show (Entry Fwd) where
->     show (EEntity ref xn e t a) = intercalate " "
->         ["E", show ref, show xn, show e, show t, show a]
+>     show (EEntity ref xn e t a expanded) = intercalate " "
+>         ["E", show ref, show xn, show e, show t, show a, show expanded]
 >     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
 
 [Name caching]
@@ -172,10 +173,10 @@ cannot.
 For readability, let us collapse the `Entity` into the `Entry` with
 these useful patterns:
 
-> pattern EPARAM ref name paramKind term anchor =
->     EEntity ref name (Parameter paramKind) term anchor
-> pattern EDEF ref name defKind dev term anchor =
->     EEntity ref name (Definition defKind dev) term anchor
+> pattern EPARAM ref name paramKind term anchor expanded =
+>     EEntity ref name (Parameter paramKind) term anchor expanded
+> pattern EDEF ref name defKind dev term anchor expanded =
+>     EEntity ref name (Definition defKind dev) term anchor expanded
 
 Kinds of Definitions:
 

@@ -43,12 +43,12 @@ have been issued during elaboration of a programming problem
 >   where
 >     help :: Bwd Layer -> [REF :<: INTM] -> [REF :<: INTM]
 >     help B0 xs = xs
->     help (ls :< Layer{currentEntry=CDefinition _ _ (n, _) _ _}) xs
+>     help (ls :< Layer{currentEntry=CDefinition _ _ (n, _) _ _ _}) xs
 >         | n == magicImplName = xs
 >     help (ls :< l) xs = help ls (params (aboveEntries l) ++ xs)
 >     params = foldMap param
->     param (EPARAM r _ _ t _)  = [r :<: t]
->     param _                 = []
+>     param (EPARAM r _ _ t _ _) = [r :<: t]
+>     param _                    = []
 
 Manipulating entries as scopes
 ------------------------------
@@ -60,8 +60,8 @@ us extract such spine from a list of entries:
 > paramREFs :: Entries -> [REF]
 > paramREFs = foldMap param where
 >   param :: Entry Bwd -> [REF]
->   param  (EPARAM r _ _ _ _) = [r]
->   param  _                  = []
+>   param  (EPARAM r _ _ _ _ _) = [r]
+>   param  _                    = []
 
 > paramSpine :: Entries -> Spine {p} REF
 > paramSpine = fmap (A . N . P) . paramREFs

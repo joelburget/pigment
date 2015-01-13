@@ -3,6 +3,7 @@
 module Cochon.Controller where
 
 import Control.Applicative
+import Control.Arrow
 import Control.Monad
 import Control.Monad.Error
 import Control.Monad.State
@@ -94,6 +95,10 @@ data Transition
     | ToggleRightPane
     | CommandKeypress SpecialKey
     | CommandTyping String
+    | ToggleEntry Name
+
+handleToggleEntry :: Name -> MouseEvent -> Maybe Transition
+handleToggleEntry name _ = Just $ ToggleEntry name
 
 handleSelectPane :: Pane -> MouseEvent -> Maybe Transition
 handleSelectPane pane _ = Just $ SelectPane pane
@@ -146,7 +151,17 @@ dispatch (CommandKeypress DownArrow)
     autocompleteDownArrow state
 dispatch (CommandKeypress DownArrow) state = historyDownArrow state
 
+dispatch (ToggleEntry name) state@InteractionState{_proofCtx=ctxs :< ctx} =
+    case execProofState (toggleEntryVisibility name) ctx of
+        Left err -> state -- XXX(joel) show errors somewhere
+        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
+
 dispatch _ state = state
+
+execProofState :: ProofState a
+               -> ProofContext
+               -> Either PureReact ProofContext
+execProofState state = (right snd) . runProofState state
 
 autocompleteUpArrow :: InteractionState -> InteractionState
 autocompleteUpArrow state = state & autocomplete %~ \auto -> case auto of

@@ -183,8 +183,8 @@ We distill structurally through canonical terms:
 
 To distill a $lambda$-abstraction, we speculate a fresh reference and
 distill under the binder, then convert the scope appropriately. The
-|INTM| version of the entry type should never be used, so we can simply
-omit it. (Hopefully we will switch the entries to |Bwd REF| so this will
+`INTM` version of the entry type should never be used, so we can simply
+omit it. (Hopefully we will switch the entries to `Bwd REF` so this will
 not be necessary.)
 
 > distillBase entries (ty :>: l@(L sc)) = do
@@ -196,7 +196,7 @@ not be necessary.)
 >         ])
 >     tm' :=>: _ <-  freshRef (x :<: dom) $ \ref ->
 >                    distill  (entries :< EPARAM  ref (mkLastName ref) kind
->                                                 (error "distill: type undefined") AnchNo)
+>                                                 (error "distill: type undefined") AnchNo True)
 >                             (cod (pval ref) :>: underScope sc ref)
 >     return $ DL (convScope sc x tm') :=>: (evTm $ L sc)
 >   where

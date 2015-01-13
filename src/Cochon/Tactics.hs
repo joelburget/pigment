@@ -694,7 +694,7 @@ infoContextual gals = do
   where
     help :: BScopeContext -> Entries -> ProofState PureReact
     help bsc B0 = return ""
-    help bsc (es :< EPARAM ref _ k _ _) | not gals = do
+    help bsc (es :< EPARAM ref _ k _ _ _) | not gals = do
         ty       <- bquoteHere (pty ref)
         reactTy  <- reactHereAt (SET :>: ty)
         d        <- help bsc es
@@ -704,7 +704,7 @@ infoContextual gals = do
                 fromString $ showRelName $ christenREF bsc ref
                 reactKword KwAsc
                 reactTy
-    help bsc (es :< EDEF ref _ _ _ _ _) | gals = do
+    help bsc (es :< EDEF ref _ _ _ _ _ _) | gals = do
         ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
         reactTy  <- reactHere (SET :>: ty)
         d        <- help bsc es
@@ -747,7 +747,7 @@ infoContextual' gals = do
        es <- getEntriesAbove
        case (gals, es) of
            (_, B0) -> return ""
-           (False, es' :< EPARAM ref _ k _ _) -> do
+           (False, es' :< EPARAM ref _ k _ _ _) -> do
                putEntriesAbove es'
                ty' <- bquoteHere (pty ref)
                reactTy <- reactHere (SET :>: ty')
@@ -758,7 +758,7 @@ infoContextual' gals = do
                        fromString $ showRelName $ christenREF bsc ref
                        reactKword KwAsc
                        reactTy
-           (True, es' :< EDEF ref _ _ _ _ _) -> do
+           (True, es' :< EDEF ref _ _ _ _ _ _) -> do
                goIn
                es <- getEntriesAbove
                (ty :=>: _) <- getGoal "hyps"
@@ -860,7 +860,7 @@ simpleOutput eval = do
 -- The `reactBKind` function reactifies a `ParamKind` if supplied with an
 -- element representing its name and type.
 
-reactBKind :: ParamKind -> PureReact -> PureReact
+reactBKind :: ParamKind -> React a () -> React a ()
 reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
 reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
 reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr

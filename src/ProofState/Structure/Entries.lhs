@@ -24,25 +24,25 @@ of one field of the `E` or `M` cases, starting with a capital letter.
 Hence, we have:
 
 > entryRef :: Traversable f => Entry f -> Maybe REF
-> entryRef (EEntity r _ _ _ _)    = Just r
+> entryRef (EEntity r _ _ _ _ _)    = Just r
 > entryRef (EModule _ _ _)  = Nothing
 
 > entryName :: Traversable f => Entry f -> Name
-> entryName (EEntity (n := _) _ _ _ _)  = n
+> entryName (EEntity (n := _) _ _ _ _ _)  = n
 > entryName (EModule n _ _)             = n
 
 > entryLastName :: Traversable f => Entry f -> (String, Int)
-> entryLastName (EEntity _ xn _ _ _) = xn
+> entryLastName (EEntity _ xn _ _ _ _) = xn
 > entryLastName (EModule n _ _)        = last n
 
 > entryScheme :: Traversable f => Entry f -> Maybe (Scheme INTM)
-> entryScheme (EDEF _ _ (PROG sch) _ _ _)  = Just sch
+> entryScheme (EDEF _ _ (PROG sch) _ _ _ _)  = Just sch
 > entryScheme _                          = Nothing
 
 > entryDev :: Traversable f => Entry f -> Maybe (Dev f)
-> entryDev (EDEF _ _ _ d _ _)  = Just d
-> entryDev (EModule _ d _)     = Just d
-> entryDev (EPARAM _ _ _ _ _)  = Nothing
+> entryDev (EDEF _ _ _ d _ _ _)  = Just d
+> entryDev (EModule _ d _)       = Just d
+> entryDev (EPARAM _ _ _ _ _ _)  = Nothing
 
 > entrySuspendState :: Traversable f => Entry f -> SuspendState
 > entrySuspendState e = case entryDev e of
@@ -50,8 +50,12 @@ Hence, we have:
 >     Nothing   -> SuspendNone
 
 > entryAnchor :: Traversable f => Entry f -> EntityAnchor
-> entryAnchor (EEntity _ _ _ _ anchor)  = anchor
+> entryAnchor (EEntity _ _ _ _ anchor _)  = anchor
 > entryAnchor (EModule _ _ _)             = AnchNo
+
+> entryExpanded :: Traversable f => Entry f -> Bool
+> entryExpanded (EEntity _ _ _ _ _ e) = e
+> entryExpanded (EModule _ _ e) = e
 
 Entry equality
 --------------
@@ -77,6 +81,7 @@ modules, in which case we return an unchanged `Left dev`.
 
 > entryCoerce ::  (Traversable f, Traversable g) =>
 >                 Entry f -> Either (Dev f) (Entry g)
-> entryCoerce (EPARAM ref xn k ty anchor)  =  Right $ EPARAM ref xn k ty anchor
-> entryCoerce (EDEF _ _ _ dev _ _)    =  Left dev
-> entryCoerce (EModule _ dev _)       =  Left dev
+> entryCoerce param@(EPARAM ref xn k ty anchor expanded) =
+>     Right $ EPARAM ref xn k ty anchor expanded
+> entryCoerce (EDEF _ _ _ dev _ _ _)     =  Left dev
+> entryCoerce (EModule _ dev _)          =  Left dev

@@ -52,11 +52,11 @@ Section [subsec:Tactics.Elimination.analysis].
 > moduleToGoal :: INTM -> ProofState (EXTM :=>: VAL)
 > moduleToGoal ty = do
 >     (_ :=>: tyv) <- checkHere (SET :>: ty)
->     CModule n <- getCurrentEntry
+>     CModule n expanded <- getCurrentEntry
 >     inScope <- getInScope
 >     let  ty' = liftType inScope ty
 >          ref = n := HOLE Waiting :<: evTm ty'
->     putCurrentEntry $ CDefinition LETG ref (last n) ty' AnchNo
+>     putCurrentEntry $ CDefinition LETG ref (last n) ty' AnchNo expanded
 >     putDevTip $ Unknown (ty :=>: tyv)
 >     return $ applySpine ref inScope
 

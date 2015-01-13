@@ -47,21 +47,33 @@ such as `Hoping` or `Crying`.
 >                         , errTm (DTIN ty)
 >                         , err " is not a set."
 >                         ])
+
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
 >     goalName <- pickName "Goal: " name
 >     let n = trace ("pickName for " ++ show name ++ " = " ++ goalName) $ mkName nsupply goalName
+
 >     -- Make a reference for the goal, with a lambda-lifted type
 >     inScope <- getInScope
 >     let  liftedTy  =  liftType inScope ty
 >          ref       =  n := HOLE holeKind :<: evTm liftedTy
+
 >     -- Make an entry for the goal, with an empty development
 >     let dev = Dev { devEntries       =  B0
 >                   , devTip           =  Unknown (ty :=>: tyv)
 >                   , devNSupply       =  freshNSpace nsupply goalName
 >                   , devSuspendState  =  SuspendNone }
+
+>     -- Which kinds of things start out expanded? This is a very preliminary
+>     -- list!
+>     let expanded = case anchor of
+>             AnchParTy _ -> True
+>             AnchConNames -> True
+>             _ -> False
+
 >     -- Put the entry in the proof context
 >     putDevNSupply $ freshName nsupply
->     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy anchor
+>     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy anchor expanded
+
 >     -- Return a reference to the goal
 >     return $ applySpine ref inScope

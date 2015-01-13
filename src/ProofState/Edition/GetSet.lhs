@@ -1,12 +1,12 @@
 The Get Set
 ===========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
 > module ProofState.Edition.GetSet where
 > import Control.Monad.Except
 > import Control.Monad.State
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import NameSupply.NameSupply
@@ -18,7 +18,6 @@ The Get Set
 > import ProofState.Edition.Entries
 > import ProofState.Edition.Scope
 > import Evidences.Tm
-> import Debug.Trace
 
 We provide various functions to get information from the proof state and
 store updated information, providing a friendlier interface than `get`
@@ -95,7 +94,7 @@ Getting in the `Layers`
 >     ls <- getLayers
 >     case ls of
 >         _ :< l  -> return (currentEntry l)
->         B0      -> return (CModule [])
+>         B0      -> return (CModule [] False)
 
 Getting in the `CurrentEntry`
 
@@ -103,12 +102,12 @@ Getting in the `CurrentEntry`
 > getCurrentName = do
 >     cEntry <-  getCurrentEntry
 >     case cEntry of
->       CModule [] -> return []
+>       CModule [] _ -> return []
 >       _ -> return $ currentEntryName cEntry
 
 > getCurrentDefinition :: ProofStateT e (EXTM :=>: VAL)
 > getCurrentDefinition = do
->     CDefinition _ ref _ _ _ <- getCurrentEntry
+>     CDefinition _ ref _ _ _ _ <- getCurrentEntry
 >     scope <- getGlobalScope
 >     return (applySpine ref scope)
 
@@ -118,12 +117,12 @@ Getting in the `HOLE`
 > getHoleGoal = do
 >     x <- getCurrentEntry
 >     case x of -- TODO(joel) do this properly with error machinery
->         CModule _ -> throwErrorStr "got a module"
->         CDefinition _ (_ := HOLE _ :<: _) _ _ _ -> getGoal "getHoleGoal"
+>         CModule _ _ -> throwErrorStr "got a module"
+>         CDefinition _ (_ := HOLE _ :<: _) _ _ _ _ -> getGoal "getHoleGoal"
 
 > getHoleKind :: ProofStateT e HKind
 > getHoleKind = do
->     CDefinition _ (_ := HOLE hk :<: _) _ _ _ <- getCurrentEntry
+>     CDefinition _ (_ := HOLE hk :<: _) _ _ _ _ <- getCurrentEntry
 >     return hk
 
 Getting the Scopes
@@ -225,15 +224,15 @@ Putting in the `PROG`
 
 > putCurrentScheme :: Scheme INTM -> ProofState ()
 > putCurrentScheme sch = do
->     CDefinition _ ref xn ty a <- getCurrentEntry
->     putCurrentEntry $ CDefinition (PROG sch) ref xn ty a
+>     CDefinition _ ref xn ty a e <- getCurrentEntry
+>     putCurrentEntry $ CDefinition (PROG sch) ref xn ty a e
 
-Putting in the `HOLE`\
+Putting in the `HOLE`
 
 > putHoleKind :: HKind -> ProofStateT e ()
 > putHoleKind hk = do
->     CDefinition kind (name := HOLE _ :<: ty) xn tm a <- getCurrentEntry
->     putCurrentEntry $ CDefinition kind (name := HOLE hk :<: ty) xn tm a
+>     CDefinition kind (name := HOLE _ :<: ty) xn tm a e <- getCurrentEntry
+>     putCurrentEntry $ CDefinition kind (name := HOLE hk :<: ty) xn tm a e
 
 Removers
 --------

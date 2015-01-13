@@ -50,7 +50,7 @@ an optional semicolon-separated list of commands.
 Parsing definitions
 
 A definition is an identifier, followed by a list of children, a
-definition (which may be @?@), and optionally a list of commands:
+definition (which may be `?`), and optionally a list of commands:
 
 > pDef :: Parsley Token DevLine
 > pDef =  (| DLDef    ident                  -- identifier
@@ -65,7 +65,7 @@ Parsing children:
 Children, if any, are enclosed inside square brackets. They can be of
 several types: definitions, that we have already defined, or parameters.
 Parameters are defined below. The absence of sub-development is signaled
-by the @:=@ symbol.
+by the `:=` symbol.
 
 > pLines  :: Parsley Token [DevLine]
 > pLines  =  bracket Square (many (pDef <|> pParam <|> pModule))
@@ -89,8 +89,8 @@ a term corresponds to explicitly solving the goal.
 Parsing commands:
 
 Commands can be typed directly in the developments by enclosing them
-inside @[| ... |]@ brackets. They are parsed in one go by
-|pCochonTactics|, so this is quite fragile. This is better used when we
+inside `[| ... |]` brackets. They are parsed in one go by
+`pCochonTactics`, so this is quite fragile. This is better used when we
 know things work.
 
 > pCTSuffix  :: Parsley Token [CTData]
@@ -110,8 +110,8 @@ A module is similar, but has no definition.
 
 Parsing Parameters
 
-A parameter is a $\lambda$-abstraction (represented by @ x : T -\>@) or
-a $\Pi$-abstraction (represented by @(x : S) -\>@).
+A parameter is a $\lambda$-abstraction (represented by `x : T ->`) or
+a $\Pi$-abstraction (represented by `(x : S) ->`).
 
 > pParam :: Parsley Token DevLine
 > pParam =  (|  (%keyword KwLambda%)          -- @\@
@@ -161,9 +161,9 @@ accumulate the commands which might have been issued.
 >     goIn
 >     -- Recursively build the kids
 >     ncs' <- makeDev kids ncs
->     -- Translate `tipTys` into a real |INTM|
+>     -- Translate `tipTys` into a real `INTM`
 >     tipTy :=>: tipTyv <- elaborate' (SET :>: tipTys)
->     -- Turn the module into a definition of |tipTy|
+>     -- Turn the module into a definition of `tipTy`
 >     moduleToGoal tipTy
 >     -- Were we provided a solution?
 >     case mtipTm of
@@ -171,7 +171,7 @@ accumulate the commands which might have been issued.
 >                    -- Leave
 >                    goOut
 >         Just tms -> do -- Yes!
->             -- Give the solution |tms|
+>             -- Give the solution `tms`
 >             elabGive tms
 >             return ()
 >     -- Is there any tactics to be executed?
@@ -216,7 +216,7 @@ a fresh reference of that type. Finally, we store that reference in the
 development.
 
 > makeEntry (DLParam k x tys) ncs = do
->     -- Translate the display `tys` into an |INTM|
+>     -- Translate the display `tys` into an `INTM`
 >     ty :=>: tyv <- elaborate' (SET :>: tys)
 >     -- Make a fresh reference of that type
 >     freshRef (x :<: tyv) (\ref ->
