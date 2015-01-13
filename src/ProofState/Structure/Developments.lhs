@@ -1,7 +1,6 @@
 Developments {#sec:ProofState.Structure.Developments}
 ============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
 >     PatternSynonyms #-}
 >

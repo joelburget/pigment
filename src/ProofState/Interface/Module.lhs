@@ -1,11 +1,13 @@
 Modules in Proof Context
 ========================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
+
 > module ProofState.Interface.Module where
+
 > import Control.Monad.Except
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import NameSupply.NameSupply

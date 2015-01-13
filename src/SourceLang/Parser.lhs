@@ -1,10 +1,11 @@
 Parser {#sec:SourceLang.Parser}
 ======
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > module SourceLang.Parser where
+
 > import Control.Applicative
 > import Data.Traversable
+
 > import Evidences.Tm
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
@@ -30,6 +31,7 @@ errors.)
 
 > parseEpiDoc :: EpiDoc Lexed -> Either String (EpiDoc Parsed)
 > parseEpiDoc = traverse parseConstr
+
 > parseConstr :: Construction Lexed -> Either String (Construction Parsed)
 > parseConstr = traverse parseTerm
 >   where

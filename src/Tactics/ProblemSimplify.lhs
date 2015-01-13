@@ -183,7 +183,8 @@ Note that this assumes we are at the top level.
 >                          (N (P symEq :$ A _X' :$ A (NP y) :$ A x' :$ A (NP q)))
 >         elimSimplify (ety :>: ex)
 >         neutralise =<< getCurrentDefinition
->     elimEquation _ _ = (|)
+>     elimEquation _ _ = empty
+
 >     simplifyProp :: VAL -> VAL -> Simplify -> ProofState (INTM :=>: VAL)
 >     simplifyProp p t (SimplyAbsurd prf) = do
 >         r    <- lambdaParam (fortran t)
@@ -267,7 +268,7 @@ goal completely.
 >     case pSimp of
 >         Just (SimplyTrivial prf) -> do
 >             topWrap b $ LRET prf :=>: LRET (evTm prf)
->         _ -> (|)
+>         _ -> empty
 
 If the goal is a $\Sigma$-type, we might as well split it into its
 components.

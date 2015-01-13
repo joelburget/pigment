@@ -20,7 +20,7 @@ Because writing elaborators is a tricky business, we would like to have
 a domain-specific language to write them with. We use the following set
 of instructions to define a monad that follows the syntax of this
 language, then write an interpreter to run the syntax in the
-|ProofState| monad.
+`ProofState` monad.
 
 > eLambda      :: String -> Elab REF
 >              -- create a $\lambda$ and return its REF
@@ -93,6 +93,7 @@ just ignored.
 >     show (EAnchor _)        = "EAnchor " ++ " (...)"
 >     show (EResolve rn _)    = "EResolve " ++ show rn ++ " (...)"
 >     show (EAskNSupply _)    = "EAskNSupply (...)"
+
 > instance Monad Elab where
 >     fail s  = ECry (sErr $ "fail: " ++ s)
 >     return  = EReturn
@@ -107,9 +108,11 @@ just ignored.
 >     EAnchor f        >>= k = EAnchor        ((k =<<) . f)
 >     EResolve rn f    >>= k = EResolve rn    ((k =<<) . f)
 >     EAskNSupply f    >>= k = EAskNSupply    ((k =<<) . f)
+
 > instance (MonadError (StackError DInTmRN)) Elab where
 >     throwError e           = ECry e
 >     catchError (ECry e) f  = f e
 >     catchError x _         = x
+
 > instance Alternative Elab where
 >     -- TODO(joel)

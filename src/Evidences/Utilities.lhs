@@ -1,7 +1,6 @@
 Utilities
 =========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
 >     ScopedTypeVariables, PatternSynonyms #-}
@@ -20,8 +19,8 @@ Utilities
 From `EXTM` to `INTM` and back again
 ------------------------------------
 
-Various commands yield an |EXTM :=\>: VAL|, and we sometimes need to
-convert this to an |INTM :=\>: VAL|.
+Various commands yield an `EXTM :=>: VAL`, and we sometimes need to
+convert this to an `INTM :=>: VAL`.
 
 > neutralise :: Monad m => (EXTM :=>: VAL) -> m (INTM :=>: VAL)
 > neutralise (n :=>: v) = return $ N n :=>: v

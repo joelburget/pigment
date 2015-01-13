@@ -1,9 +1,8 @@
 Example {#sec:SourceLang.Example}
 =======
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-
 > module SourceLang.Example where
+
 > import Elaboration.ElabMonad
 > import SourceLang.Structure
 > import SourceLang.Parser
@@ -33,5 +32,6 @@ Example {#sec:SourceLang.Example}
 > parsePlusC = case parseConstr plusC of
 >     Right c  -> c
 >     Left e   -> error e
+
 > elabPlusC :: Elab (Construction Elaborated)
 > elabPlusC = elabConstr parsePlusC

@@ -54,7 +54,7 @@ Given a scheme, we can extract the names of its $\Pi$s:
 Turning schemes to terms
 ------------------------
 
-We can also convert a |Scheme x| to an `x`, if we are given a way to
+We can also convert a `Scheme x` to an `x`, if we are given a way to
 interpret $\Pi$-bindings:
 
 > schemeToType :: (String -> x -> x -> x) -> Scheme x -> x
@@ -94,7 +94,7 @@ Schemes in error messages
 
 We can cheaply embed schemes in error messages by converting them to
 types and evaluating. Really, we ought to add schemes as a kind of
-|ErrorTok|.
+`ErrorTok`.
 
 > errScheme :: Scheme INTM -> ErrorItem t
 > errScheme sch = errTyVal (evTm (schemeToInTm sch) :<: SET)

@@ -1,7 +1,6 @@
 The Moonshine distillery {#sec:Distillation.Moonshine}
 ========================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}
 
 > module Distillation.Moonshine where

@@ -49,8 +49,8 @@ Implementing the `Elab` monad {#sec:Elaborator.RunElab}
 Running elaboration processes {#subsec:Elaborator.RunElab.runElab}
 -----------------------------
 
-The `runElab` proof state command actually interprets an |Elab x| in the
-proof state. In other words, we define here the semantics of the |Elab|
+The `runElab` proof state command actually interprets an `Elab x` in the
+proof state. In other words, we define here the semantics of the `Elab`
 syntax.
 
 > runElab :: WorkTarget ->  (TY :>: Elab (INTM :=>: VAL)) ->
@@ -88,12 +88,12 @@ them to the specially crafted `runElabNewGoal`.
 
 > runElab WorkElsewhere (ty :>: elab) | currentGoalOnly elab = runElabNewGoal (ty :>: elab)
 
-|EReturn| is the @return@ of the monad. It does nothing and always
+`EReturn` is the @return@ of the monad. It does nothing and always
 succeeds.
 
 > runElab _ (_ :>: EReturn x) = return (x, ElabSuccess)
 
-|ELambda| creates a $\lambda$-parameter, if this is allowed by the type
+`ELambda` creates a $\lambda$-parameter, if this is allowed by the type
 we are elaborating to.
 
 > runElab WorkCurrentGoal (ty :>: ELambda x f) = case lambdable ty of
@@ -106,12 +106,12 @@ we are elaborating to.
 >         , err "is not lambdable!"
 >         ]
 
-|EGoal| retrieves the current goal and passes it to the elaboration
+`EGoal` retrieves the current goal and passes it to the elaboration
 task.
 
 > runElab wrk (ty :>: EGoal f) = runElab wrk (ty :>: f ty)
 
-|EWait| makes a `Waiting` hole and pass it along to the next elaboration
+`EWait` makes a `Waiting` hole and pass it along to the next elaboration
 task.
 
 > runElab wrk (ty :>: EWait s tyWait f) = do
@@ -119,19 +119,19 @@ task.
 >     tt <- make (AnchStr s :<: tyWait')
 >     runElab wrk (ty :>: f tt)
 
-|EElab| contains a syntactic representation of an elaboration problem.
+`EElab` contains a syntactic representation of an elaboration problem.
 This representation is interpreted and executed by `runElabProb`.
 
 > runElab wrk (ty :>: EElab l p)  = runElabProb wrk l (ty :>: p)
 
-|ECompute| allows us to combine elaboration tasks: we run a first task
+`ECompute` allows us to combine elaboration tasks: we run a first task
 and pass its result to the next elaboration task.
 
 > runElab top (ty :>: ECompute (tyComp :>: elab) f) = do
 >     (e , _) <- runElab WorkElsewhere (tyComp :>: elab)
 >     runElab top (ty :>: f e)
 
-|ECry| is used to report an error. It updates the current entry into a
+`ECry` is used to report an error. It updates the current entry into a
 crying state.
 
 > runElab WorkCurrentGoal (ty :>: ECry e) = do
@@ -143,7 +143,7 @@ crying state.
 >     t :=>: tv <- getCurrentDefinition
 >     return (N t :=>: tv, ElabSuspended)
 
-|EFake| extracts the reference of the current entry and presents it as a
+`EFake` extracts the reference of the current entry and presents it as a
 fake reference. .
 
 > runElab WorkCurrentGoal (ty :>: EFake f) = do
@@ -151,13 +151,13 @@ fake reference. .
 >     inScope <- getInScope
 >     runElab WorkCurrentGoal . (ty :>:) $ f (r, paramSpine inScope)
 
-|EAnchor| extracts the name of the current entry.
+`EAnchor` extracts the name of the current entry.
 
 > runElab WorkCurrentGoal (ty :>: EAnchor f) = do
 >     name <- getCurrentName
 >     runElab WorkCurrentGoal . (ty :>:) $ f (fst (last name))
 
-|EResolve| provides a name-resolution service: given a relative name, it
+`EResolve` provides a name-resolution service: given a relative name, it
 finds the term and potentially the scheme of the definition the name
 refers to. This is passed onto the next elaboration task.
 
@@ -169,7 +169,7 @@ refers to. This is passed onto the next elaboration task.
 >     tyv'  <- bquoteHere tyv
 >     runElab wrk (ty :>: f (PAIR tyv' (N tm) :=>: PAIR tyv tmv, ms'))
 
-|EAskNSupply| gives access to the name supply to the next elaboration
+`EAskNSupply` gives access to the name supply to the next elaboration
 task.
 
 [Read-only name supply]
@@ -220,25 +220,25 @@ of the `EProb` language.
 > runElabProb :: WorkTarget ->  Loc -> (TY :>: EProb) ->
 >                               ProofState (INTM :=>: VAL, ElabStatus)
 
-|ElabDone tt| always succeed at returning the given term `tt`.
+`ElabDone tt` always succeed at returning the given term `tt`.
 
 > runElabProb wrk loc (ty :>: ElabDone tt)  =
 >     return (maybeEval tt, ElabSuccess)
 
-|ElabProb tm| asks for the elaboration of the display term `tm` (for
+`ElabProb tm` asks for the elaboration of the display term `tm` (for
 pushed-in terms).
 
 > runElabProb wrk loc (ty :>: ElabProb tm)  =
 >     runElab wrk (ty :>: makeElab loc tm)
 
-|ElabInferProb tm| asks for the elaboration and type inference of the
+`ElabInferProb tm` asks for the elaboration and type inference of the
 display term `tm` (for pull-out terms).
 
 > runElabProb wrk loc (ty :>: ElabInferProb tm) =
 >     runElab wrk (ty :>: makeElabInfer loc tm)
 
-|WaitCan tm prob| prevents the interpretation of the elaboration problem
-|prob| until `tm` is indeed a canonical object. Otherwise, the problem
+`WaitCan tm prob` prevents the interpretation of the elaboration problem
+`prob` until `tm` is indeed a canonical object. Otherwise, the problem
 is indefinitely suspended.
 
 > runElabProb wrk loc (ty :>: WaitCan (_ :=>: Just (C _)) prob) =
@@ -247,7 +247,7 @@ is indefinitely suspended.
 >     runElabProb wrk loc (ty :>: WaitCan (tm :=>: Just (evTm tm)) prob)
 
 The semantics of the `ElabHope` command is specifically given by the
-|runElabHope| interpreter in
+`runElabHope` interpreter in
 Section [subsec:Elaboration.RunElab.elabHope].
 
 > runElabProb wrk loc (ty :>: ElabHope)     = runElabHope wrk ty

@@ -1,7 +1,6 @@
 Pretty-printing {#sec:DisplayLang.Reactify}
 ===============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
 >     TypeSynonymInstances, OverloadedStrings, PatternSynonyms #-}
 
@@ -241,6 +240,6 @@ The `Elim` functor is straightforward.
 
 > instance Reactive (Elim DInTmRN) where
 >     reactify (A t)  = reactify t
->     reactify Out    = reactKword KwOut)
+>     reactify Out    = reactKword KwOut
 >     reactify (Call _) = reactKword KwCall
 >     reactify elim   = fromString $ show $ elim

@@ -1,7 +1,6 @@
 Unification
 ===========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, PatternSynonyms #-}
 
 > module Tactics.Unification where

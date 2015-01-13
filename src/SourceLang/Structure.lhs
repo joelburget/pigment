@@ -1,9 +1,10 @@
 Structure {#sec:SourceLang.Structure}
 =========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+
 > module SourceLang.Structure where
+
 > import Data.Foldable
 > import Data.Traversable
 > import Evidences.Tm

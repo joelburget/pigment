@@ -1,7 +1,6 @@
 Managing Entries in a Proof Context
 ===================================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes, StandaloneDeriving, PatternSynonyms #-}
 

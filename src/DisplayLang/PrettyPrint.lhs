@@ -1,7 +1,6 @@
 Pretty-printing {#sec:DisplayLang.PrettyPrint}
 ===============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
 >     TypeSynonymInstances, PatternSynonyms #-}
 

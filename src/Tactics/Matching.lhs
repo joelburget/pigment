@@ -1,7 +1,6 @@
 Matching {#sec:Tactics.Matching}
 ========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}
 
 > module Tactics.Matching where

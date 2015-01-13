@@ -1,7 +1,6 @@
 Lambda-lifting and discharging {#sec:ProofState.Interface.Lifting}
 ==============================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs, PatternSynonyms #-}
 
 > module ProofState.Interface.Lifting where

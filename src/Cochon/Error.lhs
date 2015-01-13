@@ -1,7 +1,6 @@
 Cochon error prettier
 =====================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
 >     DeriveFunctor, DeriveFoldable, DeriveTraversable, PatternSynonyms #-}
 

@@ -1,7 +1,6 @@
 The `ProofState` monad {#sec:ProofState.Edition.ProofState}
 ======================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
 > module ProofState.Edition.ProofState where

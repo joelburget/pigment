@@ -110,7 +110,7 @@ Evaluation under binders needs to distinguish two cases:
 
 -   the binder ignores its argument, or
 
--   a variable `x` is defined and bound in a term |t|
+-   a variable `x` is defined and bound in a term `t`
 
 In the first case, we can trivially go under the binder and innocently
 evaluate. In the second case, we turn the binding – a term – into a
@@ -132,7 +132,7 @@ Evaluator
 
 Putting the above pieces together, plus some machinery, we are finally
 able to implement an evaluator. On a technical note, we are working in
-the Applicative |-\> ENV| and use She's notation for writing
+the Applicative `-> ENV` and use She's notation for writing
 applicatives.
 
 The evaluator is typed as follow: provided with a term and a variable

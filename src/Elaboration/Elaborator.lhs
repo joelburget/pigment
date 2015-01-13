@@ -1,7 +1,6 @@
 Invoking the Elaborator {#sec:Elaborator.Elaborator}
 =======================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards,
 >     PatternSynonyms #-}
 

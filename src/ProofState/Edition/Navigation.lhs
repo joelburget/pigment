@@ -1,7 +1,6 @@
 Navigating in the Proof Context {#sec:Proofstate.Edition.Navigation}
 ===============================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes, PatternSynonyms #-}
 

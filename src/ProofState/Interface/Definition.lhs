@@ -1,7 +1,6 @@
 Making Definitions
 ==================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
 > module ProofState.Interface.Definition where
