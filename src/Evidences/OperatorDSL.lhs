@@ -65,7 +65,7 @@ try this.
 > runOpTree (ORet v)          xs   = Right (v $$$ map A xs)
 > runOpTree _  (N e : xs)   = Left e
 
-Grot! Why does the |Monad (Either e)| instance demand |(Except e)|? I
+Grot! Why does the `Monad (Either e)` instance demand `(Except e)`? I
 shut it up.
 
 instance Error NEU where strMsg = error

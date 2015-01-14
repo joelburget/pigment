@@ -44,7 +44,7 @@ distillation job for us. However, we first have to turn the de Bruijn
 indices into references.
 
 > distillScheme entries refs (SchType ty) = do
->     -- Instantiate de Bruijn indices with |refs|
+>     -- Instantiate de Bruijn indices with `refs`
 >     let ty1 = underneath refs ty
 >     -- Distill the type
 >     ty2 :=>: _ <- distill entries (SET :>: ty1)

@@ -245,14 +245,14 @@ pretty functions they implement.
 
 > distillInfer es (t :$ Call (N l)) as = distillInfer es l as
 
-To distill a parameter with a spine of eliminators, we use |unresolve|
+To distill a parameter with a spine of eliminators, we use `unresolve`
 to determine a relative name for the reference, the number of shared
 parameters, and possibly a scheme attached to it. We then call on
-|distillSpine| to process the eliminators, and return the distilled
+`distillSpine` to process the eliminators, and return the distilled
 elimination with the shared parameters and implicit arguments removed.
 
 > distillInfer entries tm@(P (name := kind :<: ty)) spine = do
->     -- Compute a relative name from |name|
+>     -- Compute a relative name from `name`
 >     proofCtxt <- get
 >     let  (relName, argsToDrop, mSch) =
 >           unresolve name kind spine (inBScope proofCtxt) entries
@@ -341,7 +341,7 @@ application.
 >                  ProofStateT INTM (DSPINE, TY)
 > distillSpine _        (_ :<: ty)    []         = return ([], ty)
 > distillSpine entries  (v :<: C ty)  (a:spine)  = do
->     -- Distill structurally the eliminator |a|
+>     -- Distill structurally the eliminator `a`
 >     (e1, ty1) <- elimTy (distill entries) (v :<: ty) a
 >     -- Further distill the spine
 >     (es, ty2) <- distillSpine entries (v $$ (fmap valueOf e1) :<: ty1) spine
@@ -356,7 +356,7 @@ application.
 >     , map ErrorElim spine
 >     ]
 
-The `toDExTm` helper function will distill a term to produce an |Ex|
+The `toDExTm` helper function will distill a term to produce an `Ex`
 representation by applying a type annotation only if necessary.
 
 > toDExTm :: Entries -> (INTM :>: INTM) -> ProofStateT INTM DExTmRN

@@ -219,7 +219,7 @@ Sorry for the horrible de Bruijn index mangling.
 >         SchExplicitPi (x :<: schS) (makeCall l (n+1) schT)
 
 The `elabProgram` command adds a label to a type, given a list of
-arguments. e.g. with a goal |plus : Nat -\> Nat -\> Nat|, |program x,y|
+arguments. e.g. with a goal `plus : Nat -> Nat -> Nat`, `program x,y`
 will give a proof state of:
 
     plus [

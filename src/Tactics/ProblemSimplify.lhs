@@ -288,7 +288,7 @@ Otherwise, we cannot simplify the problem.
 
 > simplifyGoal _ _ = throwError $ sErr "simplifyGoal: cannot simplify"
 
-When at the top level and simplifying a $\Pi$-type, |passHypothesis|
+When at the top level and simplifying a $\Pi$-type, `passHypothesis`
 introduces a hypothesis into the context and continues simplifying. Its
 argument is the codomain function of the $\Pi$-type.
 

@@ -29,11 +29,6 @@ Canonical objects
 Historically, canonical terms were type-checked by the following
 function:
 
-\< canTy :: (t -\> VAL) -\> (Can VAL :\>: Can t) -\> Maybe (Can (TY :\>:
-t)) \< canTy ev (Set :\>: Set) = Just Set \< canTy ev (Set :\>: Pi s t)
-= Just (Pi (SET :\>: s) ((ARR (ev s) SET) :\>: t) \< canTy \_ \_ =
-Nothing
-
 If we temporally forget Features, we have here a type-checker that takes
 an evaluation function `ev`, a type, and a term to be checked against
 this type. When successful, the result of typing is a canonical term
@@ -42,17 +37,17 @@ it for free during type-checking.
 
 However, to avoid re-implementing the typing rules in various places, we
 had to generalize this function. The generalization consists in
-parameterizing `canTy` with a type-directed function |TY :\>: t -\> s|,
-which is equivalent to |TY -\> t -\> s|. Because we still need an
+parameterizing `canTy` with a type-directed function `TY :>: t -> s`,
+which is equivalent to `TY -> t -> s`. Because we still need an
 evaluation function, both functions are fused into a single one, of
-type: |TY :\>: t -\> (s,VAL)|. To support failures, we extend this type
-to |TY :\>: t -\> m (s,VAL)| where `m` is a `MonadError`.
+type: `TY :>: t -> (s,VAL)`. To support failures, we extend this type
+to `TY :>: t -> m (s,VAL)` where `m` is a `MonadError`.
 
 Hence, by defining an appropriate function `chev`, we can recover the
 previous definition of `canTy`. We can also do much more: intuitively,
 we can write any type-directed function in term of `canTy`. That is, any
 function traversing the types derivation tree can be expressed using
-|canTy|.
+`canTy`.
 
 > canTy ::  (Alternative m, MonadError (StackError t) m) =>
 >           (TY :>: t -> m (s :=>: VAL)) ->
@@ -232,26 +227,23 @@ function traversing the types derivation tree can be expressed using
 Eliminators
 
 Type-checking eliminators mirrors `canTy`. `elimTy` is provided with a
-checker-evaluator, a value `f` of inferred typed `t`, ie. a |f :\<: t|
-of |VAL :\<: Can VAL|, and an eliminator of |Elim t|. If the operation
+checker-evaluator, a value `f` of inferred typed `t`, ie. a `f :<: t`
+of `VAL :<: Can VAL`, and an eliminator of `Elim t`. If the operation
 is type-safe, we are given back the eliminator enclosing the result of
-|chev| and the type of the eliminated value.
+`chev` and the type of the eliminated value.
 
-it computes the type of the argument, ie. the eliminator, in |Elim (s
-:=\>: VAL)| and the type of the result in `TY`.
+it computes the type of the argument, ie. the eliminator, in `Elim (s
+:=>: VAL)` and the type of the result in `TY`.
 
 Carefully bring t into scope (we don't really care about m and s) so we
-can refer to it in \`ErrorItem t\`, which disambiguates an instance -
-\`ErrorList a =\> Error [a]\` vs \`Error [ErrorItem INTM]\`, which we
+can refer to it in `ErrorItem t`, which disambiguates an instance -
+`ErrorList a => Error [a]` vs `Error [ErrorItem INTM]`, which we
 want.
 
 > elimTy :: forall t m s. MonadError (StackError t) m =>
 >            (TY :>: t -> m (s :=>: VAL)) ->
 >            (VAL :<: Can VAL) -> Elim t ->
 >            m (Elim (s :=>: VAL),TY)
-
-elimTy :: (TY :\>: t -\> Check s (s :=\>: VAL)) -\> (VAL :\<: Can
-VAL) -\> Elim t -\> Check s (Elim (s :=\>: VAL),TY)
 
 > elimTy chev (f :<: Pi s t) (A e) = do
 >   eev@(e :=>: ev) <- chev (s :>: e)
@@ -289,9 +281,6 @@ delivers the type of the whole application. To do that, one must be able
 to evaluate arguments. It is vital to type-check the sub-terms (left to
 right) before trusting the type at the end. This corresponds to the
 following type:
-
-\< opTy :: forall t. (t -\> VAL) -\> [t] -\> Maybe ([TY :\>: t] , TY) \<
-opTy ev args = (...)
 
 Where we are provided an evaluator `ev` and the list of arguments, which
 length should be the arity of the operator. If the type of the arguments
@@ -334,7 +323,7 @@ sequents, keep reading.
 
 The checker works as follow. In a valid typing environment $\Gamma$, it
 checks that the term $t$ is indeed of type $T$, ie. $t$ can be pushed
-into $T$: |T :\>: t|:
+into $T$: `T :>: t`:
 
 $$\Gamma \vdash \mbox{TY} \ni \mbox{Tm \{In,.\} p}$$
 

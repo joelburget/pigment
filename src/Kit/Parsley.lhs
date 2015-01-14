@@ -43,7 +43,7 @@ tokens `t` to:
 > newtype Parsley t x = Parsley
 >     {runParsley :: [t] -> Either (PFailure t) ([t], x, [t])}
 
-The informal semantics given above is formalized by the |parse|
+The informal semantics given above is formalized by the `parse`
 function. A successful parse gives a lexeme, with no remaining tokens.
 In all other cases, something went wrong.
 
@@ -156,8 +156,8 @@ to hitting a delimiter recognized by `delim`.
 
 Thanks to the monadic nature of our parser, we can implement the
 following looping combinator. Hence, we can parse some input `a` with
-|p| and bind it. Then, we can try to use the dynamically generated
-parser |l a|. Failing that, we simply return `a`.
+`p` and bind it. Then, we can try to use the dynamically generated
+parser `l a`. Failing that, we simply return `a`.
 
 > pLoop :: Parsley t a -> (a -> Parsley t a) -> Parsley t a
 > pLoop p l = do

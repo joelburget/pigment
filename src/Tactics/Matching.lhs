@@ -68,7 +68,7 @@ in. It expands elements of $\Pi$-types by applying them to fresh
 references, which must not occur in solution values (this might
 otherwise happen when given a higher-order matching problem with no
 solutions). The fresh references are therefore collected in a list and
-|checkSafe| (defined below) is called to ensure none of the unsafe
+`checkSafe` (defined below) is called to ensure none of the unsafe
 references occur.
 
 > matchValue :: Bwd REF -> TY :>: (VAL, VAL) -> StateT MatchSubst ProofState ()
@@ -135,7 +135,7 @@ along with the matching substitution.
 >     ]
 
 As noted above, fresh references generated when expanding $\Pi$-types
-must not occur as solutions to matching problems. The |checkSafe|
+must not occur as solutions to matching problems. The `checkSafe`
 function throws an error if any of the references occur in the value.
 
 > checkSafe :: Bwd REF -> VAL -> ProofState ()

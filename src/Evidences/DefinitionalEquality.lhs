@@ -74,7 +74,7 @@ trick @boutillier:report.
 
 In the case of a canonical term, we use `canTy` to check that `cv` is of
 type `cty` and, more importantly, to evaluate `cty`. Then, it is simply
-a matter of quoting this |typ :\>: val| inside the canonical
+a matter of quoting this `typ :>: val` inside the canonical
 constructor, and returning the fully quoted term. The reason for the
 presence of `Just` is that `canTy` asks for a `MonadError`. Obviously,
 we cannot fail in this code, but we have to be artificially cautious.
@@ -95,12 +95,12 @@ we cannot fail in this code, but we have to be artificially cautious.
 $\eta$-expansion
 ----------------
 
-As mentioned above, ||-expansion is the first sensible thing to do when
+As mentioned above, $\eta$-expansion is the first sensible thing to do when
 quoting. Sometimes it works, especially for closures and features for
 which a `etaExpand` is defined. Quoting a closure is a bit tricky: you
 cannot compute under a binder as you would like to. So, we first have to
 generate a fresh variable `v`. Then, we apply `v` to the function `f`,
-getting a value of type |t v|. At this point, we can safely quote the
+getting a value of type `t v`. At this point, we can safely quote the
 term. The result is a binding of `v` in the quoted term.
 
 > etaExpand :: (Can VAL :>: VAL) -> NameSupply -> Maybe INTM
@@ -130,7 +130,7 @@ operation. Hence, we consider each cases in turn.
 To quote a free variable, ie. a parameter, the idea is the following. If
 we are asked to quote a free variable `P`, there are two possible cases.
 First case, we have introduced it during an $\eta$-expansion (see
-|etaExpand|, above). Hence, we know that it is bound by a lambda: it
+`etaExpand`, above). Hence, we know that it is bound by a lambda: it
 needs to be turned into the bound variable `V`, with the right De Bruijn
 index. Second case, we have not introduced it: we can simply return it
 as such.
@@ -143,8 +143,8 @@ as such.
 
 The code above relies on the very structure of the names, as provided by
 the `NameSupply`. We know that a free variable has been created by
-|quote| if and only if the current name supply and the namespace `ns` of
-the variable are the same. Hence, the test |ns == r|. Then, we compute
+`quote` if and only if the current name supply and the namespace `ns` of
+the variable are the same. Hence, the test `ns == r`. Then, we compute
 the De Bruijn index of the bound variable by counting the number of
 lambdas traversed up to now – by looking at `j-1` in our current name
 supply `(r,j)` – minus the number of lambdas traversed at the time of

@@ -15,8 +15,8 @@ Defining the Proof State monad
 ------------------------------
 
 The proof state monad provides access to the `ProofContext` as in a
-|State| monad, but with the possibility of command failure represented
-by |Either (StackError e)|.
+`State` monad, but with the possibility of command failure represented
+by `Either (StackError e)`.
 
 TODO(joel) - figure out the fail semantics for ProofStateT
 
@@ -43,8 +43,8 @@ optional.
 > many' :: ProofState a -> ProofState [a]
 > many' = many
 
-Some functions, such as `distill`, are defined in the |ProofStateT INTM|
-monad. However, Cochon lives in a |ProofStateT DInTmRN| monad.
+Some functions, such as `distill`, are defined in the `ProofStateT INTM`
+monad. However, Cochon lives in a `ProofStateT DInTmRN` monad.
 Therefore, in order to use it, we will need to lift from the former to
 the latter.
 

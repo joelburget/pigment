@@ -108,12 +108,12 @@ either:
 
 -   discover that $P$ is absurd and provide a proof
     $\Gamma \vdash \Bhab{f}{(\prf{P} \Imply \Absurd)}$, represented by
-    |Left f|; or
+    `Left f`; or
 
 -   simplify $P$ to a conjunction ${\bigwedge_{i} {P}_{i}}$ together
     with proofs $\Gamma \vdash \Bhab{g_i}{(\prf{P} \Imply P_i)}$ and
     $\Gamma, \vec{P_i} \vdash \Bhab{h}{(\prf{P})}$, represented by
-    |Right (ps, gs, h)|.
+    `Right (ps, gs, h)`.
 
 > type Simplify = Either  (EXTM -> INTM)
 >                         (Bwd (REF :<: INTM), Bwd (EXTM -> INTM), INTM)
@@ -143,7 +143,7 @@ Simplification in Action
 The `propSimplify` command takes a global context, local context and
 proposition; it attempts to simplify the proposition following the rules
 above. if the result is `SimplyAbsurd` or `SimplyTrivial` then no
-simplification is guaranteed to have taken place, but if it is |Simply|
+simplification is guaranteed to have taken place, but if it is `Simply`
 one or more new propositions then these will be simpler than the
 original proposition. Note that this may fail if no simplification is
 possible.
@@ -245,8 +245,8 @@ conjunction of implications. Each implication is from the simplified
 components of $P$ to a single simplified component of $Q$. To prove the
 original implication, we assume a proof of $P$, then construct proofs of
 the `pis` from it and proofs of the `qis` by applying the proofs of the
-|ris| to these. We can then substitute these proofs for the `pis` and
-|qis| in the proof of $Q$.
+`ris` to these. We can then substitute these proofs for the `pis` and
+`qis` in the proof of $Q$.
 
 >     consequent (Simply pis pgs ph, simpP) (Simply qis qgs qh, simpQ)
 >         | simpP || simpQ = do
@@ -364,9 +364,9 @@ If nothing else matches, we can always try searching the context.
 > propSimplify delta p = propSearch delta p
 
 The `simplifyBlue` command attempts to simplify a blue equation using
-|refl|, optionally unrolling it (calling eqGreen and simplifying the
+`refl`, optionally unrolling it (calling eqGreen and simplifying the
 resulting pieces), or just searching the context. Note that if the
-|canUnroll| boolean is `False`, this will either find a proof of the
+`canUnroll` boolean is `False`, this will either find a proof of the
 equation and return `SimplyTrivial`, or it will fail.
 
 > simplifyBlue ::  Bool -> Bwd REF -> TY :>: VAL -> TY :>: VAL ->
@@ -472,7 +472,7 @@ current name supply and context:
 >     return $ runReaderT (propSimplify (bwdList es) p) nsupply
 
 The `propSimplifyHere` command attempts propositional simplification on
-the current location, which must be an open goal of type |PRF p| for
+the current location, which must be an open goal of type `PRF p` for
 some `p`. If it is unable to simplify `p` or simplifies it to `FF`, it
 will fail and throw an error. Otherwise, it will create zero or more new
 subgoals (from the conjuncts of the simplified proposition, if any),

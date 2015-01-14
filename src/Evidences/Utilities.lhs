@@ -65,9 +65,9 @@ the type of the reference and the term to be bound.
 >         wrapFs bs cs (binder c (fst (last n)) ty tm)
 
 Using the above, we can easily discharge and $\forall$-bind or discharge
-and $\Pi$-bind. Note that when the bound variable is not used, a |K|
+and $\Pi$-bind. Note that when the bound variable is not used, a `K`
 binder is used. For `dischargeAll`, the initial term must be in the form
-|PRF q| for some proposition `q`.
+`PRF q` for some proposition `q`.
 
 > dischargeAll :: Bwd (REF :<: INTM) -> INTM -> INTM
 > dischargeAll = dischargeF f

@@ -96,7 +96,7 @@ Otherwise, something has gone horribly wrong.
 The `mkEqConj` function builds a conjunction of `eqGreen` propositions
 by folding over a list. It is uniformly structural for canonical terms,
 ignoring contravariance. Therefore, this requires a special case for
-|Pi| in `opRunEqGreen`.
+`Pi` in `opRunEqGreen`.
 
 > mkEqConj :: [(TY :>: VAL,TY :>: VAL)] -> VAL
 > mkEqConj ((tt0, tt1) : [])  = tt0 <-> tt1
@@ -120,17 +120,17 @@ the value and uses the coherence axiom `coh` to produce the proof.
 
 The `coerce` function transports values between equal canonical sets.
 Given two sets built from the same canonical constructor (represented as
-|Can (VAL, VAL)|, a proof of their equality and an element of the first
-set, it will try to return |Right v| where `v` is an element of the
+`Can (VAL, VAL)`, a proof of their equality and an element of the first
+set, it will try to return `Right v` where `v` is an element of the
 second set. If computation is blocked by a neutral value `n`, it will
-return |Left n|.
+return `Left n`.
 
 Features must extend this definition using the `Coerce` aspect for every
 canonical set-former they introduce. They must handle coercions between
 all canonical inhabitants of such sets, but need not deal with neutral
 inhabitants. To ensure we can add arbitrary consistent axioms to the
 system, they should not inspect the proof, but may eliminate it with
-|naughtE| if asked to coerce between incompatible sets.
+`naughtE` if asked to coerce between incompatible sets.
 
 > coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > coerce Set q x = Right x

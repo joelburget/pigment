@@ -1,4 +1,4 @@
-|ElabProb|: syntactic representation of elaboration problems {#sec:Elaboration.ElabProb}
+`ElabProb`: syntactic representation of elaboration problems {#sec:Elaboration.ElabProb}
 ============================================================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -41,7 +41,7 @@ It caches the value representations of terms it contains.
 >     |  ElabSchedule (ElabProb x)
 >        -- kick off the scheduler
 
-|ElabProb| is a traversable functor, parameterised by the type of
+`ElabProb` is a traversable functor, parameterised by the type of
 references, which are typically `REF`s. Note that traversal will discard
 the cached values, but this is okay because the terms need to be
 re-evaluated after they have been updated anyway.

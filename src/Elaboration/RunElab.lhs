@@ -184,7 +184,7 @@ into some definitions, or clashes could happen.
 
 As mentioned above, some commands can only be used when elaboration is
 taking place in the current goal. This is the purpose of
-|runElabNewGoal|: it creates a dummy definition and hands back the
+`runElabNewGoal`: it creates a dummy definition and hands back the
 elaboration task to `runElab`.
 
 > runElabNewGoal :: (TY :>: Elab (INTM :=>: VAL)) -> ProofState (INTM :=>: VAL, ElabStatus)
@@ -416,7 +416,7 @@ it using the propositional simplification machinery.
 >     subProof wrk (PRF p) = flexiProof wrk p <|> lastHope wrk (PRF p)
 
 After simplification has dealt with the easy stuff, it calls
-|flexiProof| to solve any flex-rigid equations (by suspending a solution
+`flexiProof` to solve any flex-rigid equations (by suspending a solution
 process on a subgoal and returning the subgoal).
 
 > flexiProof :: WorkTarget -> VAL -> ProofState (INTM :=>: VAL, ElabStatus)

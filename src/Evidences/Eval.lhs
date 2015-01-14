@@ -196,7 +196,7 @@ variable with a free variable. Starting from the right, each characte of
 the bound name is mapped to the corresponding character of the free
 name. The first character of the bound name is mapped to the whole
 remaining prefix. So instantiating `"xys"` with `"monks"` maps `'y'` to
-|"k"| and `'x'` to `"mon"`. The idea is that matching the target of an
+`"k"` and `'x'` to `"mon"`. The idea is that matching the target of an
 eliminator in this way will give good names to the variables bound in
 its methods, if we're lucky and well prepared.
 
@@ -215,7 +215,7 @@ Util
 
 The `sumlike` function determines whether a value representing a
 description is a sum or a sigma from an enumerate. If so, it returns
-|Just| the enumeration and a function from the enumeration to
+`Just` the enumeration and a function from the enumeration to
 descriptions.
 
 > sumlike :: VAL -> Maybe (VAL, VAL -> VAL)

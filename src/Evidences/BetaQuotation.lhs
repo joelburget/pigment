@@ -23,7 +23,7 @@ Therefore, the code is much more simpler than `quote`, although the idea
 is the same.
 
 It is important to note that we are in a `NameSupplier` and we don't
-require a specially crafted `NameSupply` (unlike `quote` and |quop|).
+require a specially crafted `NameSupply` (unlike `quote` and `quop`).
 Because of that, we have to maintain the variables we have generated and
 to which De Bruijn index they correspond. This is the role of the
 backward list of references. Note also that we let the user provide an

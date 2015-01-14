@@ -114,7 +114,7 @@ cochonTactics = sort
     ]
 
 {-
-We have some shortcuts for building common kinds of tactics: |simpleCT|
+We have some shortcuts for building common kinds of tactics: `simpleCT`
 builds a tactic that works in the proof state, and there are various
 specialised versions of it for nullary and unary tactics.
 -}

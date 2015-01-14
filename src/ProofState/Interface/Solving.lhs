@@ -83,7 +83,7 @@ Finding trivial solutions
 Often, to solve a goal, we make a definition that contains further
 developments and, eventually, leads to a solution. To solve the goal, we
 are therefore left to `give` this definition. This is the role of the
-|done| command that tries to `give` the entry above the cursor.
+`done` command that tries to `give` the entry above the cursor.
 
 > done :: ProofState (EXTM :=>: VAL)
 > done = do
@@ -106,11 +106,11 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 >   devEntry <- getEntryAbove
 >   case devEntry of
 >     EDEF f@(_ := _ :<: (PI _S _T)) _ _ _ _ _ _ -> do
->         -- The entry above is a proof of |Pi S T|
->         -- Ask for a proof of |S|
+>         -- The entry above is a proof of `Pi S T`
+>         -- Ask for a proof of `S`
 >         _STm <- bquoteHere _S
 >         sTm :=>: s <- make $ (AnchStr "s") :<: _STm
->         -- Make a proof of |T|
+>         -- Make a proof of `T`
 >         _TTm <- bquoteHere $ _T $$ A s
 >         make $ (AnchStr "t") :<: _TTm
 >         goIn

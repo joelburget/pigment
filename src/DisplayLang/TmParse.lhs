@@ -70,7 +70,7 @@ appropriate type annotation.
 >   where typeAnnot tm ty = DType ty ::$ [A tm]
 
 Each `sized` parser tries the appropriate `special` parser for the size,
-then falls back to parsing at the previous size followed by a |more|
+then falls back to parsing at the previous size followed by a `more`
 parser. At the smallest size, brackets must be used to start parsing
 from the largest size again. Concrete syntax is matched using the lists
 of parsers defined in the following subsection.
@@ -104,7 +104,7 @@ Lists of sized parsers
 ----------------------
 
 A `SizedParserList` is a list of parsers associated to every size; a
-|ParamParserList| allows the parser to depend on a parameter.
+`ParamParserList` allows the parser to depend on a parameter.
 
 > type SizedParserList a    = [(Size, [Parsley Token a])]
 > type ParamParserList a b  = [(Size, [a -> Parsley Token b])]
