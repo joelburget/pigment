@@ -23,6 +23,7 @@ executable pigment
       lens-family == 1.2.0,
       mtl >= 2.2,
       void >= 0.7,
+      newtype == 0.2,
       pretty == 1.1.1.*,
       haste-lib == 0.5,
       react-haskell == 1.3.0.0

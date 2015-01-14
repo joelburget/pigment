@@ -7,8 +7,10 @@ Unification
 
 > import Prelude hiding (any, elem)
 > import Control.Monad.Except
+> import Control.Newtype
 > import Data.Foldable
 > import qualified Data.Monoid as M
+
 > import Evidences.Tm
 > import Evidences.Eval
 > import ProofState.Structure.Developments
@@ -78,8 +80,10 @@ old dependency holes with the new ones.
 >             ]
 >       | otherwise = cursorUp >> solveHole' ref deps tm
 >     pass (EModule modName _ _) = goIn >> solveHole' ref deps tm
+
 >     occurs :: REF -> Bool
->     occurs ref = any (== ref) tm || ala M.Any foldMap (any (== ref) . snd) deps
+>     occurs ref = any (== ref) tm || ala' M.Any foldMap (any (== ref) . snd) deps
+
 >     makeDeps :: [(REF, INTM)] -> NewsBulletin -> ProofState NewsBulletin
 >     makeDeps [] news = return news
 >     makeDeps ((name := HOLE k :<: tyv, ty) : deps) news = do

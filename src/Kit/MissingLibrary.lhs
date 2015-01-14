@@ -1,12 +1,12 @@
 Missing Library
 ===============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeFamilies, TypeOperators, UndecidableInstances, TypeSynonymInstances #-}
 
 > module Kit.MissingLibrary where
 
 > import Control.Applicative
+> import Control.Newtype
 > import Control.Monad.Writer
 > import Data.Foldable
 > import Data.Traversable
@@ -22,51 +22,6 @@ Renaming
 
 > iter :: (a -> b -> b) -> [a] -> b -> b
 > iter = flip . Prelude.foldr
-
-Newtype Unwrapping
-------------------
-
-TODO(joel) there's a newtype library now, right?
-
-> class Newtype n where
->   type Unwrap n
->   wrap :: Unwrap n -> n
->   unwrap :: n -> Unwrap n
-
-> ala :: Newtype v' =>
->        (t -> t') -> ((s -> t') -> u -> v') -> (s -> t) -> u -> Unwrap v'
-> ala p h f u = unwrap (h (p . f) u)
-
-> instance Newtype (Id a) where
->   type Unwrap (Id a) = a
->   wrap = Id
->   unwrap = unId
-
-> instance Newtype Any where
->   type Unwrap Any = Bool
->   wrap    = Any
->   unwrap  = getAny
-
-> instance Newtype (Sum a) where
->   type Unwrap (Sum a) = a
->   wrap    = Sum
->   unwrap  = getSum
-
-> instance Newtype (Endo a) where
->   type Unwrap (Endo a) = a -> a
->   wrap    = Endo
->   unwrap  = appEndo
-
-> newtype AppLift a x = AppLift (a x)
-
-> instance (Applicative a, Monoid x) => Monoid (AppLift a x) where
->   mempty = AppLift (pure mempty)
->   mappend (AppLift ax) (AppLift ay) = AppLift (mappend <$> ax <*> ay)
-
-> instance Newtype (AppLift a x) where
->   type Unwrap (AppLift a x) = a x
->   wrap = AppLift
->   unwrap (AppLift ax) = ax
 
 Missing Instances
 -----------------
@@ -138,36 +93,26 @@ Functor Kit
 
 > instance Traversable Id where
 >   traverse f (Id x) = Id <$> f x
->   hiding instance Functor id
->   hiding instance Foldable id
 
 > instance Traversable (Ko a) where
 >   traverse _ (Ko c) = pure (Ko c)
->   hiding instance Functor (Ko a)
->   hiding instance Foldable (Ko a)
 
 > instance (Traversable p, Traversable q) => Traversable (p :+: q) where
 >   traverse f (Le px)  = Le <$> traverse f px
 >   traverse f (Ri qx)  = Ri <$> traverse f qx
->   hiding instance Functor (p :+: q)
->   hiding instance Foldable (p :+: q)
 
 > instance (Traversable p, Traversable q) => Traversable (p :*: q) where
 >   traverse f (px :& qx)  = (:&) <$> traverse f px <*> traverse f qx
->   hiding instance Functor (p :*: q)
->   hiding instance Foldable (p :*: q)
 
 > instance Applicative Id where  -- makes fmap from traverse
 >   pure = Id
 >   Id f <*> Id s = Id (f s)
->   hiding instance Functor id
 
 > instance Monoid c => Applicative (Ko c) where-- makes crush from traverse
 >   -- pure :: x -> K c x
 >   pure _ = Ko mempty
 >   -- (<*>) :: K c (s -> t) -> K c s -> K c t
 >   Ko f <*> Ko s = Ko (mappend f s)
->   hiding instance Functor (Ko c)
 
 > crush :: (Traversable f, Monoid c) => (x -> c) -> f x -> c
 > crush m fx = unKo $ traverse (Ko . m) fx
@@ -209,6 +154,13 @@ Functor Kit
 
 > void :: Functor f => f a -> f ()
 > void = fmap (const ())
+
+Newtype Unwrapping
+------------------
+
+> instance Newtype (Id a) a where
+>   pack = Id
+>   unpack = unId
 
 Applicative Kit
 ---------------
