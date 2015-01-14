@@ -66,7 +66,7 @@ We will define `elim` this way:
 < elim :: Maybe REF -> (TY :>: INTM) -> ProofState ()
 < elim comma eliminator = (...)
 
-Analyzing the eliminator {#subsec:Tactics.Elimination.analysis}
+<a name="Tactics.Elimination.analysis">Analyzing the eliminator</a>
 ------------------------
 
 Presented as a development, `elim` is called in the context

@@ -1,4 +1,4 @@
-Managing Entries in a Development {#sec:ProofState.Structure.Entries}
+<a name="ProofState.Structure.Entries">Managing Entries in a Development</a>
 =================================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
@@ -70,7 +70,7 @@ Changing the carrier of an `Entry`
 
 The `entryCoerce` function is quite a thing. When defining `Dev`, we
 have been picky in letting any Traversable `f` be the carrier of the `f
-(Entry f)`. As shown in Section [sec:ProofState.Edition.ProofContext],
+(Entry f)`. As shown in Section [ProofState.Edition.ProofContext](#ProofState.Edition.ProofContext),
 we sometimes need to jump from one Traversable `f` to another
 Traversable `g`. In this example, we jump from a `NewsyFwd` – a `Fwd`
 list – to some `Entries` – a `Bwd` list.

@@ -1,4 +1,4 @@
-Elaborator {#sec:SourceLang.Elaborator}
+<a name="SourceLang.Elaborator">Elaborator</a>
 ==========
 
 > {-# OPTIONS_GHC -F -pgmF she #-}

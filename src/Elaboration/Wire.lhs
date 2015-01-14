@@ -1,4 +1,4 @@
-Wire Service {#sec:Elaboration.Wire}
+<a name="Elaboration.Wire">Wire Service</a>
 ============
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,

@@ -1,4 +1,4 @@
-The `ProofState` Kit {#sec:ProofState.Interface.ProofKit}
+<a name="ProofState.Interface.ProofKit">The `ProofState` Kit</a>
 ====================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -27,7 +27,7 @@ Accessing the `NameSupply`
 --------------------------
 
 By definition of the `Development` in
-Section [sec:ProofState.Structure.Developments], we have that every
+Section [ProofState.Structure.Developments](#ProofState.Structure.Developments), we have that every
 entry is associated a namespace by the mean of a local name supply. As a
 result, the `ProofState` can almost be made a `NameSupplier`. The
 exception being that it cannot fork the name supply, because it cannot

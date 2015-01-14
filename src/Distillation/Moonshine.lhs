@@ -1,4 +1,4 @@
-The Moonshine distillery {#sec:Distillation.Moonshine}
+<a name="Distillation.Moonshine">The Moonshine distillery</a>
 ========================
 
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}

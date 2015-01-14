@@ -1,4 +1,4 @@
-`ElabProb`: syntactic representation of elaboration problems {#sec:Elaboration.ElabProb}
+<a name="Elaboration.ElabProb">`ElabProb`: syntactic representation of elaboration problems</a>
 ============================================================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}

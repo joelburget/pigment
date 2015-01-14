@@ -27,11 +27,11 @@ The meat is actually in `makeKinded`, below.
 > make = makeKinded AnchNo Waiting
 
 When making a new definition, the reference to this definition bears a
-*hole kind* (Section [subsec:Evidences.Tm.references]). User-generated
+*hole kind* (Section [Evidences.Tm.references](#Evidences.Tm.references)). User-generated
 goals are of kind `Waiting`: waiting for the user to solve it (or, if
 lucky, an automation tool could nail it down). For making these kind of
 definition, we will use the `make` command above. However, during
-Elaboration for instance (Section [sec:Elaborator.Elaborator]), the
+Elaboration for instance (Section [Elaborator.Elaborator](#Elaborator.Elaborator)), the
 proof system will insert goals itself, with a somewhat changing mood
 such as `Hoping` or `Crying`.
 

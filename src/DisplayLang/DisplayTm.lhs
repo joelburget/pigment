@@ -38,14 +38,14 @@ However, we have removed the following:
 -   Type ascriptions, replaced by type annotations ; and
 
 -   Operators, replaced by a parameter containing the corresponding
-    reference in `primitives` (Section [sec:Evidences.Operators])
+    reference in `primitives` (Section [Evidences.Operators](#Evidences.Operators))
 
 Because of a limitation of GHC `deriving Traversable`, we define two
 mutually recursive data types instead of taking a `Dir` parameter.
 Thanks to this hack, we can use `deriving Traversable`.
 
 > data DInTm :: * -> * -> * where
->     DL     :: DScope p x       ->  DInTm p x -- \(\lambda\)
+>     DL     :: DScope p x       ->  DInTm p x -- (lambda)
 >     DC     :: Can (DInTm p x)  ->  DInTm p x -- canonical
 >     DN     :: DExTm p x        ->  DInTm p x -- neutral
 >     DQ     :: String           ->  DInTm p x -- hole

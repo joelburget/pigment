@@ -15,7 +15,7 @@ Managing Entries in a Proof Context
 
 Manipulating the `CurrentEntry`
 
-As with entries in Section [sec:ProofState.Structure.Entries], we need
+As with entries in Section [ProofState.Structure.Entries](#ProofState.Structure.Entries), we need
 some kit operating on any kind of `CurrentEntry`. So far, this is
 restricted to getting its name:
 

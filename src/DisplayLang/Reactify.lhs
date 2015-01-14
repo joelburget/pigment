@@ -1,4 +1,4 @@
-Pretty-printing {#sec:DisplayLang.Reactify}
+<a name="DisplayLang.Reactify">Pretty-printing</a>
 ===============
 
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,

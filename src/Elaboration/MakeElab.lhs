@@ -1,4 +1,4 @@
-Using the `Elab` language {#sec:Elaboration.MakeElab}
+<a name="Elaboration.MakeElab">Using the `Elab` language</a>
 =========================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -322,7 +322,7 @@ Elaborating `DExTm`s
 --------------------
 
 The `makeElabInfer` command is to `infer` in
-subsection [subsec:Evidences.TypeChecker.type-inference] as `makeElab`
+subsection [Evidences.TypeChecker.type-inference](#Evidences.TypeChecker.type-inference) as `makeElab`
 is to `check`. It elaborates the display term and infers its type to
 produce a type-term pair in the evidence language.
 

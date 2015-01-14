@@ -16,7 +16,7 @@ Searching in the Proof Context
 > import Evidences.Tm
 > import DisplayLang.Name
 
-In Section [sec:Proofstate.Edition.Navigation], we have developed
+In Section [Proofstate.Edition.Navigation](#Proofstate.Edition.Navigation), we have developed
 several commands to navigate in the proof context. Here, we extend these
 to be able *search* in the proof context.
 

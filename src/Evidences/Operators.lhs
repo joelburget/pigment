@@ -1,4 +1,4 @@
-Operators and primitives {#sec:Evidences.Operators}
+<a name="Evidences.Operators">Operators and primitives</a>
 ========================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}

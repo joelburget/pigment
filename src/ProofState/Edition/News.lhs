@@ -1,4 +1,4 @@
-News about updated references {#sec:ProofState.Edition.News}
+<a name="ProofState.Edition.News">News about updated references</a>
 =============================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -18,7 +18,7 @@ reasons, we do not wish to traverse the entire proof state every time
 modifications are made to one part of the tree. Instead, we store news
 entries below the cursor, and update following entries when the cursor
 moves down. This section describes the data that is stored in the proof
-state, and section [sec:Elaboration.Wire] describes how news is
+state, and section [Elaboration.Wire](#Elaboration.Wire) describes how news is
 propagated.
 
 News

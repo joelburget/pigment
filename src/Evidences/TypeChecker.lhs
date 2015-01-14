@@ -1,4 +1,4 @@
-Type-checker {#sec:Evidences.TypeChecker}
+<a name="Evidences.TypeChecker">Type-checker</a>
 ============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -288,7 +288,7 @@ is correct, we return them labelled with their type and the type of the
 result.
 
 However, we had to generalize it. Following the evolution of `canTy` in
-Section [subsubsec:Evidences.TypeChecker.canTy], we have adopted the
+Section [Evidences.TypeChecker.canTy](#Evidences.TypeChecker.canTy), we have adopted the
 following scheme:
 
 > opTy ::  (Alternative m, MonadError (StackError t) m) =>
@@ -300,9 +300,9 @@ world of things that might fail. Second, we have extended the evaluation
 function to perform type-checking at the same time. We also liberalise
 the return type to `s`, to give more freedom in the choice of the
 checker-evaluator. This change impacts on `exQuote`, `infer`, and
-|useOp|. If this definition is not clear now, it should become clear
+`useOp`. If this definition is not clear now, it should become clear
 after the definition of `canTy` in
-Section [subsubsec:Evidences.TypeChecker.canTy].
+Section [Evidences.TypeChecker.canTy](#Evidences.TypeChecker.canTy).
 
 > opTy op chev ss
 >   | length ss == opArity op = telCheck chev (opTyTel op :>: ss)
@@ -311,7 +311,7 @@ Section [subsubsec:Evidences.TypeChecker.canTy].
 >     , (err $ opName op)
 >     ]
 
-Type checking {#subsec:Evidences.TypeChecker.type-checking}
+<a name="Evidences.TypeChecker.type-checking">Type checking</a>
 -------------
 
 Here starts the bidirectional type-checking story. In this section, we
@@ -329,7 +329,7 @@ $$\Gamma \vdash \mbox{TY} \ni \mbox{Tm \{In,.\} p}$$
 
 Technically, we also need a name supply and handle failure with a
 convenient monad. Therefore, we jump in the `Check` monad defined in
-Section [subsec:NameSupply.NameSupplier.check-monad].
+Section [NameSupply.NameSupplier.check-monad](#NameSupply.NameSupplier.check-monad).
 
 > check :: (TY :>: INTM) -> Check INTM (INTM :=>: VAL)
 
@@ -392,7 +392,7 @@ has matched, then we have to give up.
 >     , errTm tm
 >     ]
 
-Type inference {#subsec:Evidences.TypeChecker.type-inference}
+<a name="Evidences.TypeChecker.type-inference">Type inference</a>
 --------------
 
 On the inference side, we also have a valid typing environment $\Gamma$

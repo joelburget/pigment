@@ -1,4 +1,4 @@
-The Scheme distiller {#sec:Distillation.Scheme}
+<a name="Distillation.Scheme">The Scheme distiller</a>
 ====================
 
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards #-}
@@ -24,7 +24,7 @@ Distilling schemes
 
 Distilling a scheme is similar in spirit to distilling a $\Pi$-type, in
 particular the $\lambda$-abstraction of its codomain
-(section [subsec:Distillation.Distiller.intm]). Provided a `Scheme
+(section [Distillation.Distiller.intm](#Distillation.Distiller.intm)). Provided a `Scheme
 INTM`, we compute the same scheme structure, with Display terms instead.
 
 To do so, we proceed structurally, using `distill` on types and,

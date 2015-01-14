@@ -1,4 +1,4 @@
-The `Elab` monad: a DSL for elaboration {#sec:Elaboration.ElabMonad}
+<a name="Elaboration.ElabMonad">The `Elab` monad: a DSL for elaboration</a>
 =======================================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}

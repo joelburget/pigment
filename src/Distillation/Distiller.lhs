@@ -1,4 +1,4 @@
-The distiller {#sec:Distillation.Distiller}
+<a name="Distillation.Distiller">The distiller</a>
 =============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -35,11 +35,11 @@ The distiller {#sec:Distillation.Distiller}
 
 The distiller, like the elaborator, is organized on a `check` / `infer`
 basis, following the type-checker implementation in
-Section [subsec:Evidences.TypeChecker.type-checking]. `distill` mirrors
+Section [Evidences.TypeChecker.type-checking](#Evidences.TypeChecker.type-checking). `distill` mirrors
 `check` — distilling `INTM`s, while `distillInfer` mirrors `infer` —
 distilling `EXTM`s.
 
-Distilling `INTM`s {#subsec:Distillation.Distiller.intm}
+<a name="Distillation.Distiller.intm">Distilling `INTM`s</a>
 ------------------
 
 The `distill` command converts a typed `INTM` in the Evidence language
@@ -55,7 +55,7 @@ rules in `distillBase`.
 When going under a binder, we have to introduce fresh names to distill
 further. When christening, these fresh names have to be dealt with
 separately (see `unresolve` in
-Section [subsec:ProofState.Interface.NameResolution.christening]):
+Section [ProofState.Interface.NameResolution.christening](#ProofState.Interface.NameResolution.christening)):
 indeed, they are actually bound variables. Hence, we collect this *local
 scope* as a list of `Entries`.
 
@@ -234,7 +234,7 @@ composed of a `DHead` — either parameter, type annotation, or embedding
 of `ExTm` — and followed by a spine of eliminators. To perform this
 translation, we accumulate a `spine` and distill it when we reach the
 head. Doing so, shared parameters can be removed (see
-subsection [subsec:ProofState.Interface.NameResolution.christening]).
+subsection [ProofState.Interface.NameResolution.christening](#ProofState.Interface.NameResolution.christening)).
 
 > distillInfer ::  Entries -> EXTM -> Spine TT REF ->
 >                  ProofStateT INTM (DExTmRN :<: TY)

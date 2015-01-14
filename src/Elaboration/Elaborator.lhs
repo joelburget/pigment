@@ -1,4 +1,4 @@
-Invoking the Elaborator {#sec:Elaborator.Elaborator}
+<a name="Elaborator.Elaborator">Invoking the Elaborator</a>
 =======================
 
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards,
@@ -45,7 +45,7 @@ Elaborating terms
 The `elaborate` command elaborates a term in display syntax, given its
 type, to produce an elaborated term and its value representation. It
 behaves similarly to `check` from
-subsection [subsec:Evidences.TypeChecker.type-checking], except that it
+subsection [Evidences.TypeChecker.type-checking](#Evidences.TypeChecker.type-checking), except that it
 operates in the `Elab` monad, so it can create subgoals and
 $\lambda$-lift terms.
 
@@ -143,7 +143,7 @@ type, and creates a $\Pi$ with that type.
 >     tt <- elaborate' (SET :>: ty)
 >     assumeParam (s :<: tt)
 
-Elaborating programming problems {#subsec:Elaborator.Elaborator.elab-prog-problem}
+<a name="Elaborator.Elaborator.elab-prog-problem">Elaborating programming problems</a>
 --------------------------------
 
 The `elabLet` command sets up a programming problem, given a name and

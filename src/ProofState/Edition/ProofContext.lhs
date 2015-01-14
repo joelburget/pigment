@@ -1,4 +1,4 @@
-Proof Context {#sec:ProofState.Edition.ProofContext}
+<a name="ProofState.Edition.ProofContext">Proof Context</a>
 =============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -16,7 +16,7 @@ Proof Context {#sec:ProofState.Edition.ProofContext}
 > import Evidences.Tm
 > import Kit.BwdFwd
 
-Recall from Section [sec:ProofState.Structure.Developments] the
+Recall from Section [ProofState.Structure.Developments](#ProofState.Structure.Developments) the
 definition of a development:
 
     type Dev = (f (Entry f), Tip, NameSupply)
@@ -55,7 +55,7 @@ The derivative makes sense only for definitions and modules, which have
 sub-developments. Parameters being childless, they ‘derive to 0'. Hence,
 the data about the working development is the derivative of the
 Definition and Module data-types defined in
-Section [subsubsec:ProofState.Structure.Developments.entry].
+Section [ProofState.Structure.Developments.entry](#ProofState.Structure.Developments.entry).
 
 > data CurrentEntry
 >     = CDefinition DefKind REF (String, Int) INTM EntityAnchor Bool
@@ -65,7 +65,7 @@ Section [subsubsec:ProofState.Structure.Developments.entry].
 One would expect the `belowEntries` to be an `Entries`, just as the
 `aboveEntries`. However, the `belowEntries` needs to be a richer
 structure to support the news infrastructure
-(Section [sec:ProofState.Edition.News]). Indeed, we propagate reference
+(Section [ProofState.Edition.News](#ProofState.Edition.News)). Indeed, we propagate reference
 updates lazily, by pushing news bulletin below the current cursor.
 
 Hence, the `belowEntries` are not only normal entries but also contain

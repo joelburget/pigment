@@ -83,7 +83,7 @@ Conor's work on Ornamemts @mcbride:ornaments builds up from a simplified
 authoritative source shall be cited: Dybjer et al. on
 induction-recursion @dybjer:ir_axiom [@dybjer:ir_algebra; @dybjer:iir].
 
-Language {#sec:language}
+<a name="language">Language</a>
 --------
 
 $$\begin{array}{rll}

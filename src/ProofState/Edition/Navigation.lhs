@@ -1,4 +1,4 @@
-Navigating in the Proof Context {#sec:Proofstate.Edition.Navigation}
+<a name="Proofstate.Edition.Navigation">Navigating in the Proof Context</a>
 ===============================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
@@ -23,15 +23,15 @@ Navigating in the Proof Context {#sec:Proofstate.Edition.Navigation}
 > import {-# SOURCE #-} Elaboration.Wire
 > import Evidences.Tm
 
-In Section [sec:ProofState.Structure.Developments], we have developed
+In Section [ProofState.Structure.Developments](#ProofState.Structure.Developments), we have developed
 the notion of `Development`, a tree reifing the proof construction
 process. In order to navigate this tree, we have computed its zipper in
-Section [sec:ProofState.Edition.ProofContext], the `ProofContext`. At
+Section [ProofState.Edition.ProofContext](#ProofState.Edition.ProofContext), the `ProofContext`. At
 this stage, we have a notion of *movement* in the proof context.
 
 However, we had to postpone the development of navigation commands to
 this stage, where we have the ability to *edit* the `ProofState`
-(Section [sec:ProofState.Edition.ProofState]). Indeed, when moving down,
+(Section [ProofState.Edition.ProofState](#ProofState.Edition.ProofState)). Indeed, when moving down,
 we might hit a news bulletin. A news bulletin is a lazy edition process.
 In order to move, we have to propogate the news, hence effectively
 editing the proof state.

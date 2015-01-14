@@ -1,4 +1,4 @@
-Structure {#sec:SourceLang.Structure}
+<a name="SourceLang.Structure">Structure</a>
 =========
 
 > {-# LANGUAGE DeriveFunctor, DeriveFoldable, DeriveTraversable #-}

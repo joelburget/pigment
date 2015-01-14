@@ -18,7 +18,7 @@ Observational Equality
 Let's have some observational equality, now!
 @altenkirch_mcbride_swierstra:obs_equality
 
-The `eqGreen` operator, defined in section [sec:Features.Equality],
+The `eqGreen` operator, defined in section [Features.Equality](#Features.Equality),
 computes the proposition that two values are equal if their containing
 sets are equal. We write `<->` for application of this operator.
 

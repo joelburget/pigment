@@ -1,4 +1,4 @@
-Equality and Quotation {#sec:Evidences.DefinitionalEquality}
+<a name="Evidences.DefinitionalEquality">Equality and Quotation</a>
 ======================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -21,7 +21,7 @@ Testing for equality is a direct application of normalization by
 evaluation@dybjer:nbe [@chapman:phd; @dybjer:dependent_types_work]: to
 compare two values, we first bring them to their normal form. Then, it
 is a simple matter of syntactic equality, as defined in Section
-[subsec:Evidences.Tm.syntactic-equality], to compare the normal forms.
+[Evidences.Tm.syntactic-equality](#Evidences.Tm.syntactic-equality), to compare the normal forms.
 
 > equal :: (TY :>: (VAL, VAL)) -> NameSupply -> Bool
 > equal (ty :>: (v1,v2)) r = quote (ty :>: v1) r == quote (ty :>: v2) r

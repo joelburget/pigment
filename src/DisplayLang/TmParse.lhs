@@ -1,4 +1,4 @@
-Parsing Terms {#sec:DisplayLang.TmParse}
+<a name="DisplayLang.TmParse">Parsing Terms</a>
 =============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -16,7 +16,7 @@ Parsing Terms {#sec:DisplayLang.TmParse}
 
 The term parser eats structured `Token`s as defined in @Lexer.lhs@. It
 uses the monadic parser combinators to translate the grammar of terms
-defined in Section [sec:language].
+defined in Section [language](#language).
 
 Names
 -----

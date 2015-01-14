@@ -1,4 +1,4 @@
-Parser {#sec:SourceLang.Parser}
+<a name="SourceLang.Parser">Parser</a>
 ======
 
 > module SourceLang.Parser where

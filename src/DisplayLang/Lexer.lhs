@@ -1,4 +1,4 @@
-Lexer {#sec:DisplayLang.Lexer}
+<a name="DisplayLang.Lexer">Lexer</a>
 =====
 
 The lexical structure is extremely simple. The reason is that Cochon

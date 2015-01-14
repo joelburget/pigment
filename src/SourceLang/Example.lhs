@@ -1,4 +1,4 @@
-Example {#sec:SourceLang.Example}
+<a name="SourceLang.Example">Example</a>
 =======
 
 > module SourceLang.Example where

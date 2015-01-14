@@ -442,7 +442,7 @@ them when the term is in fact neutral.
 > (N t) ?? _   = t
 > t     ?? ty  = t :? ty
 
-Syntactic Equality {#subsec:Evidences.Tm.syntactic-equality}
+<a name="Evidences.Tm.syntactic-equality">Syntactic Equality</a>
 ------------------
 
 In the following, we implement definitional equality on terms. In this
@@ -494,11 +494,11 @@ irrelevant. We intend this for proofs, but there may be other things
 
 In this section, we have defined the syntactic equality on terms. The
 general definition of syntactic equality remains to be done. It is the
-subject of Section [sec:Evidences.DefinitionalEquality]: there, we rely
+subject of Section [Evidences.DefinitionalEquality](#Evidences.DefinitionalEquality): there, we rely
 on *quotation* to turn values into terms. Once turned into terms, we
 fall back to the equality defined above.
 
-References {#subsec:Evidences.Tm.references}
+<a name="Evidences.Tm.references">References</a>
 ----------
 
 References are the key way we represent free variables, declared,
@@ -586,7 +586,7 @@ it computing.
 >   deriving (Show)
 
 For example, labels are used in the presentation of the `Enum`
-(Section [sec:Features.Enum]) and `Desc` (Section [sec:Features.Desc])
+(Section [Features.Enum]) and `Desc` (Section [sec:Features.Desc](#Features.Enum]) and `Desc` (Section [sec:Features.Desc))
 data-types. These data-types are themselves implemented as fix-points of
 non human-readable descriptions, hence we hide the details behind a
 label. The curious reader is referred to their implementation. Anybody

@@ -1,4 +1,4 @@
-The Scheduler {#sec:Elaboration.Scheduler}
+<a name="Elaboration.Scheduler">The Scheduler</a>
 =============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -30,7 +30,7 @@ The Scheduler {#sec:Elaboration.Scheduler}
 
 Handling elaboration essentially requires writing an operating system.
 Having defined how to execute processes in
-section [sec:Elaborator.Elaborator], we now turn our attention to
+section [Elaborator.Elaborator](#Elaborator.Elaborator), we now turn our attention to
 process scheduling. The scheduler is called when an elaboration process
 yields (either halting after solving its goal, halting with an error, or
 suspending work until later). It searches downwards in the proof state

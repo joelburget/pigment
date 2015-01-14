@@ -1,4 +1,4 @@
-Propositional Simplification {#sec:Tactics.PropositionSimplify}
+<a name="Tactics.PropositionSimplify">Propositional Simplification</a>
 ============================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}

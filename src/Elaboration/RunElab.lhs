@@ -1,4 +1,4 @@
-Implementing the `Elab` monad {#sec:Elaborator.RunElab}
+<a name="Elaborator.RunElab">Implementing the `Elab` monad</a>
 =============================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -46,7 +46,7 @@ Implementing the `Elab` monad {#sec:Elaborator.RunElab}
 > import Kit.MissingLibrary
 > import Kit.Trace
 
-Running elaboration processes {#subsec:Elaborator.RunElab.runElab}
+<a name="Elaborator.RunElab.runElab">Running elaboration processes</a>
 -----------------------------
 
 The `runElab` proof state command actually interprets an `Elab x` in the
@@ -248,16 +248,16 @@ is indefinitely suspended.
 
 The semantics of the `ElabHope` command is specifically given by the
 `runElabHope` interpreter in
-Section [subsec:Elaboration.RunElab.elabHope].
+Section [Elaboration.RunElab.elabHope](#Elaboration.RunElab.elabHope).
 
 > runElabProb wrk loc (ty :>: ElabHope)     = runElabHope wrk ty
 
 Any case that has not matched yet ends in a suspended state: we cannot
 make progress on it right now. The suspension of an elaboration problem
 is decribed in details in
-Section [subsec:Elaboration.RunElab.suspending]. Once in a suspended
+Section [Elaboration.RunElab.suspending](#Elaboration.RunElab.suspending). Once in a suspended
 state, an elaboration problem might receive some care from the Scheduler
-(Section [sec:Elaboration.Scheduler]), which might be able to make some
+(Section [Elaboration.Scheduler](#Elaboration.Scheduler)), which might be able to make some
 progress.
 
 The following problems are suspended, for different reasons:
@@ -280,7 +280,7 @@ The following problems are suspended, for different reasons:
 >     name (ElabSchedule _)   = "suspend"
 >     name _                  = error "runElabProb: unexpected suspension."
 
-Hoping, hoping, hoping {#subsec:Elaboration.RunElab.elabHope}
+<a name="Elaboration.RunElab.elabHope">Hoping, hoping, hoping</a>
 ----------------------
 
 The `runElabHope` command interprets the `ElabHope` instruction, which
@@ -291,7 +291,7 @@ we might be able to solve the problem immediately:
 
 -   A proof of a proposition might be found or refined by the
     propositional simplifier
-    (Section [sec:Tactics.PropositionSimplify]); and
+    (Section [Tactics.PropositionSimplify](#Tactics.PropositionSimplify)); and
 
 -   The solution of a programming is often an induction hypothesis that
     is sitting in our context
@@ -352,7 +352,7 @@ We might have to go inside branches (essentially finite $\Pi$-types).
 
 We have reached a label! The question is then "is this the one we are
 looking for?" First we call on the matcher (see
-section [subsec:Tactics.Matching]) to find values for the fresh
+section [Tactics.Matching](#Tactics.Matching)) to find values for the fresh
 references, then we generate a substitution from these values and apply
 it to the call term.
 
@@ -514,7 +514,7 @@ but do not always spot them.
 >     ty' <- bquoteHere ty
 >     return . (, ElabSuccess) =<< neutralise =<< makeKinded AnchNo Hoping (AnchHope :<: ty')
 
-Suspending computation {#subsec:Elaboration.RunElab.suspending}
+<a name="Elaboration.RunElab.suspending">Suspending computation</a>
 ----------------------
 
 The `suspend` command can be used to delay elaboration, by creating a

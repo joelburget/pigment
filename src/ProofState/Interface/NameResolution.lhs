@@ -1,4 +1,4 @@
-Resolving and unresolving names {#sec:ProofState.Interface.NameResolution}
+<a name="ProofState.Interface.NameResolution">Resolving and unresolving names</a>
 ===============================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
@@ -219,7 +219,7 @@ TODO(joel) what a cluster
 >     else huntLocal (x, i) ys es as
 > huntLocal (x, i) ys [] as = Left (sErr $ "Had to give up looking for " ++ x)
 
-Unresolving absolute names to relative names {#subsec:ProofState.Interface.NameResolution.christening}
+<a name="ProofState.Interface.NameResolution.christening">Unresolving absolute names to relative names</a>
 --------------------------------------------
 
 Just as resolution automatically supplies parameters to references which

@@ -1,4 +1,4 @@
-Matching {#sec:Tactics.Matching}
+<a name="Tactics.Matching">Matching</a>
 ========
 
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}

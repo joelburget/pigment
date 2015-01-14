@@ -1,4 +1,4 @@
-Developments {#sec:ProofState.Structure.Developments}
+<a name="ProofState.Structure.Developments">Developments</a>
 ============
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
@@ -45,7 +45,7 @@ A `Module` is a development that cannot have a type or value, but simply
 packs up some other developments. A development holding a definition can
 be in one of three states: an `Unknown` of the given type, a `Suspended`
 elaboration problem for producing a value of the type (see
-section [sec:Elaboration.ElabMonad]), or a `Defined` term of the type.
+section [Elaboration.ElabMonad](#Elaboration.ElabMonad)), or a `Defined` term of the type.
 Note that the type is presented as both a term and a value for
 performance purposes.
 
@@ -184,7 +184,7 @@ development of sub-objects. The `Tip` of this sub-development will be
 `Unknown`, `Suspended` or `Defined`.
 
 A programming problem is a special kind of definition: it follows a type
-`Scheme` (Section [sec:DisplayLang.Scheme]), the high-level type of the
+`Scheme` (Section [DisplayLang.Scheme](#DisplayLang.Scheme)), the high-level type of the
 function we are implementing.
 
 > data DefKind = LETG |  PROG (Scheme INTM)

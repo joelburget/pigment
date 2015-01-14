@@ -1,4 +1,4 @@
-Schemes {#sec:DisplayLang.Scheme}
+<a name="DisplayLang.Scheme">Schemes</a>
 =======
 
 > {-# OPTIONS_GHC -F -pgmF she #-}

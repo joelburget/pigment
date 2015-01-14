@@ -35,7 +35,7 @@ location.
 
 The `definitionsToImpl` function lists the entries above the cursor that
 have been issued during elaboration of a programming problem
-(Section [subsec:Elaborator.Elaborator.elab-prog-problem]).
+(Section [Elaborator.Elaborator.elab-prog-problem](#Elaborator.Elaborator.elab-prog-problem)).
 
 > magicImplName = "impl"
 > definitionsToImpl :: ProofContext -> [REF :<: INTM]

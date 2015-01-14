@@ -83,7 +83,7 @@ actually get it for any `ReaderT NameSupply`. This is as simple as:
 >         return d
 >     askNSupply = ask
 
-The `Check` monad is a `NameSupplier` {#subsec:NameSupply.NameSupplier.check-monad}
+<a name="NameSupply.NameSupplier.check-monad">The `Check` monad is a `NameSupplier`</a>
 -------------------------------------
 
 One such example is the `Check` monad:

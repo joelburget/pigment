@@ -1,4 +1,4 @@
-Lambda-lifting and discharging {#sec:ProofState.Interface.Lifting}
+<a name="ProofState.Interface.Lifting">Lambda-lifting and discharging</a>
 ==============================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs, PatternSynonyms #-}

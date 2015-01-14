@@ -1,4 +1,4 @@
-The `ProofState` monad {#sec:ProofState.Edition.ProofState}
+<a name="ProofState.Edition.ProofState">The `ProofState` monad</a>
 ======================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
