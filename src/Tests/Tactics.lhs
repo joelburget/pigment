@@ -1,4 +1,3 @@
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, PatternGuards #-}
 > module Tests.Tactics where
@@ -19,8 +18,8 @@ Enum
 
 branches is supposed to build the following term:
 
-> branchesOpRun t e' p = TIMES (p $$ A ZE) 
->                              (branchesOp @@ [e' , L (H (B0 :< p) 
+> branchesOpRun t e' p = TIMES (p $$ A ZE)
+>                              (branchesOp @@ [e' , L (H (B0 :< p)
 >                                                      "" (N (V 1 :$ A ((C (Su (N (V 0))))))))])
 
 Let's test it:
@@ -36,7 +35,7 @@ Let's test it:
 switch is supposed to build the following term:
 
 > switchOpRun t e' p ps n =
->     switchOp @@ [e' 
+>     switchOp @@ [e'
 >                 , L (H (B0 :< p) "" (N (V 1 :$ A ((C (Su (N (V 0))))))))
 >                 , ps $$ Snd
 >                 , n ]
@@ -58,7 +57,7 @@ Desc
 
 Desc on Arg is supposed to build this term:
 
-> argDescRun x y z = eval [.x.y.z. 
+> argDescRun x y z = eval [.x.y.z.
 >              SIGMA (NV x) . L $ "" :. [.a.
 >              (N (descOp :@ [y $# [a],NV z]))
 >              ]] $ B0 :< x :< y :< z
@@ -89,7 +88,7 @@ Let's test it:
 
 Just check that we can use Ind1:
 
-> testDescInd1 = isRight withTac 
+> testDescInd1 = isRight withTac
 >     where x = N (P ([("",1)] := DECL :<: DESC))
 >           z = N (P ([("",2)] := DECL :<: SET))
 >           typ = SET
@@ -97,7 +96,7 @@ Just check that we can use Ind1:
 
 Box on an Arg is supposed to build this term:
 
-> boxArgRun a f d p v = boxOp @@ [f $$ A (v $$ Fst),d,p,v $$ Snd] 
+> boxArgRun a f d p v = boxOp @@ [f $$ A (v $$ Fst),d,p,v $$ Snd]
 
 Let's test it:
 
@@ -154,7 +153,7 @@ Let's test it:
 >           f = N (P ([("",1)] := DECL :<: ARR a DESC))
 >           d = N (P ([("",2)] := DECL :<: SET))
 >           bpv = N (P ([("",3)] := DECL :<: ARR d SET))
->           p = N (P ([("",4)] := DECL :<: (C (Pi d (eval [.bpv. L $ "" :. 
+>           p = N (P ([("",4)] := DECL :<: (C (Pi d (eval [.bpv. L $ "" :.
 >                                             [.y. N (V bpv :$ A (NV y))]
 >                                            ] $ B0 :< bpv)))))
 >           v = N (P ([("",5)] := DECL :<: descOp @@ [ARG a f, d]))
@@ -181,7 +180,7 @@ Test:
 >           x = N (P ([("",1)] := DECL :<: DESC))
 >           d = N (P ([("",2)] := DECL :<: SET))
 >           bpv = N (P ([("",3)] := DECL :<: ARR d SET))
->           p = N (P ([("",4)] := DECL :<: (C (Pi d (eval [.bpv. L $ "" :. 
+>           p = N (P ([("",4)] := DECL :<: (C (Pi d (eval [.bpv. L $ "" :.
 >                                             [.y. N (V bpv :$ A (NV y))]
 >                                            ] $ B0 :< bpv)))))
 >           v = N (P ([("",5)] := DECL :<: descOp @@ [IND h x, d]))
@@ -195,7 +194,7 @@ Just check that mapBox build something with Ind1:
 >     where x = N (P ([("",1)] := DECL :<: DESC))
 >           d = N (P ([("",2)] := DECL :<: SET))
 >           bpv = N (P ([("",3)] := DECL :<: ARR d SET))
->           p = N (P ([("",4)] := DECL :<: (C (Pi d (eval [.bpv. L $ "" :. 
+>           p = N (P ([("",4)] := DECL :<: (C (Pi d (eval [.bpv. L $ "" :.
 >                                             [.y. N (V bpv :$ A (NV y))]
 >                                            ] $ B0 :< bpv)))))
 >           v = N (P ([("",5)] := DECL :<: descOp @@ [IND1 x, d]))
@@ -205,11 +204,11 @@ Just check that mapBox build something with Ind1:
 elimOp is supposed to build this term:
 
 > elimRun d bp p v =
->          p $$ A v $$ A (mapBoxOp @@ 
+>          p $$ A v $$ A (mapBoxOp @@
 >                         [d
 >                         ,MU d
 >                         ,bp
->                         ,eval [.d.bp.p. L $ "" :. [.x. 
+>                         ,eval [.d.bp.p. L $ "" :. [.x.
 >                               N (elimOp :@ [NV d,NV bp,NV p,NV x])]
 >                               ] $ B0 :< d :< bp :< p
 >                         ,v])
@@ -221,7 +220,7 @@ Let's test now:
 >           bp = (P ([("",1)] := DECL :<: ARR (MU d) SET))
 >           bpv = N bp
 >           p = N (P ([("",2)] := DECL :<: (C (Pi (descOp @@ [d,MU d])
->                                              (eval [.d.bp. L $ "" :. [.x. 
+>                                              (eval [.d.bp. L $ "" :. [.x.
 >                                               ARR (N (boxOp :@ [NV d,MU (NV d),NV bp,NV x]))
 >                                                   (N (V bp :$ A (CON (NV x))))]
 >                                                    ] $ B0 :< d :< bpv)))))
@@ -235,7 +234,7 @@ Equality
 
 Be green on a Pi:
 
-> eqGreenPiRun s1 t1 f1 s2 t2 f2 = 
+> eqGreenPiRun s1 t1 f1 s2 t2 f2 =
 >   eval  [.s1.t1.f1.s2.t2.f2.
 >         ALL (NV s1) . L $ "" :. [.x1.
 >         ALL (NV s2) . L $ "" :. [.x2.

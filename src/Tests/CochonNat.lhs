@@ -1,4 +1,3 @@
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > module Tests.CochonNat where
 
 > import Control.Monad.State
@@ -9,12 +8,13 @@
 > import PrettyPrint
 > import ProofState
 > import Tm
+
 > a = execStateT (do
 >     make ("nat" :<: SET)
 >     goIn
 >     nat' <- bquoteHere nat
 >     refNat <- elabGive nat'
->     
+>
 >     make ("two" :<: refNat)
 >     goIn
 >     two' <- bquoteHere two
@@ -27,7 +27,7 @@
 >     goIn
 >     plus' <- bquoteHere plus
 >     give plus'
->   ) emptyContext 
+>   ) emptyContext
 > Right loc = a
 > Right (s, _) = runStateT prettyProofState loc
 > main = cochon loc

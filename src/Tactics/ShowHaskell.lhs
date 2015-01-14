@@ -28,8 +28,10 @@ Converting Epigram definitions to Haskell
 
 > class ShowHaskell a where
 >     showHaskell :: Bwd String -> a -> String
+
 > instance ShowHaskell REF where
 >     showHaskell bs r = fst (mkLastName r)
+
 > instance ShowHaskell (Tm {d, p} REF) where
 >     showHaskell bs (L s)       = showHaskell bs s
 >     showHaskell bs (C c)       = showHaskell bs c
@@ -41,11 +43,13 @@ Converting Epigram definitions to Haskell
 >     showHaskell bs (f :$ a)    = "(" ++ showHaskell bs f ++ " :$ " ++ showHaskell bs a ++ ")"
 >     showHaskell bs (t :? ty)   = "(" ++ showHaskell bs t ++ " :? " ++ showHaskell bs ty ++ ")"
 >     showHaskell bs x           = error "showHaskell: can't show " ++ show x
+
 > instance ShowHaskell (Scope p REF) where
 >     showHaskell bs (x :. t)    = "(L $ " ++ show x ++ " :. [." ++ x ++ ". " ++
 >                                      showHaskell (bs :< x) t ++ "])"
 >     showHaskell bs (K t)       = "(LK " ++ showHaskell bs t ++ ")"
 >     showHaskell bs x           = error "showHaskell: can't show " ++ show x
+
 > instance ShowHaskell (Can (Tm {d, p} REF)) where
 >     showHaskell bs Set         = "SET"
 >     showHaskell bs (Pi _S (LK _T)) = "(ARR " ++ showHaskell bs _S ++ " " ++
@@ -86,16 +90,20 @@ Converting Epigram definitions to Haskell
 >     showHaskell bs (RCons s i t) = "(RCONS " ++ showHaskell bs s ++ " " ++ showHaskell bs i ++ " " ++ showHaskell bs t ++ ")"
 >     showHaskell bs (Record (l :?=: Id s)) = "(RECORD " ++ showHaskell bs l ++ " " ++ showHaskell bs s ++ ")"
 >     showHaskell bs x           = error "showHaskell: can't show " ++ show x
+
 > instance ShowHaskell (Elim (Tm {d, p} REF)) where
 >     showHaskell bs (A a)       = "(A " ++ showHaskell bs a ++ ")"
 >     showHaskell bs Out         = "Out"
 >     showHaskell bs (Call l)    = "(CALL " ++ showHaskell bs l ++ ")"
 >     showHaskell bs Fst         = "Fst"
 >     showHaskell bs Snd         = "Snd"
+
 > instance ShowHaskell a => ShowHaskell [a] where
 >     showHaskell bs xs = "[" ++ intercalate ", " (map (showHaskell bs) xs) ++ "]"
+
 > instance ShowHaskell a => ShowHaskell (Maybe a) where
 >     showHaskell bs Nothing = "Nothing"
 >     showHaskell bs (Just x) = "(Just " ++ showHaskell bs x ++ ")"
+
 > instance (ShowHaskell a, ShowHaskell b) => ShowHaskell (a :>: b) where
 >     showHaskell bs (ty :>: t) = "(" ++ showHaskell bs ty ++ " :>: " ++ showHaskell bs t ++ ")"
