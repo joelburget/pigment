@@ -16,7 +16,9 @@ Schemes for implicit arguments
 ------------------------------
 
 A definition may have a `Scheme`, which allows us to handle implicit
-syntax. A `Scheme` is defined by: $$\begin{array}{rll}
+syntax. A `Scheme` is defined by:
+
+$$\begin{array}{rll}
 \SC{Scheme} ::= & \D{Ty}
                 & \mbox{a real, tangible type} \\
              || & \PI{\V{x}}{\SC{Scheme}}{\SC{Scheme}}

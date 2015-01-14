@@ -532,7 +532,7 @@ will restart if it is unstable.
 >     -- Mark the Suspension state
 >     let ss = if isUnstable prob then SuspendUnstable else SuspendStable
 >     putDevSuspendState ss
->     -- Mark for Scheduler action \pierre{right?}
+>     -- Mark for Scheduler action TODO(joel) right?
 >     suspendHierarchy ss
 >     return r
 
@@ -544,7 +544,7 @@ current location.
 >     -- Store the suspended problem in the Tip
 >     Unknown tt <- getDevTip
 >     putDevTip (Suspended tt prob)
->     -- Mark for Scheduler action \pierre{right?}
+>     -- Mark for Scheduler action TODO(joel) right?
 >     let ss = if isUnstable prob then SuspendUnstable else SuspendStable
 >     suspendHierarchy ss
 >     getCurrentDefinition

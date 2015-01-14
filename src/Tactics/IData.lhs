@@ -146,7 +146,7 @@ Datatype declaration
 >   i <- lambdaParam "i"
 >   let d = L $ "i" :.IFSIGMA (N e) (N (cs' :$ A (NV 0)))
 >       (allowingTy, allowedBy)  =  imkAllowed ("i", indtye, NV 0) pars'
->                         -- \pierre{XXX: NV 0 refers to the .i. in the giveOut}
+>                         -- XXX(joel) NV 0 refers to the .i. in the giveOut}
 >       label                    =  ANCHOR (TAG nom) allowingTy allowedBy
 >   (dty :=>: dtyv) <- giveOutBelow (IMU (Just (L $ "i" :. [.i. label])) (N indtye) d (NP i))
 

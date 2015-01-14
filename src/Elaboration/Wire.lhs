@@ -212,7 +212,7 @@ ignore the attached `ElabHope` process.
 >         -- The elaboration strategy \emph{has to} be to `Hope`
 >         tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor expanded)
 >       _         -> do
->         -- \pierre{Is that a `throwError` or an `error`?}
+>         -- TODO(joel) Is that a `throwError` or an `error`?
 >         throwError . sErr . unlines $ [
 >                     "tellEntry: news bulletin contains update", show ne,
 >                     "for hole", show ref,

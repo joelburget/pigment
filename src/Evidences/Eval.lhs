@@ -37,47 +37,41 @@ elimination principles to the language.
 Formally, the computation rules of the featureless language are the
 following:
 
-$$\begin{aligned}
-(\lambda \_ . v) u & \mapsto & v
-    \label{eqn:Evidences.Rules.elim-cstt} \\
-(\lambda x . t) v  & \mapsto & \mbox{eval } t[x \mapsto v]
-    \label{eqn:Evidences.Rules.elim-bind} \\
-\mbox{unpack}(Con\ t) & \mapsto & t
-    \label{eqn:Evidences.Rules.elim-con}  \\
-(N n) \$\$ ee      & \mapsto & N (n \:\$ e)
-    \label{eqn:Evidences.Rules.elim-stuck}\end{aligned}$$
+name       | start                   | finish
+elim-cstt  | $(\lambda \_ . v) u$    | $v$
+elim-bind  | $(\lambda x . t) v$     | $\mbox{eval } t[x \mapsto v]$
+elim-con   | $\mbox{unpack}(Con\ t)$ | $t$
+elim-stuck | $(N n) \$\$ ee$         | $N (n \:\$ e)$
 
-The rules [eqn:Evidences.Rules.elim-cstt] and
-[eqn:Evidences.Rules.elim-bind] are standard lambda calculus stories.
-Rule [eqn:Evidences.Rules.elim-con] is the expected "unpacking the
-packer" rule. Rule [eqn:Evidences.Rules.elim-stuck] is justified as
-follow: if no application rule applies, this means that we are stuck.
-This can happen if and only if the application is itself stuck. The
+The rules `elim-cstt` and `elim-bind` are standard lambda calculus stories.
+Rule `elim-con` is the expected "unpacking the packer" rule. Rule `elim-stuck`
+is justified as follow: if no application rule applies, this means that we are
+stuck.  This can happen if and only if the application is itself stuck. The
 stuckness therefore propagates to the whole elimination.
 
 This translates into the following code:
 
 > ($$) :: VAL -> Elim VAL -> VAL
-> L (K v)      $$ A _  = v               -- By \ref{eqn:Evidences.Rules.elim-cstt}
+> L (K v)      $$ A _  = v               -- elim-cstt
 > L (H (vs, rho) x t)  $$ A v
->   = eval t (vs :< v, naming x v rho)   -- By \ref{eqn:Evidences.Rules.elim-bind}
+>   = eval t (vs :< v, naming x v rho)   -- elim-bind
 > L (x :. t)   $$ A v
->   = eval t (B0 :< v, naming x v [])    -- By \ref{eqn:Evidences.Rules.elim-bind}
-> C (Con t)    $$ Out  = t               -- By \ref{eqn:Evidences.Rules.elim-con}
+>   = eval t (B0 :< v, naming x v [])    -- elim-bind
+> C (Con t)    $$ Out  = t               -- elim-con
 > LRET t $$ Call l = t
 > COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
 >     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
 >     f $$ A s]
 > PAIR x y $$ Fst = x
 > PAIR x y $$ Snd = y
-> N n          $$ e    = N (n :$ e)      -- By \ref{eqn:Evidences.Rules.elim-stuck}
+> N n          $$ e    = N (n :$ e)      -- elim-stuck
 > f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
 >                                  "\nwith eliminator\n" ++ show e
 
 The `naming` operation amends the current naming scheme, taking account
 the instantiation of x: see below.
 
-The left fold of `\$\$` applies a value to a bunch of eliminators:
+The left fold of `$$` applies a value to a bunch of eliminators:
 
 > ($$$) :: (Foldable f) => VAL -> f (Elim VAL) -> VAL
 > ($$$) = Data.Foldable.foldl ($$)
