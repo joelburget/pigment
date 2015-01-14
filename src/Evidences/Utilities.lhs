@@ -9,6 +9,7 @@ Utilities
 
 > import Prelude hiding (elem)
 > import Data.Foldable
+
 > import NameSupply.NameSupplier
 > import Evidences.Tm
 > import Evidences.Mangler

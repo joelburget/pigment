@@ -88,7 +88,7 @@ Datatype declaration
 >     else do
 >       b' <- freshRef (fortran b :<: a)
 >               (\s -> ity2h indty r ps (b $$ A (NP s)) >>= \x ->
->                        (| (L $ (fortran b) :. (capM s 0 %% x) ) |))
+>                        pure (L $ (fortran b) :. (capM s 0 %% x) ))
 >       return (IPI a' b')
 > ity2h indty r ps (N (x :$ A i')) = do
 >   b <- withNSupply (equal (SET :>: (N x, NP r $$$ ps)))
@@ -112,7 +112,7 @@ Datatype declaration
 > ielabData :: String -> [ (String , DInTmRN) ] -> DInTmRN ->
 >                        [ (String , DInTmRN) ] -> ProofState (EXTM :=>: VAL)
 > ielabData nom pars indty scs = do
->   oldaus <- (| paramSpine getInScope |)
+>   oldaus <- paramSpine <$> getInScope
 >   makeModule nom
 >   goIn
 >   pars' <- traverse (\(x,y) -> do

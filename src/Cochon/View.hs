@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
-  MultiParamTypeClasses #-}
+  MultiParamTypeClasses, EmptyDataDecls #-}
 module Cochon.View where
 
 import Control.Applicative

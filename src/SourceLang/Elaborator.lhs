@@ -1,10 +1,11 @@
 <a name="SourceLang.Elaborator">Elaborator</a>
 ==========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > module SourceLang.Elaborator where
+
 > import Control.Applicative
 > import Data.Traversable
+
 > import Evidences.Tm
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
@@ -33,6 +34,6 @@ should do.
 >     return (LetConstr decl' Nothing)
 > elabDecl :: Decl Parsed -> Elab (Decl Elaborated)
 > elabDecl (Decl hyps x ty) =
->     (| Decl (traverse elabDecl hyps) ~x (elabTerm (Loc 0) SET ty) |)
+>     Decl <$> traverse elabDecl hyps <*> pure x <*> elabTerm (Loc 0) SET ty
 > elabRefinement :: Refinement Parsed -> Elab (Refinement Elaborated)
 > elabRefinement (Refinement prob tac wbk) = undefined

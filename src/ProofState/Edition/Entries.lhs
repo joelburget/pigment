@@ -2,7 +2,7 @@ Managing Entries in a Proof Context
 ===================================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes, StandaloneDeriving, PatternSynonyms #-}
+>              GADTs, RankNTypes, PatternSynonyms #-}
 
 > module ProofState.Edition.Entries where
 
@@ -59,7 +59,7 @@ Hence, we can change the carrier of `Entry` from `Bwd` to `Fwd` or a
 variation thereof:
 
 > reverseEntry :: Entry Bwd -> Entry NewsyFwd
-> reverseEntry = rearrangeEntry (NF . (fmap Right) . (<>> F0))
+> reverseEntry = rearrangeEntry (NF . fmap Right . (<>> F0))
 
 > reverseEntries :: Fwd (Entry Bwd) -> NewsyEntries
 > reverseEntries es = NF $ fmap (Right . reverseEntry) es

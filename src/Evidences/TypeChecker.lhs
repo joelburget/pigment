@@ -1,7 +1,6 @@
 <a name="Evidences.TypeChecker">Type-checker</a>
 ============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, FlexibleInstances,
 >     TypeSynonymInstances, FlexibleContexts, PatternGuards,
 >     MultiParamTypeClasses, ScopedTypeVariables, PatternSynonyms #-}
@@ -118,8 +117,8 @@ function traversing the types derivation tree can be expressed using
 > canTy chev (IMu tt@(_ :?=: (Id ii :& Id x)) i :>: Con y) = do
 >   yyv <- chev (idescOp @@ [ ii
 >                           , x $$ A i
->                           , L $ "i" :. [.i.
->                               C (IMu (fmap (-$ []) tt) (NV i)) ]
+>                           , L $ "i" :. (let i = 0 in
+>                               C (IMu (fmap (-$ []) tt) (NV i)) )
 >                           ] :>: y)
 >   return $ Con yyv
 > canTy chev (Set :>: Label l t) = do
@@ -166,21 +165,21 @@ function traversing the types derivation tree can be expressed using
 >   ttv <- chev (ARR sv SCH :>: t)
 >   return $ SchImpPi ssv ttv
 > canTy _   (Set :>: Prop) = return Prop
-> canTy chev  (Set :>: Prf p) = (|Prf (chev (PROP :>: p))|)
+> canTy chev  (Set :>: Prf p) = Prf <$> chev (PROP :>: p)
 > canTy chev  (Prop :>: All s p) = do
 >   ssv@(_ :=>: sv) <- chev (SET :>: s)
 >   ppv <- chev (ARR sv PROP :>: p)
 >   return $ All ssv ppv
 > canTy chev  (Prop :>: And p q) =
->   (|And (chev (PROP :>: p)) (chev (PROP :>: q))|)
+>   And <$> chev (PROP :>: p) <*> chev (PROP :>: q)
 > canTy _  (Prop :>: Trivial) = return Trivial
 > canTy _   (Prop :>: Absurd) = return Absurd
-> canTy chev  (Prf p :>: Box (Irr x)) = (|(Box . Irr) (chev (PRF p :>: x))|)
+> canTy chev  (Prf p :>: Box (Irr x)) = Box . Irr <$> chev (PRF p :>: x)
 > canTy chev (Prf (AND p q) :>: Pair x y) = do
->   (|Pair (chev (PRF p :>: x)) (chev (PRF q :>: y))|)
+>   Pair <$> chev (PRF p :>: x) <*> chev (PRF q :>: y)
 > canTy _   (Prf TRIVIAL :>: Void) = return Void
-> canTy chev (Prop :>: Inh ty) = (|Inh (chev (SET :>: ty))|)
-> canTy chev (Prf (INH ty) :>: Wit t) = (|Wit (chev (ty :>: t))|)
+> canTy chev (Prop :>: Inh ty) = Inh <$> chev (SET :>: ty)
+> canTy chev (Prf (INH ty) :>: Wit t) = Wit <$> chev (ty :>: t)
 > canTy chev (Set :>: Quotient x r p) = do
 >   x@(_ :=>: xv) <- chev (SET :>: x)
 >   r@(_ :=>: rv) <- chev (ARR xv (ARR xv PROP) :>: r)
@@ -254,7 +253,7 @@ want.
 > elimTy chev (_ :<: (IMu tt@(_ :?=: (Id ii :& Id x)) i)) Out =
 >   return (Out,
 >     idescOp @@ [  ii , x $$ A i
->                ,  L $ "i" :. [.i. C (IMu (fmap (-$ []) tt) (NV i)) ] ])
+>                ,  L $ "i" :. (let i = 0 in C (IMu (fmap (-$ []) tt) (NV i)) ) ])
 > elimTy chev (_ :<: Label _ t) (Call l) = do
 >    llv@(l :=>: lv) <- chev (t :>: l)
 >    return (Call llv, t)

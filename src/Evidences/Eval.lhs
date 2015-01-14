@@ -1,7 +1,6 @@
 Evaluation
 ==========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
 >     PatternSynonyms, PatternGuards, DataKinds #-}
@@ -60,7 +59,7 @@ This translates into the following code:
 > C (Con t)    $$ Out  = t               -- elim-con
 > LRET t $$ Call l = t
 > COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
->     L $ "s" :. [.s. COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)],
+>     L $ "s" :. (let s = 0 in COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)),
 >     f $$ A s]
 > PAIR x y $$ Fst = x
 > PAIR x y $$ Snd = y
@@ -148,15 +147,16 @@ the environment (f). Elimination is handled by `$$` defined above (g).
 And similarly for operators with `@@` (h).
 
 > eval :: Tm d TT REF -> ENV -> VAL
-> eval (L b)       = (|L (body b)|)                -- By (a)
-> eval (C c)       = (|C (eval ^$ c)|)             -- By (b)
+> eval (L b)       = L <$> (body b)                -- By (a)
+> eval (C c)       = C <$> eval ^$ c               -- By (b)
 > eval (N n)       = eval n                        -- By (c)
 > eval (t :? _)    = eval t                        -- By (d)
-> eval (P x)       = (|(pval x)|)                  -- By (e)
+> eval (P x)       = pure (pval x)                 -- By (e)
 > eval (V i)       = evar i                        -- By (f)
-> eval (t :$ e)    = (|eval t $$ (eval ^$ e)|)     -- By (g)
-> eval (op :@ vs)  = (|(op @@) (eval ^$ vs)|)      -- By (h)
-> eval (Yuk v)     = (|v|)
+> eval (t :$ e)    = ($$) <$> eval t <*> eval ^$ e -- By (g)
+> eval (op :@ vs)  = (op @@) <$> (eval ^$ vs)      -- By (h)
+> eval (Yuk v)     = pure v
+
 > evar :: Int -> ENV -> VAL
 > evar i (vs, ts) = fromMaybe (error "eval: bad index") (vs !. i)
 
@@ -173,7 +173,7 @@ Here's a bit of a dirty trick which sometimes results in better name
 choices. We firstly need the notion of a textual substitution from
 Tm.lhs.
 
-\< type TXTSUB = [(Char, String)] – renaming plan
+< type TXTSUB = [(Char, String)] – renaming plan
 
 That's a plan for mapping characters to strings. We apply them to
 strings like this, with no change to characters which aren't mapped.

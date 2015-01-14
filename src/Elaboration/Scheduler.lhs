@@ -1,7 +1,6 @@
 <a name="Elaboration.Scheduler">The Scheduler</a>
 =============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternSynonyms #-}
 
 > module Elaboration.Scheduler where
@@ -55,7 +54,7 @@ terminate as appropriate.
 
 > scheduler :: Name -> ProofState ()
 > scheduler n = do
->     ss <- (|devSuspendState getAboveCursor|)
+>     ss <- devSuspendState <$> getAboveCursor
 >     case ss of
 >         SuspendUnstable  -> do  putDevSuspendState SuspendNone
 >                                 cursorTop

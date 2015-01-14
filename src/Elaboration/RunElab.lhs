@@ -1,7 +1,6 @@
 <a name="Elaborator.RunElab">Implementing the `Elab` monad</a>
 =============================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards,
 >     PatternSynonyms #-}
 
@@ -164,7 +163,7 @@ refers to. This is passed onto the next elaboration task.
 > runElab wrk (ty :>: EResolve rn f) = do
 >     (ref, as, ms) <- resolveHere rn
 >     let  tm   = P ref $:$ toSpine as
->          ms'  = (| (flip applyScheme as) ms |)
+>          ms'  = applyScheme <$> ms <*> pure as
 >     (tmv :<: tyv) <- inferHere tm
 >     tyv'  <- bquoteHere tyv
 >     runElab wrk (ty :>: f (PAIR tyv' (N tm) :=>: PAIR tyv tmv, ms'))
@@ -324,7 +323,7 @@ parameters and hands them to `seekIn`.
 >           s <- prettyHere (ty :>: N label')
 >           proofTrace $ "Failed to resolve recursive call to "
 >                            ++ renderHouseStyle s
->           (|)
+>           empty
 >       seekOn (es' :< EPARAM param _ ParamLam _ _ _) =
 >           seekIn B0 (P param) (pty param) <|> seekOn es'
 >       seekOn (es' :< _)                            =    seekOn es'
@@ -364,7 +363,7 @@ it to the call term.
 
 If, in our way to the label the peeling fails, then we must give up.
 
->       seekIn rs tm ty = (|)
+>       seekIn rs tm ty = empty
 
 To generate a substitution, we quote the value given to each reference
 and substitute out the preceding references. If a reference has no
@@ -424,7 +423,7 @@ process on a subgoal and returning the subgoal).
 >     flexiProofMatch           (_S :>: s) (_T :>: t)
 >     <|> flexiProofLeft   wrk  (_S :>: s) (_T :>: t)
 >     <|> flexiProofRight  wrk  (_S :>: s) (_T :>: t)
-> flexiProof _ _ = (|)
+> flexiProof _ _ = empty
 
 If we are trying to prove an equation between the same fake reference
 applied to two lists of parameters, we prove equality of the parameters
@@ -457,7 +456,7 @@ equality to make recursive calls.
 >     smash :: VAL -> [(VAL, VAL, VAL)] -> VAL
 >     smash q [] = q
 >     smash q ((as, at, prf):ps) = smash (q $$ A as $$ A at $$ A prf) ps
-> flexiProofMatch _ _ = (|)
+> flexiProofMatch _ _ = empty
 
 If one side of the equation is a hoping hole applied to the shared
 parameters of our current location, we can solve it with the other side
@@ -483,7 +482,7 @@ of the equation.
 
 >          eprob  = WaitSolve ref (s' :=>: Just s) ElabHope
 >     suspendThis wrk ("eq" :<: PRF p' :=>: PRF p) eprob
-> flexiProofLeft _ _ _ = (|)
+> flexiProofLeft _ _ _ = empty
 
 > flexiProofRight :: WorkTarget -> (TY :>: VAL) -> (TY :>: VAL)
 >     -> ProofState (INTM :=>: VAL, ElabStatus)
@@ -498,7 +497,7 @@ of the equation.
 >          p'     = EQBLUE (_S'  :>: s'  ) (_T'  :>: N t'  )
 >          eprob  = WaitSolve ref (s' :=>: Just s) ElabHope
 >     suspendThis wrk ("eq" :<: PRF p' :=>: PRF p) eprob
-> flexiProofRight _ _ _ = (|)
+> flexiProofRight _ _ _ = empty
 
 If all else fails, we can hope for anything we like by leaving a hoping
 subgoal, either using the current one (if we are working on it) or

@@ -1,7 +1,6 @@
 Operator DSL
 ============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
 >     PatternSynonyms #-}
@@ -55,10 +54,10 @@ try this.
 > runOpTree :: OpTree -> [VAL] -> Either NEU VAL
 > runOpTree (OLam f)  (x : xs)  = runOpTree (f x) xs
 > runOpTree (OPr f)   (v : xs)  = runOpTree f (v $$ Fst : v $$ Snd : xs)
-> runOpTree (OCase bs) (i : xs)   = (| (bs !!) (num i) |) >>= \ b -> runOpTree b xs where
+> runOpTree (OCase bs) (i : xs)   = ((bs !!) <$> (num i)) >>= \ b -> runOpTree b xs where
 >   num :: VAL -> Either NEU Int
->   num ZE      = (| 0 |)
->   num (SU n)  = (| (1+) (num n) |)
+>   num ZE      = Right 0
+>   num (SU n)  = (1+) <$> (num n)
 >   num (N e)   = Left e
 > runOpTree (OCon f) (CON t : xs)  = runOpTree f (t : xs)
 > runOpTree (OSet f) (C c :  xs)   = runOpTree (f c) xs

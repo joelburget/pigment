@@ -1,10 +1,11 @@
 BwdFwd
 ======
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE  TypeOperators, TypeSynonymInstances, TypeFamilies,
 >               FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
+
 > module Kit.BwdFwd where
+
 > import Data.Monoid
 > import Data.Foldable hiding (foldl, foldr)
 > import Data.Traversable
@@ -94,12 +95,26 @@ Backward and forward lists, applicative with zipping.
 >                                 t)
 >     where sum = foldr' (\_ x -> x+1) 0
 
+> instance Functor Bwd where
+>     fmap f B0 = B0
+>     fmap f (xs :< x) = fmap f xs :< f x
+
+> instance Foldable Bwd where
+>     foldMap _ B0 = mempty
+>     foldMap f (xs :< x) = foldMap f xs <> f x
+
 > instance Traversable Bwd where
->   traverse f B0         = (|B0|)
->   traverse f (xs :< x)  = (|(f ^$ xs) :< f x|)
->   hiding instance Functor Bwd
+>   traverse f B0         = pure B0
+>   traverse f (xs :< x)  = (:<) <$> (f ^$ xs) <*> f x
+
+> instance Functor Fwd where
+>     fmap f F0 = F0
+>     fmap f (x :> xs) = f x :> fmap f xs
+
+> instance Foldable Fwd where
+>     foldMap _ F0 = mempty
+>     foldMap f (x :> xs) = f x <> foldMap f xs
 
 > instance Traversable Fwd where
->   traverse f F0         = (|F0|)
->   traverse f (x :> xs)  = (|f x :> (f ^$ xs)|)
->   hiding instance Functor Fwd
+>   traverse f F0         = pure F0
+>   traverse f (x :> xs)  = (:>) <$> f x <*> (f ^$ xs)

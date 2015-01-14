@@ -1,7 +1,7 @@
 Generic name supplier
 =====================
 
-> {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
+> {-# LANGUAGE TypeOperators, GADTs, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, ScopedTypeVariables,
 >     MultiParamTypeClasses #-}
 > module NameSupply.NameSupplier where
@@ -78,9 +78,8 @@ actually get it for any `ReaderT NameSupply`. This is as simple as:
 >         nsupply <- ask
 >         lift $ freshRef st (runReaderT . body) nsupply
 >     forkNSupply s child dad = do
->         c <- local (flip freshNSpace s) child
->         d <- local freshName (dad c)
->         return d
+>         c <- local (`freshNSpace` s) child
+>         local freshName (dad c)
 >     askNSupply = ask
 
 <a name="NameSupply.NameSupplier.check-monad">The `Check` monad is a `NameSupplier`</a>

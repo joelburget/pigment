@@ -1,7 +1,6 @@
 <a name="Tactics.PropositionSimplify">Propositional Simplification</a>
 ============================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, FlexibleInstances,
 >              PatternGuards, TupleSections, PatternSynonyms #-}
 
@@ -264,7 +263,7 @@ the `pis` from it and proofs of the `qis` by applying the proofs of the
 If we get to this point, neither the antecedent nor the consequent
 simplified, so we had better give up.
 
->     consequent (_, False) (_, False) = (|)
+>     consequent (_, False) (_, False) = empty
 
 To simplify a proposition that is universally quantified over a
 (completely canonical) enumeration, we can simplify it for each possible
@@ -274,9 +273,9 @@ value.
 >     process B0 B0 B0 (ZE :=>: ZE) ts
 >   where
 >     getTags :: Bwd VAL -> VAL -> Maybe (Bwd VAL)
->     getTags ts NILE         = (| ts |)
+>     getTags ts NILE         = pure ts
 >     getTags ts (CONSE t e)  = getTags (ts :< t) e
->     getTags ts _            = (|)
+>     getTags ts _            = empty
 >     process :: Bwd (REF :<: INTM) -> Bwd (EXTM -> INTM) -> Bwd INTM ->
 >         INTM :=>: VAL -> Bwd VAL -> Simplifier Simplify
 >     process qs gs hs (n :=>: nv) B0 = do
@@ -384,9 +383,9 @@ equation and return `SimplyTrivial`, or it will fail.
 >        s'    <- bquote B0 s
 >        return . SimplyTrivial $ N (P refl :$ A sty' :$ A s')
 >    unroll :: Bool -> Simplifier Simplify
->    unroll False  = (|)
+>    unroll False  = empty
 >    unroll True   = case opRun eqGreen [sty, s, tty, t] of
->        Left _         -> (|)
+>        Left _         -> empty
 >        Right TRIVIAL  -> return $ SimplyTrivial (CON VOID)
 >        Right q        -> forkSimplify delta q
 >            (return . simplifyTransform (:$ Out) CON . fst)
@@ -405,7 +404,7 @@ hypotheses, in the context with the backchained proposition removed.
 >     return $ SimplyTrivial prf'
 >   where
 >     seekProof :: Bwd REF -> Fwd REF -> VAL -> Simplifier VAL
->     seekProof B0 _ _ = (|)
+>     seekProof B0 _ _ = empty
 >     seekProof (rs :< ref@(_ := DECL :<: PRF q)) fs p =
 >         backchain (rs :< ref) fs B0 p q <|> seekProof rs (ref :> fs) p
 >     seekProof (rs :< ref) fs p = seekProof rs (ref :> fs) p

@@ -5,7 +5,9 @@
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, PatternSynonyms,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
 >     DataKinds #-}
+
 > module Evidences.Operators where
+
 > import Control.Applicative
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
@@ -19,7 +21,7 @@
 > import NameSupply.NameSupplier
 
 In this section, we weave some She aspects. In particular, we bring
-inside @Rules.lhs@ the `operators` defined by feature files, along with
+inside `Rules.lhs` the `operators` defined by feature files, along with
 any auxiliary code.
 
 > operators :: [Op]
@@ -200,6 +202,7 @@ any auxiliary code.
 >           comp f g = L $ "x" :. [.x. f -$ [g -$ [NV x]]]
 >           args = [dD, xX, zZ, comp f g, N v]
 >       mapOpSimp _ _ = empty
+
 > inductionOp :: Op
 > inductionOp = Op
 >   { opName = "induction"
@@ -218,6 +221,7 @@ any auxiliary code.
 >       "P" :<: (ARR (MU Nothing dD) SET) :-: \pP ->
 >       "p" :<: (inductionOpMethodType $$ A dD $$ A pP) :-: \p ->
 >       Target (pP $$ A v)
+
 > branchesDOp = Op
 >   { opName   = "branchesD"
 >   , opArity  = 1
@@ -249,12 +253,14 @@ any auxiliary code.
 >         Target desc
 >       proj 0 bs = ORet (bs $$ Fst)
 >       proj i bs = (proj (i - 1) (bs $$ Snd))
+
 > inductionOpMethodType = L $ "d" :. [.d.
 >                    L $ "P" :. [._P.
 >                    PI (N $ descOp :@ [NV d, MU Nothing (NV d)])
 >                       (L $ "x" :. [.x.
 >                        ARR (N $ boxOp :@ [NV d, MU Nothing (NV d), NV _P, NV x])
 >                            (N (V _P :$ A (CON (NV x)))) ]) ] ]
+
 > branchesOp = Op
 >   { opName   = "branches"
 >   , opArity  = 2
@@ -270,6 +276,7 @@ any auxiliary code.
 >       bOpTy = "e" :<: enumU :-: \e ->
 >               "p" :<: ARR (ENUMT e) SET :-: \p ->
 >               Target SET
+
 > switchOp = Op
 >   { opName  = "switch"
 >   , opArity = 4
@@ -288,6 +295,7 @@ any auxiliary code.
 >         "p" :<: ARR (ENUMT e) SET :-: \p ->
 >         "b" :<: branchesOp @@ [e , p] :-: \b ->
 >         Target (p $$ A x)
+
 > enumInductionOp = Op
 >   {  opName = "enumInduction"
 >   ,  opArity = 5
@@ -319,6 +327,7 @@ any auxiliary code.
 >                        (p -$ [PAIR (CONSE (NV t) (NV e)) (SU (NV x))])
 >                    ]]]) :-: \ ms ->
 >       Target (p $$ A (PAIR e x))
+
 > eqGreen = Op { opName = "eqGreen"
 >              , opArity = 4
 >              , opTyTel =  "S" :<: SET :-: \ sS -> "s" :<: sS :-: \ s ->
@@ -338,6 +347,7 @@ any auxiliary code.
 >                          , t1 :=>: t1v ]
 >                         , PROP)
 >              opty _  _             = throwError' "eqGreen: invalid arguments."
+
 > coe = Op { opName = "coe"
 >          , opArity = 4
 >          , opTyTel =  "S" :<: SET :-: \ sS -> "T" :<: SET :-: \ tT ->
@@ -360,6 +370,7 @@ any auxiliary code.
 >          oprun [x,N y,q,s] = Left y
 >          oprun vs = error ("coe: undefined for arguments"
 >                                ++ unlines (map show vs))
+
 > coh = Op { opName = "coh"
 >          , opArity = 4
 >          , opTyTel =
@@ -382,6 +393,7 @@ any auxiliary code.
 >            pval cohAx $$ A _S $$ A _T $$ A _Q $$ A s
 >          oprun vs = error ("coe: undefined for arguments"
 >                                ++ unlines (map show vs))
+
 > substMonadOp = Op
 >   { opName = "substMonad"
 >   , opArity = 5
@@ -415,6 +427,7 @@ any auxiliary code.
 >                       substMonadOp :@ [ d -$ [], y -$ [], z -$ []
 >                                       , f -$ [], g -$ [ NV x ] ] ]
 >     substMonadOpSimp _ _ = empty
+
 > elimMonadOp :: Op
 > elimMonadOp = Op
 >   { opName = "elimMonad"
@@ -442,6 +455,7 @@ any auxiliary code.
 >         ts])
 >     elimMonadOpRun [d,x,RETURN z,bp,mc,mv] = Right $ mv $$ A z
 >     elimMonadOpRun [_,_,N n,_,_,_] = Left n
+
 > idescOp :: Op
 > idescOp = Op
 >   { opName = "idesc"
@@ -485,6 +499,7 @@ any auxiliary code.
 >      "d" :<: (idesc $$ A iI) :-: \d ->
 >      "X" :<: ARR iI SET :-: \x ->
 >      Target SET
+
 > iboxOp :: Op
 > iboxOp = Op
 >   { opName = "ibox"
@@ -531,6 +546,7 @@ any auxiliary code.
 >       "P" :<: ARR _I SET                 :-: \ _P ->
 >       "v" :<: idescOp @@ [_I,_D,_P]      :-: \v ->
 >       Target $ idesc $$ A (SIGMA _I (L $ "i" :. [.i. _P -$ [NV i]]))
+
 > imapBoxOp :: Op
 > imapBoxOp = Op
 >   { opName = "imapBox"
@@ -571,6 +587,7 @@ any auxiliary code.
 >       "p" :<: (PI _IX $ L $ "ix" :. [.ix. _P -$ [ NV ix ] ] ) :-: \ _ ->
 >       "v" :<: (idescOp @@ [_I,_D,_X]) :-: \v ->
 >        Target (idescOp @@ [_IX, iboxOp @@ [_I,_D,_X,v], _P])
+
 > iinductionOpMethodType _I _D _P =
 >     PI _I $ L $ "i" :. [.i.
 >      let _It = _I -$ []
@@ -580,6 +597,7 @@ any auxiliary code.
 >                             , N (iboxOp :@ [_It, _D -$ [ NV i ], mud, NV x])
 >                             , _P -$ [] ]))
 >           (_P -$ [ PAIR (NV i) (CON (NV x)) ]) ] ]
+
 > iinductionOp :: Op
 > iinductionOp = Op
 >   { opName = "iinduction"
@@ -616,6 +634,7 @@ any auxiliary code.
 >   ,  opRun = \ [s] -> argsOpRun s
 >   ,  opSimp = \ _ _ -> empty
 >   }
+
 > schTypeOp = Op
 >   {  opName = "schType"
 >   ,  opArity = 1
@@ -623,6 +642,7 @@ any auxiliary code.
 >   ,  opRun = \ [s] -> schTypeOpRun s
 >   ,  opSimp = \ _ _ -> empty
 >   }
+
 > argsOpRun :: VAL -> Either NEU VAL
 > argsOpRun (SCHTY _)       = Right UNIT
 > argsOpRun (SCHEXPPI s t)  =
@@ -632,6 +652,8 @@ any auxiliary code.
 >   Right $ SIGMA s
 >            (L ("x" :. [.x. N $ argsOp :@ [t -$ [ NV x ]]]))
 > argsOpRun (N v)           = Left v
+
+
 > schTypeOpRun :: VAL -> Either NEU VAL
 > schTypeOpRun (SCHTY s)       = Right s
 > schTypeOpRun (SCHEXPPI s t)  =
@@ -641,6 +663,7 @@ any auxiliary code.
 >   Right $ PI s
 >            (L ("x" :. [.x. N $ schTypeOp :@ [t -$ [ NV x ]]]))
 > schTypeOpRun (N v)           = Left v
+
 > nEOp = Op { opName = "naughtE"
 >           , opArity = 2
 >           , opTyTel =  "z" :<: PRF ABSURD :-: \ _ ->
@@ -648,6 +671,7 @@ any auxiliary code.
 >           , opRun = runOpTree $ OCon $ OBarf
 >           , opSimp = \_ _ -> empty
 >           }
+
 > inhEOp = Op { opName = "inh"
 >             , opArity = 4
 >             , opTyTel = "S" :<: SET :-: \ ty ->
@@ -661,6 +685,7 @@ any auxiliary code.
 >                                       N n   -> Left n
 >             , opSimp = \_ _ -> empty
 >             }
+
 > qElimOp = Op
 >   { opName  = "elimQuotient"
 >   , opArity = 7
@@ -686,6 +711,7 @@ any auxiliary code.
 >     run :: [VAL] -> Either NEU VAL
 >     run [_, _, _, CLASS x, _, m, _] = Right (m $$ A x)
 >     run [_, _, _, N n, _, _, _]     = Left n
+
 > recordOp = Op
 >   { opName   = "Record"
 >   , opArity  = 1
@@ -699,6 +725,7 @@ any auxiliary code.
 >       recordOpRun [REMPTY]           = Right UNIT
 >       recordOpRun [RCONS sig id ty]  = Right $ SIGMA (recordOp @@ [sig]) ty
 >       recordOpRun [N x]              = Left x
+
 > labelsOp = Op
 >   { opName   = "labels"
 >   , opArity  = 1
@@ -712,6 +739,7 @@ any auxiliary code.
 >       labelsOpRun [REMPTY]           = Right NILE
 >       labelsOpRun [RCONS sig id ty]  = Right $ CONSE id (labelsOp @@ [sig])
 >       labelsOpRun [N x]              = Left x
+
 > typeAtOp = Op
 >   { opName   = "typeAt"
 >   , opArity  = 2
@@ -729,6 +757,7 @@ any auxiliary code.
 >       typeAtOpRun [RCONS sig id ty, ZE]    = Right $ PAIR sig ty
 >       typeAtOpRun [RCONS sig id ty, SU n]  = Right $ typeAtOp @@ [ sig, n ]
 >       typeAtOpRun [_,N x]                 = Left x
+
 > fstsOp = Op
 >   { opName   = "fsts"
 >   , opArity  = 3
@@ -748,6 +777,7 @@ any auxiliary code.
 >       fstsOpRun [RCONS sig id ty, SU n, x]  =
 >           Right $ fstsOp @@ [sig, n, x $$ Fst]
 >       fstsOpRun [_, N x, _]                 = Left x
+
 > atOp = Op
 >   { opName   = "at"
 >   , opArity  = 3
@@ -769,6 +799,7 @@ any auxiliary code.
 >       atOpRun [RCONS sig id ty, SU n, x]  =
 >           Right $ atOp @@ [sig, n, x $$ Fst]
 >       atOpRun [_, N x, _]                 = Left x
+
 > splitOp = Op
 >   { opName = "split" , opArity = 5
 >   , opTyTel =  "A"   :<: SET                          :-: \ aA ->
