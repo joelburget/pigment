@@ -23,12 +23,6 @@ Renaming
 > iter :: (a -> b -> b) -> [a] -> b -> b
 > iter = flip . Prelude.foldr
 
-Indicator Function
-------------------
-
-> indicator :: (x -> Bool) -> x -> Int
-> indicator p x = if p x then 1 else 0
-
 Newtype Unwrapping
 ------------------
 
