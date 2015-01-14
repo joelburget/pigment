@@ -3,7 +3,7 @@ Elimination with a Motive
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternGuards,
->     PatternSynonyms #-}
+>     PatternSynonyms, DataKinds #-}
 
 > module Tactics.Elimination where
 
@@ -395,7 +395,7 @@ traversal for this to make sense.
 >     help (delta :< (r :<: ty)) xs = help delta
 >         (if (r `elem` deps) || shouldKeep ty
 >             then (r :<: ty) : xs else xs)
->     shouldKeep :: Tm {d, TT} REF -> Bool
+>     shouldKeep :: Tm d TT REF -> Bool
 >     shouldKeep (LABEL _ _) = True
 >     shouldKeep (C c) = Data.Foldable.any shouldKeep c
 >     shouldKeep (L (_ :. t)) = shouldKeep t

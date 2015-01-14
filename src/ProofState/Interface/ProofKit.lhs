@@ -3,7 +3,7 @@ The `ProofState` Kit {#sec:ProofState.Interface.ProofKit}
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
+>              GADTs, RankNTypes, DataKinds #-}
 > module ProofState.Interface.ProofKit where
 > import Control.Monad.Except
 > import Kit.BwdFwd
@@ -61,7 +61,7 @@ Accessing the type-checker
 First off, we can access the $\beta$-normalizer: the `bquoteHere`
 command $\beta$-quotes a term using the local name supply.
 
-> bquoteHere :: Tm {d, VV} REF -> ProofStateT e (Tm {d, TT} REF)
+> bquoteHere :: Tm d VV REF -> ProofStateT e (Tm d TT REF)
 > bquoteHere tm = withNSupply $ bquote B0 tm
 
 Secondly, any type-checking problem (defined in the `Check` monad) can

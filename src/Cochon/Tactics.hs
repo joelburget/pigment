@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -F -pgmF she #-}
-{-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms #-}
+{-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds #-}
 
 module Cochon.Tactics (cochonTactics, infoHypotheses, reactBKind, runProofState) where
 
@@ -714,7 +714,7 @@ infoContextual gals = do
             reactKword KwAsc
             reactTy
     help bsc (es :< _) = help bsc es
-    removeShared :: Spine {TT} REF -> TY -> TY
+    removeShared :: Spine TT REF -> TY -> TY
     removeShared []       ty        = ty
     removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
 

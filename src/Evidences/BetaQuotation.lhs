@@ -3,10 +3,14 @@ $\beta$-Quotation
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
+>     DataKinds #-}
+
 > module Evidences.BetaQuotation where
+
 > import Control.Applicative
 > import Data.Traversable
+
 > import Kit.BwdFwd
 > import Evidences.Tm
 > import Evidences.Eval
@@ -28,7 +32,7 @@ of assumptions inside a term.
 
 Apart from that, this is a standard $\beta$-quotation:
 
-> bquote :: NameSupplier m => Bwd REF -> Tm {d,VV} REF -> m (Tm {d,TT} REF)
+> bquote :: NameSupplier m => Bwd REF -> Tm d VV REF -> m (Tm d TT REF)
 
 If binded by one of our lambda, we bind the free variables to the right
 lambda. We don't do anything otherwise.

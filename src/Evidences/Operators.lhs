@@ -3,7 +3,8 @@ Operators and primitives {#sec:Evidences.Operators}
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, PatternSynonyms,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
+>     DataKinds #-}
 > module Evidences.Operators where
 > import Control.Applicative
 > import Kit.BwdFwd
@@ -54,12 +55,15 @@ any auxiliary code.
 >   atOp,
 >   splitOp
 >   ]
+
 > type DescDispatchTable = (VAL,
 >                       VAL -> VAL,
 >                       VAL -> VAL -> VAL,
 >                       VAL -> VAL -> VAL,
 >                       VAL -> VAL -> VAL)
+
 > type EnumDispatchTable = (VAL, VAL -> VAL -> VAL)
+
 > mkLazyEnumDef :: VAL -> EnumDispatchTable -> Either NEU VAL
 > mkLazyEnumDef arg (nilECase, consECase) = let args = arg $$ Snd in
 >     case arg $$ Fst of
@@ -67,6 +71,7 @@ any auxiliary code.
 >         CONSN  -> Right $ consECase (args $$ Fst) (args $$ Snd $$ Fst)
 >         N t    -> Left t
 >         _      -> error "mkLazyEnumDef: invalid constructor!"
+
 > descOp :: Op
 > descOp = Op
 >   { opName = "desc"
@@ -94,9 +99,11 @@ any auxiliary code.
 >       "D" :<: desc :-: \dD ->
 >       "X" :<: SET :-: \xX ->
 >       Target SET
+
 > unTag :: VAL -> String
 > unTag (TAG u) = u
 > unTag _ = "x"
+
 > boxOp :: Op
 > boxOp = Op
 >   { opName = "box"
@@ -778,7 +785,7 @@ any auxiliary code.
 >   , opSimp = \_ _ -> empty
 >   }
 
-> descConstructors :: Tm {In, p} x
+> descConstructors :: Tm In p x
 > descConstructors =  CONSE (TAG "idD")
 >                          (CONSE (TAG "constD")
 >                          (CONSE (TAG "sumD")
@@ -787,7 +794,7 @@ any auxiliary code.
 >                          (CONSE (TAG "piD")
 >                           NILE)))))
 
-> descBranches :: Tm {In, p} x
+> descBranches :: Tm In p x
 > descBranches = (PAIR (CONSTD UNIT)
 >                   (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
 >                   (PAIR (SIGMAD enumU (L $ "E" :. [._E.
@@ -802,12 +809,12 @@ any auxiliary code.
 >                                            (CONSTD UNIT))]))
 >                    VOID))))))
 
-> descD :: Tm {In, p} x
+> descD :: Tm In p x
 > descD = SUMD descConstructors
 >              (L $ "c" :. [.c. N $
 >                  switchDOp :@ [ descConstructors , descBranches , NV c] ])
 
-> desc :: Tm {In, p} x
+> desc :: Tm In p x
 > desc = MU (Just (ANCHOR (TAG "Desc") SET ALLOWEDEPSILON)) descD
 
 > descREF :: REF
@@ -824,21 +831,21 @@ any auxiliary code.
 > descBranchesREF = [("Primitive", 0), ("DescBranches", 0)] :=
 >     DEFN descBranches :<: branchesOp @@ [descConstructors, LK desc]
 
-> enumConstructors :: Tm {In, p} x
+> enumConstructors :: Tm In p x
 > enumConstructors = CONSE (TAG "nil") (CONSE (TAG "cons") NILE)
 
-> enumBranches :: Tm {In, p} x
+> enumBranches :: Tm In p x
 > enumBranches =
 >     PAIR (CONSTD UNIT)
 >         (PAIR (SIGMAD UID (L $ "t" :. (PRODD (TAG "E") IDD (CONSTD UNIT))))
 >             VOID)
 
-> enumD :: Tm {In, p} x
+> enumD :: Tm In p x
 > enumD = SIGMAD  (ENUMT enumConstructors)
 >                   (L $ "c" :. [.c. N $
 >                       switchDOp :@ [ enumConstructors , enumBranches , NV c] ])
 
-> enumU :: Tm {In, p} x
+> enumU :: Tm In p x
 > enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
 
 > enumREF :: REF

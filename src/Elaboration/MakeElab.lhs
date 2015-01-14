@@ -2,7 +2,8 @@ Using the `Elab` language {#sec:Elaboration.MakeElab}
 =========================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternSynonyms #-}
+> {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternSynonyms,
+>     DataKinds #-}
 
 > module Elaboration.MakeElab where
 
@@ -200,7 +201,7 @@ tag in the enumeration to determine the appropriate index.
 >     findTag a _ n  = throwError . sErr $ "elaborate: tag `"
 >                                           ++ a
 >                                           ++ " not found in enumeration."
->     toNum :: Int -> Tm {In, p} x
+>     toNum :: Int -> Tm In p x
 >     toNum 0  = ZE
 >     toNum n  = SU (toNum (n-1))
 > makeElab' loc (PROP :>: DEqBlue t u) = do
@@ -329,7 +330,7 @@ The result of `makeElabInfer` is of type $\SIGMA{\V{X}}{\Set}{X}$, which
 we can represent as an evidence term or value (`sigSetTM` or
 `sigSetVAL`, respectively).
 
-> sigSetVAL :: Tm {In,p} x
+> sigSetVAL :: Tm In p x
 > sigSetVAL = SIGMA SET (idVAL "ssv")
 > sigSetTM :: INTM
 > sigSetTM =  sigSetVAL

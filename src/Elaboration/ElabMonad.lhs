@@ -4,11 +4,14 @@ The `Elab` monad: a DSL for elaboration {#sec:Elaboration.ElabMonad}
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TypeSynonymInstances, FlexibleInstances,
 >              MultiParamTypeClasses, GeneralizedNewtypeDeriving,
->              PatternGuards #-}
+>              PatternGuards, DataKinds #-}
+
 > module Elaboration.ElabMonad where
+
 > import Control.Applicative
 > import Control.Monad
 > import Control.Monad.Except
+
 > import NameSupply.NameSupply
 > import Evidences.Tm
 > import Evidences.Eval
@@ -34,7 +37,7 @@ language, then write an interpreter to run the syntax in the
 >              -- solve a suspendable elaboration problem and return the result
 > eCompute     :: (TY :>: Elab (INTM :=>: VAL)) -> Elab (INTM :=>: VAL)
 >              -- execute commands to produce an element of a given type
-> eFake        :: Elab (REF, Spine {TT} REF)
+> eFake        :: Elab (REF, Spine TT REF)
 >              -- return a fake reference to the current goal and the current spine
 > eResolve     :: RelName -> Elab (INTM :=>: VAL, Maybe (Scheme INTM))
 >              -- resolve a name to a term and maybe a scheme
@@ -52,7 +55,7 @@ monad.
 >     |  ECry (StackError DInTmRN)
 >     |  EElab Loc EProb
 >     |  ECompute (TY :>: Elab (INTM :=>: VAL)) (INTM :=>: VAL -> Elab x)
->     |  EFake ((REF, Spine {TT} REF) -> Elab x)
+>     |  EFake ((REF, Spine TT REF) -> Elab x)
 >     |  EAnchor (String -> Elab x)
 >     |  EResolve RelName ((INTM :=>: VAL, Maybe (Scheme INTM)) -> Elab x)
 >     |  EAskNSupply (NameSupply -> Elab x)

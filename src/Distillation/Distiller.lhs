@@ -2,12 +2,16 @@ The distiller {#sec:Distillation.Distiller}
 =============
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms,
+>     DataKinds #-}
 
 > module Distillation.Distiller where
 
 > import Control.Monad.State
+
 > import Text.PrettyPrint.HughesPJ (Doc)
+> import React
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import ProofState.Structure.Developments
@@ -28,7 +32,6 @@ The distiller {#sec:Distillation.Distiller}
 > import Evidences.Eval
 > import Evidences.Operators
 > import Evidences.DefinitionalEquality
-> import React
 
 The distiller, like the elaborator, is organized on a `check` / `infer`
 basis, following the type-checker implementation in
@@ -200,7 +203,7 @@ not be necessary.)
 >                             (cod (pval ref) :>: underScope sc ref)
 >     return $ DL (convScope sc x tm') :=>: (evTm $ L sc)
 >   where
->     convScope :: Scope {TT} REF -> String -> DInTmRN -> DSCOPE
+>     convScope :: Scope TT REF -> String -> DInTmRN -> DSCOPE
 >     convScope (_ :. _)  x  tm = x ::. tm
 >     convScope (K _)     _  tm = DK tm
 
@@ -233,7 +236,7 @@ translation, we accumulate a `spine` and distill it when we reach the
 head. Doing so, shared parameters can be removed (see
 subsection [subsec:ProofState.Interface.NameResolution.christening]).
 
-> distillInfer ::  Entries -> EXTM -> Spine {TT} REF ->
+> distillInfer ::  Entries -> EXTM -> Spine TT REF ->
 >                  ProofStateT INTM (DExTmRN :<: TY)
 
 If we spot a neutral term being called when distilling, we distill the
@@ -334,7 +337,7 @@ using `elimTy` to determine the appropriate type to push in at each
 step, and returns the distilled spine and the overall type of the
 application.
 
-> distillSpine ::  Entries -> (VAL :<: TY) -> Spine {TT} REF ->
+> distillSpine ::  Entries -> (VAL :<: TY) -> Spine TT REF ->
 >                  ProofStateT INTM (DSPINE, TY)
 > distillSpine _        (_ :<: ty)    []         = return ([], ty)
 > distillSpine entries  (v :<: C ty)  (a:spine)  = do

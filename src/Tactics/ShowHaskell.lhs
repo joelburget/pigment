@@ -32,7 +32,7 @@ Converting Epigram definitions to Haskell
 > instance ShowHaskell REF where
 >     showHaskell bs r = fst (mkLastName r)
 
-> instance ShowHaskell (Tm {d, p} REF) where
+> instance ShowHaskell (Tm d p REF) where
 >     showHaskell bs (L s)       = showHaskell bs s
 >     showHaskell bs (C c)       = showHaskell bs c
 >     showHaskell bs (NV i)      = "(NV " ++ maybe (show i) id (bs !. i) ++ ")"
@@ -50,7 +50,7 @@ Converting Epigram definitions to Haskell
 >     showHaskell bs (K t)       = "(LK " ++ showHaskell bs t ++ ")"
 >     showHaskell bs x           = error "showHaskell: can't show " ++ show x
 
-> instance ShowHaskell (Can (Tm {d, p} REF)) where
+> instance ShowHaskell (Can (Tm d p REF)) where
 >     showHaskell bs Set         = "SET"
 >     showHaskell bs (Pi _S (LK _T)) = "(ARR " ++ showHaskell bs _S ++ " " ++
 >                                      showHaskell bs _T ++ ")"
@@ -91,7 +91,7 @@ Converting Epigram definitions to Haskell
 >     showHaskell bs (Record (l :?=: Id s)) = "(RECORD " ++ showHaskell bs l ++ " " ++ showHaskell bs s ++ ")"
 >     showHaskell bs x           = error "showHaskell: can't show " ++ show x
 
-> instance ShowHaskell (Elim (Tm {d, p} REF)) where
+> instance ShowHaskell (Elim (Tm d p REF)) where
 >     showHaskell bs (A a)       = "(A " ++ showHaskell bs a ++ ")"
 >     showHaskell bs Out         = "Out"
 >     showHaskell bs (Call l)    = "(CALL " ++ showHaskell bs l ++ ")"

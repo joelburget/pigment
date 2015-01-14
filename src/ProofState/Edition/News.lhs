@@ -2,8 +2,10 @@ News about updated references {#sec:ProofState.Edition.News}
 =============================
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs #-}
+> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs, DataKinds #-}
+
 > module ProofState.Edition.News where
+
 > import Control.Monad.Writer
 > import Data.Traversable
 > import Data.Foldable hiding (foldr)
@@ -22,7 +24,7 @@ propagated.
 News
 ----
 
-|News| represents possible changes to references. At the moment, it may
+`News` represents possible changes to references. At the moment, it may
 be `GoodNews` (the reference has become more defined) or `NoNews` (even
 better from our perspective, as the reference has not changed). Note
 that `News` is ordered by increasing "niceness".
@@ -57,7 +59,7 @@ newsworthy.
 > addNews :: (REF, News) -> NewsBulletin ->  NewsBulletin
 > addNews (_,  NoNews)  old  = old
 > addNews (r,  n)       old  = (r, n `mappend` n') : old' where
->   -- Find previous versions n' (if any), 
+>   -- Find previous versions n' (if any),
 >   -- Remove duplicate in old':
 >   (n', old') = seek old
 >   seek [] = (NoNews, [])
@@ -121,7 +123,7 @@ reference used in the term). Using the `Writer` monad allows the term to
 be updated and the news about it calculated in a single traversal. Note
 that we ensure `FAKE` references remain as they are, as in `getLatest`.
 
-> tellNews :: NewsBulletin -> Tm {d, TT} REF -> (Tm {d, TT} REF, News)
+> tellNews :: NewsBulletin -> Tm d TT REF -> (Tm d TT REF, News)
 > tellNews []    tm = (tm, NoNews)
 > tellNews news  tm = runWriter $ traverse teller tm
 >   where
