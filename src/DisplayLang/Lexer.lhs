@@ -15,13 +15,16 @@ are round, square, or curly, and you can make fancy brackets by wedging
 an identifier between open-and-bar, or bar-and-close without whitespace.
 Sequences of non-whitespace are identifiers unless they're keywords.
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeSynonymInstances #-}
+
 > module DisplayLang.Lexer where
+
 > import Control.Applicative
+> import Data.Functor
 > import Data.List
 > import Data.Char
 > import Kit.Parsley
+> import Kit.MissingLibrary
 
 What are tokens?
 ----------------
@@ -76,10 +79,9 @@ that, an identifier. Hence, we can recognize a token with the following
 parser:
 
 > parseToken :: Parsley Char Token
-> parseToken = (|id parseBrackets
->               |id parseKeyword
->               |id parseIdent
->               |)
+> parseToken = id parseBrackets
+>          <|> id parseKeyword
+>          <|> id parseIdent
 
 Tokenizing an input string then simply consists in matching a bunch of
 token separated by spaces. For readability, we are also glutton in
@@ -89,7 +91,7 @@ spaces the user may have put before and after the tokens.
 > tokenize = spaces *> pSep spaces parseToken <* spaces
 
 In the following, we implement these combinators in turn: `spaces`,
-|parseIdent|, `parseKeyword`, and `parseBrackets`.
+`parseIdent`, `parseKeyword`, and `parseBrackets`.
 
 Lexing spaces
 
@@ -114,9 +116,10 @@ the parsed word. For example, "foo," lexes into first `Idenfitier foo`
 then `Keyword ,`. In `Parsley`, this translates to:
 
 > parseWord :: Parsley Char String
-> parseWord = (|id (some $ tokenFilter (\t -> not $ elem t $ space ++ bracketChars ++ protected))
->              |(: []) (tokenFilter (flip elem protected))|)
+> parseWord = (id <$> (some $ tokenFilter filter))
+>         <|> ((: []) <$> (tokenFilter (flip elem protected)))
 >     where protected = ",`';"
+>           filter t = not $ elem t $ space ++ bracketChars ++ protected
 
 As we are at it, we can test for word equality, that is build a parser
 matching a given word:
@@ -265,8 +268,8 @@ Lexing identifiers
 Hence, parsing an identifier simply consists in successfully parsing a
 word – which is not a keyword – and saying "oh! it's an `Identifier`".
 
-> parseIdent = (|id (%parseKeyword%) (|)
->               |Identifier parseWord |)
+> parseIdent = id <$ parseKeyword *> empty
+>          <|> Identifier <$> parseWord
 
 Lexing brackets
 
@@ -278,12 +281,12 @@ Brackets, open and closed, are one of the following.
 > bracketChars = "|" ++ openBracket ++ closeBracket
 
 Parsing brackets, as you would expect, requires a monad: we're not
-context-free my friend. This is slight variation around the |pLoop|
+context-free my friend. This is slight variation around the `pLoop`
 combinator.
 
 First, we use `parseOpenBracket` to match an opening bracket, and get
 it's code. Thanks to this code, we can already say that we hold a
-|Brackets|. We are left with tokenizing the content of the bracket, up
+`Brackets`. We are left with tokenizing the content of the bracket, up
 to parsing the corresponding closing bracket.
 
 Parsing the closing bracket is made slightly more complex by the
@@ -293,19 +296,15 @@ opening bracket with the one of the closing bracket.
 > parseBrackets :: Parsley Char Token
 > parseBrackets = do
 >   bra <- parseOpenBracket
->   (|(Brackets bra)
->      (|id tokenize (%parseCloseBracket bra %) |) |)
+>   (Brackets bra) <$> (tokenize <* parseCloseBracket bra)
 >     where parseOpenBracket :: Parsley Char Bracket
->           parseOpenBracket = (|id (% tokenEq '(' %)
->                                     (|RoundB possibleWord (% tokenEq '|' %)
->                                      |Round (% spaces %)|)
->                               |id (% tokenEq '[' %)
->                                     (|SquareB possibleWord (% tokenEq '|' %)
->                                      |Square (% spaces %)|)
->                               |id (% tokenEq '{' %)
->                                     (|CurlyB possibleWord (% tokenEq '|' %)
->                                      |Curly (% spaces %)|)
->                               |)
+>           parseOpenBracket =
+>                 tokenEq '(' *> ((RoundB <$> possibleWord <* tokenEq '|')
+>                             <|> (Round <$ spaces))
+>             <|> tokenEq '[' *> ((SquareB <$> possibleWord <* tokenEq '|')
+>                             <|> (Square <$ spaces))
+>             <|> tokenEq '{' *> ((CurlyB <$> possibleWord <* tokenEq '|')
+>                             <|> (Curly <$ spaces))
 >           parseCloseBracket :: Bracket -> Parsley Char ()
 >           parseCloseBracket Round = tokenEq ')'
 >           parseCloseBracket Square = tokenEq ']'
@@ -314,9 +313,9 @@ opening bracket with the one of the closing bracket.
 >           parseCloseBracket (SquareB s) = matchBracketB s ']'
 >           parseCloseBracket (CurlyB s) = matchBracketB s '}'
 >           parseBracket x = tokenFilter (flip elem x)
->           matchBracketB s bra = (|id ~ () (% tokenEq '|' %)
->                                           (% wordEq s %)
->                                           (% tokenEq bra %) |)
+>           matchBracketB :: String -> Char -> Parsley Char ()
+>           matchBracketB s bra = void $
+>               tokenEq '|' >> wordEq s >> tokenEq bra
 >           possibleWord = parseWord <|> pure ""
 
 Abstracting tokens

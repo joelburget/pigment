@@ -3,7 +3,9 @@ Missing Library
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeFamilies, TypeOperators, UndecidableInstances, TypeSynonymInstances #-}
+
 > module Kit.MissingLibrary where
+
 > import Control.Applicative
 > import Control.Monad.Writer
 > import Data.Foldable
@@ -76,13 +78,13 @@ Missing Instances
 -----------------
 
 > instance (Applicative f, Num x, Show (f x), Eq (f x)) => Num (f x) where
->   x + y          = (|x + y|)
->   x * y          = (|x * y|)
->   x - y          = (|x - y|)
->   abs x          = (|abs x|)
->   negate x       = (|negate x|)
->   signum x       = (|signum x|)
->   fromInteger i  = (|(fromInteger i)|)
+>   x + y          = (+) <$> x <*> y
+>   x * y          = (*) <$> x <*> y
+>   x - y          = (-) <$> x <*> y
+>   abs x          = abs <$> x
+>   negate x       = negate <$> x
+>   signum x       = signum <$> x
+>   fromInteger i  = pure $ fromInteger i
 
 Grr.
 
@@ -187,21 +189,32 @@ Functor Kit
 > size = rec ((1+) . reduce)
 
 > instance HalfZip Id where
->   halfZip (Id x) (Id y) = (| (Id (x,y)) |)
+>   halfZip (Id x) (Id y) = pure (Id (x,y))
 
 > instance (Eq a) => HalfZip (Ko a) where
->   halfZip (Ko x) (Ko y) | x == y = (| (Ko x) |)
+>   halfZip (Ko x) (Ko y) | x == y = pure (Ko x)
 >   halfZip _ _ = Nothing
 
 > instance (HalfZip p, HalfZip q) => HalfZip (p :+: q) where
->   halfZip (Le x) (Le y) = (|Le (halfZip x y)|)
->   halfZip (Ri x) (Ri y) = (|Ri (halfZip x y)|)
+>   halfZip (Le x) (Le y) = Le <$> halfZip x y
+>   halfZip (Ri x) (Ri y) = Ri <$> halfZip x y
 >   halfZip _ _ = Nothing
 
 > instance (HalfZip p, HalfZip q) => HalfZip (p :*: q) where
->   halfZip (x0 :& y0) (x1 :& y1) = (| (halfZip x0 x1) :& (halfZip y0 y1) |)
+>   halfZip (x0 :& y0) (x1 :& y1) = (:&) <$> halfZip x0 x1 <*> halfZip y0 y1
 
 >   -- HalfZip xs xs = Just (fmap (\x -> (x,x)) xs)
+
+> infixl 4 $>
+
+> -- | Flipped version of '<$'.
+> --
+> -- /Since: 4.7.0.0/
+> ($>) :: Functor f => f a -> b -> f b
+> ($>) = flip (<$)
+
+> void :: Functor f => f a -> f ()
+> void = fmap (const ())
 
 Applicative Kit
 ---------------
