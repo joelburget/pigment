@@ -199,7 +199,7 @@ elabData nom pars scs = do
                    (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
                           SET
                           pars')
-                   (map (\(_,_,r) -> A (NP r)) pars')
+                   (map (\(_, _, r) -> A (NP r)) pars')
 
       -- and constructor names
       make (AnchConNames :<: NP enumREF)

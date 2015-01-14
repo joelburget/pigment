@@ -7,6 +7,7 @@ Cochon Command Lexer
 > module Cochon.CommandLexer where
 
 > import Control.Applicative
+
 > import Kit.Parsley
 > import DisplayLang.Lexer
 > import DisplayLang.TmParse
@@ -58,7 +59,7 @@ Tokenizer combinators
 > tokenScheme = SchemeArg <$> pScheme
 
 > tokenOption :: Parsley Token CochonArg -> Parsley Token CochonArg
-> tokenOption p = Optional <$> (bracket Square p) <|> pure NoCochonArg
+> tokenOption p = (Optional <$> (bracket Square p)) <|> pure NoCochonArg
 
 > tokenEither :: Parsley Token CochonArg -> Parsley Token CochonArg
 >                                        -> Parsley Token CochonArg
@@ -67,11 +68,11 @@ Tokenizer combinators
 > tokenListArgs :: Parsley Token CochonArg
 >               -> Parsley Token ()
 >               -> Parsley Token CochonArg
-> tokenListArgs p sep = ListArgs <$> (pSep sep p)
+> tokenListArgs p sep = ListArgs <$> pSep sep p
 
 > tokenPairArgs :: Parsley Token CochonArg -> Parsley Token () ->
 >                  Parsley Token CochonArg -> Parsley Token CochonArg
-> tokenPairArgs p sep q = PairArgs <$> p <* sep *> q
+> tokenPairArgs p sep q = PairArgs <$> p <* sep <*> q
 
 Printers
 --------
@@ -96,5 +97,5 @@ Printers
 > argEither f g (LeftArg a) = f a
 > argEither f g (RightArg b) = g b
 
-> argPair :: (CochonArg -> a) -> (CochonArg -> b) -> CochonArg -> (a , b)
-> argPair f g (PairArgs a b) = (f a , g b)
+> argPair :: (CochonArg -> a) -> (CochonArg -> b) -> CochonArg -> (a, b)
+> argPair f g (PairArgs a b) = (f a, g b)

@@ -361,14 +361,15 @@ dataTac = CochonTactic
          pars <- tokenListArgs (bracket Round $ tokenPairArgs
            tokenString
            (keyword KwAsc)
-           tokenInTm) (|()|)
+           tokenInTm) (pure ())
          keyword KwDefn
-         scs <- tokenListArgs (bracket Round $ tokenPairArgs
-           (|id (%keyword KwTag%)
-                tokenString |)
-           (keyword KwAsc)
-           tokenInTm)
-          (keyword KwSemi)
+         scs <- tokenListArgs
+             (bracket Round $ tokenPairArgs
+                 (keyword KwTag >> tokenString)
+                 (keyword KwAsc)
+                 tokenInTm
+             )
+             (keyword KwSemi)
          return $ B0 :< nom :< pars :< scs
     , ctxTrans = (\[StrArg nom, pars, cons] -> simpleOutput $ do
           elabData nom (argList (argPair argToStr argToIn) pars)
