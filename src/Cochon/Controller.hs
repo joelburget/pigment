@@ -5,7 +5,6 @@ module Cochon.Controller where
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
-import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Writer
 import qualified Data.Foldable as Foldable

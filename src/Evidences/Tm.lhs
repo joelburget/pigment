@@ -11,7 +11,6 @@ Tm
 
 > import Prelude hiding (foldl)
 > import Control.Applicative
-> import Control.Monad.Error
 > import Control.Monad.Except
 > import qualified Data.Monoid as M
 > import Data.Monoid (mempty, mappend, (<>))
@@ -66,12 +65,12 @@ And we can infer types from:
 * elimination, by the type of the eliminator; and
 * type ascription on a checkable term, by the ascripted type.
 
->   P     :: x                                    -> Tm Ex p   x -- parameter
->   V     :: Int                                  -> Tm Ex TT  x -- variable
->   (:@)  :: Op -> [Tm In p x]                 -> Tm Ex p   x -- fully applied op
+>   P     :: x                              -> Tm Ex p   x -- parameter
+>   V     :: Int                            -> Tm Ex TT  x -- variable
+>   (:@)  :: Op -> [Tm In p x]              -> Tm Ex p   x -- fully applied op
 >   (:$)  :: Tm Ex p x -> Elim (Tm In p x)  -> Tm Ex p   x -- elim
 >   (:?)  :: Tm In TT x -> Tm In TT x       -> Tm Ex TT  x -- typing
->   Yuk   :: Tm In VV x                        -> Tm Ex TT  x -- dirty
+>   Yuk   :: Tm In VV x                     -> Tm Ex TT  x -- dirty
 
 To put some flesh on these bones, we define and use the `Scope`, `Can`,
 `Op`, and `Elim` data-types. Their role is described below. Before that,
@@ -262,21 +261,6 @@ a `Target`.
 > data TEL x  = Target x
 >             | (String :<: TY) :-: (VAL -> TEL x)
 > infix 3 :-:
-
-The interpretation of the telescope is carried by `telCheck`. On the
-model of `opTy` defined below, this interpretation uses a generic
-checker-evaluator `chev`. Based on this chev, it simply goes over the
-telescope, checking and evaluating as it moves further.
-
-> telCheck ::  (Alternative m, MonadError (StackError t) m) =>
->              (TY :>: t -> m (s :=>: VAL)) ->
->              (TEL x :>: [t]) -> m ([s :=>: VAL] , x)
-> telCheck chev (Target x :>: []) = return ([] , x)
-> telCheck chev ((_ :<: sS :-: tT) :>: (s : t)) = do
->     ssv@(s :=>: sv) <- chev (sS :>: s)
->     (svs , x) <- telCheck chev ((tT sv) :>: t)
->     return (ssv : svs , x)
-> telCheck _ _ = throwError $ sErr "telCheck: opTy mismatch"
 
 Running the operator
 
@@ -681,6 +665,7 @@ following to make it suit your need.
 >                 | ErrorElim     (Elim t)
 >                 | ErrorREF REF
 >                 | ErrorVAL      (VAL     :<: Maybe TY)
+
 > instance Functor ErrorTok where
 >     fmap f (StrMsg x)              = StrMsg x
 >     fmap f (ErrorTm (t :<: mt))    = ErrorTm (f t :<: fmap f mt)
@@ -708,9 +693,6 @@ further failures. The top of the stack is the head of the list.
 < mplus l@(Left (StackError xs)) \_ = l
 < mplus \_ r@(Left (StackError xs)) = r
 < mplus (Right l) (Right r) =k
-
-> instance Error (StackError t) where
->   strMsg = sErr
 
 > instance M.Monoid (StackError t) where
 >   (StackError a) `mappend` (StackError b) = StackError (a ++ b)

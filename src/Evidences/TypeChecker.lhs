@@ -9,9 +9,10 @@ Type-checker {#sec:Evidences.TypeChecker}
 > module Evidences.TypeChecker where
 
 > import Control.Applicative
-> import Control.Monad.Except
+> import Control.Monad.Except as Ex
 > import Data.Monoid ((<>))
 > import Data.Traversable
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Evidences.Tm
@@ -20,6 +21,23 @@ Type-checker {#sec:Evidences.TypeChecker}
 > import {-# SOURCE #-} Evidences.DefinitionalEquality
 > import Evidences.Operators
 > import NameSupply.NameSupplier
+> import ProofState.Edition.ProofState
+
+The interpretation of the telescope is carried by `telCheck`. On the
+model of `opTy` defined below, this interpretation uses a generic
+checker-evaluator `chev`. Based on this chev, it simply goes over the
+telescope, checking and evaluating as it moves further.
+
+> telCheck ::  (Alternative m, MonadError (StackError t) m) =>
+>              (TY :>: t -> m (s :=>: VAL)) ->
+>              (TEL x :>: [t]) -> m ([s :=>: VAL] , x)
+
+> telCheck chev (Target x :>: []) = return ([] , x)
+> telCheck chev ((_ :<: sS :-: tT) :>: (s : t)) = do
+>     ssv@(s :=>: sv) <- chev (sS :>: s)
+>     (svs , x) <- telCheck chev ((tT sv) :>: t)
+>     return (ssv : svs , x)
+> telCheck _ _ = Ex.throwError $ sErr "telCheck: opTy mismatch"
 
 Type-checking Canonicals and Eliminators
 ----------------------------------------
@@ -29,10 +47,10 @@ Canonical objects
 Historically, canonical terms were type-checked by the following
 function:
 
-\< canTy :: (t -\> VAL) -\> (Can VAL :\>: Can t) -\> Maybe (Can (TY :\>:
-t)) \< canTy ev (Set :\>: Set) = Just Set \< canTy ev (Set :\>: Pi s t)
-= Just (Pi (SET :\>: s) ((ARR (ev s) SET) :\>: t) \< canTy \_ \_ =
-Nothing
+< canTy :: (t -> VAL) -> (Can VAL :>: Can t) -> Maybe (Can (TY :>: t))
+< canTy ev (Set :>: Set)    = Just Set
+< canTy ev (Set :>: Pi s t) = Just (Pi (SET :>: s) ((ARR (ev s) SET) :>: t)
+< canTy _  _            = Nothing
 
 If we temporally forget Features, we have here a type-checker that takes
 an evaluation function `ev`, a type, and a term to be checked against
@@ -42,22 +60,23 @@ it for free during type-checking.
 
 However, to avoid re-implementing the typing rules in various places, we
 had to generalize this function. The generalization consists in
-parameterizing `canTy` with a type-directed function |TY :\>: t -\> s|,
-which is equivalent to |TY -\> t -\> s|. Because we still need an
+parameterizing `canTy` with a type-directed function `TY :>: t -> s`,
+which is equivalent to `TY -> t -> s`. Because we still need an
 evaluation function, both functions are fused into a single one, of
-type: |TY :\>: t -\> (s,VAL)|. To support failures, we extend this type
-to |TY :\>: t -\> m (s,VAL)| where `m` is a `MonadError`.
+type: `TY :>: t -> (s,VAL)`. To support failures, we extend this type
+to `TY :>: t -> m (s,VAL)` where `m` is a `MonadError`.
 
 Hence, by defining an appropriate function `chev`, we can recover the
 previous definition of `canTy`. We can also do much more: intuitively,
 we can write any type-directed function in term of `canTy`. That is, any
 function traversing the types derivation tree can be expressed using
-|canTy|.
+`canTy`.
 
 > canTy ::  (Alternative m, MonadError (StackError t) m) =>
 >           (TY :>: t -> m (s :=>: VAL)) ->
 >           (Can VAL :>: Can t) ->
 >           m (Can (s :=>: VAL))
+
 > canTy chev (Set :>: Set)     = return Set
 > canTy chev (Set :>: Pi s t)  = do
 >   ssv@(s :=>: sv) <- chev (SET :>: s)
@@ -222,7 +241,7 @@ function traversing the types derivation tree can be expressed using
 >   return $ Pair xxv yyv
 > canTy _  (Set :>: UId)    = return UId
 > canTy _  (UId :>: Tag s)  = return (Tag s)
-> canTy chev (ty :>: x) = throwError $ StackError
+> canTy chev (ty :>: x) = Ex.throwError $ StackError
 >     [ err "canTy: the proposed value "
 >     , errCan x
 >     , err " is not of type "
@@ -232,26 +251,25 @@ function traversing the types derivation tree can be expressed using
 Eliminators
 
 Type-checking eliminators mirrors `canTy`. `elimTy` is provided with a
-checker-evaluator, a value `f` of inferred typed `t`, ie. a |f :\<: t|
-of |VAL :\<: Can VAL|, and an eliminator of |Elim t|. If the operation
+checker-evaluator, a value `f` of inferred typed `t`, ie. a `f :<: t`
+of `VAL :<: Can VAL`, and an eliminator of `Elim t`. If the operation
 is type-safe, we are given back the eliminator enclosing the result of
-|chev| and the type of the eliminated value.
+`chev` and the type of the eliminated value.
 
-it computes the type of the argument, ie. the eliminator, in |Elim (s
-:=\>: VAL)| and the type of the result in `TY`.
+it computes the type of the argument, ie. the eliminator, in `Elim (s
+:=>: VAL)` and the type of the result in `TY`.
 
 Carefully bring t into scope (we don't really care about m and s) so we
-can refer to it in \`ErrorItem t\`, which disambiguates an instance -
-\`ErrorList a =\> Error [a]\` vs \`Error [ErrorItem INTM]\`, which we
+can refer to it in `ErrorItem t`, which disambiguates an instance -
+`ErrorList a => Error [a]` vs `Error [ErrorItem INTM]`, which we
 want.
+
+TODO(joel) is this comment outdated?
 
 > elimTy :: forall t m s. MonadError (StackError t) m =>
 >            (TY :>: t -> m (s :=>: VAL)) ->
 >            (VAL :<: Can VAL) -> Elim t ->
 >            m (Elim (s :=>: VAL),TY)
-
-elimTy :: (TY :\>: t -\> Check s (s :=\>: VAL)) -\> (VAL :\<: Can
-VAL) -\> Elim t -\> Check s (Elim (s :=\>: VAL),TY)
 
 > elimTy chev (f :<: Pi s t) (A e) = do
 >   eev@(e :=>: ev) <- chev (s :>: e)
@@ -274,7 +292,7 @@ VAL) -\> Elim t -\> Check s (Elim (s :=\>: VAL),TY)
 > elimTy chev (_ :<: Prf (AND p q))      Snd    = return (Snd, PRF q)
 > elimTy chev (_ :<: Sigma s t) Fst = return (Fst, s)
 > elimTy chev (p :<: Sigma s t) Snd = return (Snd, t $$ A (p $$ Fst))
-> elimTy _  (v :<: t) e = throwError $ StackError
+> elimTy _  (v :<: t) e = Ex.throwError $ StackError
 >     [ err "elimTy: failed to eliminate"
 >     , errTyVal (v :<: (C t))
 >     , err "with"
@@ -290,8 +308,8 @@ to evaluate arguments. It is vital to type-check the sub-terms (left to
 right) before trusting the type at the end. This corresponds to the
 following type:
 
-\< opTy :: forall t. (t -\> VAL) -\> [t] -\> Maybe ([TY :\>: t] , TY) \<
-opTy ev args = (...)
+< opTy :: forall t. (t -> VAL) -> [t] -> Maybe ([TY :>: t] , TY)
+< opTy ev args = (...)
 
 Where we are provided an evaluator `ev` and the list of arguments, which
 length should be the arity of the operator. If the type of the arguments
@@ -311,13 +329,13 @@ world of things that might fail. Second, we have extended the evaluation
 function to perform type-checking at the same time. We also liberalise
 the return type to `s`, to give more freedom in the choice of the
 checker-evaluator. This change impacts on `exQuote`, `infer`, and
-|useOp|. If this definition is not clear now, it should become clear
+`useOp`. If this definition is not clear now, it should become clear
 after the definition of `canTy` in
 Section [subsubsec:Evidences.TypeChecker.canTy].
 
 > opTy op chev ss
 >   | length ss == opArity op = telCheck chev (opTyTel op :>: ss)
-> opTy op _ _ = throwError $ StackError
+> opTy op _ _ = Ex.throwError $ StackError
 >     [ (err "operator arity error: ")
 >     , (err $ opName op)
 >     ]
@@ -334,7 +352,7 @@ sequents, keep reading.
 
 The checker works as follow. In a valid typing environment $\Gamma$, it
 checks that the term $t$ is indeed of type $T$, ie. $t$ can be pushed
-into $T$: |T :\>: t|:
+into $T$: `T :>: t`:
 
 $$\Gamma \vdash \mbox{TY} \ni \mbox{Tm \{In,.\} p}$$
 
@@ -348,6 +366,8 @@ Type-checking a canonical term is rather easy, as we just have to
 delegate the hard work to `canTy`. The checker-evaluator simply needs to
 evaluate the well-typed terms.
 
+MonadError (StackError t) (Check INTM)
+
 > check (C cty :>: C ctm) = do
 >   cc' <- canTy check (cty :>: ctm) -- :: Check INTM (Can (INTM :=>: VAL))
 >   return $ C ctm :=>: (C $ fmap valueOf cc')
@@ -358,7 +378,7 @@ $$\Rule{x : S \vdash T x \ni t}
      {\Pi S\ T \ni \lambda x . t}$$
 
 As for the implementation, we apply the by-now standard trick of making
-a fresh variable $x \in S$ and computing the type |T x|. Then, we simply
+a fresh variable $x \in S$ and computing the type `T x`. Then, we simply
 have to check that $T\ x \ni t$.
 
 > check (PI s t :>: L sc) = do
@@ -379,7 +399,7 @@ This translates naturally into the following code:
 >   yv :<: yt <- infer n
 >   case (equal (SET :>: (w, yt)) r) of
 >     True -> return $ N n :=>: yv
->     False -> throwError $ StackError
+>     False -> Ex.throwError $ StackError
 >         [ err "check: inferred type"
 >         , errTyVal (yt :<: SET)
 >         , err "of"
@@ -396,7 +416,7 @@ has matched, then we have to give up.
 >               (\ref -> check (  PRF (q $$ A (pval ref)) :>:
 >                                 underScope sc ref))
 >     return $ L sc :=>: (evTm $ L sc)
-> check (ty :>: tm) = throwError $ StackError
+> check (ty :>: tm) = Ex.throwError $ StackError
 >     [ err "check: type mismatch: type"
 >     , errTyVal (ty :<: SET)
 >     , err "does not admit"
@@ -429,7 +449,7 @@ $$\Rule{f \in \Pi\ S\ T  \qquad
      {f x \in {(B x)}^\downarrow}$$
 
 The story is the same in the general case: we infer the eliminated term
-|t| and we type-check the eliminator, using `elimTy`. Because |elimTy|
+`t` and we type-check the eliminator, using `elimTy`. Because `elimTy`
 computes the result type, we have inferred the result type.
 
 > infer (t :$ s)           = do
@@ -438,7 +458,7 @@ computes the result type, we have inferred the result type.
 >         C cty -> do
 >             (s', ty') <- elimTy check (val :<: cty) s
 >             return $ (val $$ (fmap valueOf s')) :<: ty'
->         _ -> throwError $ StackError
+>         _ -> Ex.throwError $ StackError
 >                  [ err "infer: inferred type"
 >                  , errTyVal (ty :<: SET)
 >                  , err "of"
@@ -468,4 +488,4 @@ Which translates directly into the following code:
 Obviously, if none of the rule above applies, then there is something
 fishy.
 
-> infer _                   = throwError $ sErr "infer: unable to infer type"
+> infer _                   = Ex.throwError $ sErr "infer: unable to infer type"

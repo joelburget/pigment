@@ -3,11 +3,14 @@ Generic name supplier
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, ScopedTypeVariables,
->     MultiParamTypeClasses #-}
+>     MultiParamTypeClasses, GeneralizedNewtypeDeriving, StandaloneDeriving #-}
+
 > module NameSupply.NameSupplier where
+
 > import Control.Applicative
 > import Control.Monad.Except
 > import Control.Monad.Reader
+
 > import NameSupply.NameSupply
 > import Evidences.Tm
 
@@ -88,11 +91,24 @@ The `Check` monad is a `NameSupplier` {#subsec:NameSupply.NameSupplier.check-mon
 
 One such example is the `Check` monad:
 
-> type Check e = ReaderT NameSupply (Either (StackError e))
+> newtype Check e a = Check { unCheck :: ReaderT NameSupply (Either (StackError e)) a } deriving (Functor, Applicative, Monad, NameSupplier)
+
+> deriving instance MonadReader NameSupply (Check e)
+
+> instance Alternative (Check e) where
+>     -- TODO(joel)
+
+> instance MonadError (StackError t) (Check t) where
+>   throwError = Check . ReaderT . const . Left
+
+>   -- catchError :: m a -> (e -> m a) -> m a
+>   catchError (Check action) handler = Check $ ReaderT $ \r -> case runReaderT action r of
+>       Left err -> runReaderT (unCheck $ handler err) r
+>       right -> right
 
 That is, a Reader of `NameSupply` on top of an Error of `StackError`.
 Running a type-checking process is therefore a simple `runReader`
 operation:
 
 > typeCheck :: Check e a -> NameSupply -> Either (StackError e) a
-> typeCheck = runReaderT
+> typeCheck = runReaderT . unCheck

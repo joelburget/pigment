@@ -12,7 +12,6 @@ represent extents numerically.
 > import Control.Applicative
 > import Control.Monad
 > import Control.Monad.Except
-> import Control.Monad.Error
 
 Parsley's Semantics
 -------------------
@@ -64,7 +63,7 @@ It's a `Monad` and all that.
 >     (sts, s', ts)  <- s ts
 >     (tts, t', ts)  <- runParsley (f s') ts
 >     return (sts ++ tts, t', ts)
->   fail s = Parsley $ \ _ -> Left $ strMsg s
+>   fail s = Parsley $ \ _ -> Left $ PFailure ([], Fail s)
 >   hiding instance Applicative (Parsley t)
 
 > instance Functor (Parsley t) where
@@ -76,7 +75,7 @@ It's a `Monad` and all that.
 >   hiding instance Functor (Parsely t)
 
 > instance Alternative (Parsley t) where
->   empty = Parsley $ \ _ -> Left noMsg
+>   empty = Parsley $ \ _ -> Left (PFailure ([], Abort))
 >   p <|> q = Parsley $ \ ts ->
 >             either (\_ -> runParsley q ts) Right (runParsley p ts)
 
@@ -84,10 +83,6 @@ It's a `Monad` and all that.
 >   mzero  = empty
 >   mplus  = (<|>)
 >   hiding instance Alternative (Parsley t)
-
-> instance Error (PFailure t) where
->   noMsg = PFailure ([], Abort)
->   strMsg s = PFailure ([], Fail s)
 
 Low-level combinators
 ---------------------

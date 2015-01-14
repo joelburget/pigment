@@ -2,11 +2,13 @@ The `ProofState` monad {#sec:ProofState.Edition.ProofState}
 ======================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
+>              GADTs, RankNTypes, MultiParamTypeClasses #-}
 > module ProofState.Edition.ProofState where
 
 > import Control.Applicative
+> import Control.Monad.Except
 > import Control.Monad.State
+
 > import DisplayLang.Name
 > import ProofState.Edition.ProofContext
 > import Evidences.Tm
@@ -15,8 +17,8 @@ Defining the Proof State monad
 ------------------------------
 
 The proof state monad provides access to the `ProofContext` as in a
-|State| monad, but with the possibility of command failure represented
-by |Either (StackError e)|.
+`State` monad, but with the possibility of command failure represented
+by `Either (StackError e)`.
 
 TODO(joel) - figure out the fail semantics for ProofStateT
 
@@ -28,23 +30,31 @@ type synonym:
 
 > type ProofState = ProofStateT DInTmRN
 
+> instance MonadError (StackError t) (ProofStateT t) where
+>   throwError = StateT . const . Left
+
+>   -- catchError :: m a -> (e -> m a) -> m a
+>   catchError action handler = StateT $ \ctx -> case runStateT action ctx of
+>       Left err -> runStateT (handler err) ctx
+>       right -> right
+
 Error management toolkit
 ------------------------
 
 Work around an overlapping instance error by restricting the type of
 optional.
 
-> optional' :: ProofState a -> ProofState (Maybe a)
-> optional' = optional
+optional' :: ProofState a -> ProofState (Maybe a)
+optional' = optional
 
-> some' :: ProofState a -> ProofState [a]
-> some' = some
+some' :: ProofState a -> ProofState [a]
+some' = some
 
-> many' :: ProofState a -> ProofState [a]
-> many' = many
+many' :: ProofState a -> ProofState [a]
+many' = many
 
-Some functions, such as `distill`, are defined in the |ProofStateT INTM|
-monad. However, Cochon lives in a |ProofStateT DInTmRN| monad.
+Some functions, such as `distill`, are defined in the `ProofStateT INTM`
+monad. However, Cochon lives in a `ProofStateT DInTmRN` monad.
 Therefore, in order to use it, we will need to lift from the former to
 the latter.
 
