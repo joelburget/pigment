@@ -63,10 +63,11 @@ Section [ProofState.Structure.Developments.entry](#ProofState.Structure.Develop
 >     deriving Show
 
 One would expect the `belowEntries` to be an `Entries`, just as the
-`aboveEntries`. However, the `belowEntries` needs to be a richer
-structure to support the news infrastructure
-(Section [ProofState.Edition.News](#ProofState.Edition.News)). Indeed, we propagate reference
-updates lazily, by pushing news bulletin below the current cursor.
+`aboveEntries`. However, the `belowEntries` needs to be a richer structure to
+support the news infrastructure
+(Section [ProofState.Edition.News](#ProofState.Edition.News)). Indeed, we
+propagate reference updates lazily, by pushing news bulletin below the current
+cursor.
 
 Hence, the `belowEntries` are not only normal entries but also contain
 news. We define a `newtype` for the composition of the `Fwd` and `Either

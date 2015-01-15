@@ -19,6 +19,8 @@ The Get Set
 > import ProofState.Edition.Scope
 > import Evidences.Tm
 
+> import Kit.Trace
+
 We provide various functions to get information from the proof state and
 store updated information, providing a friendlier interface than `get`
 and `put`. The rule of thumb for naming these functions is to prefix the
@@ -116,6 +118,7 @@ Getting in the `HOLE`
 > getHoleGoal :: ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do
 >     x <- getCurrentEntry
+>     elabTrace (show x)
 >     case x of -- TODO(joel) do this properly with error machinery
 >         CModule _ _ -> throwErrorStr "got a module"
 >         CDefinition _ (_ := HOLE _ :<: _) _ _ _ _ -> getGoal "getHoleGoal"
