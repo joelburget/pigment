@@ -120,8 +120,9 @@ Getting in the `HOLE`
 >     x <- getCurrentEntry
 >     elabTrace (show x)
 >     case x of -- TODO(joel) do this properly with error machinery
->         CModule _ _ -> throwErrorStr "got a module"
 >         CDefinition _ (_ := HOLE _ :<: _) _ _ _ _ -> getGoal "getHoleGoal"
+>         CModule _ _ -> throwErrorStr "got a module"
+>         CDefinition _ _ _ _ _ _ -> throwErrorStr "got a non-hole definition"
 
 > getHoleKind :: ProofStateT e HKind
 > getHoleKind = do
