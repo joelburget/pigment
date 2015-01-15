@@ -139,19 +139,19 @@ Keywords are slightly more involved. A keyword is one of the following
 things...
 
 > data Keyword where
->     KwMu :: Keyword
->     KwEnum  :: Keyword
->     KwPlus  :: Keyword
->     KwEqBlue :: Keyword
->     KwMonad   :: Keyword
->     KwReturn  :: Keyword
->     KwIMu :: Keyword
->     KwCall      :: Keyword
->     KwLabel     :: Keyword
->     KwLabelEnd  :: Keyword
->     KwRet       :: Keyword
->     KwNu    :: Keyword
->     KwCoIt  :: Keyword
+>     KwMu         :: Keyword
+>     KwEnum       :: Keyword
+>     KwPlus       :: Keyword
+>     KwEqBlue     :: Keyword
+>     KwMonad      :: Keyword
+>     KwReturn     :: Keyword
+>     KwIMu        :: Keyword
+>     KwCall       :: Keyword
+>     KwLabel      :: Keyword
+>     KwLabelEnd   :: Keyword
+>     KwRet        :: Keyword
+>     KwNu         :: Keyword
+>     KwCoIt       :: Keyword
 >     KwProb       :: Keyword
 >     KwProbLabel  :: Keyword
 >     KwPatPi      :: Keyword
@@ -159,56 +159,56 @@ things...
 >     KwSchTy      :: Keyword
 >     KwExpPi      :: Keyword
 >     KwImpPi      :: Keyword
->     KwProp     :: Keyword
->     KwAbsurd   :: Keyword
->     KwTrivial  :: Keyword
->     KwPrf      :: Keyword
->     KwAnd      :: Keyword
->     KwArr      :: Keyword
->     KwImp      :: Keyword
->     KwAll      :: Keyword
->     KwInh      :: Keyword
->     KwWit      :: Keyword
->     KwQuotient  :: Keyword
->     KwRecord :: Keyword
->     KwRSig :: Keyword
->     KwREmpty :: Keyword
->     KwRCons :: Keyword
->     KwFst  :: Keyword
->     KwSnd  :: Keyword
->     KwSig  :: Keyword
->     KwUId  :: Keyword
->     KwTag  :: Keyword
->     KwAsc         :: Keyword
->     KwComma       :: Keyword
->     KwSemi        :: Keyword
->     KwDefn        :: Keyword
->     KwUnderscore  :: Keyword
->     KwEq          :: Keyword
->     KwBy          :: Keyword
->     KwSet         :: Keyword
->     KwPi          :: Keyword
->     KwLambda      :: Keyword
->     KwCon         :: Keyword
->     KwOut         :: Keyword
+>     KwProp       :: Keyword
+>     KwAbsurd     :: Keyword
+>     KwTrivial    :: Keyword
+>     KwPrf        :: Keyword
+>     KwAnd        :: Keyword
+>     KwArr        :: Keyword
+>     KwImp        :: Keyword
+>     KwAll        :: Keyword
+>     KwInh        :: Keyword
+>     KwWit        :: Keyword
+>     KwQuotient   :: Keyword
+>     KwRecord     :: Keyword
+>     KwRSig       :: Keyword
+>     KwREmpty     :: Keyword
+>     KwRCons      :: Keyword
+>     KwFst        :: Keyword
+>     KwSnd        :: Keyword
+>     KwSig        :: Keyword
+>     KwUId        :: Keyword
+>     KwTag        :: Keyword
+>     KwAsc        :: Keyword
+>     KwComma      :: Keyword
+>     KwSemi       :: Keyword
+>     KwDefn       :: Keyword
+>     KwUnderscore :: Keyword
+>     KwEq         :: Keyword
+>     KwBy         :: Keyword
+>     KwSet        :: Keyword
+>     KwPi         :: Keyword
+>     KwLambda     :: Keyword
+>     KwCon        :: Keyword
+>     KwOut        :: Keyword
 >   deriving (Bounded, Enum, Eq, Show)
 
 ...and they look like this:
 
 > key :: Keyword -> String
-> key KwMu        = "Mu"
-> key KwEnum      = "Enum"
-> key KwPlus      = "+"
-> key KwEqBlue = "=="
-> key KwMonad     = "Monad"
-> key KwReturn    = "`"  -- rename me
-> key KwIMu      = "IMu"
-> key KwCall      = "call"
-> key KwLabel     = "<"
-> key KwLabelEnd  = ">"
-> key KwRet       = "return"  -- rename me
-> key KwNu        = "Nu"
-> key KwCoIt      = "CoIt"
+> key KwMu         = "Mu"
+> key KwEnum       = "Enum"
+> key KwPlus       = "+"
+> key KwEqBlue     = "=="
+> key KwMonad      = "Monad"
+> key KwReturn     = "`"  -- rename me
+> key KwIMu        = "IMu"
+> key KwCall       = "call"
+> key KwLabel      = "<"
+> key KwLabelEnd   = ">"
+> key KwRet        = "return"  -- rename me
+> key KwNu         = "Nu"
+> key KwCoIt       = "CoIt"
 > key KwProb       = "Prob"
 > key KwProbLabel  = "ProbLabel"
 > key KwPatPi      = "PatPi"
@@ -216,39 +216,38 @@ things...
 > key KwSchTy      = "SchTy"
 > key KwExpPi      = "ExpPi"
 > key KwImpPi      = "ImpPi"
-> key KwProp      = "Prop"
-> key KwAbsurd    = "FF"
-> key KwTrivial   = "TT"
-> key KwPrf       = ":-"
-> key KwAnd       = "&&"
-> key KwArr       = "->"
-> key KwImp       = "=>"
-> key KwAll       = "All"
-> key KwInh       = "Inh"
-> key KwWit       = "wit"
-> key KwQuotient  = "Quotient"
-> key KwRecord        = "Rec"
-> key KwRSig          = "RSig"
-> key KwREmpty        = "REmpty"
-> key KwRCons         = "RCons"
-> key KwFst       = "!"
-> key KwSnd       = "-"
-> key KwSig       = "Sig"
-> key KwUId       = "UId"
-> key KwTag       = "'"
-> key KwAsc         = ":"
-> key KwComma       = ","
-> key KwSemi        = ";"
-> key KwDefn        = ":="
-> key KwUnderscore  = "_"
-> key KwEq          = "="
-> key KwBy          = "<="
-
-> key KwSet         = "Set"
-> key KwPi          = "Pi"
-> key KwLambda      = "\\"
-> key KwCon         = "con"
-> key KwOut         = "%"
+> key KwProp       = "Prop"
+> key KwAbsurd     = "FF"
+> key KwTrivial    = "TT"
+> key KwPrf        = ":-"
+> key KwAnd        = "&&"
+> key KwArr        = "->"
+> key KwImp        = "=>"
+> key KwAll        = "All"
+> key KwInh        = "Inh"
+> key KwWit        = "wit"
+> key KwQuotient   = "Quotient"
+> key KwRecord     = "Rec"
+> key KwRSig       = "RSig"
+> key KwREmpty     = "REmpty"
+> key KwRCons      = "RCons"
+> key KwFst        = "!"
+> key KwSnd        = "-"
+> key KwSig        = "Sig"
+> key KwUId        = "UId"
+> key KwTag        = "'"
+> key KwAsc        = ":"
+> key KwComma      = ","
+> key KwSemi       = ";"
+> key KwDefn       = ":="
+> key KwUnderscore = "_"
+> key KwEq         = "="
+> key KwBy         = "<="
+> key KwSet        = "Set"
+> key KwPi         = "Pi"
+> key KwLambda     = "\\"
+> key KwCon        = "con"
+> key KwOut        = "%"
 
     key k = error ("key: missing keyword " ++ show k)
 
