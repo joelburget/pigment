@@ -253,6 +253,10 @@ reactProofState = renderReact
 renderReact :: ProofState InteractionReact
 renderReact = do
     me <- getCurrentName
+
+    -- TODO(joel) - we temporarily replace entries above the cursor and
+    -- contexts below the cursor with nothing, then put them back later
+    -- (below). Why?
     es <- replaceEntriesAbove B0
     cs <- putBelowCursor F0
 
@@ -269,9 +273,11 @@ renderReact = do
                 _ -> do
                     d'' <- reactEntries cs
                     return (d >> "---" >> d'')
+
             tip <- reactTip
             putEntriesAbove es
             putBelowCursor cs
+
             return $ div_ [ class_ "proof-state" ] $ do
                 -- div_ [ class_ "entries-name" ] $ do
                 --     "Entries name: "

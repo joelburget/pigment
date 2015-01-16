@@ -37,8 +37,8 @@ This is mostly used at the programming level. For making modules, we use
 >                   ,  devTip           =  Module
 >                   ,  devNSupply       =  freshNSpace nsupply s
 >                   ,  devSuspendState  =  SuspendNone }
->     putEntryAbove $ EModule  {  name     =  n
->                              ,  dev      =  dev
+>     putEntryAbove $ EModule  {  name     = n
+>                              ,  dev      = dev
 >                              ,  expanded = True }
 >     putDevNSupply $ freshName nsupply
 >     return n

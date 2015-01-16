@@ -184,8 +184,8 @@ development of sub-objects. The `Tip` of this sub-development will be
 `Unknown`, `Suspended` or `Defined`.
 
 A programming problem is a special kind of definition: it follows a type
-`Scheme` (Section [DisplayLang.Scheme](#DisplayLang.Scheme)), the high-level type of the
-function we are implementing.
+`Scheme` (Section [DisplayLang.Scheme](#DisplayLang.Scheme)), the high-level
+type of the function we are implementing.
 
 > data DefKind = LETG |  PROG (Scheme INTM)
 

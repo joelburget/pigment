@@ -52,9 +52,9 @@ is a record with the following fields:
 >  deriving Show
 
 The derivative makes sense only for definitions and modules, which have
-sub-developments. Parameters being childless, they ‘derive to 0'. Hence,
-the data about the working development is the derivative of the
-Definition and Module data-types defined in
+sub-developments. Parameters being childless, they ‘derive to 0'. Hence, the
+data about the working development is the derivative of the Definition and
+Module data-types defined in
 Section [ProofState.Structure.Developments.entry](#ProofState.Structure.Developments.entry).
 
 > data CurrentEntry

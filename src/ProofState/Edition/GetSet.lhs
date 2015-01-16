@@ -3,7 +3,9 @@ The Get Set
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
+
 > module ProofState.Edition.GetSet where
+
 > import Control.Monad.Except
 > import Control.Monad.State
 

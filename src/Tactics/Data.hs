@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF she #-}
 {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternSynonyms #-}
 
 -- Datatype declaration
@@ -105,7 +104,7 @@ ty2h r ps (PI a b) = do
       else do
         (b',i) <- freshRef (fortran b :<: a)
                    (\s -> ty2h r ps (b $$ A (NP s)) >>= \(x,y) ->
-                                 (| (L $ "a" :. (capM s 0 %% x),y) |))
+                                 pure (L $ "a" :. (capM s 0 %% x),y))
         return $ case i of
           0 -> (a' , 1)
           _ -> (SIGMA a' b', i + 1)
@@ -124,18 +123,18 @@ occursM r = Mang
 swapM :: REF -> REF -> Mangle Identity REF REF
 swapM r s = Mang
     {  mangP = \ x xes ->
-                 if x == r then (| ((P s) $:$) xes |)
-                           else (| ((P x) $:$) xes |)
-    ,  mangV = \ i ies -> (|(V i $:$) ies|)
+                 if x == r then ((P s) $:$) <$> xes
+                           else ((P x) $:$) <$> xes
+    ,  mangV = \ i ies -> (V i $:$) <$> ies
     ,  mangB = \ _ -> swapM r s
     }
 
 capM :: REF -> Int -> Mangle Identity REF REF
 capM r i = Mang
     {  mangP = \ x xes ->
-                 if x == r then (| ((V i) $:$) xes |)
-                           else (| ((P x) $:$) xes |)
-    ,  mangV = \ j jes -> (|(V j $:$) jes|)
+                 if x == r then ((V i) $:$) <$> xes
+                           else ((P x) $:$) <$> xes
+    ,  mangV = \ j jes -> (V j $:$) <$> jes
     ,  mangB = \ _ -> capM r (i+1)
     }
 
@@ -173,7 +172,7 @@ mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
 elabData :: String -> [ (String , DInTmRN) ] ->
                       [ (String , DInTmRN) ] -> ProofState (EXTM :=>: VAL)
 elabData nom pars scs = do
-      oldaus <- (| paramSpine getInScope |)
+      oldaus <- paramSpine <$> getInScope
 
       -- start by making a module named after the type of what we're
       -- building

@@ -1,9 +1,10 @@
 <a name="DisplayLang.Scheme">Schemes</a>
 =======
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs #-}
+
 > module DisplayLang.Scheme where
+
 > import Control.Applicative
 > import Data.Foldable hiding (foldl)
 > import Data.Traversable
@@ -37,11 +38,17 @@ generality, we will parameterise over the exact representation of types:
 >   deriving Show
 
 > instance Traversable Scheme where
->     traverse f (SchType t) = (|SchType (f t)|)
+>     traverse f (SchType t) = SchType <$> f t
 >     traverse f (SchExplicitPi (x :<: schS) schT) =
->         (| SchExplicitPi (| (x :<:) (traverse f schS) |) (traverse f schT) |)
+>         SchExplicitPi <$> ((x :<:) <$> traverse f schS) <*> traverse f schT
 >     traverse f (SchImplicitPi (x :<: s) schT) =
->         (| SchImplicitPi (| (x :<:) (f s) |) (traverse f schT) |)
+>         SchImplicitPi <$> ((x :<:) <$> f s) <*> traverse f schT
+
+> instance Functor Scheme where
+>     fmap = fmapDefault
+
+> instance Foldable Scheme where
+>     foldMap = foldMapDefault
 
 Extracting names
 ----------------
@@ -70,6 +77,7 @@ With two direct special cases:
 
 > schemeToInTm :: Scheme (InTm x) -> InTm x
 > schemeToInTm = schemeToType PIV
+
 > schemeToDInTm :: Scheme (DInTm p x) -> DInTm p x
 > schemeToDInTm = schemeToType DPIV
 

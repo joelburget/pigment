@@ -492,11 +492,11 @@ irrelevant. We intend this for proofs, but there may be other things
 > instance Eq (Irr x) where
 >   _ == _ = True
 
-In this section, we have defined the syntactic equality on terms. The
-general definition of syntactic equality remains to be done. It is the
-subject of Section [Evidences.DefinitionalEquality](#Evidences.DefinitionalEquality): there, we rely
-on *quotation* to turn values into terms. Once turned into terms, we
-fall back to the equality defined above.
+In this section, we have defined the syntactic equality on terms. The general
+definition of syntactic equality remains to be done. It is the subject of
+Section [Evidences.DefinitionalEquality](#Evidences.DefinitionalEquality):
+there, we rely on *quotation* to turn values into terms. Once turned into
+terms, we fall back to the equality defined above.
 
 <a name="Evidences.Tm.references">References</a>
 ----------
