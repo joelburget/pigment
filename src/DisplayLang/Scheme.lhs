@@ -19,14 +19,11 @@ Schemes for implicit arguments
 A definition may have a `Scheme`, which allows us to handle implicit
 syntax. A `Scheme` is defined by:
 
-$$\begin{array}{rll}
-\SC{Scheme} ::= & \D{Ty}
-                & \mbox{a real, tangible type} \\
-             || & \PI{\V{x}}{\SC{Scheme}}{\SC{Scheme}}
-                & \mbox{an explicit $\Pi$} \\
-             || & \IPI{\V{x}}{\D{Ty}}{\SC{Scheme}}
-                & \mbox{an implicit $\Pi$}
-\end{array}$$
+| Constructor            | Description           |
+|:----------------------:|:---------------------:|
+| Ty                     | a real, tangible type |
+| (x : Scheme) -> Scheme | an explicit Pi        |
+| { x : ty } -> Scheme   | an implicit Pi        |
 
 Crucially, an implicit $\Pi$ hides a real type, not another scheme: we
 forbid "higher-schemes" for mental sanity reasons. For the sake of
