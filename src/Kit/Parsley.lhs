@@ -196,6 +196,7 @@ matches a given token.
 > tokenFilter :: (t -> Bool) -> Parsley t t
 > tokenFilter p = pFilter (ok p) nextToken
 >     where ok :: (a -> Bool) -> a -> Maybe a
->           ok p a = (|a (%guard (p a)%)|)
+>           ok p a = pure a <* guard (p a)
+
 > tokenEq :: Eq t => t -> Parsley t ()
-> tokenEq t = (|id ~ () (% tokenFilter (== t) %)|)
+> tokenEq t = void $ tokenFilter (== t)

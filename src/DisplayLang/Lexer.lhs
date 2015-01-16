@@ -74,7 +74,7 @@ We implement the tokenizer as a `Parsley` on `Char`s. That's a cheap
 solution for what we have to do. The previous implementation was running
 other the string of characters, wrapped in a `StateT` monad transformer.
 
-A token is either a bracketted expression, a keyword, or, failing all
+A token is either a bracketed expression, a keyword, or, failing all
 that, an identifier. Hence, we can recognize a token with the following
 parser:
 
@@ -260,7 +260,9 @@ To implement `parseKeyword`, we can simply filter by words that can be
 found in the `keywords` list.
 
 > parseKeyword :: Parsley Char Token
-> parseKeyword = pFilter (\t -> fmap (Keyword . snd) $ find ((t ==) . fst) keywords) parseWord
+> parseKeyword = pFilter
+>     (\t -> fmap (Keyword . snd) $ find ((t ==) . fst) keywords)
+>     parseWord
 
 Lexing identifiers
 

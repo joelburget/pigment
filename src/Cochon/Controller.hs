@@ -272,6 +272,12 @@ pCochonTactic  = do
     case tacticsMatching x of
         [ct] -> do
             args <- ctParse ct
+
+            -- trailing semicolons are cool, or not
+            optional (tokenEq (Keyword KwSemi))
+
+            -- this parser is not gonna be happy if there are args left
+            -- over
             return (ct, trail args)
         [] -> fail "unknown tactic name."
         cts -> fail $
