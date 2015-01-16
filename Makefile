@@ -19,6 +19,9 @@ web:
 src/css/index.css: src/css/index.less
 	cd src/css; lessc index.less index.css --autoprefix=""; cd -
 
+install_less_deps:
+	npm install -g less less-plugin-autoprefix
+
 # *caution*
 # docs:
 # 	rm -rf docs
