@@ -1,15 +1,17 @@
 Display Terms
 =============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
 >     ScopedTypeVariables, PatternSynonyms,
 >     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+
 > module DisplayLang.DisplayTm where
+
 > import Control.Applicative
 > import Data.Foldable hiding (foldl)
 > import Data.Traversable
+
 > import Evidences.Tm
 > import Kit.MissingLibrary
 
@@ -97,6 +99,7 @@ scope:
 > dScopeName :: DScope p x -> String
 > dScopeName (x ::. _)  = x
 > dScopeName (DK _)     = "_"
+
 > dScopeTm :: DScope p x -> DInTm p x
 > dScopeTm (_ ::. tm)  = tm
 > dScopeTm (DK tm)     = tm
@@ -119,13 +122,15 @@ To make `deriving Traversable` work properly, we have to `newtype`-wrap
 them and manually give trivial `Traversable` instances for the wrappers.
 The instantiation code is hidden in the literate document.
 
-> newtype InTmWrap  p x = InTmWrap  (InTm p)  deriving Show
-> newtype ExTmWrap  p x = ExTmWrap  (ExTm p)  deriving Show
+> newtype InTmWrap p x = InTmWrap (InTm p) deriving (Show, Functor, Foldable)
+> newtype ExTmWrap p x = ExTmWrap (ExTm p) deriving (Show, Functor, Foldable)
+
 > pattern DTIN x = DT (InTmWrap x)
 > pattern DTEX x = DTEx (ExTmWrap x)
 
 > instance Traversable (InTmWrap p) where
 >   traverse f (InTmWrap x) = pure (InTmWrap x)
+
 > instance Traversable (ExTmWrap p) where
 >   traverse f (ExTmWrap x) = pure (ExTmWrap x)
 
@@ -133,26 +138,29 @@ The following are essentially saying that `DInTm` is traversable in its
 first argument, as well as its second.
 
 > traverseDTIN :: Applicative f => (p -> f q) -> DInTm p x -> f (DInTm q x)
-> traverseDTIN f (DL (x ::. tm)) = (|DL (|(x ::.) (traverseDTIN f tm)|)|)
-> traverseDTIN f (DL (DK tm)) = (|DL (|DK (traverseDTIN f tm)|)|)
-> traverseDTIN f (DC c) = (|DC (traverse (traverseDTIN f) c)|)
-> traverseDTIN f (DN n) = (|DN (traverseDTEX f n)|)
-> traverseDTIN f (DQ s) = (|(DQ s)|)
-> traverseDTIN f DU     = (|DU|)
-> traverseDTIN f (DTIN tm) = (|DTIN (traverse f tm)|)
-> traverseDTIN f (DAnchor s args) = (|(DAnchor s) (traverseDTIN f args)|)
+> traverseDTIN f (DL (x ::. tm)) = DL <$> ((x ::.) <$> traverseDTIN f tm)
+> traverseDTIN f (DL (DK tm)) = DL <$> (DK <$> traverseDTIN f tm)
+> traverseDTIN f (DC c) = DC <$> traverse (traverseDTIN f) c
+> traverseDTIN f (DN n) = DN <$> traverseDTEX f n
+> traverseDTIN f (DQ s) = pure (DQ s)
+> traverseDTIN f DU     = pure DU
+> traverseDTIN f (DTIN tm) = DTIN <$> traverse f tm
+> traverseDTIN f (DAnchor s args) = DAnchor s <$> traverseDTIN f args
 > traverseDTIN f (DEqBlue t u) =
->   (| DEqBlue (traverseDTEX f t) (traverseDTEX f u) |)
-> traverseDTIN f (DIMu s i) = (|DIMu (traverse (traverseDTIN f) s) (traverseDTIN f i)|)
-> traverseDTIN f (DTag s xs) = (|(DTag s) (traverse (traverseDTIN f) xs)|)
+>     DEqBlue <$> traverseDTEX f t <*> traverseDTEX f u
+> traverseDTIN f (DIMu s i) = DIMu
+>     <$> traverse (traverseDTIN f) s
+>     <*> traverseDTIN f i
+> traverseDTIN f (DTag s xs) = DTag s <$> traverse (traverseDTIN f) xs
 
 > traverseDTEX :: Applicative f => (p -> f q) -> DExTm p x -> f (DExTm q x)
-> traverseDTEX f (h ::$ as) = (|(traverseDHead f h) ::$ (traverse (traverse (traverseDTIN f)) as)|)
+> traverseDTEX f (h ::$ as) =
+>     (::$) <$> traverseDHead f h <*> traverse (traverse (traverseDTIN f)) as
 
 > traverseDHead :: Applicative f => (p -> f q) -> DHead p x -> f (DHead q x)
-> traverseDHead f (DP x) = (|(DP x)|)
-> traverseDHead f (DType tm) = (|DType (traverseDTIN f tm)|)
-> traverseDHead f (DTEX tm) = (|DTEX (traverse f tm)|)
+> traverseDHead f (DP x) = pure (DP x)
+> traverseDHead f (DType tm) = DType <$> traverseDTIN f tm
+> traverseDHead f (DTEX tm) = DTEX <$> traverse f tm
 
 Type annotations
 
