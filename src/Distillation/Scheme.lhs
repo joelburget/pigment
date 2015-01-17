@@ -2,7 +2,9 @@
 ====================
 
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards #-}
+
 > module Distillation.Scheme where
+
 > import Text.PrettyPrint.HughesPJ (Doc)
 > import Kit.BwdFwd
 > import ProofState.Structure.Developments

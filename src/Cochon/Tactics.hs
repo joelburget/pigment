@@ -254,7 +254,7 @@ makeTac = simpleCT
     ))
 
 moduleTac = unaryStringCT "module"
-    (\s -> makeModule s >> goIn >> return "Made module.")
+    (\s -> makeModule DevelopModule s >> goIn >> return "Made module.")
     "module <x> - creates a module with name <x>."
 
 piTac = simpleCT

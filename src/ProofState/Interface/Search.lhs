@@ -55,7 +55,7 @@ follow this itinerary to reach our destination.
 >     goTo name
 >     entry <- getCurrentEntry
 >     putCurrentEntry $ case entry of
->         CModule name e -> CModule name (not e)
+>         CModule name e p -> CModule name (not e) p
 >         CDefinition kind ref lastName tm anchor e ->
 >             CDefinition kind ref lastName tm anchor (not e)
 >     goTo bookmark

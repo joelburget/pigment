@@ -38,6 +38,8 @@ have been issued during elaboration of a programming problem
 (Section [Elaborator.Elaborator.elab-prog-problem](#Elaborator.Elaborator.elab-prog-problem)).
 
 > magicImplName = "impl"
+
+
 > definitionsToImpl :: ProofContext -> [REF :<: INTM]
 > definitionsToImpl pc@PC{pcAboveCursor=Dev{devEntries=es}} =
 >     help (pcLayers pc) (params es)
@@ -50,6 +52,7 @@ have been issued during elaboration of a programming problem
 >     params = foldMap param
 >     param (EPARAM r _ _ t _ _) = [r :<: t]
 >     param _                    = []
+
 
 Manipulating entries as scopes
 ------------------------------

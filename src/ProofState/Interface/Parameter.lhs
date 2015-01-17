@@ -18,13 +18,12 @@ Making Parameters
 `\`-abstraction
 ---------------
 
-When working at solving a goal, we might be able to introduce an
-hypothesis. For instance, if the goal type is $\Nat \To \Nat \To
-\Nat$, we can introduce two hypotheses $\V{x}$ and $\V{y}$. Further, the
-type of the goal governs the kind of the parameter (a lambda, or a
-forall) and its type. This automation is implemented by `lambdaParam`
-that lets you introduce a parameter above the cursor while working on a
-goal.
+When working at solving a goal, we might be able to introduce an hypothesis.
+For instance, if the goal type is `Nat -> Nat -> Nat`, we can introduce two
+hypotheses `x` and `y` Further, the type of the goal governs the kind of the
+parameter (a lambda, or a forall) and its type. This automation is implemented
+by `lambdaParam` that lets you introduce a parameter above the cursor while
+working on a goal.
 
 > lambdaParam :: String -> ProofState REF
 > lambdaParam x = do

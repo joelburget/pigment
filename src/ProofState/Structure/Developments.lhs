@@ -24,7 +24,7 @@ Developments can be of different nature: this is indicated by the `Tip`.
 A development also keeps a `NameSupply` at hand, for namespace handling
 purposes. Initially we had the following definition:
 
-< type Dev = (Bwd Entry, Tip, NameSupply)
+    type Dev = (Bwd Entry, Tip, NameSupply)
 
 but generalised this to allow other `Traversable` functors `f` in place
 of `Bwd`, and to store a `SuspendState`, giving:
@@ -90,6 +90,7 @@ either be:
 >     | AnchHope
 >     | AnchElabInferFully
 >     | AnchTau
+>     | AnchDataDef
 >     -- Anchors with cryptic names I don't understand
 >     | AnchStr String
 >     -- "Nothing"
@@ -113,8 +114,29 @@ either be:
 >     show AnchHope = "hope"
 >     show AnchElabInferFully = "elab infer fully"
 >     show AnchTau = "tau"
+>     show AnchDataDef = "data definition"
 >     show (AnchStr str) = str
 >     show AnchNo = "AnchNo"
+
+> data ModulePurpose
+>     -- using a module to hold development
+>     = DevelopData
+>     | DevelopModule
+>     | DevelopOther
+>
+>     -- we have nothing else to show
+>     | EmptyModule
+>
+>     -- used by `moduleToGoal`
+>     | ToGoal
+>
+>     -- just a temporary holding place
+>     | Draft
+>     deriving Show
+
+> modulePurposeToAnchor :: ModulePurpose -> EntityAnchor
+> modulePurposeToAnchor DevelopData = AnchDataDef
+> modulePurposeToAnchor _           = AnchNo
 
 > data Entry f
 >   =  EEntity  { ref       :: REF
@@ -125,7 +147,8 @@ either be:
 >               , expanded  :: Bool }
 >   |  EModule  { name      :: Name
 >               , dev       :: (Dev f)
->               , expanded  :: Bool }
+>               , expanded  :: Bool
+>               , purpose   :: ModulePurpose }
 
 In the Module case, we have already tied the knot, by defining `M` with
 a sub-development. In the Entity case, we give yet another choice of
@@ -140,12 +163,14 @@ is `Bwd`:
 > instance Show (Entry Bwd) where
 >     show (EEntity ref xn e t a expanded) = intercalate " "
 >         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
+>     show (EModule n d e p) = intercalate " "
+>         ["M", show n, show d, show e, show p]
 
 > instance Show (Entry Fwd) where
 >     show (EEntity ref xn e t a expanded) = intercalate " "
 >         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
+>     show (EModule n d e p) = intercalate " "
+>         ["M", show n, show d, show e, show p]
 
 [Name caching]
 

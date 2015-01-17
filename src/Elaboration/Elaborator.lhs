@@ -123,7 +123,7 @@ goal.
 
 > elabMake :: (String :<: DInTmRN) -> ProofState (EXTM :=>: VAL)
 > elabMake (s :<: ty) = do
->     makeModule s
+>     makeModule DevelopOther s
 >     goIn
 >     ty' :=>: _ <- elaborate' (SET :>: ty)
 >     tm <- moduleToGoal ty'
@@ -172,7 +172,7 @@ the following proof state:
 
 > elabLet :: (String :<: Scheme DInTmRN) -> ProofState (EXTM :=>: VAL)
 > elabLet (x :<: sch) = do
->     makeModule x
+>     makeModule DevelopOther x
 >     goIn
 
 First we need to elaborate the scheme so it contains evidence terms,

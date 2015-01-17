@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
-  MultiParamTypeClasses, EmptyDataDecls #-}
+  MultiParamTypeClasses, EmptyDataDecls, LambdaCase #-}
 module Cochon.View where
 
 import Control.Applicative
@@ -253,6 +253,7 @@ reactProofState = renderReact
 renderReact :: ProofState InteractionReact
 renderReact = do
     me <- getCurrentName
+    entry <- getCurrentEntry
 
     -- TODO(joel) - we temporarily replace entries above the cursor and
     -- contexts below the cursor with nothing, then put them back later
@@ -260,8 +261,10 @@ renderReact = do
     es <- replaceEntriesAbove B0
     cs <- putBelowCursor F0
 
-    case (es, cs) of
-        (B0, F0) -> reactEmptyTip
+    case (entry, es, cs) of
+        (CModule _ _ DevelopData, _, _) -> viewDataDevelopment entry es
+        (CDefinition _ _ _ _ AnchDataDef _, _, _) -> viewDataDevelopment entry es
+        (_, B0, F0) -> reactEmptyTip
         _ -> do
             d <- reactEntries (es <>> F0)
 
@@ -288,6 +291,23 @@ renderReact = do
                 div_ [ class_ "proof-state-inner" ] $ d'
                 tip
 
+
+dataWeCareAbout :: Entry a -> Bool
+dataWeCareAbout (EEntity _ _ _ _ (AnchConName _) _) = True
+dataWeCareAbout (EEntity _ _ _ _ AnchDataDef _) = True
+dataWeCareAbout (EEntity _ _ _ _ AnchDataDesc _) = True
+dataWeCareAbout _ = False
+
+
+viewDataDevelopment :: CurrentEntry -> Entries -> ProofState InteractionReact
+viewDataDevelopment (CDefinition _ (name := _) _ _ _ _) entries = do
+    let weCareAbout = filterBwd dataWeCareAbout entries
+    entries <- reactEntries (weCareAbout <>> F0)
+
+    return $ div_ [ class_ "data-develop" ] $ do
+        entries
+
+
 reactEmptyTip :: ProofState InteractionReact
 reactEmptyTip = do
     tip <- getDevTip
@@ -298,6 +318,7 @@ reactEmptyTip = do
             tip' <- reactTip
             return $ div_ [ class_ "empty-tip" ] $
                 reactKword KwDefn >> " " >> tip'
+
 
 reactEntries :: Fwd (Entry Bwd) -> ProofState InteractionReact
 reactEntries F0 = return ""
@@ -335,15 +356,19 @@ reactEntry e = do
 
     -- TODO entry-module vs entry-entity
     return $ div_ [ class_ "entry entry-entity" ] $ do
-        entryHeader e
         -- locally anchor
+        entryHeader e
         description
 
 
 entryHeader :: Traversable f => Entry f -> InteractionReact
-entryHeader e = do
-    let displayName = fromString $ fst $ entryLastName e
-        name = entryName e
+entryHeader e = entryHeader' (entryName e)
+
+
+entryHeader' :: Name -> InteractionReact
+entryHeader' name = do
+    let displayName = fromString $ fst $ last name
+
     div_ [ class_ "entry-header" ] $ do
         button_
             [ onClick (handleToggleEntry name)

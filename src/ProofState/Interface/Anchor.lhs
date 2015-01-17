@@ -3,7 +3,9 @@ Anchor resolution
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
+
 > module ProofState.Interface.Anchor where
+
 > import Control.Applicative
 > import Data.Foldable
 > import Data.Traversable
@@ -15,8 +17,8 @@ Anchor resolution
 > import Evidences.Tm
 
 > isAnchor :: Traversable f => Entry f -> Bool
-> isAnchor (EEntity _ _ _ _ (Just _) _)  = True
-> isAnchor _                             = False
+> isAnchor (EEntity _ _ _ _ AnchNo _)  = False
+> isAnchor _                           = True
 
 > anchorsInScope :: ProofState Entries
 > anchorsInScope = do
@@ -42,12 +44,12 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 >           seekAnchor (scope :< EPARAM ref _ _ _ (Just anchor') _)
 >                            | anchor' == anchor = B0 :< ref
 >           seekAnchor (scope :< EPARAM ref _ _ _ Nothing _) = seekAnchor scope
->           seekAnchor (scope :< EDEF ref _ _ dev _ (Just anchor') _)
->                            | anchor' == anchor = B0 :< ref
->           seekAnchor (scope :< EDEF ref _ _ dev _ Nothing _) =
+>           seekAnchor (scope :< EDEF ref _ _ dev _ AnchNo _) =
 >                         seekAnchor (devEntries dev)
 >                         <> seekAnchor scope
->           seekAnchor (scope :< EModule _ dev _) =
+>           seekAnchor (scope :< EDEF ref _ _ dev _ anchor' _)
+>                            | anchor' == anchor = B0 :< ref
+>           seekAnchor (scope :< EModule _ dev _ _) =
 >                         seekAnchor (devEntries dev)
 >                         <> seekAnchor scope
 

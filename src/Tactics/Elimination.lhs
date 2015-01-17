@@ -130,7 +130,7 @@ the cursor is left on the motive subgoal.
 Make a module, which we will convert to a goal of type $P \vec{t}$
 later:
 
->     elimName <- makeModule "makeE"
+>     elimName <- makeModule DevelopOther "makeE"
 >     goIn
 
 Make a goal for the motive:

@@ -18,13 +18,11 @@ Making Definitions
 > import Evidences.Tm
 > import Evidences.Eval
 
-> import Debug.Trace
-
 The `make` command adds a named goal of the given type above the cursor.
 The meat is actually in `makeKinded`, below.
 
-> make :: (EntityAnchor :<: INTM) -> ProofState (EXTM :=>: VAL)
-> make = makeKinded AnchNo Waiting
+> make :: EntityAnchor :<: INTM -> ProofState (EXTM :=>: VAL)
+> make = makeKinded Waiting
 
 When making a new definition, the reference to this definition bears a
 *hole kind* (Section [Evidences.Tm.references](#Evidences.Tm.references)). User-generated
@@ -35,9 +33,8 @@ Elaboration for instance (Section [Elaborator.Elaborator](#Elaborator.Elaborato
 proof system will insert goals itself, with a somewhat changing mood
 such as `Hoping` or `Crying`.
 
-> makeKinded :: EntityAnchor ->  HKind -> (EntityAnchor :<: INTM) ->
->                                ProofState (EXTM :=>: VAL)
-> makeKinded anchor holeKind (name :<: ty) = do
+> makeKinded :: HKind -> (EntityAnchor :<: INTM) -> ProofState (EXTM :=>: VAL)
+> makeKinded holeKind (name :<: ty) = do
 >     -- Check that the type is indeed a type
 >     _ :=>: tyv <- checkHere (SET :>: ty)
 >                     `pushError`
@@ -50,7 +47,7 @@ such as `Hoping` or `Crying`.
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
 >     goalName <- pickName "Goal: " name
->     let n = trace ("pickName for " ++ show name ++ " = " ++ goalName) $ mkName nsupply goalName
+>     let n = mkName nsupply goalName
 
 >     -- Make a reference for the goal, with a lambda-lifted type
 >     inScope <- getInScope
@@ -65,14 +62,14 @@ such as `Hoping` or `Crying`.
 
 >     -- Which kinds of things start out expanded? This is a very preliminary
 >     -- list!
->     let expanded = case anchor of
+>     let expanded = case name of
 >             AnchParTy _ -> True
 >             AnchConNames -> True
 >             _ -> False
 
 >     -- Put the entry in the proof context
 >     putDevNSupply $ freshName nsupply
->     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy anchor expanded
+>     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy name expanded
 
 >     -- Return a reference to the goal
 >     return $ applySpine ref inScope

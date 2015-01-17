@@ -158,24 +158,49 @@ as appropriate then continues with `lookFor`.
 
 TODO(joel) what a cluster
 
-> lookUp :: (String, Int) -> BScopeContext -> FScopeContext ->
->               Either (StackError t) ResolveState
+> lookUp :: (String, Int)
+>        -> BScopeContext
+>        -> FScopeContext
+>        -> Either (StackError t) ResolveState
+
 > lookUp (x,i) (B0, B0) fs = Left (sErr $ "Not in scope " ++ x)
-> lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss) | x == y =
->   if i == 0 then Right (Left (fs,vfss), paramREFs (flat esus es), Nothing, Nothing)
->             else lookUp (x,i-1) (esus,es) (F0,((y,j),fs) :> vfss)
-> lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss) =
+
+> lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss)
+>   | x == y = if i == 0
+>              then Right ( Left (fs,vfss)
+>                         , paramREFs (flat esus es)
+>                         , Nothing
+>                         , Nothing)
+>              else lookUp (x, i-1)
+>                          (esus, es)
+>                          (F0, ((y, j), fs) :> vfss)
+
+> lookUp (x,i) ((esus :< (es, (y, j))), B0) (fs, vfss) =
 >   lookUp (x,i) (esus,es) (F0,((y,j),fs) :> vfss)
-> lookUp (x,i) (esus, es :< e@(EModule n (Dev {devEntries=es'}) _)) (fs,vfss)
+
+> lookUp (x,i) (esus, es :< e@(EModule n (Dev {devEntries=es'}) _ _)) (fs,vfss)
 >   | lastNom n == x =
->   if i == 0 then Right (Right es', paramREFs (flat esus es), Nothing, Nothing)
->             else lookUp (x,i-1) (esus,es) (e:>fs,vfss)
-> lookUp (x,i) (esus, es :< e@(EDEF r (y,j) dkind (Dev {devEntries=es'}) _ _ _)) (fs,vfss) | x == y =
->   if i == 0 then Right (Right es', paramREFs (flat esus es), Just r, entryScheme e)
->             else lookUp (x,i-1) (esus,es) (e:>fs,vfss)
-> lookUp (x,i) (esus, es :< e@(EPARAM r (y,j) _ _ _ _)) (fs,vfss) | x == y =
+>   if i == 0 then Right ( Right es'
+>                        , paramREFs (flat esus es)
+>                        , Nothing
+>                        , Nothing)
+>             else lookUp (x, i-1) (esus, es) (e :> fs, vfss)
+
+> lookUp (x, i)
+>        (esus, es :< e@(EDEF r (y,j) dkind (Dev {devEntries=es'}) _ _ _))
+>        (fs,vfss)
+>   | x == y = if i == 0
+>              then Right ( Right es'
+>                         , paramREFs (flat esus es)
+>                         , Just r
+>                         , entryScheme e)
+>              else lookUp (x, i - 1) (esus, es) (e :> fs, vfss)
+
+> lookUp (x,i) (esus, es :< e@(EPARAM r (y,j) _ _ _ _)) (fs,vfss)
+>   | x == y =
 >   if i == 0 then Right (Right B0, [], Just r, Nothing)
 >             else lookUp (x,i-1) (esus,es) (e:>fs,vfss)
+
 > lookUp u (esus, es :< e) (fs,vfss) = lookUp u (esus,es) (e:>fs,vfss)
 
 > lookDown :: (String,Int) -> FScopeContext -> [REF] ->
@@ -418,7 +443,8 @@ Parting the noms
 >   Just (paramSpine (flat esus es),Right fsc)
 > partNom hd top ((esus :< (es,not)), B0) (js,vjss) =
 >   partNom hd top (esus,es) (F0,(not,js):>vjss)
-> partNom hd top (esus, es :< EModule n (Dev {devEntries=es'}) _) fsc | (hd ++ [top]) == n =
+> partNom hd top (esus, es :< EModule n (Dev {devEntries=es'}) _ _) fsc
+>   | (hd ++ [top]) == n =
 >   Just (paramSpine (flat esus es),Left es')
 > partNom hd top (esus, es :< EDEF _ top' _ (Dev {devEntries=es'}) _ _ _) fsc | hd ++ [top] == (flatNom esus []) ++ [top'] =
 >   Just (paramSpine (flat esus es),Left es')
@@ -459,9 +485,9 @@ attached, if there is one.
 > countB i n (esus :< (es', u'), B0)
 >   | lastNom n == fst u'                        = countB (i+1)  n (esus, es')
 > countB i n (esus :< (es', u'), B0)             = countB i      n (esus, es')
-> countB i n (esus, es :< EModule n' (Dev {devEntries=es'}) _)
+> countB i n (esus, es :< EModule n' (Dev {devEntries=es'}) _ _)
 >   | n == n'                                    = (| (i, Nothing) |)
-> countB i n (esus, es :< EModule n' _ _)
+> countB i n (esus, es :< EModule n' _ _ _)
 >   | lastNom n == lastNom n'                    = countB (i+1) n (esus, es)
 > countB i n (esus, es :< e@(EEntity r u' _ _ _ _))
 >   | last n == u' && refName r == n             = (| (i, entryScheme e) |)
@@ -489,20 +515,25 @@ current location but the spine is different.
 
 > countF :: String -> Fwd (Entry Bwd) -> Int
 > countF x F0 = 0
-> countF x (EModule n _ _ :> es) | (fst . last $ n) == x = 1 + countF x es
+> countF x (EModule n _ _ _ :> es) | (fst . last $ n) == x = 1 + countF x es
 > countF x (EEntity _ (y,_) _ _ _ _ :> es) | y == x = 1 + countF x es
 > countF x (_ :> es) = countF x es
 
 > findF :: Int -> (String,Int) -> Fwd (Entry Bwd)
 >              -> Maybe ((String,Offs), Maybe (Scheme INTM))
-> findF i u (EModule n _ _ :> es) | (last $ n) == u =
+> findF i u (EModule n _ _ _ :> es)
+>   | (last $ n) == u =
 >   Just ((fst u, if i == 0 then Rel 0 else Abs i), Nothing)
-> findF i u@(x,_) (EModule n _ _ :> es) | (fst . last $ n) == x = findF (i+1) u es
-> findF i u (e@(EDEF _ v dkind _ _ _ _) :> es) | v == u =
+> findF i u@(x,_) (EModule n _ _ _ :> es)
+>   | (fst . last $ n) == x = findF (i+1) u es
+> findF i u (e@(EDEF _ v dkind _ _ _ _) :> es)
+>   | v == u =
 >   Just ((fst u, if i == 0 then Rel 0 else Abs i), entryScheme e)
-> findF i u (EEntity _ v _ _ _ _ :> es) | v == u =
+> findF i u (EEntity _ v _ _ _ _ :> es)
+>   | v == u =
 >   Just ((fst u, if i == 0 then Rel 0 else Abs i), Nothing)
-> findF i u@(x,_) (EEntity _ (y,_) _ _ _ _ :> es) | y == x = findF (i+1) u es
+> findF i u@(x,_) (EEntity _ (y,_) _ _ _ _ :> es)
+>   | y == x = findF (i+1) u es
 > findF i u (_ :> es) = findF i u es
 > findF _ _ _ = Nothing
 
@@ -521,7 +552,8 @@ match the current location.
 
 > nomRel' :: Int -> (String,Int) -> Entries
 >                -> Maybe (Int,Entries, Maybe (Scheme INTM))
-> nomRel' o (x,i) (es:< EModule n (Dev {devEntries=es'}) _) | (fst . last $ n) == x  =
+> nomRel' o (x,i) (es:< EModule n (Dev {devEntries=es'}) _ _)
+>   | (fst . last $ n) == x  =
 >   if i == (snd . last $ n) then (| (o,es',Nothing) |)
 >                            else nomRel' (o+1) (x,i) es
 > nomRel' o (x,i) (es:< e@(EDEF _ (y,j) dkind (Dev {devEntries=es'}) _ _ _)) | y == x =

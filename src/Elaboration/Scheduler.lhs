@@ -27,13 +27,13 @@
 > import Kit.MissingLibrary
 > import Kit.Trace
 
-Handling elaboration essentially requires writing an operating system.
-Having defined how to execute processes in
-section [Elaborator.Elaborator](#Elaborator.Elaborator), we now turn our attention to
-process scheduling. The scheduler is called when an elaboration process
-yields (either halting after solving its goal, halting with an error, or
-suspending work until later). It searches downwards in the proof state
-for unstable elaboration problems and executes any it finds.
+Handling elaboration essentially requires writing an operating system.  Having
+defined how to execute processes in
+section [Elaborator.Elaborator](#Elaborator.Elaborator), we now turn our
+attention to process scheduling. The scheduler is called when an elaboration
+process yields (either halting after solving its goal, halting with an error,
+or suspending work until later). It searches downwards in the proof state for
+unstable elaboration problems and executes any it finds.
 
 When the scheduler is started, all problems before the working location
 should be stable, but there may be unstable problems in the current
@@ -103,6 +103,8 @@ elaboration if it finds one. If elaboration succeeds, it gives the
 resulting term. It returns whether an elaboration process was resumed
 (not whether the process succeeded).
 
+TODO(joel) make this not a Bool
+
 > resumeCurrentEntry :: ProofState Bool
 > resumeCurrentEntry = do
 >   tip <- getDevTip
@@ -166,9 +168,10 @@ otherwise we hope for a proof of their equality.
 >         else  runElabHope WorkElsewhere (PRF (EQBLUE (ty :>: tmv') (ty :>: stv))) >>
 >               schedTrace "resume: WaitSolve failed!" >> resume tt prob
 
-\< else throwErrorS \< [ err "resume: hole" \< , errRef ref \< , err
-"has been solved with" \< , errTyVal (tmv' :\<: ty) \< , err "but I
-wanted to solve it with" \< , errTyVal (valueOf stt' :\<: ty) \< ]
+<         else  throwError' $ err "resume: hole" ++ errRef ref ++
+<                    err "has been solved with" ++ errTyVal (tmv' :<: ty) ++
+<                    err "but I wanted to solve it with" ++
+<                            errTyVal (valueOf stt' :<: ty)
 
 > resume tt (ElabSchedule prob) = resume tt prob
 

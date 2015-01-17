@@ -1,10 +1,10 @@
 .PHONY: build debug clean server docs web
 
 debug: src/css/index.css
-	cd src; hastec Main.lhs --with-js=js/react-stubs.js --ddisable-js-opts --debug; say done; cd -
+	cd src; hastec Main.lhs --with-js=js/react-stubs.js --ddisable-js-opts --debug; cd -
 
 build: src/css/index.css
-	cd src; hastec Main.lhs --with-js=js/react-stubs.js; say done; cd -
+	cd src; hastec Main.lhs --with-js=js/react-stubs.js; cd -
 
 clean:
 	git clean -xf

@@ -28,8 +28,8 @@ one we are used to: introducing namespaces and avoiding name clashes.
 This is mostly used at the programming level. For making modules, we use
 `makeModule`.
 
-> makeModule :: String -> ProofState Name
-> makeModule s = do
+> makeModule :: ModulePurpose -> String -> ProofState Name
+> makeModule purpose s = do
 >     nsupply <- getDevNSupply
 >     let n = mkName nsupply s
 >     -- Insert a new entry above, the empty module `s`
@@ -39,7 +39,8 @@ This is mostly used at the programming level. For making modules, we use
 >                   ,  devSuspendState  =  SuspendNone }
 >     putEntryAbove $ EModule  {  name     = n
 >                              ,  dev      = dev
->                              ,  expanded = True }
+>                              ,  expanded = True
+>                              ,  purpose  = purpose }
 >     putDevNSupply $ freshName nsupply
 >     return n
 
@@ -54,11 +55,12 @@ Section [Tactics.Elimination.analysis](#Tactics.Elimination.analysis).
 > moduleToGoal :: INTM -> ProofState (EXTM :=>: VAL)
 > moduleToGoal ty = do
 >     (_ :=>: tyv) <- checkHere (SET :>: ty)
->     CModule n expanded <- getCurrentEntry
+>     CModule n expanded purpose <- getCurrentEntry
 >     inScope <- getInScope
 >     let  ty' = liftType inScope ty
 >          ref = n := HOLE Waiting :<: evTm ty'
->     putCurrentEntry $ CDefinition LETG ref (last n) ty' AnchNo expanded
+>     putCurrentEntry $ CDefinition LETG ref (last n) ty'
+>         (modulePurposeToAnchor purpose) expanded
 >     putDevTip $ Unknown (ty :=>: tyv)
 >     return $ applySpine ref inScope
 
@@ -69,12 +71,12 @@ dangling references is high.
 
 > draftModule :: String -> ProofState t -> ProofState t
 > draftModule name draftyStuff = do
->     makeModule name
+>     makeModule Draft name
 >     goIn
 >     t <- draftyStuff
 >     goOutBelow
 >     mm <- removeEntryAbove
 >     case mm of
->         Just (EModule _ _ _) -> return t
+>         Just (EModule _ _ _ _) -> return t
 >         _ -> throwError . sErr $ "draftModule: drafty " ++ name
 >                                  ++ " did not end up in the right place!"

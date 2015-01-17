@@ -79,7 +79,7 @@ old dependency holes with the new ones.
 >             , err "occurs illegally."
 >             ]
 >       | otherwise = cursorUp >> solveHole' ref deps tm
->     pass (EModule modName _ _) = goIn >> solveHole' ref deps tm
+>     pass (EModule modName _ _ _) = goIn >> solveHole' ref deps tm
 
 >     occurs :: REF -> Bool
 >     occurs ref = any (== ref) tm || ala' M.Any foldMap (any (== ref) . snd) deps
@@ -88,7 +88,7 @@ old dependency holes with the new ones.
 >     makeDeps [] news = return news
 >     makeDeps ((name := HOLE k :<: tyv, ty) : deps) news = do
 >         let (ty', _) = tellNews news ty
->         makeKinded AnchNo k (AnchStr (fst (last name)) :<: ty')
+>         makeKinded k (AnchStr (fst (last name)) :<: ty')
 >         EDEF ref _ _ _ _ _ _ <- getEntryAbove
 >         makeDeps deps ((name := DEFN (NP ref) :<: tyv, GoodNews) : news)
 >     makeDeps _ _ = throwErrorS
@@ -108,7 +108,7 @@ old dependency holes with the new ones.
 >     stripShared' (n :$ A (NP r)) (es :< EPARAM paramRef _ _ _ _ _)
 >         | r == paramRef                        = stripShared' n es
 >     stripShared' n (es :< EDEF _ _ _ _ _ _ _)  = stripShared' n es
->     stripShared' n (es :< EModule _ _ _)       = stripShared' n es
+>     stripShared' n (es :< EModule _ _ _ _)     = stripShared' n es
 >     stripShared' n es =
 >       -- |proofTrace $ "stripShared: fail on " ++ show n|
 >       throwErrorS

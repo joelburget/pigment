@@ -511,7 +511,7 @@ but do not always spot them.
 >     return . (, ElabSuspended) =<< neutralise =<< getCurrentDefinition
 > lastHope WorkElsewhere ty = do
 >     ty' <- bquoteHere ty
->     return . (, ElabSuccess) =<< neutralise =<< makeKinded AnchNo Hoping (AnchHope :<: ty')
+>     return . (, ElabSuccess) =<< neutralise =<< makeKinded Hoping (AnchHope :<: ty')
 
 <a name="Elaboration.RunElab.suspending">Suspending computation</a>
 ----------------------

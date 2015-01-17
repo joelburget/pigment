@@ -89,12 +89,10 @@ are therefore left to `give` this definition. This is the role of the
 > done = do
 >   devEntry <- getEntryAbove
 >   case devEntry of
->     EDEF ref _ _ _ _ _ _ -> do
->         -- The entry above is indeed a definition
->         giveOutBelow $ NP ref
->     _ -> do
->         -- The entry was not a definition
->         throwError $ sErr "done: entry above cursor must be a definition."
+>     -- The entry above is indeed a definition
+>     EDEF ref _ _ _ _ _ _ -> giveOutBelow $ NP ref
+>     -- The entry was not a definition
+>     _ -> throwError $ sErr "done: entry above cursor must be a definition."
 
 Slightly more sophisticated is the well-known `apply` tactic in Coq: we
 are trying to solve a goal of type `T` while we have a definition of
