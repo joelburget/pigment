@@ -250,6 +250,9 @@ parseCmd l = case parse tokenize l of
 tacticsMatching :: String -> [CochonTactic]
 tacticsMatching x = filter (isPrefixOf x . ctName) cochonTactics
 
+tacticNamed :: String -> Maybe CochonTactic
+tacticNamed x = find ((== x) . ctName) cochonTactics
+
 describePFailure :: PFailure a -> ([a] -> String) -> String
 describePFailure (PFailure (ts, fail)) f =
     let errMsg = case fail of
@@ -269,8 +272,8 @@ tacticNames = intercalate ", " . map ctName
 pCochonTactic :: Parsley Token CTData
 pCochonTactic  = do
     x <- ident <|> (key <$> anyKeyword)
-    case tacticsMatching x of
-        [ct] -> do
+    case tacticNamed x of
+        Just ct -> do
             args <- ctParse ct
 
             -- trailing semicolons are cool, or not
@@ -279,6 +282,4 @@ pCochonTactic  = do
             -- this parser is not gonna be happy if there are args left
             -- over
             return (ct, trail args)
-        [] -> fail "unknown tactic name."
-        cts -> fail $
-            "ambiguous tactic name (could be " ++ tacticNames cts ++ ")."
+        Nothing -> fail "unknown tactic name."
