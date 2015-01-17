@@ -157,7 +157,7 @@ accumulate the commands which might have been issued.
 
 > makeEntry (DLDef x kids (mtipTm :<: tipTys) commands) ncs = do
 >     -- Open a module named by her name
->     n <- makeModule x
+>     n <- makeModule DevelopOther x
 >     goIn
 >     -- Recursively build the kids
 >     ncs' <- makeDev kids ncs
@@ -192,7 +192,7 @@ definitions.
 
 > makeEntry (DLModule x kids commands) ncs = do
 >     -- Make the module
->     n <- makeModule x
+>     n <- makeModule DevelopModule x
 >     goIn
 >     -- Recursively build the kids
 >     ncs' <- makeDev kids ncs

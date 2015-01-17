@@ -113,7 +113,7 @@ Datatype declaration
 >                        [ (String , DInTmRN) ] -> ProofState (EXTM :=>: VAL)
 > ielabData nom pars indty scs = do
 >   oldaus <- paramSpine <$> getInScope
->   makeModule nom
+>   makeModule DevelopData nom
 >   goIn
 >   pars' <- traverse (\(x,y) -> do
 >     make (AnchParTy x :<: SET)
@@ -159,7 +159,7 @@ tests/TaggedInduction are in scope, if so you get nicer induction
 principles (:
 
 >   (do (icase,_,_) <- resolveHere [("TData",Rel 0),("tcase",Rel 0)]
->       makeModule "Case"
+>       makeModule DevelopOther "Case"
 >       goIn
 >       i <- assumeParam ("i" :<: (N indtye :=>: indtyv))
 >       v <- assumeParam (comprefold (concat (map (\(_,_,_,c) -> c) cs))
@@ -173,7 +173,7 @@ principles (:
 >       giveOutBelow (N caseTm)
 >       return ()) `catchError` \_ -> return ()
 >   (do (dind,_,_) <- resolveHere [("TData",Rel 0),("tind",Rel 0)]
->       makeModule "Ind"
+>       makeModule DevelopOther "Ind"
 >       goIn
 >       i <- assumeParam ("i" :<: (N indtye :=>: indtyv))
 >       v <- assumeParam (comprefold (concat (map (\(_,_,_,c) -> c) cs))

@@ -59,7 +59,7 @@ Section [ProofState.Structure.Developments.entry](#ProofState.Structure.Develop
 
 > data CurrentEntry
 >     = CDefinition DefKind REF (String, Int) INTM EntityAnchor Bool
->     | CModule Name Bool
+>     | CModule Name Bool ModulePurpose
 >     deriving Show
 
 One would expect the `belowEntries` to be an `Entries`, just as the
@@ -89,7 +89,8 @@ piece of kit to deal with this global context.
 > instance Show (Entry NewsyFwd) where
 >     show (EEntity ref xn e t a expanded) = intercalate " "
 >         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
+>     show (EModule n d e p) = intercalate " "
+>         ["M", show n, show d, show e, show p]
 
 > instance Show (Entity NewsyFwd) where
 >     show (Parameter k) = "Param " ++ show k

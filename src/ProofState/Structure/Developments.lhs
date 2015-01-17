@@ -116,6 +116,22 @@ either be:
 >     show (AnchStr str) = str
 >     show AnchNo = "AnchNo"
 
+> data ModulePurpose
+>     -- using a module to hold development
+>     = DevelopData
+>     | DevelopModule
+>     | DevelopOther
+>
+>     -- we have nothing else to show
+>     | EmptyModule
+>
+>     -- used by `moduleToGoal`
+>     | ToGoal
+>
+>     -- just a temporary holding place
+>     | Draft
+>     deriving Show
+
 > data Entry f
 >   =  EEntity  { ref       :: REF
 >               , lastName  :: (String, Int)
@@ -125,7 +141,8 @@ either be:
 >               , expanded  :: Bool }
 >   |  EModule  { name      :: Name
 >               , dev       :: (Dev f)
->               , expanded  :: Bool }
+>               , expanded  :: Bool
+>               , purpose   :: ModulePurpose }
 
 In the Module case, we have already tied the knot, by defining `M` with
 a sub-development. In the Entity case, we give yet another choice of
@@ -140,12 +157,14 @@ is `Bwd`:
 > instance Show (Entry Bwd) where
 >     show (EEntity ref xn e t a expanded) = intercalate " "
 >         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
+>     show (EModule n d e p) = intercalate " "
+>         ["M", show n, show d, show e, show p]
 
 > instance Show (Entry Fwd) where
 >     show (EEntity ref xn e t a expanded) = intercalate " "
 >         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e) = intercalate " " ["M", show n, show d, show e]
+>     show (EModule n d e p) = intercalate " "
+>         ["M", show n, show d, show e, show p]
 
 [Name caching]
 

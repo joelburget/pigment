@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
-  MultiParamTypeClasses, EmptyDataDecls #-}
+  MultiParamTypeClasses, EmptyDataDecls, LambdaCase #-}
 module Cochon.View where
 
 import Control.Applicative
@@ -253,6 +253,7 @@ reactProofState = renderReact
 renderReact :: ProofState InteractionReact
 renderReact = do
     me <- getCurrentName
+    entry <- getCurrentEntry
 
     -- TODO(joel) - we temporarily replace entries above the cursor and
     -- contexts below the cursor with nothing, then put them back later
@@ -260,8 +261,9 @@ renderReact = do
     es <- replaceEntriesAbove B0
     cs <- putBelowCursor F0
 
-    case (es, cs) of
-        (B0, F0) -> reactEmptyTip
+    case (entry, es, cs) of
+        (CModule _ _ DevelopData, _, _) -> viewDataDevelopment entry
+        (_, B0, F0) -> reactEmptyTip
         _ -> do
             d <- reactEntries (es <>> F0)
 
@@ -287,6 +289,20 @@ renderReact = do
                 --             _ -> fst $ last me
                 div_ [ class_ "proof-state-inner" ] $ d'
                 tip
+
+viewDataDevelopment :: CurrentEntry -> ProofState InteractionReact
+viewDataDevelopment mod@(CModule name _ _) = do
+    entries <- devEntries <$> getAboveCursor
+    let weCareAbout = filterBwd
+            (\case (EEntity _ _ _ _ (AnchConName _) _) -> True
+                   _ -> False)
+            entries
+    entries <- reactEntries (weCareAbout <>> F0)
+
+    return $ div_ [ class_ "data-develop" ] $ do
+        entryHeader' name
+        entries
+
 
 reactEmptyTip :: ProofState InteractionReact
 reactEmptyTip = do
@@ -341,9 +357,13 @@ reactEntry e = do
 
 
 entryHeader :: Traversable f => Entry f -> InteractionReact
-entryHeader e = do
-    let displayName = fromString $ fst $ entryLastName e
-        name = entryName e
+entryHeader e = entryHeader' (entryName e)
+
+
+entryHeader' :: Name -> InteractionReact
+entryHeader' name = do
+    let displayName = fromString $ fst $ last name
+
     div_ [ class_ "entry-header" ] $ do
         button_
             [ onClick (handleToggleEntry name)

@@ -176,7 +176,7 @@ elabData nom pars scs = do
 
       -- start by making a module named after the type of what we're
       -- building
-      makeModule nom
+      makeModule DevelopData nom
 
       -- we're going to be working inside of the module for the rest of
       -- this function
@@ -232,7 +232,7 @@ elabData nom pars scs = do
       -- the label is assigned throughout, so the label will be preserved
       -- when eliminating by induction.
 
-      makeModule "Ind"
+      makeModule DevelopOther "Ind"
       goIn
       v <- assumeParam
         (comprefold (concatMap recArgNames cs) :<: (N dty :=>: dtyv))

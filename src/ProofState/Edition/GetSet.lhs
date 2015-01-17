@@ -98,7 +98,7 @@ Getting in the `Layers`
 >     ls <- getLayers
 >     case ls of
 >         _ :< l  -> return (currentEntry l)
->         B0      -> return (CModule [] False)
+>         B0      -> return (CModule [] False EmptyModule)
 
 Getting in the `CurrentEntry`
 
@@ -106,8 +106,8 @@ Getting in the `CurrentEntry`
 > getCurrentName = do
 >     cEntry <-  getCurrentEntry
 >     case cEntry of
->       CModule [] _ -> return []
->       _ -> return $ currentEntryName cEntry
+>       CModule [] _ _ -> return []
+>       _              -> return $ currentEntryName cEntry
 
 > getCurrentDefinition :: ProofStateT e (EXTM :=>: VAL)
 > getCurrentDefinition = do
@@ -123,7 +123,7 @@ Getting in the `HOLE`
 >     elabTrace (show x)
 >     case x of -- TODO(joel) do this properly with error machinery
 >         CDefinition _ (_ := HOLE _ :<: _) _ _ _ _ -> getGoal "getHoleGoal"
->         CModule _ _ -> throwErrorStr "got a module"
+>         CModule _ _ _ -> throwErrorStr "got a module"
 >         CDefinition _ _ _ _ _ _ -> throwErrorStr "got a non-hole definition"
 
 > getHoleKind :: ProofStateT e HKind

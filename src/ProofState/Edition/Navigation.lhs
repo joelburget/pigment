@@ -366,7 +366,7 @@ current entry.
 >     let dev = Dev (above <>< below) tip root state
 >     case currentEntry of
 >         CDefinition dkind ref xn ty a e ->  return $ EDEF ref xn dkind dev ty a e
->         CModule n e                     ->  return $ EModule n dev e
+>         CModule n e p                   ->  return $ EModule n dev e p
 
 Conversely, when entering a new development, the former entry needs to
 be *unzipped* to form the current development.
@@ -377,10 +377,10 @@ be *unzipped* to form the current development.
 >     replaceLayer $ l { currentEntry = CDefinition dkind ref xn ty a e}
 >     putAboveCursor dev
 
-> putEnterCurrent (EModule [] dev _) = putAboveCursor dev
-> putEnterCurrent (EModule n dev e) = do
+> putEnterCurrent (EModule [] dev _ _) = putAboveCursor dev
+> putEnterCurrent (EModule n dev e p) = do
 >     l <- getLayer
->     replaceLayer $ l { currentEntry = CModule n e }
+>     replaceLayer $ l { currentEntry = CModule n e p }
 >     putAboveCursor dev
 
 Cursor navigation
