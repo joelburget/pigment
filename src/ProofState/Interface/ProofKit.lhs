@@ -1,10 +1,11 @@
 <a name="ProofState.Interface.ProofKit">The `ProofState` Kit</a>
 ====================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes, DataKinds #-}
+
 > module ProofState.Interface.ProofKit where
+
 > import Control.Monad.Except
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
