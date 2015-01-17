@@ -117,7 +117,7 @@ Backward and forward lists, applicative with zipping.
 
 > filterBwd :: (a -> Bool) -> Bwd a -> Bwd a
 > filterBwd _ B0 = B0
-> filterBwd p (as :< a) = if p a then as :< a else as'
+> filterBwd p (as :< a) = if p a then as' :< a else as'
 >     where as' = filterBwd p as
 
 > filterFwd :: (a -> Bool) -> Fwd a -> Fwd a
