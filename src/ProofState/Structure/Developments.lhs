@@ -15,6 +15,8 @@
 > import Elaboration.ElabProb
 > import DisplayLang.Scheme
 
+> import Debug.Trace
+
 The `Dev` data-structure
 ------------------------
 
@@ -90,6 +92,7 @@ either be:
 >     | AnchHope
 >     | AnchElabInferFully
 >     | AnchTau
+>     | AnchDataDef
 >     -- Anchors with cryptic names I don't understand
 >     | AnchStr String
 >     -- "Nothing"
@@ -113,6 +116,7 @@ either be:
 >     show AnchHope = "hope"
 >     show AnchElabInferFully = "elab infer fully"
 >     show AnchTau = "tau"
+>     show AnchDataDef = "data definition"
 >     show (AnchStr str) = str
 >     show AnchNo = "AnchNo"
 
@@ -131,6 +135,10 @@ either be:
 >     -- just a temporary holding place
 >     | Draft
 >     deriving Show
+
+> modulePurposeToAnchor :: ModulePurpose -> EntityAnchor
+> modulePurposeToAnchor DevelopData = AnchDataDef
+> modulePurposeToAnchor _           = traceShow "modulePurposeToAnchor AnchNo" AnchNo
 
 > data Entry f
 >   =  EEntity  { ref       :: REF

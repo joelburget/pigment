@@ -55,11 +55,11 @@ Section [Tactics.Elimination.analysis](#Tactics.Elimination.analysis).
 > moduleToGoal :: INTM -> ProofState (EXTM :=>: VAL)
 > moduleToGoal ty = do
 >     (_ :=>: tyv) <- checkHere (SET :>: ty)
->     CModule n expanded _ <- getCurrentEntry
+>     CModule n expanded purpose <- getCurrentEntry
 >     inScope <- getInScope
 >     let  ty' = liftType inScope ty
 >          ref = n := HOLE Waiting :<: evTm ty'
->     putCurrentEntry $ CDefinition LETG ref (last n) ty' AnchNo expanded
+>     putCurrentEntry $ CDefinition LETG ref (last n) ty' (modulePurposeToAnchor purpose) expanded
 >     putDevTip $ Unknown (ty :=>: tyv)
 >     return $ applySpine ref inScope
 

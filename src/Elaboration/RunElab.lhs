@@ -45,6 +45,8 @@
 > import Kit.MissingLibrary
 > import Kit.Trace
 
+> import Debug.Trace
+
 <a name="Elaborator.RunElab.runElab">Running elaboration processes</a>
 -----------------------------
 
@@ -511,7 +513,7 @@ but do not always spot them.
 >     return . (, ElabSuspended) =<< neutralise =<< getCurrentDefinition
 > lastHope WorkElsewhere ty = do
 >     ty' <- bquoteHere ty
->     return . (, ElabSuccess) =<< neutralise =<< makeKinded AnchNo Hoping (AnchHope :<: ty')
+>     return . (, ElabSuccess) =<< neutralise =<< makeKinded (trace "runElab AnchNo" AnchNo) Hoping (AnchHope :<: ty')
 
 <a name="Elaboration.RunElab.suspending">Suspending computation</a>
 ----------------------

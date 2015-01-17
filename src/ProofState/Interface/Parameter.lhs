@@ -15,16 +15,17 @@ Making Parameters
 > import ProofState.Interface.ProofKit
 > import Evidences.Tm
 
+> import Debug.Trace
+
 `\`-abstraction
 ---------------
 
-When working at solving a goal, we might be able to introduce an
-hypothesis. For instance, if the goal type is $\Nat \To \Nat \To
-\Nat$, we can introduce two hypotheses $\V{x}$ and $\V{y}$. Further, the
-type of the goal governs the kind of the parameter (a lambda, or a
-forall) and its type. This automation is implemented by `lambdaParam`
-that lets you introduce a parameter above the cursor while working on a
-goal.
+When working at solving a goal, we might be able to introduce an hypothesis.
+For instance, if the goal type is `Nat -> Nat -> Nat`, we can introduce two
+hypotheses `x` and `y` Further, the type of the goal governs the kind of the
+parameter (a lambda, or a forall) and its type. This automation is implemented
+by `lambdaParam` that lets you introduce a parameter above the cursor while
+working on a goal.
 
 > lambdaParam :: String -> ProofState REF
 > lambdaParam x = do
@@ -38,7 +39,7 @@ goal.
 >             freshRef (x :<: s) $ \ref -> do
 >               sTm <- bquoteHere s
 >               -- Insert the parameter above the cursor
->               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind sTm AnchNo True
+>               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind sTm (trace "lambdaParam AnchNo" AnchNo) True
 >               -- Update the Tip
 >               let tipTy = t $ pval ref
 >               tipTyTm <- bquoteHere tipTy
@@ -65,7 +66,7 @@ provided type under the given module.
 >         -- Working under a module
 >         freshRef (x :<: ty) $ \ref -> do
 >           -- Simply make the reference
->           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm AnchNo True
+>           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm (trace "assumeParam AnchNo" AnchNo) True
 >           return ref
 >       _    -> throwError $ sErr "assumeParam: only possible for modules."
 
@@ -91,7 +92,7 @@ indeed a type, so it requires further attention.
 >           -- Working on a goal of type `Set`
 >           freshRef (s :<: ty) $ \ref -> do
 >             -- Simply introduce the parameter
->             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm AnchNo True
+>             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm (trace "piParamUnsafe AnchNo" AnchNo) True
 >             return ref
 >         Unknown _  -> throwError $ sErr "piParam: goal is not of type SET."
 >         _          -> throwError $ sErr "piParam: only possible for incomplete goals."

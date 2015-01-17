@@ -112,8 +112,8 @@ Backward and forward lists, applicative with zipping.
 >     foldMap = foldMapDefault
 
 > instance Traversable Fwd where
->   traverse f F0         = pure F0
->   traverse f (x :> xs)  = (:>) <$> f x <*> (f ^$ xs)
+>     traverse f F0         = pure F0
+>     traverse f (x :> xs)  = (:>) <$> f x <*> (f ^$ xs)
 
 > filterBwd :: (a -> Bool) -> Bwd a -> Bwd a
 > filterBwd _ B0 = B0

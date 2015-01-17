@@ -2,7 +2,9 @@
 ====================
 
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards #-}
+
 > module Distillation.Scheme where
+
 > import Text.PrettyPrint.HughesPJ (Doc)
 > import Kit.BwdFwd
 > import ProofState.Structure.Developments
@@ -18,6 +20,8 @@
 > import Evidences.Mangler
 > import Evidences.Eval
 > import React
+
+> import Debug.Trace
 
 Distilling schemes
 ------------------
@@ -64,7 +68,7 @@ well supply it, though it should not be inspected.
 >     freshRef (x :<: evTm s') $ \ref -> do
 >         -- Distill the codomain
 >         (schT', t') <- distillScheme
->                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' AnchNo True)
+>                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' (trace ("distillScheme " ++ (fst (mkLastName ref))) AnchNo) True)
 >                          (refs :< ref)
 >                          schT
 >         return (SchExplicitPi (x :<: schS') schT', PIV x s' t')
@@ -81,7 +85,7 @@ one.
 >     freshRef (x :<: sv) $ \ref -> do
 >         -- Distill the domain
 >         (schT', t') <- distillScheme
->                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' AnchNo True)
+>                          (entries :< EPARAM ref (mkLastName ref) ParamPi s' (trace ("distillScheme 2: " ++ (fst (mkLastName ref))) AnchNo) True)
 >                          (refs :< ref)
 >                          schT
 >         return (SchImplicitPi (x :<: sd) schT', PIV x s' t')

@@ -24,7 +24,7 @@ The `make` command adds a named goal of the given type above the cursor.
 The meat is actually in `makeKinded`, below.
 
 > make :: (EntityAnchor :<: INTM) -> ProofState (EXTM :=>: VAL)
-> make = makeKinded AnchNo Waiting
+> make = makeKinded (trace "make AnchNo" AnchNo) Waiting
 
 When making a new definition, the reference to this definition bears a
 *hole kind* (Section [Evidences.Tm.references](#Evidences.Tm.references)). User-generated
@@ -50,7 +50,8 @@ such as `Hoping` or `Crying`.
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
 >     goalName <- pickName "Goal: " name
->     let n = trace ("pickName for " ++ show name ++ " = " ++ goalName) $ mkName nsupply goalName
+>     -- let n = trace ("pickName for " ++ show name ++ " = " ++ goalName) $ mkName nsupply goalName
+>     let n = mkName nsupply goalName
 
 >     -- Make a reference for the goal, with a lambda-lifted type
 >     inScope <- getInScope

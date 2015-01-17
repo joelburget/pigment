@@ -71,6 +71,7 @@ import Haste.Prim
 import Lens.Family2
 import React
 
+import Debug.Trace
 import Kit.Trace
 
 instance Reactive EntityAnchor where
@@ -261,8 +262,11 @@ renderReact = do
     es <- replaceEntriesAbove B0
     cs <- putBelowCursor F0
 
+    -- elabTrace ("entry: " ++ show entry)
+
     case (entry, es, cs) of
-        (CModule _ _ DevelopData, _, _) -> viewDataDevelopment entry
+        (CModule _ _ DevelopData, _, _) -> viewDataDevelopment entry es
+        (CDefinition _ _ _ _ AnchDataDef _, _, _) -> viewDataDevelopment entry es
         (_, B0, F0) -> reactEmptyTip
         _ -> do
             d <- reactEntries (es <>> F0)
@@ -290,17 +294,22 @@ renderReact = do
                 div_ [ class_ "proof-state-inner" ] $ d'
                 tip
 
-viewDataDevelopment :: CurrentEntry -> ProofState InteractionReact
-viewDataDevelopment mod@(CModule name _ _) = do
-    entries <- devEntries <$> getAboveCursor
-    let weCareAbout = filterBwd
-            (\case (EEntity _ _ _ _ (AnchConName _) _) -> True
-                   _ -> False)
-            entries
-    entries <- reactEntries (weCareAbout <>> F0)
+
+dataWeCareAbout :: Entry a -> Bool
+dataWeCareAbout (EEntity _ _ _ _ (AnchConName _) _) = True
+dataWeCareAbout (EEntity _ _ _ _ AnchDataDef _) = True
+dataWeCareAbout (EEntity _ _ _ _ AnchDataDesc _) = True
+dataWeCareAbout (EEntity _ (str, _) _ _ anch _) = traceShow (str, anch) False
+dataWeCareAbout (EModule _ _ _ _) = trace "EMod" False
+-- dataWeCareAbout _ = False
+
+
+viewDataDevelopment :: CurrentEntry -> Entries -> ProofState InteractionReact
+viewDataDevelopment (CDefinition _ (name := _) _ _ _ _) entries = do
+    let weCareAbout = filterBwd dataWeCareAbout entries
+    entries <- reactEntries (traceShow (bwdLength weCareAbout, bwdLength entries) weCareAbout <>> F0)
 
     return $ div_ [ class_ "data-develop" ] $ do
-        entryHeader' name
         entries
 
 
@@ -351,8 +360,8 @@ reactEntry e = do
 
     -- TODO entry-module vs entry-entity
     return $ div_ [ class_ "entry entry-entity" ] $ do
-        entryHeader e
         -- locally anchor
+        entryHeader e
         description
 
 

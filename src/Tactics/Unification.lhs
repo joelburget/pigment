@@ -25,6 +25,8 @@ Unification
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 
+> import Debug.Trace
+
 Solving flex-rigid problems
 ---------------------------
 
@@ -88,7 +90,7 @@ old dependency holes with the new ones.
 >     makeDeps [] news = return news
 >     makeDeps ((name := HOLE k :<: tyv, ty) : deps) news = do
 >         let (ty', _) = tellNews news ty
->         makeKinded AnchNo k (AnchStr (fst (last name)) :<: ty')
+>         makeKinded (traceShow "unification AnchNo" AnchNo) k (AnchStr (fst (last name)) :<: ty')
 >         EDEF ref _ _ _ _ _ _ <- getEntryAbove
 >         makeDeps deps ((name := DEFN (NP ref) :<: tyv, GoodNews) : news)
 >     makeDeps _ _ = throwErrorS
