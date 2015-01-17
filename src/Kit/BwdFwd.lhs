@@ -96,25 +96,31 @@ Backward and forward lists, applicative with zipping.
 >     where sum = foldr' (\_ x -> x+1) 0
 
 > instance Functor Bwd where
->     fmap f B0 = B0
->     fmap f (xs :< x) = fmap f xs :< f x
+>     fmap = fmapDefault
 
 > instance Foldable Bwd where
->     foldMap _ B0 = mempty
->     foldMap f (xs :< x) = foldMap f xs <> f x
+>     foldMap = foldMapDefault
 
 > instance Traversable Bwd where
->   traverse f B0         = pure B0
->   traverse f (xs :< x)  = (:<) <$> (f ^$ xs) <*> f x
+>     traverse f B0         = pure B0
+>     traverse f (xs :< x)  = (:<) <$> (f ^$ xs) <*> f x
 
 > instance Functor Fwd where
->     fmap f F0 = F0
->     fmap f (x :> xs) = f x :> fmap f xs
+>     fmap = fmapDefault
 
 > instance Foldable Fwd where
->     foldMap _ F0 = mempty
->     foldMap f (x :> xs) = f x <> foldMap f xs
+>     foldMap = foldMapDefault
 
 > instance Traversable Fwd where
 >   traverse f F0         = pure F0
 >   traverse f (x :> xs)  = (:>) <$> f x <*> (f ^$ xs)
+
+> filterBwd :: (a -> Bool) -> Bwd a -> Bwd a
+> filterBwd _ B0 = B0
+> filterBwd p (as :< a) = if p a then as :< a else as'
+>     where as' = filterBwd p as
+
+> filterFwd :: (a -> Bool) -> Fwd a -> Fwd a
+> filterFwd _ F0 = F0
+> filterFwd p (a :> as) = if p a then a :> as' else as'
+>     where as' = filterFwd p as
