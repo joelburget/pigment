@@ -1,7 +1,6 @@
 <a name="ProofState.Edition.ProofContext">Proof Context</a>
 =============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes, StandaloneDeriving #-}
 > module ProofState.Edition.ProofContext where
@@ -97,6 +96,12 @@ piece of kit to deal with this global context.
 
 > instance Traversable NewsyFwd where
 >     traverse g (NF x) = NF <$> traverse (traverse g) x
+
+> instance Foldable NewsyFwd where
+>     foldMap = foldMapDefault
+
+> instance Functor NewsyFwd where
+>     fmap = fmapDefault
 
 The Zipper: `ProofContext`
 --------------------------
