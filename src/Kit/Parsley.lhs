@@ -6,7 +6,6 @@ fancy. It is hopelessly inefficient, but we can spend more effort when
 it becomes a more serious problem. In particular, we can easily
 represent extents numerically.
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > module Kit.Parsley where
 
 > import Control.Applicative
@@ -65,7 +64,6 @@ It's a `Monad` and all that.
 >     (tts, t', ts)  <- runParsley (f s') ts
 >     return (sts ++ tts, t', ts)
 >   fail s = Parsley $ \ _ -> Left $ strMsg s
->   hiding instance Applicative (Parsley t)
 
 > instance Functor (Parsley t) where
 >   fmap = ap . return
@@ -73,7 +71,6 @@ It's a `Monad` and all that.
 > instance Applicative (Parsley t) where
 >   pure   = return
 >   (<*>)  = ap
->   hiding instance Functor (Parsely t)
 
 > instance Alternative (Parsley t) where
 >   empty = Parsley $ \ _ -> Left noMsg
@@ -83,7 +80,6 @@ It's a `Monad` and all that.
 > instance MonadPlus (Parsley t) where
 >   mzero  = empty
 >   mplus  = (<|>)
->   hiding instance Alternative (Parsley t)
 
 > instance Error (PFailure t) where
 >   noMsg = PFailure ([], Abort)
@@ -106,7 +102,7 @@ You can consume everything! This always succeed.
 > pRest = Parsley $ \ ts -> Right (ts, ts, [])
 
 You can peek ahead, that is: we return a lexeme composed by all the
-tokens to come, but we do not consider them as consumed (|[]| on the
+tokens to come, but we do not consider them as consumed (`[]` on the
 left, `ts` on the right).
 
 > peekToken :: Parsley t [t]
@@ -129,16 +125,14 @@ the combinators below without breaking the `Parsley(...)` abstraction.
 You can test for the end of the token stream with `pEndOfStream`:
 
 > pEndOfStream :: Parsley t ()
-> pEndOfStream = guard =<< (|null peekToken|)
+> pEndOfStream = guard =<< null <$> peekToken
 
 Parsing separated sequences goes like this, purely applicative with She
 support. Either we can parse a `p` followed by many `sep` and `p`, or we
 return the empty list.
 
 > pSep :: Parsley t s -> Parsley t x -> Parsley t [x]
-> pSep sep p =  (|p : (many $ sep *> p)
->                |id ~ []
->                |)
+> pSep sep p =  ((:) <$> p <*> many (sep *> p)) <|> pure []
 
 We can also allow an optional terminator for a separated sequence.
 
@@ -150,8 +144,8 @@ delimiter. This is the role of `consumeUntil`. It runs the parser `p` up
 to hitting a delimiter recognized by `delim`.
 
 > consumeUntil :: Parsley t a -> Parsley t eol -> Parsley t [a]
-> consumeUntil p delim = (|id ~ [] (% delim %)
->                         |p : (consumeUntil p delim)|)
+> consumeUntil p delim =
+>     ([] <$ delim) <|> ((:) <$> p <*> consumeUntil p delim)
 > consumeUntil' = consumeUntil nextToken
 
 Thanks to the monadic nature of our parser, we can implement the
@@ -180,8 +174,8 @@ returning the result of `f` as tokens.
 Here's a useful static operation:
 
 > pGuard :: Bool -> Parsley t ()
-> pGuard True   = (|()|)
-> pGuard False  = (|)
+> pGuard True   = pure ()
+> pGuard False  = empty
 
 Token manipulation
 ------------------

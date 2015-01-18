@@ -74,11 +74,13 @@ Functor Kit
 > instance Foldable (Ko a) where
 >   foldMap = foldMapDefault
 
-> instance (Traversable p, Traversable q, Foldable p, Foldable q) => Foldable (p :+: q) where
->   foldMap = foldMapDefault
+> instance (Traversable p, Traversable q) => Foldable (p :+: q) where
+>     foldMap = foldMapDefault
 
-> instance (Traversable p, Traversable q, Foldable p, Foldable q) => Foldable (p :*: q) where
->   foldMap = foldMapDefault
+> instance (Traversable p, Traversable q) => Foldable (p :*: q) where
+>     foldMap = foldMapDefault
+
+TODO replace with version from recursion-schemes
 
 > newtype Fix f = InF (f (Fix f))  -- tying the knot
 
