@@ -93,7 +93,7 @@ type CTData = (CochonTactic, [CochonArg])
 
 data Command = Command
     { commandStr :: String
-    , commandCtx :: (Bwd ProofContext)
+    , commandCtx :: Bwd ProofContext
 \end{code}
 
 Derivative fields - these are less fundamental and can be derived from the
@@ -114,7 +114,7 @@ type InteractionHistory = Fwd Command
 data CommandFocus
     = InHistory
         { deferred :: String
-        , current :: (ListZip Command)
+        , current :: ListZip Command
         }
     | InPresent String
 

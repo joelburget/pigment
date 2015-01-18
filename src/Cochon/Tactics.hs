@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -F -pgmF she #-}
-{-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds #-}
+{-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds,
+  LambdaCase #-}
 
 module Cochon.Tactics (cochonTactics, infoHypotheses, reactBKind, runProofState) where
 
@@ -544,7 +545,7 @@ parseTac = unaryInCT "parse" (return . fromString . show)
 schemeTac = unaryNameCT "scheme" infoScheme
   "scheme <name> - looks up the scheme on the definition <name>."
 
-showTac = unaryStringCT "show" (\s -> case s of
+showTac = unaryStringCT "show" (\case
     "inscope"  -> infoInScope
     "context"  -> infoContext
     "dump"     -> infoDump
@@ -626,7 +627,7 @@ haskellTac = unaryExCT "haskell" (\ t -> elabInfer' t >>= dumpHaskell)
 
 -- The `propSimplify` tactic attempts to simplify the type of the current
 -- goal, which should be propositional. Usually one will want to use
--- |simplify| instead, or simplification will happen automatically (with
+-- `simplify` instead, or simplification will happen automatically (with
 -- the `let` and `<=` tactics), but this is left for backwards
 -- compatibility.
 --

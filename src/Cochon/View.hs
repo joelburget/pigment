@@ -1,5 +1,6 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
   MultiParamTypeClasses, EmptyDataDecls, LambdaCase #-}
+
 module Cochon.View where
 
 import Control.Applicative
@@ -73,6 +74,7 @@ import React
 
 import Kit.Trace
 
+
 instance Reactive EntityAnchor where
     reactify x = span_ [ class_ "anchor" ] $ fromString $ show x
 
@@ -134,7 +136,7 @@ autocompleteView mtacs = case mtacs of
     Stowed -> ""
     CompletingTactics tacs -> div_ [ class_ "autocomplete" ] $
         innerAutocomplete tacs
-    CompletingParams tac -> locally $ case (ctHelp tac) of
+    CompletingParams tac -> locally $ case ctHelp tac of
         Left react -> div_ [ class_ "tactic-help" ] react
         Right tacticHelp -> longHelp tacticHelp
 
@@ -209,7 +211,7 @@ interactionLog logs = div_ [ class_ "interaction-log" ] $
                 promptArrow
                 " "
                 fromString cmdStr
-            div_ [ class_ "log-output" ] $ out
+            div_ [ class_ "log-output" ] out
 
 proofCtxDisplay :: Bwd ProofContext -> InteractionReact
 proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
@@ -288,7 +290,7 @@ renderReact = do
                 --         case me of
                 --             [] -> "(no name)"
                 --             _ -> fst $ last me
-                div_ [ class_ "proof-state-inner" ] $ d'
+                div_ [ class_ "proof-state-inner" ] d'
                 tip
 
 
@@ -304,8 +306,7 @@ viewDataDevelopment (CDefinition _ (name := _) _ _ _ _) entries = do
     let weCareAbout = filterBwd dataWeCareAbout entries
     entries <- reactEntries (weCareAbout <>> F0)
 
-    return $ div_ [ class_ "data-develop" ] $ do
-        entries
+    return $ div_ [ class_ "data-develop" ] entries
 
 
 reactEmptyTip :: ProofState InteractionReact
@@ -383,7 +384,7 @@ reactTip :: ProofState InteractionReact
 reactTip = do
     tip <- getDevTip
     locally <$> case tip of
-        Module -> return $ div_ [ class_ "tip" ] $ "(module)"
+        Module -> return $ div_ [ class_ "tip" ] "(module)"
         Unknown (ty :=>: _) -> do
             hk <- getHoleKind
             tyd <- reactHere (SET :>: ty)
@@ -402,8 +403,10 @@ reactTip = do
         Defined tm (ty :=>: tyv) -> do
             tyd <- reactHere (SET :>: ty)
             tmd <- reactHereAt (tyv :>: tm)
-            return $ div_ [ class_ "tip" ] $
-                (tmd >> reactKword KwAsc >> tyd)
+            return $ div_ [ class_ "tip" ] $ do
+                tmd
+                reactKword KwAsc
+                tyd
 
 
 reactHKind :: HKind -> PureReact

@@ -161,7 +161,7 @@ dispatch _ state = state
 execProofState :: ProofState a
                -> ProofContext
                -> Either PureReact ProofContext
-execProofState state = (right snd) . runProofState state
+execProofState state = right snd . runProofState state
 
 autocompleteUpArrow :: InteractionState -> InteractionState
 autocompleteUpArrow state = state & autocomplete %~ \auto -> case auto of
@@ -241,7 +241,7 @@ parseCmd l = case parse tokenize l of
     Right ts -> case parse pCochonTactic ts of
         Left pf -> Left $
             "Parse failure: " ++
-            describePFailure pf (intercalate " " . map crushToken)
+            describePFailure pf (unwords . map crushToken)
         Right ctdata -> Right ctdata
 
 -- The `tacticsMatching` function identifies Cochon tactics that match the
@@ -261,7 +261,7 @@ describePFailure (PFailure (ts, fail)) f =
             EndOfParser  -> "end of parser."
             Expect t     -> "expected " ++ f [t] ++ "."
             Fail s       -> s
-        sucMsg = if length ts > 0
+        sucMsg = if not (null ts)
                then "\nSuccessfully parsed: ``" ++ f ts ++ "''."
                else ""
     in errMsg ++ sucMsg

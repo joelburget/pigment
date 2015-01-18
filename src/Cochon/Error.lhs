@@ -1,8 +1,7 @@
 Cochon error prettier
 =====================
 
-> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
->     DeriveFunctor, DeriveFoldable, DeriveTraversable, PatternSynonyms #-}
+> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternSynonyms #-}
 
 > module Cochon.Error where
 
@@ -26,7 +25,8 @@ Catching the gremlins before they leave `ProofState`
 >                   throwError e'
 
 > distillErrors :: StackError DInTmRN -> ProofState (StackError DInTmRN)
-> distillErrors (StackError e) = StackError `fmap` (sequence $ fmap (sequence . fmap distillError) e)
+> distillErrors (StackError e) =
+>     StackError `fmap` sequence (fmap (sequence . fmap distillError) e)
 
 > distillError :: ErrorTok DInTmRN -> ProofState (ErrorTok DInTmRN)
 > distillError (ErrorVAL (v :<: mt)) = do
@@ -44,13 +44,8 @@ Pretty-printing the stack trace
 -------------------------------
 
 > prettyStackError :: StackError DInTmRN -> Doc
-> prettyStackError (StackError e) =
->     vcat $
->     fmap (text "Error:" <>) $
->     fmap hsep $
->     fmap -- on the stack
->     (fmap -- on the token
->      prettyErrorTok) e
+> prettyStackError (StackError e) = vcat $
+>     fmap (((text "Error:" <>) . hsep) . fmap prettyErrorTok) e
 
 > prettyErrorTok :: ErrorTok DInTmRN -> Doc
 > prettyErrorTok (StrMsg s)              = text s
@@ -62,4 +57,4 @@ The following cases should be avoided as much as possible:
 
 > prettyErrorTok (ErrorREF (name := _))  = text $ showName name
 > prettyErrorTok (ErrorVAL (v :<: _))    = text "ErrorVAL" <>
->                                              (brackets $ text $ show v)
+>                                              brackets (text $ show v)

@@ -1,8 +1,7 @@
 Cochon Command Lexer
 ====================
 
-> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
->     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs #-}
 
 > module Cochon.CommandLexer where
 
@@ -59,7 +58,7 @@ Tokenizer combinators
 > tokenScheme = SchemeArg <$> pScheme
 
 > tokenOption :: Parsley Token CochonArg -> Parsley Token CochonArg
-> tokenOption p = (Optional <$> (bracket Square p)) <|> pure NoCochonArg
+> tokenOption p = (Optional <$> bracket Square p) <|> pure NoCochonArg
 
 > tokenEither :: Parsley Token CochonArg -> Parsley Token CochonArg
 >                                        -> Parsley Token CochonArg

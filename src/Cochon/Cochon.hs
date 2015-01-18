@@ -2,8 +2,7 @@
 -- ====================
 
 {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
-    DeriveFunctor, DeriveFoldable, DeriveTraversable, OverloadedStrings,
-    CPP, NamedFieldPuns #-}
+    OverloadedStrings, CPP, NamedFieldPuns #-}
 
 module Cochon.Cochon where
 
@@ -63,18 +62,17 @@ cochon loc = withElem "inject" $ \e -> do
 paranoid = False
 veryParanoid = False
 
--- XXX(joel) refactor this whole thing - remove putStrLn - fix line
--- length - surely this can be expressed more compactly
+-- XXX(joel) refactor this whole thing - remove putStrLn
 
 validateDevelopment :: Bwd ProofContext -> IO ()
-validateDevelopment locs@(_ :< loc) = if veryParanoid
-    -- XXX: there must be a better way to do that
-    then Foldable.mapM_ validateCtxt locs
-    else if paranoid
-        then validateCtxt loc
-        else return ()
-  where validateCtxt loc =
-            case evalStateT (validateHere `catchError` catchUnprettyErrors) loc of
+validateDevelopment locs@(_ :< loc)
+    | veryParanoid = Foldable.mapM_ validateCtxt locs
+    | paranoid = validateCtxt loc
+    | otherwise = return ()
+    where result = evalStateT
+              (validateHere `catchError` catchUnprettyErrors)
+              loc
+          validateCtxt loc = case result of
               Left ss -> do
                   putStrLn "*** Warning: definition failed to type-check! ***"
                   putStrLn $ renderHouseStyle $ prettyStackError ss

@@ -1,12 +1,14 @@
 Loading Developments
 ====================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators #-}
+
 > module Cochon.DevLoad () where
+
 > import Control.Monad.State
 > import Control.Monad.Except
 > import Control.Applicative
+
 > import Kit.BwdFwd
 > import Kit.Parsley
 > import Cochon.Cochon
@@ -53,12 +55,12 @@ A definition is an identifier, followed by a list of children, a
 definition (which may be `?`), and optionally a list of commands:
 
 > pDef :: Parsley Token DevLine
-> pDef =  (| DLDef    ident                  -- identifier
->                     pLines                 -- childrens (optional)
->                     pDefn                  -- definition
->                     pCTSuffix              -- commands (optional)
->                     (%keyword KwSemi%)
->          |)
+> pDef =  DLDef
+>     <$> ident                  -- identifier
+>     <*> pLines                 -- childrens (optional)
+>     <*> pDefn                  -- definition
+>     <*> pCTSuffix              -- commands (optional)
+>     <* keyword KwSemi
 
 Parsing children:
 
@@ -78,10 +80,8 @@ The question mark corresponds to an open goal. On the other hand, giving
 a term corresponds to explicitly solving the goal.
 
 > pDefn :: Parsley Token (Maybe DInTmRN :<: DInTmRN)
-> pDefn  =  (| (%identEq "?"%) (%keyword KwAsc%)
->                   ~Nothing :<: pDInTm
->           |  id pAsc
->           |)
+> pDefn = (identEq "?" >> keyword KwAsc >> (Nothing :<:) <$> pDInTm)
+>     <|> pure pAsc
 >   where pAsc = do
 >          tm :<: ty <- pAscription
 >          return $ Just tm :<: ty
@@ -102,11 +102,11 @@ Parsing Modules
 A module is similar, but has no definition.
 
 > pModule :: Parsley Token DevLine
-> pModule =  (| DLModule  ident                  -- identifier
->                         pLines                 -- children (optional)
->                         pCTSuffix              -- commands (optional)
->                         (%keyword KwSemi%)
->            |)
+> pModule =  DLModule
+>     <$> ident                  -- identifier
+>     <*> pLines                 -- children (optional)
+>     <*> pCTSuffix              -- commands (optional)
+>     <* keyword KwSemi
 
 Parsing Parameters
 
@@ -114,19 +114,20 @@ A parameter is a $\lambda$-abstraction (represented by `x : T ->`) or
 a $\Pi$-abstraction (represented by `(x : S) ->`).
 
 > pParam :: Parsley Token DevLine
-> pParam =  (|  (%keyword KwLambda%)          -- @\@
->             (DLParam ParamLam)
->             ident                         -- @x@
->             (%keyword KwAsc%)             -- @:@
->             (sizedDInTm (pred ArrSize))   -- @T@
->             (%keyword KwArr%) |)          -- @->@
->         <|>
->             (bracket Round                -- @(@
->              (|  (DLParam ParamPi)
->                  ident                    -- @x@
->                  (%keyword KwAsc%)        -- @:@
->                  pDInTm |)) <*            -- @S)@
->                  keyword KwArr            -- @->@
+> pParam =  (keyword KwLambda        -- @\@
+>       $> DLParam ParamLam
+>      <*> ident                     -- @x@
+>      <*  keyword KwAsc             -- @:@
+>      <*> sizedDInTm (pred ArrSize) -- @T@
+>      <*  keyword KwArr)            -- @->@
+>      <|>
+>      bracket Round                 -- @(@
+>          (DLParam ParamPi
+>               <$> ident            -- @x@
+>               <*  keyword KwAsc    -- @:@
+>               <*> pDInTm
+>          )                         -- @S)@
+>      <* keyword KwArr              -- @->@
 
 Construction
 ------------
@@ -167,22 +168,18 @@ accumulate the commands which might have been issued.
 >     moduleToGoal tipTy
 >     -- Were we provided a solution?
 >     case mtipTm of
->         Nothing -> do -- No.
->                    -- Leave
->                    goOut
+>         -- No? Leave.
+>         Nothing -> goOut
 >         Just tms -> do -- Yes!
 >             -- Give the solution `tms`
 >             elabGive tms
 >             return ()
 >     -- Is there any tactics to be executed?
->     case commands of
->         []  -> do -- No.
->                -- Return the kids' commands
->                return ncs'
->         _   -> do -- Yes!
->                -- Accumulate our commands
->                -- With the ones from the kids
->                return $ (n, commands) : ncs'
+>     return $ case commands of
+>         -- No? Return the kids' commands.
+>         []  -> ncs'
+>         -- Yes! Accumulate our commands with the ones from the kids.
+>         _   -> (n, commands) : ncs'
 
 Making a Module:
 
@@ -199,14 +196,12 @@ definitions.
 >     -- Leave
 >     goOut
 >     -- Is there any tactics to be executed?
->     case commands of
->         []  -> do -- No.
->                -- Return the kids' commands
->                return ncs'
->         _   -> do -- Yes!
->                -- Accumulate our commands
->                -- With the ones from the kids
->                return $ (n, commands) : ncs'
+>     return $ case commands of
+>         -- No? Return the kids' commands.
+>         []  -> ncs'
+>         -- Yes! Accumulate our commands with the ones from the kids.
+
+>         _   -> (n, commands) : ncs'
 
 Making a Parameter:
 
