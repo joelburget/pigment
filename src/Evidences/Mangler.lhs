@@ -1,7 +1,6 @@
 Variable Manipulation
 =====================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
 >     ScopedTypeVariables, DataKinds #-}
@@ -44,10 +43,10 @@ idiom. This is basically a traversal, but calling the appropriate fields of
 `Mangle` for each parameter, variable or binder encountered.
 
 > (%) :: Applicative f => Mangle f x y -> Tm In TT x -> f (Tm In TT y)
-> m % L (K t)      = (|L (|K (m % t)|)|)
-> m % L (x :. t)   = (|L (|(x :.) (mangB m x % t)|)|)
-> m % C c          = (|C ((m %) ^$ c)|)
-> m % N n          = (|N (exMang m n (|[]|))|)
+> m % L (K t)      = (L . K <$> m % t)
+> m % L (x :. t)   = L . (x :.) <$> mangB m x % t
+> m % C c          = C <$> (m %) ^$ c
+> m % N n          = N <$> exMang m n (pure [])
 
 The corresponding behaviour for `ExTm`s is implemented by `exMang`.
 
@@ -55,9 +54,9 @@ The corresponding behaviour for `ExTm`s is implemented by `exMang`.
 >            Tm Ex TT x -> f [Elim (Tm In TT y)] -> f (Tm Ex TT y)
 > exMang m (P x)     es = mangP m x es
 > exMang m (V i)     es = mangV m i es
-> exMang m (o :@ a)  es = (|(| (o :@) ((m %) ^$ a) |) $:$ es|)
-> exMang m (t :$ e)  es = exMang m t (|((m %) ^$ e) : es|)
-> exMang m (t :? y)  es = (|(|(m % t) :? (m % y)|) $:$ es|)
+> exMang m (o :@ a)  es = ($:$) <$> ((o :@) <$> (m %) ^$ a) <*> es
+> exMang m (t :$ e)  es = exMang m t $ (:) <$> (m %) ^$ e <*> es
+> exMang m (t :? y)  es = ($:$) <$> ((:?) <$> m % t <*> m % y) <*> es
 
 The `%%` and `%%#` operators apply mangles that use the identity functor.
 
@@ -65,7 +64,7 @@ The `%%` and `%%#` operators apply mangles that use the identity functor.
 > m %% t = runIdentity $ m % t
 
 > (%%#) :: Mangle Identity x y -> Tm Ex TT x -> Tm Ex TT y
-> m %%# t = runIdentity $ exMang m t (| [] |)
+> m %%# t = runIdentity $ exMang m t (pure [])
 
 The `under` mangle
 ------------------
@@ -75,8 +74,8 @@ the parameter `y` and leaves the term otherwise unchanged.
 
 > under :: Int -> x -> Mangle Identity x x
 > under i y = Mang
->   {  mangP = \ x ies -> (|(P x $:$) ies|)
->   ,  mangV = \ j ies -> (|((if i == j then P y else V j) $:$) ies|)
+>   {  mangP = \ x ies -> (P x $:$) <$> ies
+>   ,  mangV = \ j ies -> ((if i == j then P y else V j) $:$) <$> ies
 >   ,  mangB = \ _ -> under (i + 1) y
 >   }
 
@@ -101,8 +100,8 @@ $\lambda$-abstractions in the proof state.
 >   where
 >     disMangle :: Bwd REF -> Int -> Mangle Identity REF REF
 >     disMangle ys i = Mang
->       {  mangP = \ x ies -> (|(h ys x i $:$) ies|)
->       ,  mangV = \ i ies -> (|(V i $:$) ies|)
+>       {  mangP = \ x ies -> (h ys x i $:$) <$> ies
+>       ,  mangV = \ i ies -> (V i $:$) <$> ies
 >       ,  mangB = \ _ -> disMangle ys (i + 1)
 >       }
 >     h B0                        x i  = P x
@@ -122,8 +121,8 @@ target term, it substitutes the terms for the references in the target.
 >   where
 >     substMangle :: Bwd (REF :<: INTM) -> Bwd INTM -> Mangle Identity REF REF
 >     substMangle bs vs = Mang
->       {  mangP = \ x ies -> (|(help bs vs x $:$) ies|)
->       ,  mangV = \ i ies -> (|(V i $:$) ies|)
+>       {  mangP = \ x ies -> (help bs vs x $:$) <$> ies
+>       ,  mangV = \ i ies -> (V i $:$) <$> ies
 >       ,  mangB = \ _ -> substMangle bs vs
 >       }
 >
@@ -142,7 +141,7 @@ local binders it has gone under, so as to not increment them.
 
 > inc :: Int -> Mangle Identity x x
 > inc n = Mang
->     {  mangP = \x ies -> (|(P x $:$) ies|)
->     ,  mangV = \j ies -> (|(V (if j >= n then j+1 else j) $:$) ies|)
+>     {  mangP = \x ies -> (P x $:$) <$> ies
+>     ,  mangV = \j ies -> (V (if j >= n then j+1 else j) $:$) <$> ies
 >     ,  mangB = \_ -> inc (n+1)
 >     }
