@@ -24,7 +24,7 @@ Hence, we have:
 
 > entryRef :: Traversable f => Entry f -> Maybe REF
 > entryRef (EEntity r _ _ _ _ _) = Just r
-> entryRef Emodule{}             = Nothing
+> entryRef EModule{}             = Nothing
 
 > entryName :: Traversable f => Entry f -> Name
 > entryName (EEntity (n := _) _ _ _ _ _) = n

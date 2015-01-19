@@ -1,7 +1,6 @@
 <a name="ProofState.Interface.NameResolution">Resolving and unresolving names</a>
 ===============================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, PatternGuards, PatternSynonyms, DataKinds #-}
 
 > module ProofState.Interface.NameResolution where
@@ -208,7 +207,7 @@ TODO(joel) what a cluster
 > lookDown (x, i) (e :> es, uess) sp =
 >     if x == (fst $ entryLastName e)
 >     then if i == 0
->          then case (|devEntries (entryDev e)|) of
+>          then case devEntries <$> entryDev e of
 >              Just zs  -> Right (Right zs, sp, entryRef e, entryScheme e)
 >              Nothing  -> Right (Right B0, [], entryRef e, entryScheme e)
 >          else lookDown (x, i-1) (es, uess) (pushSpine e sp)
@@ -237,7 +236,7 @@ TODO(joel) what a cluster
 > huntLocal (x, i) ys (e : es) as =
 >     if x == (fst $ entryLastName e)
 >     then if i == 0
->          then case (|devEntries (entryDev e)|) of
+>          then case devEntries <$> entryDev e of
 >              Just zs  -> lookLocal ys zs as (entryRef e) (entryScheme e)
 >              Nothing  -> Left (sErr "Params in other Devs are not in scope")
 >          else huntLocal (x, i-1) ys es as
@@ -481,16 +480,16 @@ attached, if there is one.
 
 > countB :: Int -> Name -> BScopeContext -> Maybe (Int, Maybe (Scheme INTM))
 > countB i n (esus :< (es', u'), B0)
->   | last n == u' && flatNom esus [] == init n  = (| (i, Nothing) |)
+>   | last n == u' && flatNom esus [] == init n  = pure (i, Nothing)
 > countB i n (esus :< (es', u'), B0)
 >   | lastNom n == fst u'                        = countB (i+1)  n (esus, es')
 > countB i n (esus :< (es', u'), B0)             = countB i      n (esus, es')
 > countB i n (esus, es :< EModule n' (Dev {devEntries=es'}) _ _)
->   | n == n'                                    = (| (i, Nothing) |)
+>   | n == n'                                    = pure (i, Nothing)
 > countB i n (esus, es :< EModule n' _ _ _)
 >   | lastNom n == lastNom n'                    = countB (i+1) n (esus, es)
 > countB i n (esus, es :< e@(EEntity r u' _ _ _ _))
->   | last n == u' && refName r == n             = (| (i, entryScheme e) |)
+>   | last n == u' && refName r == n             = pure (i, entryScheme e)
 > countB i n (esus, es :< EEntity _ u' _ _ _ _)
 >   | lastNom n == fst u'                        = countB (i+1) n (esus, es)
 > countB i n (esus, es :< _)                     = countB i n (esus, es)
@@ -504,12 +503,12 @@ current location but the spine is different.
 > nomAbs :: Name -> FScopeContext -> Maybe (RelName, Maybe (Scheme INTM))
 > nomAbs [u] (es,(_,es'):>uess) = do
 >   (v,ms) <- findF 0 u es
->   (| ([v],ms) |)
+>   return ([v], ms)
 > nomAbs ((x,_):nom) (es,(_,es'):>uess) = do
 >   (nom',ms) <- nomAbs nom (es',uess)
->   case countF x es of
->     0 -> (| ((x,Rel 0) : nom', ms) |)
->     j -> (| ((x,Abs j) : nom', ms) |)
+>   return $ case countF x es of
+>     0 -> ((x,Rel 0) : nom', ms)
+>     j -> ((x,Abs j) : nom', ms)
 > nomAbs [] _ = Just ([], Nothing)
 > nomAbs _ _ = Nothing
 
@@ -544,7 +543,7 @@ match the current location.
 
 > nomRel :: Name -> Entries
 >                -> Maybe (Scheme INTM) -> Maybe (RelName, Maybe (Scheme INTM))
-> nomRel [] _ ms = (| ([], ms) |)
+> nomRel [] _ ms = Just ([], ms)
 > nomRel (x : nom) es _ = do
 >   (i,es',ms) <- nomRel' 0 x es
 >   (nom',ms') <- nomRel nom es' ms
@@ -554,12 +553,12 @@ match the current location.
 >                -> Maybe (Int,Entries, Maybe (Scheme INTM))
 > nomRel' o (x,i) (es:< EModule n (Dev {devEntries=es'}) _ _)
 >   | (fst . last $ n) == x  =
->   if i == (snd . last $ n) then (| (o,es',Nothing) |)
+>   if i == (snd . last $ n) then Just (o,es',Nothing)
 >                            else nomRel' (o+1) (x,i) es
 > nomRel' o (x,i) (es:< e@(EDEF _ (y,j) dkind (Dev {devEntries=es'}) _ _ _)) | y == x =
->   if i == j then (| (o,es',entryScheme e) |) else nomRel' (o+1) (x,i) es
+>   if i == j then Just (o,es',entryScheme e) else nomRel' (o+1) (x,i) es
 > nomRel' o (x,i) (es:< EEntity _ (y,j) _ _ _ _) | y == x =
->   if i == j then (| (o,B0,Nothing) |) else nomRel' (o+1) (x,i) es
+>   if i == j then Just (o,B0,Nothing) else nomRel' (o+1) (x,i) es
 > nomRel' o (x,i) (es:<e) = nomRel' o (x,i) es
 > nomRel' _ _ _ = Nothing
 
