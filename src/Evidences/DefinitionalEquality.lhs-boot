@@ -1,4 +1,3 @@
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
 > module Evidences.DefinitionalEquality where

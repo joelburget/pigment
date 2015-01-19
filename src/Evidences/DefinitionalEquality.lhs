@@ -1,7 +1,6 @@
 <a name="Evidences.DefinitionalEquality">Equality and Quotation</a>
 ======================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
 >     PatternSynonyms #-}
@@ -185,13 +184,13 @@ Simplification of stuck terms
 > simplify n r = exSimp n r
 
 > inSimp :: VAL -> NameSupply -> VAL
-> inSimp (N n) = (| N (exSimp n) |)
-> inSimp v     = (| v |)
+> inSimp (N n) = N <$> exSimp n
+> inSimp v     = pure v
 
 > exSimp :: NEU -> NameSupply -> NEU
-> exSimp (P x)      = (| (P x) |)
-> exSimp (n :$ el)  = (| exSimp n :$ (inSimp ^$ el) |)
-> exSimp (op :@ vs) = opS op <*> (inSimp ^$ vs)
+> exSimp (P x)      = pure (P x)
+> exSimp (n :$ el)  = (:$) <$> exSimp n <*> inSimp ^$ el
+> exSimp (op :@ vs) = opS op <*> inSimp ^$ vs
 >   where
 >     opS op r vs = case opSimp op vs r of
 >       Nothing -> op :@ vs
