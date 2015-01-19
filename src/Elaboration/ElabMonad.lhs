@@ -1,7 +1,6 @@
 <a name="Elaboration.ElabMonad">The `Elab` monad: a DSL for elaboration</a>
 =======================================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TypeSynonymInstances, FlexibleInstances,
 >              MultiParamTypeClasses, GeneralizedNewtypeDeriving,
 >              PatternGuards, DataKinds #-}
@@ -97,6 +96,21 @@ just ignored.
 >     show (EResolve rn _)    = "EResolve " ++ show rn ++ " (...)"
 >     show (EAskNSupply _)    = "EAskNSupply (...)"
 
+TODO(joel) - implement monad in terms of these instead of the other way around?
+
+> instance Functor Elab where
+>     fmap f e = pure f <*> e
+
+> instance Applicative Elab where
+>     pure = return
+>     mf <*> ma = do
+>         f <- mf
+>         a <- ma
+>         return $ f a
+
+> instance Alternative Elab where
+>     -- TODO(joel)
+
 > instance Monad Elab where
 >     fail s  = ECry (sErr $ "fail: " ++ s)
 >     return  = EReturn
@@ -116,6 +130,3 @@ just ignored.
 >     throwError e           = ECry e
 >     catchError (ECry e) f  = f e
 >     catchError x _         = x
-
-> instance Alternative Elab where
->     -- TODO(joel)

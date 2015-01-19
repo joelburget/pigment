@@ -1,7 +1,6 @@
 <a name="Elaboration.ElabProb">`ElabProb`: syntactic representation of elaboration problems</a>
 ============================================================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TypeSynonymInstances, FlexibleInstances,
 >              MultiParamTypeClasses, GeneralizedNewtypeDeriving,
 >              PatternGuards #-}
@@ -83,13 +82,20 @@ some handy functions for producing and manipulating these.
 >     show (WaitSolve ref tt prob)  = "WaitSolve (" ++ show ref ++ ") ("
 >                                         ++ show tt ++ ") (" ++ show prob ++ ")"
 >     show (ElabSchedule prob)      = "ElabSchedule (" ++ show prob ++ ")"
+
+> instance Functor ElabProb where
+>     fmap = fmapDefault
+
+> instance Foldable ElabProb where
+>     foldMap = foldMapDefault
+
 > instance Traversable ElabProb where
->     traverse f (ElabDone tt)            = (|ElabDone (travEval f tt)|)
->     traverse f ElabHope                 = (|ElabHope|)
->     traverse f (ElabProb tm)            = (|ElabProb (traverseDTIN f tm)|)
->     traverse f (ElabInferProb tm)       = (|ElabInferProb (traverseDTEX f tm)|)
->     traverse f (WaitCan tt prob)        = (|WaitCan (travEval f tt) (traverse f prob)|)
->     traverse f (WaitSolve ref tt prob)  = (|WaitSolve (f ref) (travEval f tt) (traverse f prob)|)
->     traverse f (ElabSchedule prob)      = (|ElabSchedule (traverse f prob)|)
+>     traverse f (ElabDone tt)            = ElabDone <$> travEval f tt
+>     traverse f ElabHope                 = pure ElabHope
+>     traverse f (ElabProb tm)            = ElabProb <$> traverseDTIN f tm
+>     traverse f (ElabInferProb tm)       = ElabInferProb <$> traverseDTEX f tm
+>     traverse f (WaitCan tt prob)        = WaitCan <$> travEval f tt <*> traverse f prob
+>     traverse f (WaitSolve ref tt prob)  = WaitSolve <$> f ref <*> travEval f tt <*> traverse f prob
+>     traverse f (ElabSchedule prob)      = ElabSchedule <$> traverse f prob
 > travEval :: Applicative f => (p -> f q) -> InTm p :=>: Maybe VAL -> f (InTm q :=>: Maybe VAL)
-> travEval f (tm :=>: _) = (|traverse f tm :=>: ~Nothing|)
+> travEval f (tm :=>: _) = (:=>:) <$> traverse f tm <*> pure Nothing

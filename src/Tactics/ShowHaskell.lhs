@@ -1,4 +1,3 @@
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, FlexibleInstances,
 >              PatternGuards, TupleSections, PatternSynonyms #-}
 

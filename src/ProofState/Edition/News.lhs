@@ -1,7 +1,6 @@
 <a name="ProofState.Edition.News">News about updated references</a>
 =============================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs, DataKinds #-}
 
 > module ProofState.Edition.News where

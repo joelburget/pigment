@@ -1,7 +1,6 @@
 $\beta$-Quotation
 =================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
 >     DataKinds #-}
@@ -44,28 +43,27 @@ lambda. We don't do anything otherwise.
 
 Constant lambdas are painlessly structural.
 
-> bquote refs (L (K t))   = (| LK (bquote refs t) |)
+> bquote refs (L (K t))   = LK <$> bquote refs t
 
 When we see a syntactic lambda value, we are very happy, because
 quotation is just renaming.
 
-> -- bquote refs (L (x :. t)) = (| (refs -|| L (x :. t)) |)
+> -- bquote refs (L (x :. t)) = pure (refs -|| L (x :. t))
 
 For all other lambdas, it's the usual story: we create a fresh variable,
 evaluate the applied term, quote the result, and bring everyone under a
 binder.
 
-> bquote refs f@(L _) =
->     (|(L . (x :.))
->       (freshRef  (x :<: error "bquote: type undefined")
->                  (\x -> bquote  (refs :< x)
->                                 (f $$ A (pval x))))|)
+> bquote refs f@(L _) = L . (x :.) <$>
+>       freshRef  (x :<: error "bquote: type undefined")
+>                 (\x -> bquote  (refs :< x)
+>                                 (f $$ A (pval x)))
 >     where x = fortran f
 
 For the other constructors, we simply go through and do as much damage
 as we can. Simple, easy.
 
-> bquote refs (C c)       = (| C (traverse (bquote refs) c) |)
-> bquote refs (N n)       = (| N (bquote refs n) |)
-> bquote refs (n :$ v)    = (| (bquote refs n) :$ (traverse (bquote refs) v) |)
-> bquote refs (op :@ vs)  = (| (op :@) (traverse (bquote refs) vs) |)
+> bquote refs (C c)       = C <$> traverse (bquote refs) c
+> bquote refs (N n)       = N <$> bquote refs n
+> bquote refs (n :$ v)    = (:$) <$> bquote refs n <*> traverse (bquote refs) v
+> bquote refs (op :@ vs)  = (op :@) <$> traverse (bquote refs) vs
