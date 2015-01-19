@@ -86,9 +86,9 @@ piece of kit to deal with this global context.
 >     show (NF ls) = show ls
 
 > instance Show (Entry NewsyFwd) where
->     show (EEntity ref xn e t a expanded) = intercalate " "
+>     show (EEntity ref xn e t a expanded) = unwords
 >         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e p) = intercalate " "
+>     show (EModule n d e p) = unwords
 >         ["M", show n, show d, show e, show p]
 
 > instance Show (Entity NewsyFwd) where

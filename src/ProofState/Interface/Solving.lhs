@@ -42,13 +42,13 @@ entries below the cursor are (lazily) notified of the good news.
 >             -- The `tm` is of the expected type
 >             checkHere (tipTy :>: tm)
 >                 `pushError`
->                 (StackError
+>                 StackError
 >                      [ err "give: typechecking failed:"
 >                      , errTm (DTIN tm)
 >                      , err "is not of type"
 >                      , errTyVal (tipTy :<: SET)
 >                      ]
->                 )
+>
 >             -- Lambda lift the given solution
 >             globalScope <- getGlobalScope
 >             above <- getEntriesAbove
@@ -107,10 +107,10 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 >         -- The entry above is a proof of `Pi S T`
 >         -- Ask for a proof of `S`
 >         _STm <- bquoteHere _S
->         sTm :=>: s <- make $ (AnchStr "s") :<: _STm
+>         sTm :=>: s <- make $ AnchStr "s" :<: _STm
 >         -- Make a proof of `T`
 >         _TTm <- bquoteHere $ _T $$ A s
->         make $ (AnchStr "t") :<: _TTm
+>         make $ AnchStr "t" :<: _TTm
 >         goIn
 >         giveOutBelow $ N $ P f :$ A (N sTm)
 >     _ -> throwError $ sErr  $ "apply: last entry in the development"
@@ -120,7 +120,7 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 
 > ungawa :: ProofState ()
 > ungawa =  ignore done <|> ignore apply <|> ignore (lambdaParam "ug")
->           `pushError` (sErr "ungawa: no can do.")
+>           `pushError` sErr "ungawa: no can do."
 
 Refining the proof state
 ------------------------

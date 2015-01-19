@@ -1,8 +1,7 @@
 <a name="ProofState.Structure.Entries">Managing Entries in a Development</a>
 =================================
 
-> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
->     PatternSynonyms #-}
+> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs, PatternSynonyms #-}
 
 > module ProofState.Structure.Entries where
 
@@ -25,7 +24,7 @@ Hence, we have:
 
 > entryRef :: Traversable f => Entry f -> Maybe REF
 > entryRef (EEntity r _ _ _ _ _) = Just r
-> entryRef (EModule _ _ _ _)     = Nothing
+> entryRef Emodule{}             = Nothing
 
 > entryName :: Traversable f => Entry f -> Name
 > entryName (EEntity (n := _) _ _ _ _ _) = n
@@ -40,9 +39,9 @@ Hence, we have:
 > entryScheme _                             = Nothing
 
 > entryDev :: Traversable f => Entry f -> Maybe (Dev f)
-> entryDev (EDEF _ _ _ d _ _ _)  = Just d
-> entryDev (EModule _ d _ _)     = Just d
-> entryDev (EPARAM _ _ _ _ _ _)  = Nothing
+> entryDev (EDEF _ _ _ d _ _ _) = Just d
+> entryDev (EModule _ d _ _)    = Just d
+> entryDev EPARAM{}             = Nothing
 
 > entrySuspendState :: Traversable f => Entry f -> SuspendState
 > entrySuspendState e = case entryDev e of
@@ -51,7 +50,7 @@ Hence, we have:
 
 > entryAnchor :: Traversable f => Entry f -> EntityAnchor
 > entryAnchor (EEntity _ _ _ _ anchor _)  = anchor
-> entryAnchor (EModule _ _ _ _)           = AnchNo
+> entryAnchor EModule{}                   = AnchNo
 
 > entryExpanded :: Traversable f => Entry f -> Bool
 > entryExpanded (EEntity _ _ _ _ _ e) = e

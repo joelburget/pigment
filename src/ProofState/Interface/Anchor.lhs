@@ -37,7 +37,7 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 > resolveAnchor anchor = do
 >   scope <- getInScope
 >   case seekAnchor scope of
->     B0 -> return $ Nothing
+>     B0 -> return Nothing
 >     _ :< ref -> return $ Just ref
 >     where seekAnchor :: Entries -> Bwd REF
 >           seekAnchor B0 = empty
