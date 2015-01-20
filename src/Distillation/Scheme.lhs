@@ -1,7 +1,7 @@
 <a name="Distillation.Scheme">The Scheme distiller</a>
 ====================
 
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, LiberalTypeSynonyms #-}
 
 > module Distillation.Scheme where
 
@@ -112,7 +112,7 @@ ProofState usage.
 >     sch' <- distillSchemeHere sch
 >     return $ pretty sch' maxBound
 
-> reactSchemeHere :: Scheme INTM -> ProofState PureReact
+> reactSchemeHere :: Scheme INTM -> ProofState (Pure React')
 > reactSchemeHere sch = do
 >     sch' <- distillSchemeHere sch
 >     return $ reactify sch'

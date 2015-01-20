@@ -1,5 +1,6 @@
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, FlexibleInstances,
->              PatternGuards, TupleSections, PatternSynonyms #-}
+>              PatternGuards, TupleSections, PatternSynonyms,
+>              LiberalTypeSynonyms #-}
 
 > module Tactics.ShowHaskell where
 
@@ -17,7 +18,7 @@
 Converting Epigram definitions to Haskell
 =========================================
 
-> dumpHaskell :: INTM :=>: VAL :<: TY -> ProofState PureReact
+> dumpHaskell :: INTM :=>: VAL :<: TY -> ProofState (Pure React')
 > dumpHaskell (_ :=>: v :<: ty) = do
 >     v'   <- bquoteHere v
 >     ty'  <- bquoteHere ty

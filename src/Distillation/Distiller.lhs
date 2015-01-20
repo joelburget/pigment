@@ -3,7 +3,7 @@
 
 > {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms,
->     DataKinds #-}
+>     DataKinds, LiberalTypeSynonyms #-}
 
 > module Distillation.Distiller where
 
@@ -387,10 +387,10 @@ passes it to the pretty-printer.
 >     dtm :=>: _ <- distillHere tt
 >     return (pretty dtm size)
 
-> reactHere :: (TY :>: INTM) -> ProofState PureReact
+> reactHere :: (TY :>: INTM) -> ProofState (Pure React')
 > reactHere = reactHereAt
 
-> reactHereAt :: (TY :>: INTM) -> ProofState PureReact
+> reactHereAt :: (TY :>: INTM) -> ProofState (Pure React')
 > reactHereAt tt = do
 >     dtm :=>: _ <- distillHere tt
 >     return $ reactify dtm

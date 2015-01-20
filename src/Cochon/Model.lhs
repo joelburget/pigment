@@ -1,4 +1,6 @@
 \begin{code}
+{-# LANGUAGE LiberalTypeSynonyms #-}
+
 module Cochon.Model where
 
 import Control.Applicative
@@ -18,7 +20,7 @@ import Lens.Family2
 import React
 
 -- TODO(joel) - give this a [CochonArg] reader?
-type Cmd a = WriterT PureReact (State (Bwd ProofContext)) a
+type Cmd a = WriterT (Pure React') (State (Bwd ProofContext)) a
 
 setCtx :: Bwd ProofContext -> Cmd ()
 setCtx = put
@@ -26,7 +28,7 @@ setCtx = put
 getCtx :: Cmd (Bwd ProofContext)
 getCtx = get
 
-displayUser :: PureReact -> Cmd ()
+displayUser :: Pure React' -> Cmd ()
 displayUser = tell
 
 tellUser :: String -> Cmd ()
@@ -46,7 +48,7 @@ data CochonTactic = CochonTactic
     { ctName   :: String
     , ctParse  :: Parsley Token (Bwd CochonArg)
     , ctxTrans :: [CochonArg] -> Cmd ()
-    , ctHelp   :: Either PureReact TacticHelp
+    , ctHelp   :: Either (Pure React') TacticHelp
     }
 
 instance Show CochonTactic where
@@ -67,7 +69,7 @@ The help for a tactic is:
 
 \begin{code}
 data TacticHelp = TacticHelp
-    { template :: PureReact -- TODO highlight each piece individually
+    { template :: Pure React' -- TODO highlight each piece individually
     , example :: String
     , summary :: String
 
@@ -101,7 +103,7 @@ first two fields.
 
 \begin{code}
     , commandParsed :: Either String CTData -- is this really necessary?
-    , commandOutput :: PureReact
+    , commandOutput :: Pure React'
     }
 \end{code}
 

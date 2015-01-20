@@ -2,7 +2,8 @@
 ===============
 
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
->     TypeSynonymInstances, OverloadedStrings, PatternSynonyms #-}
+>     TypeSynonymInstances, OverloadedStrings, PatternSynonyms,
+>     LiberalTypeSynonyms #-}
 
 > module DisplayLang.Reactify where
 
@@ -22,19 +23,19 @@
 
 The `reactKword` function gives a react element representing a `Keyword`.
 
-> reactKword :: Keyword -> React a ()
+> reactKword :: Keyword -> React a b c ()
 > reactKword kw =
 >     span_ [ class_ (catJSStr "" ["kw ", fromString (show kw)]) ] $
 >         fromString (key kw)
 
-> parens :: PureReact -> PureReact
+> parens :: Pure React' -> Pure React'
 > parens r = "(" >> r >> ")"
 
 The `Reactive` class describes things that can be made into React
 elements.
 
 > class Reactive x where
->     reactify :: x -> PureReact
+>     reactify :: x -> Pure React'
 
 > instance Reactive (Can DInTmRN) where
 >     reactify Set       = reactKword KwSet
@@ -108,7 +109,7 @@ The `reactPi` function takes a term and the current size. It accumulates
 domains until a non(dependent) $\Pi$-type is found, then calls
 `reactPiMore` to produce the final element.
 
-> reactPi :: PureReact -> DInTmRN -> PureReact
+> reactPi :: Pure React' -> DInTmRN -> Pure React'
 > reactPi bs (DPI s (DL (DK t))) = reactPiMore bs
 >     -- (reactify s >> reactKword KwArr >> reactify t) XXX
 >     (reactKword KwArr)
@@ -124,7 +125,7 @@ domains until a non(dependent) $\Pi$-type is found, then calls
 The `reactPiMore` function takes a bunch of domains (which may be empty)
 and a codomain, and represents them appropriately for the current size.
 
-> reactPiMore :: PureReact -> PureReact -> PureReact
+> reactPiMore :: Pure React' -> Pure React' -> Pure React'
 > reactPiMore bs d = bs >> reactKword KwArr >> d
 
 To reactify a scope, we accumulate arguments until something other than
@@ -133,7 +134,7 @@ a $\lambda$-term is reached.
 > instance Reactive DSCOPE where
 >     reactify s = reactLambda (B0 :< dScopeName s) (dScopeTm s)
 
-> reactLambda :: Bwd String -> DInTmRN -> PureReact
+> reactLambda :: Bwd String -> DInTmRN -> Pure React'
 > reactLambda vs (DL s) = reactLambda (vs :< dScopeName s) (dScopeTm s)
 > reactLambda vs tm = do
 >     reactKword KwLambda
@@ -179,7 +180,7 @@ a $\lambda$-term is reached.
 >         "[" >> fromString x >> reactKword KwAsc >> reactify s >> "]"
 >         reactify schT
 
-> reactifyEnumIndex :: Int -> DInTmRN -> PureReact
+> reactifyEnumIndex :: Int -> DInTmRN -> Pure React'
 > reactifyEnumIndex n DZE      = fromString $ show n
 > reactifyEnumIndex n (DSU t)  = reactifyEnumIndex (succ n) t
 > reactifyEnumIndex n tm       = do
@@ -187,7 +188,7 @@ a $\lambda$-term is reached.
 >     reactKword KwPlus
 >     reactify tm
 
-> reactifyAll :: PureReact -> DInTmRN -> PureReact
+> reactifyAll :: Pure React' -> DInTmRN -> Pure React'
 > reactifyAll bs (DALL (DPRF p) (DL (DK q))) = reactifyAllMore
 >   bs
 >   (reactify p >> reactKword KwImp >> reactify q)
@@ -200,25 +201,25 @@ a $\lambda$-term is reached.
 >   (reactKword KwAll >> reactify s >> reactify t)
 > reactifyAll bs tm = reactifyAllMore bs (reactify tm)
 
-> -- reactifyAllMore :: PureReact -> PureReact -> PureReact
+> -- reactifyAllMore :: Pure React' -> Pure React' -> Pure React'
 > -- reactifyAllMore bs d
 > --   | isEmpty bs  = wrapDoc d PiSize
 > --   | otherwise   = wrapDoc (bs <> kword KwImp <> d) PiSize
 
-> reactifyAllMore :: PureReact -> PureReact -> PureReact
+> reactifyAllMore :: Pure React' -> Pure React' -> Pure React'
 > reactifyAllMore bs d = bs >> reactKword KwImp >> d
 
-> reactifyPair :: DInTmRN -> PureReact
+> reactifyPair :: DInTmRN -> Pure React'
 > reactifyPair p = "[" >> reactifyPairMore "" p >> "]"
 
-> reactifyPairMore :: PureReact -> DInTmRN -> PureReact
+> reactifyPairMore :: Pure React' -> DInTmRN -> Pure React'
 > reactifyPairMore d DVOID        = d
 > reactifyPairMore d (DPAIR a b)  = reactifyPairMore
 >     (d >> reactify a)
 >     b
 > reactifyPairMore d t            = d >> reactKword KwComma >> reactify t
 
-> reactifySigma :: PureReact -> DInTmRN -> PureReact
+> reactifySigma :: Pure React' -> DInTmRN -> Pure React'
 > reactifySigma d DUNIT                      = reactifySigmaDone d ""
 > reactifySigma d (DSIGMA s (DL (x ::. t)))  = reactifySigma
 >     (d >> fromString x >> reactKword KwAsc >> reactify s >> reactKword KwSemi)
@@ -229,9 +230,9 @@ a $\lambda$-term is reached.
 >     (reactKword KwSig >> reactify s >> reactify t)
 > reactifySigma d t = reactifySigmaDone d (reactify t)
 
-> reactifySigmaDone :: PureReact -> PureReact -> PureReact
+> reactifySigmaDone :: Pure React' -> Pure React' -> Pure React'
 > reactifySigmaDone s t = reactKword KwSig >> "(" >> s >> t >> ")"
-> -- reactifySigmaDone :: PureReact -> PureReact -> PureReact
+> -- reactifySigmaDone :: Pure React' -> Pure React' -> Pure React'
 > -- reactifySigmaDone s t
 > --   | isEmpty s  = wrapDoc t AppSize
 > --   | otherwise  = wrapDoc (kword KwSig <> parens (s <> t)) AppSize

@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
-  MultiParamTypeClasses, EmptyDataDecls, LambdaCase #-}
+  MultiParamTypeClasses, EmptyDataDecls, LambdaCase, LiberalTypeSynonyms #-}
 
 module Cochon.View where
 
@@ -69,6 +69,7 @@ import Tactics.Unification
 
 import Haste hiding (fromString, prompt, focus)
 import Haste.Prim
+import Haste.Foreign
 import Lens.Family2
 import React
 
@@ -77,6 +78,7 @@ import Kit.Trace
 
 instance Reactive EntityAnchor where
     reactify x = span_ [ class_ "anchor" ] $ fromString $ show x
+
 
 page :: InteractionState -> InteractionReact
 page state = div_ [ class_ "page" ] $ do
@@ -88,17 +90,16 @@ page state = div_ [ class_ "page" ] $ do
             locally $ workingOn state
     rightPane state
 
+
 -- The autocomplete overlay
-data Autocomplete
-instance ReactKey Autocomplete where
-    type ClassState Autocomplete = AutocompleteState
-    type AnimationState Autocomplete = ()
-    type Signal Autocomplete = Void
+type Autocomplete a = a AutocompleteState Void ()
+
 
 rightPane :: InteractionState -> InteractionReact
 rightPane s = do
     when (s^.rightPaneVisible == Visible) (innerRightPane s)
     paneToggle s
+
 
 paneToggle :: InteractionState -> InteractionReact
 paneToggle s = button_ [ class_ "pane-bar"
@@ -108,6 +109,7 @@ paneToggle s = button_ [ class_ "pane-bar"
           Invisible -> "pane-bar-icon icon ion-arrow-left-b"
           Visible   -> "icon ion-arrow-right-b"
     i_ [ class_ cls ] ""
+
 
 choosePaneButtons :: Pane -> InteractionReact
 choosePaneButtons pane = div_ [ class_ "choose-pane" ] $ do
@@ -122,6 +124,7 @@ choosePaneButtons pane = div_ [ class_ "choose-pane" ] $ do
          , onClick (handleSelectPane Settings)
          ] "Settings"
 
+
 innerRightPane :: InteractionState -> InteractionReact
 innerRightPane InteractionState{_currentPane=pane, _interactions=ixs} =
     div_ [ class_ "right-pane" ] $ do
@@ -131,7 +134,8 @@ innerRightPane InteractionState{_currentPane=pane, _interactions=ixs} =
             Commands -> tacticList
             Settings -> "TODO(joel) - settings"
 
-autocompleteView :: AutocompleteState -> React Autocomplete ()
+
+autocompleteView :: AutocompleteState -> Autocomplete React'
 autocompleteView mtacs = case mtacs of
     Stowed -> ""
     CompletingTactics tacs -> div_ [ class_ "autocomplete" ] $
@@ -140,9 +144,10 @@ autocompleteView mtacs = case mtacs of
         Left react -> div_ [ class_ "tactic-help" ] react
         Right tacticHelp -> longHelp tacticHelp
 
-innerAutocomplete :: ListZip CochonTactic -> React Autocomplete ()
+
+innerAutocomplete :: ListZip CochonTactic -> Autocomplete React'
 innerAutocomplete (ListZip early focus late) = do
-    let desc :: Foldable a => a CochonTactic -> React Autocomplete ()
+    let desc :: Foldable a => a CochonTactic -> Autocomplete React'
         desc tacs = Foldable.forM_ tacs (div_ . fromString . ctName)
 
     desc early
@@ -153,8 +158,10 @@ innerAutocomplete (ListZip early focus late) = do
 
     desc late
 
-promptArrow :: PureReact
+
+promptArrow :: Pure React'
 promptArrow = i_ [ class_ "icon ion-ios-arrow-forward" ] ""
+
 
 prompt :: InteractionState -> InteractionReact
 prompt state = div_ [ class_ "prompt" ] $ do
@@ -166,9 +173,10 @@ prompt state = div_ [ class_ "prompt" ] $ do
            , onKeyDown handleKey
            ]
 
-workingOn :: InteractionState -> PureReact
+
+workingOn :: InteractionState -> Pure React'
 workingOn InteractionState{_proofCtx=_ :< loc} =
-    let runner :: ProofState (PureReact, PureReact)
+    let runner :: ProofState (Pure React', Pure React')
         runner = do
             mty <- optional' getHoleGoal
             goal <- case mty of
@@ -182,14 +190,15 @@ workingOn InteractionState{_proofCtx=_ :< loc} =
 
             return (goal, name)
 
-        val :: PureReact
+        val :: Pure React'
         val = case runProofState runner loc of
             Left err -> err
             Right ((goal, name), loc') -> goal >> name
 
     in div_ [ class_ "working-on" ] val
 
-showGoal :: TY -> ProofState PureReact
+
+showGoal :: TY -> ProofState (Pure React')
 showGoal ty@(LABEL _ _) = do
     h <- infoHypotheses
     s <- reactHere . (SET :>:) =<< bquoteHere ty
@@ -203,7 +212,8 @@ showGoal ty = do
         "Goal: "
         s
 
-interactionLog :: InteractionHistory -> PureReact
+
+interactionLog :: InteractionHistory -> Pure React'
 interactionLog logs = div_ [ class_ "interaction-log" ] $
     Foldable.forM_ logs $ \(Command cmdStr _ _ out) ->
         div_ [ class_ "log-elem" ] $ do
@@ -213,13 +223,15 @@ interactionLog logs = div_ [ class_ "interaction-log" ] $
                 fromString cmdStr
             div_ [ class_ "log-output" ] out
 
+
 proofCtxDisplay :: Bwd ProofContext -> InteractionReact
 proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
     case runProofState reactProofState ctx of
         Left err -> locally err
         Right (display, _) -> display
 
-longHelp :: TacticHelp -> PureReact
+
+longHelp :: TacticHelp -> Pure React'
 longHelp (TacticHelp template example summary args) =
     div_ [ class_ "tactic-help" ] $ do
         div_ [ class_ "tactic-template" ] template
@@ -237,19 +249,23 @@ longHelp (TacticHelp template example summary args) =
                 div_ [ class_ "tactic-help-title" ] $ fromString argName
                 div_ [ class_ "tactic-help-body" ] $ fromString argSummary
 
-renderHelp :: Either PureReact TacticHelp -> PureReact
+
+renderHelp :: Either (Pure React') TacticHelp -> Pure React'
 renderHelp (Left react) = react
 renderHelp (Right (TacticHelp _ _ summary _)) = fromString summary
 
-tacticList :: PureReact
+
+tacticList :: Pure React'
 tacticList = div_ [ class_ "tactic-list" ] $
     Foldable.forM_ cochonTactics $ \tactic ->
         div_ [ class_ "tactic-info" ] $ renderHelp $ ctHelp tactic
+
 
 -- The `reactProofState` command generates a reactified representation of
 -- the proof state at the current location.
 reactProofState :: ProofState InteractionReact
 reactProofState = renderReact
+
 
 -- Render a bunch of entries!
 renderReact :: ProofState InteractionReact
@@ -348,7 +364,7 @@ reactEntry e = do
             return r
          else return ""
 
-    -- anchor :: PureReact <- case entryAnchor e of
+    -- anchor :: Pure React' <- case entryAnchor e of
     --      AnchNo -> ""
     --      otherAnchor -> div_ [ class_ "anchor" ] $ do
     --          "[["
@@ -409,7 +425,7 @@ reactTip = do
                 tyd
 
 
-reactHKind :: HKind -> PureReact
+reactHKind :: HKind -> Pure React'
 reactHKind kind = span_ [ class_ "hole" ] $ case kind of
     Waiting    -> "?"
     Hoping     -> "HOPE?"

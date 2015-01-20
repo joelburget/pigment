@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, EmptyDataDecls #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, EmptyDataDecls,
+  LiberalTypeSynonyms #-}
 
 module Cochon.Controller where
 
@@ -75,13 +76,8 @@ import React hiding (key)
 import qualified React
 
 -- The top level page
-data Cochon
-instance ReactKey Cochon where
-    type ClassState Cochon = InteractionState
-    type AnimationState Cochon = ()
-    type Signal Cochon = Transition
-
-type InteractionReact = React Cochon ()
+type Cochon a = a InteractionState Transition ()
+type InteractionReact = Cochon React'
 
 data SpecialKey
     = Enter
@@ -118,7 +114,7 @@ handleCmdChange = Just . CommandTyping . fromJSStr . targetValue
 
 animDispatch :: Transition
              -> InteractionState
-             -> (InteractionState, [AnimConfig Cochon])
+             -> (InteractionState, [AnimConfig Transition ()])
 animDispatch trans st = (dispatch trans st, [])
 
 dispatch :: Transition -> InteractionState -> InteractionState
@@ -160,7 +156,7 @@ dispatch _ state = state
 
 execProofState :: ProofState a
                -> ProofContext
-               -> Either PureReact ProofContext
+               -> Either (Pure React') ProofContext
 execProofState state = right snd . runProofState state
 
 autocompleteUpArrow :: InteractionState -> InteractionState
@@ -200,7 +196,7 @@ historyDownArrow state = state & commandFocus %~ \hist -> case hist of
             Nothing -> InPresent (deferred hist)
         InPresent str -> hist
 
-runCmd :: Cmd a -> Bwd ProofContext -> (PureReact, Bwd ProofContext)
+runCmd :: Cmd a -> Bwd ProofContext -> (Pure React', Bwd ProofContext)
 runCmd cmd ctx =
     let ((_, react), ctx') = runState (runWriterT cmd) ctx
     in (react, ctx')
