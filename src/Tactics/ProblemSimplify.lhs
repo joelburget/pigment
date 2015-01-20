@@ -1,4 +1,3 @@
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, FlexibleInstances,
 >              PatternGuards, TupleSections, PatternSynonyms #-}
 
@@ -116,9 +115,9 @@ components.
 
 > simplifyGoal b (PI (SIGMA d r) t) = do
 >     simpTrace "PI SIGMA"
->     let mt =  PI d . L $ (fortran r) :. [.a.
->               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
->               t -$ [PAIR (NV a) (NV b)] ] ]
+>     let mt =  PI d . L $ (fortran r) :. (let { a = 0 :: Int } in
+>               PI (r -$ [NV a]) . L $ (fortran t) :. (let { b = 0; a = 1 } in
+>               t -$ [PAIR (NV a) (NV b)] ) )
 >     x :=>: xv <- simplifyGoal False mt
 >     ex <- annotate x mt
 >     let body = N (ex :$ A (N (V 0 :$ Fst)) :$ A (N (V 0 :$ Snd)))

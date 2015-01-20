@@ -1,7 +1,6 @@
 Observational Equality
 ======================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
 >     PatternSynonyms #-}
@@ -9,6 +8,7 @@ Observational Equality
 > module Evidences.PropositionalEquality where
 
 > import Control.Applicative
+
 > import Kit.MissingLibrary
 > import Evidences.Tm
 > import Evidences.Eval
@@ -39,25 +39,25 @@ follows,
 >   AND (eqGreen @@ [s1,p1 $$ Fst,s2,p2 $$ Fst])
 >       (eqGreen @@ [t1 $$ A (p1 $$ Fst),p1 $$ Snd,t2 $$ A (p2 $$ Fst),p2 $$ Snd])
 > opRunEqGreen [QUOTIENT a r _, CLASS x, QUOTIENT b s _, CLASS y] =
->   Right $ ALL b $ L $ "x2" :. [.x2.
+>   Right $ ALL b $ L $ "x2" :. (let { x2 = 0 } in
 >             IMP (EQBLUE ((a -$ []) :>: (x -$ [])) ((b -$ []) :>: NV x2))
->                 (s -$ [NV x2 , y -$ [] ]) ]
+>                 (s -$ [NV x2 , y -$ [] ]))
 > opRunEqGreen [QUOTIENT a r _, N x, QUOTIENT b s _, _]   = Left x
 > opRunEqGreen [QUOTIENT a r _, _,   QUOTIENT b s _, N y] = Left y
 > opRunEqGreen [UID,TAG s1,UID,TAG s2] | s1 == s2 = Right $ TRIVIAL
 > opRunEqGreen [UID,TAG _,UID,TAG _] = Right $ ABSURD
 > opRunEqGreen [C (Pi sS1 tT1), f1, C (Pi sS2 tT2), f2] = Right $
->   ALL sS1 $ L $ "s1" :.  [.s1.
->    ALL (sS2 -$ []) $ L $ "s2" :. [.s2.
+>   ALL sS1 $ L $ "s1" :.  (let { s1 = 0 :: Int } in
+>    ALL (sS2 -$ []) $ L $ "s2" :. (let { s2 = 0; s1 = 1 } in
 >     IMP  (EQBLUE ((sS1 -$ []) :>: NV s1) ((sS2 -$ []) :>: NV s2)) $
 >      (tT1 -$ [ NV s1 ] :>: f1 -$ [ NV s1 ])
->        <:-:> (tT2 -$ [ NV s2 ] :>: f2 -$ [ NV s2 ]) ] ]
+>        <:-:> (tT2 -$ [ NV s2 ] :>: f2 -$ [ NV s2 ]) ) )
 > opRunEqGreen [SET, PI sS1 tT1, SET, PI sS2 tT2] = Right $
 >    AND  ((SET :>: sS2) <-> (SET :>: sS1)) $
->          ALL sS2 $ L $ "s2" :. [.s2.
->           ALL (sS1 -$ []) $ L $ "s1" :. [.s1.
+>          ALL sS2 $ L $ "s2" :. (let { s2 = 0 :: Int } in
+>           ALL (sS1 -$ []) $ L $ "s1" :. (let { s1 = 0; s2 = 1 } in
 >            IMP  (EQBLUE ((sS2 -$ []) :>: NV s2) ((sS1 -$ []) :>: NV s1)) $
->             (SET :>: (tT1 -$ [ NV s1 ])) <:-:> (SET :>: (tT2 -$ [ NV s2 ])) ] ]
+>             (SET :>: (tT1 -$ [ NV s1 ])) <:-:> (SET :>: (tT2 -$ [ NV s2 ])) ) )
 > opRunEqGreen [SET, C (Mu (_ :?=: Id t0)), SET, C (Mu (_ :?=: Id t1))] =
 >     opRunEqGreen [desc, t0, desc, t1]
 
@@ -135,15 +135,15 @@ system, they should not inspect the proof, but may eliminate it with
 > coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > coerce Set q x = Right x
 > coerce (Pi (sS1, sS2) (tT1, tT2)) q f1 =
->   Right . L $ (fortran tT2) :. [.s2. N $
+>   Right . L $ (fortran tT2) :. (let { s2 = 0 } in N $
 >     let  (s1, sq) = coehin sS2 sS1 (CON $ q $$ Fst) (NV s2)
 >          t1 = f1 -$ [ s1 ]
 >     in   coe :@ [  tT1 -$ [ s1 ], tT2 -$ [ NV s2 ]
->                 ,  CON $ (q $$ Snd) -$ [ NV s2 , s1 , sq ] , t1 ] ]
+>                 ,  CON $ (q $$ Snd) -$ [ NV s2 , s1 , sq ] , t1 ] )
 > coerce (Mu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
 >   let typ = ARR desc (ARR ANCHORS SET)
->       vap = L $ "d" :. [.d. L $ "l" :. [.l. N $
->               descOp :@ [NV d,MU (Just $ NV l) (NV d)] ] ]
+>       vap = L $ "d" :. (let d = 0 :: Int in L $ "l" :. (let {l = 0; d = 1} in N $
+>               descOp :@ [NV d,MU (Just $ NV l) (NV d)] ) )
 >   in Right . CON $
 >     coe @@ [ descOp @@ [ d0 , MU (Just l0) d0 ]
 >            , descOp @@ [ d1 , MU (Just l1) d1 ]
@@ -153,8 +153,8 @@ system, they should not inspect the proof, but may eliminate it with
 >            , x ]
 > coerce (Mu (Nothing :?=: Id (d0,d1))) q (CON x) =
 >   let typ = ARR desc SET
->       vap = L $ "d" :. [.d. N $
->               descOp :@ [NV d,MU Nothing (NV d)] ]
+>       vap = L $ "d" :. (let d = 0 :: Int in N $
+>               descOp :@ [NV d,MU Nothing (NV d)] )
 >   in Right . CON $
 >     coe @@ [ descOp @@ [ d0 , MU Nothing d0 ]
 >            , descOp @@ [ d1 , MU Nothing d1 ]
@@ -186,29 +186,29 @@ system, they should not inspect the proof, but may eliminate it with
 >       qi  = CON $ q $$ Snd $$ Snd $$ Snd
 >       qd = CON $ q $$ Snd $$ Snd $$ Fst
 >       typ =
->         PI SET $ L $ "iI" :. [.iI.
+>         PI SET $ L $ "iI" :. (let { iI = 0 } in
 >          ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
 >           ARR (NV iI) $
->            ARR (ARR (NV iI) ANCHORS) SET ]
+>            ARR (ARR (NV iI) ANCHORS) SET )
 >       vap =
->         L $ "iI" :. [.iI.
->          L $ "d" :. [.d.
->           L $ "i" :. [.i.
->            L $ "l" :. [.l. N $
+>         L $ "iI" :. (let { iI = 0 :: Int } in
+>          L $ "d" :. (let { d = 0; iI = 1 } in
+>           L $ "i" :. (let { i = 0; d = 1; iI = 2} in
+>            L $ "l" :. (let { l = 0; i = 1; d = 2; iI = 3 } in N $
 >             idescOp :@ [ NV iI , N (V d :$ A (NV i))
->                        , L $ "j" :. [.j.
->                           IMU (|(NV l)|) (NV iI) (NV d) (NV j)]
->                        ] ] ] ] ]
+>                        , L $ "j" :. (let { j = 0; l = 1; i = 2; d = 3; iI = 4 } in
+>                           IMU (pure (NV l)) (NV iI) (NV d) (NV j))
+>                        ] ) ) ) )
 >   in Right . CON $
 >     coe @@ [ idescOp @@ [  iI0, d0 $$ A i0
->                         ,  L $ "i" :. [.i.
->                             IMU (|(l0 -$ [])|) (iI0 -$ []) (d0 -$ []) (NV i)
->                            ]
+>                         ,  L $ "i" :. (let { i = 0 :: Int } in
+>                             IMU (pure (l0 -$ [])) (iI0 -$ []) (d0 -$ []) (NV i)
+>                            )
 >                         ]
 >            , idescOp @@ [  iI1, d1 $$ A i1
->                         ,  L $ "i" :. [.i.
->                             IMU (|(l1 -$ [])|) (iI1 -$ []) (d1 -$ []) (NV i)
->                            ]
+>                         ,  L $ "i" :. (let { i = 0 :: Int } in
+>                             IMU (pure (l1 -$ [])) (iI1 -$ []) (d1 -$ []) (NV i)
+>                            )
 >                         ]
 >            , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                              $$ A iI0 $$ A iI1 $$ A qiI
@@ -221,24 +221,24 @@ system, they should not inspect the proof, but may eliminate it with
 >       qi  = CON $ q $$ Snd $$ Snd
 >       qd = CON $ q $$ Snd $$ Fst
 >       typ =
->         PI SET $ L $ "iI" :. [.iI.
+>         PI SET $ L $ "iI" :. (let { iI = 0 :: Int } in
 >          ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
->           ARR (NV iI) SET ]
+>           ARR (NV iI) SET )
 >       vap =
->         L $ "iI" :. [.iI.
->          L $ "d" :. [.d.
->           L $ "i" :. [.i. N $
+>         L $ "iI" :. (let { iI = 0 :: Int } in
+>          L $ "d" :. (let { d = 0; iI = 1 } in
+>           L $ "i" :. (let { i = 0; d = 1; iI = 2 } in N $
 >             idescOp :@ [ NV iI , N (V d :$ A (NV i))
->                        , L $ "j" :. [.j.
->                           IMU Nothing (NV iI) (NV d) (NV j)]
->                        ] ] ] ]
+>                        , L $ "j" :. (let { j = 0; i = 1; d = 2; iI = 3 } in
+>                           IMU Nothing (NV iI) (NV d) (NV j))
+>                        ] ) ) )
 >   in Right . CON $
 >     coe @@ [ idescOp @@ [ iI0 , d0 $$ A i0
->                         , L $ "i" :. [.i.
->                             IMU Nothing (iI0 -$ []) (d0 -$ []) (NV i) ] ]
+>                         , L $ "i" :. (let { i = 0 :: Int } in
+>                             IMU Nothing (iI0 -$ []) (d0 -$ []) (NV i) ) ]
 >            , idescOp @@ [ iI1 , d1 $$ A i1
->                         , L $ "i" :. [.i.
->                             IMU Nothing (iI1 -$ []) (d1 -$ []) (NV i) ] ]
+>                         , L $ "i" :. (let { i = 0 :: Int } in
+>                             IMU Nothing (iI1 -$ []) (d1 -$ []) (NV i) ) ]
 >            , CON $ pval refl $$ A typ $$ A vap $$ Out
 >                              $$ A iI0 $$ A iI1 $$ A qiI
 >                              $$ A d0 $$ A d1 $$ A qd
@@ -249,8 +249,8 @@ system, they should not inspect the proof, but may eliminate it with
 > -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > coerce (Nu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
 >   let typ = ARR desc (ARR SET SET)
->       vap = L $ "d" :. [.d. L $ "l" :. [.l. N $
->               descOp :@ [NV d,NU (Just $ NV l) (NV d)] ] ]
+>       vap = L $ "d" :. (let { d = 0 :: Int } in L $ "l" :. (let { l = 0; d = 1 } in N $
+>               descOp :@ [NV d,NU (Just $ NV l) (NV d)]))
 >   in Right . CON $
 >     coe @@ [ descOp @@ [ d0 , NU (Just l0) d0 ]
 >            , descOp @@ [ d1 , NU (Just l1) d1 ]
@@ -260,8 +260,8 @@ system, they should not inspect the proof, but may eliminate it with
 >            , x ]
 > coerce (Nu (Nothing :?=: Id (d0,d1))) q (CON x) =
 >   let typ = ARR desc SET
->       vap = L $ "d" :. [.d. N $
->               descOp :@ [NV d,NU Nothing (NV d)] ]
+>       vap = L $ "d" :. (let { d = 0 :: Int } in N $
+>               descOp :@ [NV d,NU Nothing (NV d)])
 >   in Right . CON $
 >     coe @@ [ descOp @@ [ d0 , NU Nothing d0 ]
 >            , descOp @@ [ d1 , NU Nothing d1 ]

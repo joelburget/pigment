@@ -1,7 +1,6 @@
 <a name="Elaboration.MakeElab">Using the `Elab` language</a>
 =========================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternSynonyms,
 >     DataKinds #-}
 
@@ -124,13 +123,13 @@ with the `eElab` instruction, providing a syntactic representation.
 > subElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
 > subElabInfer loc tm = eCompute (sigSetVAL :>: makeElabInfer loc tm)
 
-> inductionOpLabMethodType = L $ "l" :. [.l.
->                    L $ "d" :. [.d.
->                    L $ "P" :. [._P.
->                    PI (N $ descOp :@ [NV d, MU (|(NV l)|) (NV d)])
->                       (L $ "x" :. [.x.
->                        ARR (N $ boxOp :@ [NV d, MU (|(NV l)|) (NV d), NV _P, NV x])
->                            (N (V _P :$ A (CON (NV x)))) ]) ] ] ]
+> inductionOpLabMethodType = L $ "l" :. (let { l = 0 :: Int } in
+>                    L $ "d" :. (let { d = 0; l = 1 } in
+>                    L $ "P" :. (let { _P = 0; d = 1; l = 2 } in
+>                    PI (N $ descOp :@ [NV d, MU (pure (NV l)) (NV d)])
+>                       (L $ "x" :. (let { x = 0; _P = 1; d = 2; l = 3 } in
+>                        ARR (N $ boxOp :@ [NV d, MU (pure (NV l)) (NV d), NV _P, NV x])
+>                            (N (V _P :$ A (CON (NV x)))) )) ) ) )
 
 Since we frequently pattern-match on the goal type when elaborating `In`
 terms, we abstract it out. Thus `makeElab'` actually implements
@@ -246,9 +245,9 @@ a function from a pair.
 >     tm :=>: tmv <- subElab loc (t $$ A VOID :>: f)
 >     return $ LK tm :=>: LK tmv
 > makeElab' loc (PI (SIGMA d r) t :>: DCON f) = do
->     let mt =  PI d . L $ (fortran r) :. [.a.
->               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
->               t -$ [PAIR (NV a) (NV b)] ] ]
+>     let mt =  PI d . L $ (fortran r) :. (let { a = 0 :: Int } in
+>               PI (r -$ [NV a]) . L $ (fortran t) :. (let { b = 0; a = 1 } in
+>               t -$ [PAIR (NV a) (NV b)] ) )
 >     mt'  :=>: _    <- eQuote mt
 >     tm   :=>: tmv  <- subElab loc (mt :>: f)
 >     x <- eLambda (fortran t)
@@ -356,7 +355,7 @@ function at the given type.
 
 > makeElabInferHead :: Loc -> DHEAD -> Elab (INTM :=>: VAL, Maybe (Scheme INTM))
 > makeElabInferHead loc (DP rn)     = eResolve rn
-> makeElabInferHead loc (DTEX tm)   = (| (eInfer tm) , ~Nothing |)
+> makeElabInferHead loc (DTEX tm)   = (, Nothing) <$> eInfer tm
 > makeElabInferHead loc (DType ty)  = do
 >     tm :=>: v <- subElab loc (SET :>: ty)
 >     return (typeAnnotTM tm :=>: typeAnnotVAL v, Nothing)

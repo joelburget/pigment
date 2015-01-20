@@ -1,7 +1,6 @@
 Datatype declaration
 ====================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternSynonyms #-}
 
 > module Tactics.IData where
@@ -148,7 +147,7 @@ Datatype declaration
 >       (allowingTy, allowedBy)  =  imkAllowed ("i", indtye, NV 0) pars'
 >                         -- XXX(joel) NV 0 refers to the .i. in the giveOut}
 >       label                    =  ANCHOR (TAG nom) allowingTy allowedBy
->   (dty :=>: dtyv) <- giveOutBelow (IMU (Just (L $ "i" :. [.i. label])) (N indtye) d (NP i))
+>   (dty :=>: dtyv) <- giveOutBelow (IMU (Just (L $ "i" :. (let { i = 0 :: Int } in label))) (N indtye) d (NP i))
 
 We specialise the induction operator to this datatype, ensuring the
 label is assigned throughout, so the label will be preserved when
@@ -169,7 +168,7 @@ principles (:
 >                            :$ A (NP i) :$ A (NP v)
 >       caseV :<: caseTy <- inferHere caseTm
 >       caseTy' <- bquoteHere caseTy
->       moduleToGoal (isetLabel (L $ "i" :. [.i. label]) caseTy')
+>       moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) caseTy')
 >       giveOutBelow (N caseTm)
 >       return ()) `catchError` \_ -> return ()
 >   (do (dind,_,_) <- resolveHere [("TData",Rel 0),("tind",Rel 0)]
@@ -183,13 +182,13 @@ principles (:
 >                          :$ A (NP i) :$ A (NP v)
 >       dindV :<: dindTy <- inferHere dindT
 >       dindTy' <- bquoteHere dindTy
->       moduleToGoal (isetLabel (L $ "i" :. [.i. label]) dindTy')
+>       moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) dindTy')
 >       giveOutBelow (N dindT)
 >       return ()) `catchError` \_ ->
 >     (do let indTm = P (lookupOpRef iinductionOp) :$ A (N indtye) :$ A d
 >         indV :<: indTy <- inferHere indTm
 >         indTy' <- bquoteHere indTy
->         make (AnchInd :<: isetLabel (L $ "i" :. [.i. label]) indTy')
+>         make (AnchInd :<: isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) indTy')
 >         goIn
 >         giveOutBelow (N indTm)
 >         return ())

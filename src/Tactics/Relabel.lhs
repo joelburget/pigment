@@ -1,7 +1,6 @@
 Relabelling
 ===========
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards,
 >              FlexibleContexts, PatternSynonyms #-}
 
@@ -187,7 +186,8 @@ Similarly for indexed data types:
 >     sameTag      <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
 >     unless sameTag $ throwError $ sErr "relabel: mismatched tags!"
 >     relabelValue (idescOp @@ [_I, f t,
->         L $ "i" :. [.i. IMU (fmap (-$ []) l) (_I -$ []) (d -$ []) (NV i)] ]
+>         L $ "i" :. (let i = 0 in
+>                     IMU (fmap (-$ []) l) (_I -$ []) (d -$ []) (NV i)) ]
 >             :>: (foldr DPAIR DU as, xs))
 
 Lest we forget, tags may also belong to enumerations!

@@ -1,7 +1,6 @@
 <a name="Distillation.Distiller">The distiller</a>
 =============
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms,
 >     DataKinds, LiberalTypeSynonyms #-}
 
@@ -130,9 +129,9 @@ return refl instead.
 >     m   :=>: tv  <- distill es (ENUMT e :>: t)
 >     as  :=>: xv  <-
 >       distill es (idescOp @@ [  _I,f tv
->                              ,  L $ "i" :. [.i.
+>                              ,  L $ "i" :. (let { i = 0 :: Int } in
 >                                   IMU (fmap (-$ []) l)
->                                       (_I -$ []) (s -$ []) (NV i)]
+>                                       (_I -$ []) (s -$ []) (NV i))
 >                              ] :>: x)
 >     case m of
 >         DTAG s   -> return $ DTag s (unfold as)  :=>: CON (PAIR tv xv)

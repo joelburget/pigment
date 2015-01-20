@@ -1,7 +1,6 @@
 Elimination with a Motive
 =========================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternGuards,
 >     PatternSynonyms, DataKinds #-}
 
@@ -572,9 +571,9 @@ sigma-type, then `currySigma d r t` is the curried function type that
 takes the projections separately.
 
 > currySigma :: VAL -> VAL -> VAL -> VAL
-> currySigma d r t = PI d . L $ (fortran r) :. [.a.
->               PI (r -$ [NV a]) . L $ (fortran t) :. [.b.
->               t -$ [PAIR (NV a) (NV b)]]]
+> currySigma d r t = PI d . L $ (fortran r) :. (let { a = 0 :: Int } in
+>               PI (r -$ [NV a]) . L $ (fortran t) :. (let { b = 0; a = 1 } in
+>               t -$ [PAIR (NV a) (NV b)]))
 
 Simplifying constraints
 

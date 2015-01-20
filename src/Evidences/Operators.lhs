@@ -356,7 +356,7 @@ any auxiliary code.
 >          , opRun = oprun
 >          , opSimp = \ [sS, tT, _, s] r -> case s of
 >              N s | equal (SET :>: (sS, tT)) r -> pure s
->              _ -> (|)
+>              _ -> empty
 >          } where
 >          oprun :: [VAL] -> Either NEU VAL
 >          oprun [_S, _T, q, v] | partialEq _S _T q = Right v
@@ -382,7 +382,7 @@ any auxiliary code.
 >          , opSimp = \ [_S, _T, _, s] r ->
 >              if equal (SET :>: (_S, _T)) r
 >                then pure $ P refl :$ A _S :$ A s
->                else (|)
+>                else empty
 >          } where
 >          oprun :: [VAL] -> Either NEU VAL
 >          oprun [_S, _T, q, s] | partialEq _S _T q =
