@@ -161,9 +161,9 @@ Note that this assumes we are at the top level.
 >         q    <- lambdaParam "qe"
 >         _X'  <- bquoteHere _X
 >         x'   <- bquoteHere x
->         let  ety  =  PI (ARR _X SET) $ L $ "P" :. [._P.
+>         let  ety  =  PI (ARR _X SET) $ L $ "P" :. (let { _P = 0 :: Int } in
 >                          ARR (N (V _P :$ A x')) (N (V _P :$ A (NP y)))
->                      ]
+>                      )
 >              ex   =  P substEq :$ A _X' :$ A x' :$ A (NP y) :$ A (NP q)
 >         elimSimplify (ety :>: ex)
 >         neutralise =<< getCurrentDefinition
@@ -175,9 +175,9 @@ Note that this assumes we are at the top level.
 >         q    <- lambdaParam "qe"
 >         _X'  <- bquoteHere _X
 >         x'   <- bquoteHere x
->         let  ety  =  PI (ARR _X SET) $ L $ "P" :. [._P.
+>         let  ety  =  PI (ARR _X SET) $ L $ "P" :. (let { _P = 0 :: Int } in
 >                          ARR (N (V _P :$ A x')) (N (V _P :$ A (NP y)))
->                      ]
+>                      )
 >              ex   =  P substEq :$ A _X' :$ A x' :$ A (NP y) :$ A
 >                          (N (P symEq :$ A _X' :$ A (NP y) :$ A x' :$ A (NP q)))
 >         elimSimplify (ety :>: ex)
