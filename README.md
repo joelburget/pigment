@@ -1,5 +1,7 @@
 # Pigment
 
+[![](http://pigment.herokuapp.com/badge.svg)](http://pigment.herokuapp.com)
+
 [Pigment](http://pigment.io) is an experiment in programming language design. It's built on top of
 the incredible Epigram programming language.
 
