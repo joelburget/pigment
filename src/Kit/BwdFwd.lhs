@@ -2,7 +2,8 @@ BwdFwd
 ======
 
 > {-# LANGUAGE  TypeOperators, TypeSynonymInstances, TypeFamilies,
->               FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
+>               FlexibleInstances, FlexibleContexts, UndecidableInstances,
+>               DeriveGeneric #-}
 
 > module Kit.BwdFwd where
 
@@ -10,15 +11,23 @@ BwdFwd
 > import Data.Foldable hiding (foldl, foldr)
 > import Data.Traversable
 > import Control.Applicative
+> import GHC.Generics
+
+> import GHCJS.Marshal
+
 > import Kit.MissingLibrary
 
 Backward and forward lists, applicative with zipping.
 
-> data Bwd x = B0 | Bwd x :< x deriving (Show, Eq)
+> data Bwd x = B0 | Bwd x :< x deriving (Show, Eq, Generic)
 > infixl 5 :<
 
-> data Fwd x = F0 | x :> Fwd x deriving (Show, Eq)
+> instance FromJSRef x => FromJSRef (Bwd x) where
+
+> data Fwd x = F0 | x :> Fwd x deriving (Show, Eq, Generic)
 > infixr 5 :>
+
+> instance FromJSRef x => FromJSRef (Fwd x) where
 
 > bwdList :: [x] -> Bwd x
 > bwdList = foldl (:<) B0

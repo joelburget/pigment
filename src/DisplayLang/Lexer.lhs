@@ -24,7 +24,7 @@ Sequences of non-whitespace are identifiers unless they're keywords.
 > import Data.List
 > import Data.Char
 > import Kit.Parsley
-> import Kit.MissingLibrary
+> import Kit.MissingLibrary hiding (void)
 
 What are tokens?
 ----------------

@@ -19,6 +19,9 @@ web:
 src/css/index.css: src/css/index.less
 	cd src/css; lessc index.less index.css --autoprefix=""; cd -
 
+src/js/out.js: src/js/react.js src/js/support.js
+	cd src/js; ./node_modules/bin/browserify support.js -o out.js; cd -
+
 install_less_deps:
 	npm install -g less less-plugin-autoprefix
 

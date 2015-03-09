@@ -8,6 +8,7 @@
 > module DisplayLang.Reactify where
 
 > import Data.List
+> import Data.Monoid ((<>))
 > import Data.String (fromString)
 > import ProofState.Structure.Developments
 > import DisplayLang.DisplayTm
@@ -18,14 +19,14 @@
 > import Kit.BwdFwd
 > import Kit.MissingLibrary hiding ((<>))
 
-> import Haste.Prim
+> -- import Haste.Prim
 > import React hiding (key)
 
 The `reactKword` function gives a react element representing a `Keyword`.
 
 > reactKword :: Keyword -> React a b c ()
 > reactKword kw =
->     span_ [ class_ (catJSStr "" ["kw ", fromString (show kw)]) ] $
+>     span_ [ class_ ("kw " {- XXX <> fromString (show kw)-}) ] $
 >         fromString (key kw)
 
 > parens :: Pure React' -> Pure React'
@@ -138,7 +139,7 @@ a $\lambda$-term is reached.
 > reactLambda vs (DL s) = reactLambda (vs :< dScopeName s) (dScopeTm s)
 > reactLambda vs tm = do
 >     reactKword KwLambda
->     fromString $ intercalate " " $ trail vs
+>     fromString $ unwords $ trail vs
 >     reactKword KwArr
 >     reactify tm
 
@@ -161,7 +162,7 @@ a $\lambda$-term is reached.
 >         reactKword KwTag
 >         fromString name
 >         mapM_ reactify tms
->     reactify indtm           = fromString $ show $ indtm
+>     reactify indtm           = fromString $ show indtm
 
 > instance Reactive DExTmRN where
 >     reactify (n ::$ els)  = reactify n >> mapM_ reactify els
@@ -184,7 +185,7 @@ a $\lambda$-term is reached.
 > reactifyEnumIndex n DZE      = fromString $ show n
 > reactifyEnumIndex n (DSU t)  = reactifyEnumIndex (succ n) t
 > reactifyEnumIndex n tm       = do
->     (fromString (show n))
+>     fromString (show n)
 >     reactKword KwPlus
 >     reactify tm
 
@@ -243,4 +244,4 @@ The `Elim` functor is straightforward.
 >     reactify (A t)  = reactify t
 >     reactify Out    = reactKword KwOut
 >     reactify (Call _) = reactKword KwCall
->     reactify elim   = fromString $ show $ elim
+>     reactify elim   = fromString $ show elim

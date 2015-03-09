@@ -42,20 +42,26 @@ import Cochon.Tactics
 
 import Kit.BwdFwd
 
-import Haste hiding (fromString, prompt, focus)
-import Haste.DOM (withElem)
-import Haste.JSON
-import Haste.Prim
+-- import Haste hiding (fromString, prompt, focus)
+-- import Haste.DOM (withElem)
+-- import Haste.JSON
+-- import Haste.Prim
+import GHCJS.Types
+import GHCJS.DOM (runWebGUI, currentDocument)
+import GHCJS.DOM.Document (documentGetElementById, documentGetDocumentElement)
 import React hiding (key)
 import qualified React
 
 -- We start out here. Main calls `cochon emptyContext`.
 
 cochon :: ProofContext -> IO ()
-cochon loc = withElem "inject" $ \e -> do
+-- cochon loc = withElem "inject" $ \e -> do
+cochon loc = do -- runWebGUI $ \webview -> do
+    Just doc <- currentDocument
+    Just e <- documentGetElementById doc ("inject" :: JSString)
     let startCtx = B0 :< loc
     validateDevelopment startCtx
-    cls <- createClass page animDispatch (startState startCtx) () []
+    cls <- createClassCrazy page animDispatch (startState startCtx) () []
     render e cls
     return ()
 

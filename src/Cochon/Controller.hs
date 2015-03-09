@@ -70,8 +70,9 @@ import Tactics.Unification
 
 import Lens.Family2
 
-import Haste hiding (fromString, prompt, focus)
-import Haste.Prim
+-- import Haste hiding (fromString, prompt, focus)
+-- import Haste.Prim
+import GHCJS.Foreign
 import React hiding (key)
 import qualified React
 
@@ -110,7 +111,7 @@ handleKey KeyboardEvent{React.key="ArrowDown"} = Just $ CommandKeypress DownArro
 handleKey _ = Nothing
 
 handleCmdChange :: ChangeEvent -> Maybe Transition
-handleCmdChange = Just . CommandTyping . fromJSStr . targetValue
+handleCmdChange = Just . CommandTyping . fromJSString . targetValue
 
 animDispatch :: Transition
              -> InteractionState

@@ -2,18 +2,65 @@
 <html>
     <head>
         <meta charset='utf-8'>
-        <title>pigment</title>
+        <title>Pigment</title>
         <link rel="icon" type="image/x-icon" href="favicon.ico">
-        <link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
-        <link href="http://code.ionicframework.com/ionicons/2.0.0/css/ionicons.min.css" media="all" rel="stylesheet">
-        <link href="css/index.css" media="all" rel="stylesheet">
+        <link href='http://fonts.googleapis.com/css?family=Cutive+Mono' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="css/fixedsticky.css">
         <meta name="author" content="Joel Burget (joelburget@gmail.com)">
         <meta name="copyright" content="Copyright &copy; Joel Burget">
-        <meta name="keywords" content="programming types dependent-types functional compiler proof">
+        <meta name="keywords" content="keywords">
+        <style>
+body {
+    color: rgb(113, 143, 199);
+    font-family: 'Open Sans', monospace;
+    font-size: 20px;
+}
+main {
+    width: 1000px;
+}
+h2 {
+    font-family: "Open Sans",sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+iframe {
+    position: relative;
+    top: 4px;
+}
+.divider {
+    background-image: url(divider.png);
+    width: 300px;
+    height: 300px;
+    margin-top: -116px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.sticky {
+    position: fixed;
+    top: 0;
+}
+        </style>
     </head>
     <body>
-        <div id="inject"></div>
-        <script type="text/javascript" src="./js/react.js"></script>
-        <script type="text/javascript" src="./Main.js"></script>
+        <main>
+            <img alt="pigment" src="full-logo-2.png" />
+            <div class="divider"></div>
+            <h2>Programming Language, Designed</h2>
+            <div class="fold">
+                <div id="stickyheader"></div>
+            <p>Pigment is an experiment in programming language design. We're taking modern programming language research and putting it in a helpful, interactive environment in the browser.</p>
+            <div>
+                Come chat about the project
+                <script async defer src="http://pigment.herokuapp.com/slackin.js"></script>
+                or check out the code
+                <iframe src="https://ghbtns.com/github-btn.html?user=joelburget&repo=pigment&type=star&count=true" frameborder="0" scrolling="0" width="80px" height="20px"></iframe>
+                <iframe src="https://ghbtns.com/github-btn.html?user=joelburget&repo=pigment&type=fork&count=true" frameborder="0" scrolling="0" width="80px" height="20px"></iframe>
+            </div>
+            </div>
+        </main>
+        <script src="js/bundle.js"></script>
     </body>
 </html>

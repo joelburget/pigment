@@ -50,6 +50,8 @@ HalfZip
 Functor Kit
 -----------
 
+TODO(joel) replace with Identity, Constant, Sum, Product
+
 > newtype Id       x = Id {unId :: x}        deriving Show
 > newtype Ko a     x = Ko {unKo :: a}        deriving Show
 > data (p :+: q)  x = Le (p x) | Ri (q x)    deriving Show
@@ -80,7 +82,7 @@ Functor Kit
 > instance (Traversable p, Traversable q) => Foldable (p :*: q) where
 >     foldMap = foldMapDefault
 
-TODO replace with version from recursion-schemes
+TODO(joel) replace with version from recursion-schemes
 
 > newtype Fix f = InF (f (Fix f))  -- tying the knot
 

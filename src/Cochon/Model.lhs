@@ -1,5 +1,5 @@
 \begin{code}
-{-# LANGUAGE LiberalTypeSynonyms #-}
+{-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric #-}
 
 module Cochon.Model where
 
@@ -8,6 +8,7 @@ import Control.Monad.State
 import Control.Monad.Writer
 import Data.Ord
 import Data.String
+import GHC.Generics
 
 import Cochon.CommandLexer
 import DisplayLang.Lexer
@@ -16,6 +17,7 @@ import Kit.ListZip
 import Kit.Parsley
 import ProofState.Edition.ProofContext
 
+import GHCJS.Marshal
 import Lens.Family2
 import React
 
@@ -49,7 +51,7 @@ data CochonTactic = CochonTactic
     , ctParse  :: Parsley Token (Bwd CochonArg)
     , ctxTrans :: [CochonArg] -> Cmd ()
     , ctHelp   :: Either (Pure React') TacticHelp
-    }
+    } deriving Generic
 
 instance Show CochonTactic where
     show = ctName
@@ -78,9 +80,9 @@ data TacticHelp = TacticHelp
     , argHelp :: [(String, String)]
     }
 
-data Pane = Log | Commands | Settings deriving Eq
+data Pane = Log | Commands | Settings deriving (Eq, Generic)
 
-data Visibility = Visible | Invisible deriving Eq
+data Visibility = Visible | Invisible deriving (Eq, Generic)
 
 toggleVisibility :: Visibility -> Visibility
 toggleVisibility Visible = Invisible
@@ -104,7 +106,7 @@ first two fields.
 \begin{code}
     , commandParsed :: Either String CTData -- is this really necessary?
     , commandOutput :: Pure React'
-    }
+    } deriving Generic
 \end{code}
 
 we presently need to be able to add a latest, move to earlier / later, and get
@@ -119,11 +121,13 @@ data CommandFocus
         , current :: ListZip Command
         }
     | InPresent String
+    deriving Generic
 
 data AutocompleteState
     = CompletingTactics (ListZip CochonTactic)
     | CompletingParams CochonTactic
     | Stowed
+    deriving Generic
 
 data InteractionState = InteractionState
     { _proofCtx :: Bwd ProofContext
@@ -152,10 +156,17 @@ quite cumbersome.
 \begin{code}
     , _rightPaneVisible :: Visibility
     , _currentPane :: Pane
-    }
-\end{code}
+    } deriving (Generic)
 
-\begin{code}
+-- instance FromJSRef InteractionState where
+-- instance FromJSRef CommandFocus where
+-- instance FromJSRef AutocompleteState where
+-- instance FromJSRef Pane where
+-- instance FromJSRef Visibility where
+-- instance FromJSRef Command where
+-- instance FromJSRef ProofContext where
+-- instance FromJSRef CochonTactic where
+
 startState :: Bwd ProofContext -> InteractionState
 startState pc = InteractionState pc (InPresent "") F0 Stowed Visible Log
 

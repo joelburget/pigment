@@ -67,9 +67,10 @@ import Tactics.Relabel
 import Tactics.ShowHaskell
 import Tactics.Unification
 
-import Haste hiding (fromString, prompt, focus)
-import Haste.Prim
-import Haste.Foreign
+-- import Haste hiding (fromString, prompt, focus)
+-- import Haste.Prim
+-- import Haste.Foreign
+import GHCJS.Foreign
 import Lens.Family2
 import React
 
@@ -167,7 +168,7 @@ prompt :: InteractionState -> InteractionReact
 prompt state = div_ [ class_ "prompt" ] $ do
     locally promptArrow
     input_ [ class_ "prompt-input"
-           , value_ (toJSStr (userInput state))
+           , value_ (toJSString (userInput state))
            , autofocus_ True
            , onChange handleCmdChange
            , onKeyDown handleKey
