@@ -5,6 +5,10 @@ dist/
 *.hi
 *.o-boot
 *.hi-boot
+*.js_o
+*.js_hi
+*.js_o-boot
+*.js_hi-boot
 *.hspp
 *.dvi
 *.pdf
