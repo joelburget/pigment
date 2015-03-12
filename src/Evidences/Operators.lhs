@@ -1,10 +1,8 @@
 <a name="Evidences.Operators">Operators and primitives</a>
 ========================
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
-> {-# LANGUAGE TypeOperators, GADTs, KindSignatures, PatternSynonyms,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
->     DataKinds #-}
+> {-# LANGUAGE TypeOperators, GADTs, PatternSynonyms,
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, DataKinds #-}
 
 > module Evidences.Operators where
 
@@ -69,7 +67,7 @@ any auxiliary code.
 > mkLazyEnumDef :: VAL -> EnumDispatchTable -> Either NEU VAL
 > mkLazyEnumDef arg (nilECase, consECase) = let args = arg $$ Snd in
 >     case arg $$ Fst of
->         NILN   -> Right $ nilECase
+>         NILN   -> Right nilECase
 >         CONSN  -> Right $ consECase (args $$ Fst) (args $$ Snd $$ Fst)
 >         N t    -> Left t
 >         _      -> error "mkLazyEnumDef: invalid constructor!"
@@ -83,17 +81,17 @@ any auxiliary code.
 >       [ {-ID-} oTup $ OLam $ \_X -> ORet _X
 >       , {-CONST-} oTup $ \_A -> OLam $ \_X -> ORet _A
 >       , {-SUM-} oTup $ \_E _D -> OLam $ \_X -> ORet $
->                   SIGMA (ENUMT _E) $ L $ "c" :. [.c. N $
->                      descOp :@ [_D -$ [NV c], _X -$ []]]
+>                   SIGMA (ENUMT _E) $ L $ "c" :. (let c = 0 :: Int in N $
+>                      descOp :@ [_D -$ [NV c], _X -$ []])
 >       , {-PROD-} oTup $ \u _D _D' -> OLam $ \_X -> ORet $
 >                   SIGMA (descOp @@ [_D, _X])
->                         (L $ (unTag u) :. (N $ descOp :@ [_D' -$ [], _X -$ []]))
+>                         (L $ unTag u :. (N $ descOp :@ [_D' -$ [], _X -$ []]))
 >       , {-SIGMA-} oTup $ \_S _D -> OLam $ \_X -> ORet $
->                   SIGMA _S $ L $ (fortran _D) :. [.s. N $
->                     descOp :@ [_D -$ [NV s], _X -$ []]]
+>                   SIGMA _S $ L $ fortran _D :. (let s = 0 :: Int in N $
+>                     descOp :@ [_D -$ [NV s], _X -$ []])
 >       , {-PI-} oTup $ \_S _D -> OLam $ \_X -> ORet $
->                   PI _S $ L $ (fortran _D) :. [.s. N $
->                     descOp :@ [_D -$ [NV s], _X -$ []]]
+>                   PI _S $ L $ fortran _D :. (let s = 0 :: Int in N $
+>                     descOp :@ [_D -$ [NV s], _X -$ []])
 >       ]
 >   , opSimp = \_ _ -> empty
 >   } where
@@ -118,12 +116,12 @@ any auxiliary code.
 >            ORet $ boxOp @@ [_D $$ A c, _X, _P, d]
 >       , {-PROD-} oTup $ \u _D _D' -> oLams $ \_X _P -> OPr $ oLams $ \d d' ->
 >            ORet $ SIGMA (boxOp @@ [_D, _X, _P, d]) (L $ (unTag u ++ "h") :.
->                      (N (boxOp :@ [_D' -$ [], _X -$ [], _P -$ [], d' -$ []])))
+>                      N (boxOp :@ [_D' -$ [], _X -$ [], _P -$ [], d' -$ []]))
 >       , {-SIGMA-} oTup $ \ () _D -> oLams $ \_X _P -> OPr $ oLams $ \s d ->
 >            ORet $ boxOp @@ [_D $$ A s, _X, _P, d]
 >       , {-PI-} oTup $ \_S _D -> oLams $ \_X _P f ->
->            ORet $ PI _S $ L $ (fortran _D) :. [.s. N $
->               boxOp :@ [_D -$ [NV s], _X -$ [] , _P -$ [] , f -$ [NV s]]]
+>            ORet $ PI _S $ L $ fortran _D :. (let s = 0 :: Int in N $
+>               boxOp :@ [_D -$ [NV s], _X -$ [] , _P -$ [] , f -$ [NV s]])
 >       ]
 >   , opSimp = \_ _ -> empty
 >   } where
@@ -149,9 +147,9 @@ any auxiliary code.
 >     , {-SIGMA-} oTup $ \ () _D -> oLams $ \_X _P p -> OPr $ oLams $ \s d ->
 >          ORet $ mapBoxOp @@ [_D $$ A s, _X, _P, p, d]
 >     , {-PI-} oTup $ \() _D -> oLams $ \_X _P p f ->
->          ORet $ L $ (fortran _D) :. [.s. N $
+>          ORet $ L $ (fortran _D) :. (let s = 0 :: Int in N $
 >            mapBoxOp :@ [_D -$ [NV s], _X -$ [] , _P -$ [] , p -$ [],
->                          f -$ [NV s]]]
+>                          f -$ [NV s]])
 >     ]
 >   , opSimp = \_ _ -> empty
 >   } where
@@ -159,7 +157,7 @@ any auxiliary code.
 >       "D" :<: desc :-: \ dD ->
 >       "X" :<: SET :-: \ xX ->
 >       "P" :<: ARR xX SET :-: \ pP ->
->       "p" :<: (PI xX $ L $ "x" :. [.x. pP -$ [ NV x ] ]) :-: \ _ ->
+>       "p" :<: (PI xX $ L $ "x" :. (let x = 0 :: Int in pP -$ [ NV x ] )) :-: \ _ ->
 >       "v" :<: (descOp @@ [dD,xX]) :-: \v ->
 >        Target (boxOp @@ [dD,xX,pP,v])
 > mapOp = Op
@@ -177,9 +175,9 @@ any auxiliary code.
 >     , {-SIGMA-} oTup $ \ () _D -> oLams $ \_X _Y f -> OPr $ oLams $ \s d ->
 >          ORet $ PAIR s (mapOp @@ [_D $$ A s, _X, _Y, f, d])
 >     , {-PI-} oTup $ \() _D -> oLams $ \_X _Y f g ->
->          ORet $ L $ (fortran _D) :. [.s. N $
+>          ORet $ L $ (fortran _D) :. (let s = 0 :: Int in N $
 >            mapOp :@ [_D -$ [NV s], _X -$ [] , _Y -$ [] , f -$ [],
->                          g -$ [NV s]]]
+>                          g -$ [NV s]])
 >     ]
 >   , opSimp  = mapOpSimp
 >   } where
@@ -195,11 +193,11 @@ any auxiliary code.
 >         | equal (SET :>: (xX, yY)) r &&
 >           equal (ARR xX yY :>: (f, identity)) r = pure v
 >         where
->           identity = L $ "x" :. [.x. NV x]
+>           identity = L $ "x" :. (let x = 0 :: Int in NV x)
 >       mapOpSimp [dD, _, zZ, f, N (mOp :@ [_, xX, _, g, N v])] r
 >         | mOp == mapOp = mapOpSimp args r <|> pure (mapOp :@ args)
 >         where
->           comp f g = L $ "x" :. [.x. f -$ [g -$ [NV x]]]
+>           comp f g = L $ "x" :. (let x = 0 :: Int in f -$ [g -$ [NV x]])
 >           args = [dD, xX, zZ, comp f g, N v]
 >       mapOpSimp _ _ = empty
 
@@ -211,8 +209,8 @@ any auxiliary code.
 >   , opRun = {-inductionOpRun-} runOpTree $
 >       OLam $ \ _D -> OCon $ oLams $ \ v _P p -> ORet $
 >         p $$ A v $$ A (mapBoxOp @@ [_D, MU Nothing _D, _P,
->           L $ "x" :. [.x. N $
->            inductionOp :@ [_D -$ [], NV x, _P -$ [], p -$ []]], v])
+>           L $ "x" :. (let x = 0 :: Int in N $
+>            inductionOp :@ [_D -$ [], NV x, _P -$ [], p -$ []]), v])
 >   , opSimp = \_ _ -> empty
 >   } where
 >     inductionOpTy =
@@ -254,12 +252,12 @@ any auxiliary code.
 >       proj 0 bs = ORet (bs $$ Fst)
 >       proj i bs = (proj (i - 1) (bs $$ Snd))
 
-> inductionOpMethodType = L $ "d" :. [.d.
->                    L $ "P" :. [._P.
+> inductionOpMethodType = L $ "d" :. (let d = 0 :: Int in
+>                    L $ "P" :. (let _P = 0; d = 1 in
 >                    PI (N $ descOp :@ [NV d, MU Nothing (NV d)])
->                       (L $ "x" :. [.x.
+>                       (L $ "x" :. (let x = 0; _P = 1; d = 2 in
 >                        ARR (N $ boxOp :@ [NV d, MU Nothing (NV d), NV _P, NV x])
->                            (N (V _P :$ A (CON (NV x)))) ]) ] ]
+>                            (N (V _P :$ A (CON (NV x)))) ))))
 
 > branchesOp = Op
 >   { opName   = "branches"
@@ -269,7 +267,7 @@ any auxiliary code.
 >       oData  [ oTup $ OLam $ \_P -> ORet UNIT
 >              , oTup $ \ () _E -> OLam $ \_P -> ORet $
 >                TIMES (_P $$ A ZE)
->                   (branchesOp @@ [_E, L $ "x" :. [.x. _P -$ [SU (NV x)]]])
+>                   (branchesOp @@ [_E, L $ "x" :. (let x = 0 :: Int in _P -$ [SU (NV x)])])
 >              ]
 >   , opSimp   = \_ _ -> empty
 >   } where
@@ -315,17 +313,17 @@ any auxiliary code.
 >     eOpTy =
 >       "e" :<: enumU :-: \ e ->
 >       "x" :<: ENUMT e :-: \ x ->
->       "p" :<: ARR (SIGMA enumU (L $ "e" :. [.e. ENUMT (NV e)])) SET :-: \ p ->
->       "mz" :<: (PI UID $ L $ "t" :. [.t.
->                    PI enumU $ L $ "e" :. [.e.
+>       "p" :<: ARR (SIGMA enumU (L $ "e" :. (let e = 0 :: Int in ENUMT (NV e)))) SET :-: \ p ->
+>       "mz" :<: (PI UID $ L $ "t" :. (let t = 1; e = 0 in
+>                    PI enumU $ L $ "e" :. (let e = 0; t = 1 in
 >                        p -$ [PAIR (CONSE (NV t) (NV e)) ZE]
->                    ]]) :-: \ mz ->
->       "ms" :<: (PI UID $ L $ "t" :. [.t.
->                    PI enumU $ L $ "e" :. [.e.
->                    PI (ENUMT (NV e)) $ L $ "x" :. [.x.
+>                    ))) :-: \ mz ->
+>       "ms" :<: (PI UID $ L $ "t" :. (let t = 0 :: Int in
+>                    PI enumU $ L $ "e" :. (let e = 0; t = 1 in
+>                    PI (ENUMT (NV e)) $ L $ "x" :. (let x = 0; e = 1; t = 2 in
 >                    ARR (p -$ [PAIR (NV e) (NV x)])
 >                        (p -$ [PAIR (CONSE (NV t) (NV e)) (SU (NV x))])
->                    ]]]) :-: \ ms ->
+>                    )))) :-: \ ms ->
 >       Target (p $$ A (PAIR e x))
 
 > eqGreen = Op { opName = "eqGreen"
@@ -409,9 +407,9 @@ any auxiliary code.
 >     substMonadOpRun :: [VAL] -> Either NEU VAL
 >     substMonadOpRun [dD, xX, yY, f, COMPOSITE ts] = Right . COMPOSITE $
 >       mapOp @@ [  dD, MONAD dD xX, MONAD dD yY,
->                   L $ "t" :. [.t. N $
+>                   L $ "t" :. (let t = 0 :: Int in N $
 >                   substMonadOp :@ [  dD -$ [], xX -$ [], yY -$ []
->                                   ,  f -$ [], NV t] ] ,
+>                                   ,  f -$ [], NV t] ) ,
 >                   ts]
 >     substMonadOpRun [d, x, y, f, RETURN z]  = Right $ f $$ A z
 >     substMonadOpRun [d, x, y, f, N t]    = Left t
@@ -420,12 +418,12 @@ any auxiliary code.
 >       | equal (SET :>: (x, y)) r &&
 >         equal (ARR x (MONAD d x) :>: (f, ret)) r = pure t
 >       where
->         ret = L ("x" :. [.x. RETURN (NV x)])
+>         ret = L ("x" :. (let x = 0 :: Int in RETURN (NV x)))
 >     substMonadOpSimp [d, y, z, f, N (sOp :@ [_, x, _, g, N t])] r
 >       | sOp == substMonadOp = pure $ substMonadOp :@ [d, x, z, comp, N t]
->       where  comp = L $ "x" :. [.x. N $
+>       where  comp = L $ "x" :. (let x = 0 :: Int in N $
 >                       substMonadOp :@ [ d -$ [], y -$ [], z -$ []
->                                       , f -$ [], g -$ [ NV x ] ] ]
+>                                       , f -$ [], g -$ [ NV x ] ] )
 >     substMonadOpSimp _ _ = empty
 
 > elimMonadOp :: Op
@@ -436,12 +434,12 @@ any auxiliary code.
 >                "X" :<: SET                        :-: \ xX ->
 >                "t" :<: MONAD dD xX                :-: \ t ->
 >                "P" :<: ARR (MONAD dD xX) SET      :-: \ pP ->
->                "c" :<: (PI (descOp @@ [dD, MONAD dD xX]) $ L $ "ts" :. [.ts.
+>                "c" :<: (PI (descOp @@ [dD, MONAD dD xX]) $ L $ "ts" :. (let ts = 0 :: Int in
 >                          ARR (N (boxOp :@ [  dD -$ []
 >                                           ,  MONAD (dD -$ []) (xX -$ [])
 >                                           ,  pP -$ [] , NV ts]))
->                           (pP -$ [COMPOSITE (NV ts) ])])  :-: \ _ ->
->                "v" :<: (PI xX $ L $ "x" :. [.x. pP -$ [ RETURN (NV x) ] ])       :-: \ _ ->
+>                           (pP -$ [COMPOSITE (NV ts) ])))  :-: \ _ ->
+>                "v" :<: (PI xX $ L $ "x" :. (let x = 0 :: Int in pP -$ [ RETURN (NV x) ] ))       :-: \ _ ->
 >                Target $ pP $$ A t
 >   , opRun = elimMonadOpRun
 >   , opSimp = \_ _ -> empty
@@ -449,9 +447,9 @@ any auxiliary code.
 >     elimMonadOpRun :: [VAL] -> Either NEU VAL
 >     elimMonadOpRun [d,x,COMPOSITE ts,bp,mc,mv] = Right $
 >       mc $$ A ts $$ A (mapBoxOp @@ [d, MONAD d x, bp,
->         L $ "t" :. [.t. N $ elimMonadOp :@ [  d -$ [], x -$ []
+>         L $ "t" :. (let t = 0 :: Int in N $ elimMonadOp :@ [  d -$ [], x -$ []
 >                                            ,  NV t , bp -$ []
->                                            ,  mc -$ [], mv -$ [] ] ] ,
+>                                            ,  mc -$ [], mv -$ [] ] ) ,
 >         ts])
 >     elimMonadOpRun [d,x,RETURN z,bp,mc,mv] = Right $ mv $$ A z
 >     elimMonadOpRun [_,_,N n,_,_,_] = Left n
@@ -465,29 +463,29 @@ any auxiliary code.
 >       [ {-VAR-} oTup $ \i -> OLam $ \_P -> ORet $ _P $$ A i
 >       , {-CONST-} oTup $ \_A -> OLam $ \_P -> ORet _A
 >       , {-PI-} oTup $ \_S _T -> OLam $ \_P -> ORet $
->                  PI _S $ L $ "s" :. [.s. N $
->                    idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ]]
+>                  PI _S $ L $ "s" :. (let s = 0 :: Int in N $
+>                    idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ])
 >       , {-FPI-} oTup $ \_E _Df -> OLam $ \_P -> ORet $
 >                   branchesOp @@
 >                     [  _E
->                     ,  (L $ "e" :. [.e. N $
+>                     ,  (L $ "e" :. (let e = 0 :: Int in N $
 >                           idescOp :@  [  _I -$ []
 >                                       ,  _Df -$ [NV e]
 >                                       ,  _P -$ []
->                                       ]])
+>                                       ]))
 >                     ]
 >       , {-SIGMA-} oTup $ \_S _T -> OLam $ \_P -> ORet $
->                     SIGMA _S $ L $ (fortran _T) :. [.s. N $
->                       idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ]]
+>                     SIGMA _S $ L $ (fortran _T) :. (let s = 0 :: Int in N $
+>                       idescOp :@ [ _I -$ [] , _T -$ [NV s], _P -$ [] ])
 >       , {-FSIGMA-} oTup $ \_E _Ds -> OLam $ \_P -> ORet $
->                      SIGMA (ENUMT _E) (L $ (fortran _Ds) :. [.s. N $
+>                      SIGMA (ENUMT _E) (L $ (fortran _Ds) :. (let s = 0 :: Int in N $
 >                        idescOp :@ [ _I -$ []
 >                                   , N $ switchOp :@
 >                                           [ _E -$ []
 >                                           , NV s
 >                                           , LK (idesc -$ [ _I -$ []])
 >                                           , _Ds -$ [] ]
->                                   , _P -$ [] ] ])
+>                                   , _P -$ [] ] ))
 >       , {-PROD-} oTup $ \u _D _D' -> OLam $ \_P -> ORet $
 >                    SIGMA (idescOp @@ [_I, _D, _P]) $ L $ (unTag u) :.
 >                       (N (idescOp :@ [_I -$ [], _D' -$ [], _P -$ []]))
@@ -511,19 +509,19 @@ any auxiliary code.
 >       , {-CONST-} oTup $ \() -> oLams $ \() () -> ORet $
 >                      ICONST (PRF TRIVIAL)
 >       , {-PI-} oTup $ \_S _T -> oLams $ \_P f -> ORet $
->                  IPI _S (L $ "s" :. [.s. N $
+>                  IPI _S (L $ "s" :. (let s = 0 :: Int in N $
 >                    iboxOp :@  [  _I -$ [], _T -$ [NV s]
->                               ,  _P -$ [], f -$ [NV s]] ])
+>                               ,  _P -$ [], f -$ [NV s]] ))
 >       , {-FPI-} oTup $ \_E _Df -> oLams $ \_P v -> ORet $
->                   IFPI _E (L $ "e" :. [.e. N $
+>                   IFPI _E (L $ "e" :. (let e = 0 in N $
 >                     iboxOp :@  [  _I -$ [] , _Df -$ [NV e], _P -$ []
 >                                ,  N $ switchOp :@
 >                                         [  _E -$ [] , NV e
->                                         ,  L $ "f" :. [.f. N $
+>                                         ,  L $ "f" :. (let f = 0; e = 1 in N $
 >                                              idescOp :@  [  _I -$ []
 >                                                          ,  _Df -$ [NV f]
->                                                          , _P -$ [] ] ]
->                                         ,  v -$ []]]])
+>                                                          , _P -$ [] ] )
+>                                         ,  v -$ []]]))
 >       , {-SIGMA-} oTup $ \() _T -> OLam $ \_P -> OPr $ oLams $ \s d -> ORet $
 >                     iboxOp @@ [_I, _T $$ A s, _P, d]
 >       , {-FSIGMA-} oTup $ \_E _Ds -> OLam $ \_P -> OPr $ oLams $ \e d -> ORet $
@@ -545,7 +543,7 @@ any auxiliary code.
 >       "D" :<: (idesc $$ A _I)  :-: \ _D ->
 >       "P" :<: ARR _I SET                 :-: \ _P ->
 >       "v" :<: idescOp @@ [_I,_D,_P]      :-: \v ->
->       Target $ idesc $$ A (SIGMA _I (L $ "i" :. [.i. _P -$ [NV i]]))
+>       Target $ idesc $$ A (SIGMA _I (L $ "i" :. (let i = 0 :: Int in _P -$ [NV i])))
 
 > imapBoxOp :: Op
 > imapBoxOp = Op
@@ -556,13 +554,13 @@ any auxiliary code.
 >       [ {-VAR-} oTup $ \i -> oLams $ \() () p v -> ORet $ p $$ A (PAIR i v)
 >       , {-CONST-} oTup $ \() -> oLams $ \() () () () -> ORet $ VOID
 >       , {-PI-} oTup $ \() _T -> oLams $ \_X _P p f -> ORet $
->           L $ "s" :. [.s. N $
+>           L $ "s" :. (let s = 0 :: Int in N $
 >             imapBoxOp :@  [  _I -$ [], _T -$ [NV s]
->                           ,  _X -$ [] ,_P -$ [], p -$ [], f -$ [NV s] ] ]
+>                           ,  _X -$ [] ,_P -$ [], p -$ [], f -$ [NV s] ] )
 >       , {-FPI-} oTup $ \() _Df -> oLams $ \_X _P p v -> ORet $
->           L $ "s" :. [.s. N $
+>           L $ "s" :. (let s = 0 :: Int in N $
 >             imapBoxOp :@  [  _I -$ [], _Df -$ [NV s]
->                           ,  _X -$ [] ,_P -$ [], p -$ [], v -$ [NV s] ] ]
+>                           ,  _X -$ [] ,_P -$ [], p -$ [], v -$ [NV s] ] )
 >       , {-SIGMA-} oTup $ \() _T -> oLams $ \_X _P p -> OPr $ oLams $ \s d -> ORet $
 >           imapBoxOp @@ [  _I, _T $$ A s, _X, _P, p, d]
 >       , {-FSIGMA-} oTup $ \_E _Ds -> oLams $ \_X _P p -> OPr $ oLams $ \e d -> ORet $
@@ -582,21 +580,21 @@ any auxiliary code.
 >       "I" :<: SET :-: \_I ->
 >       "D" :<: (idesc $$ A _I) :-: \ _D ->
 >       "X" :<: ARR _I SET :-: \ _X ->
->       let _IX = SIGMA _I (L $ "i" :. [.i. _X -$ [NV i] ]) in
+>       let _IX = SIGMA _I (L $ "i" :. (let i = 0 :: Int in _X -$ [NV i] )) in
 >       "P" :<: ARR _IX SET :-: \ _P ->
->       "p" :<: (PI _IX $ L $ "ix" :. [.ix. _P -$ [ NV ix ] ] ) :-: \ _ ->
+>       "p" :<: (PI _IX $ L $ "ix" :. (let ix = 0 :: Int in _P -$ [ NV ix ] ) ) :-: \ _ ->
 >       "v" :<: (idescOp @@ [_I,_D,_X]) :-: \v ->
 >        Target (idescOp @@ [_IX, iboxOp @@ [_I,_D,_X,v], _P])
 
 > iinductionOpMethodType _I _D _P =
->     PI _I $ L $ "i" :. [.i.
+>     PI _I $ L $ "i" :. (let i = 0 :: Int in
 >      let _It = _I -$ []
->          mud = L $ "j" :. [.j. IMU Nothing _It (_D -$ []) (NV j) ]
->      in PI (N (idescOp :@ [ _It, _D -$ [ NV i ], mud])) $ L $ "x" :. [.x.
+>          mud = L $ "j" :. (let j = 0; i = 1 in IMU Nothing _It (_D -$ []) (NV j) )
+>      in PI (N (idescOp :@ [ _It, _D -$ [ NV i ], mud])) $ L $ "x" :. (let x = 0; j = 1; i = 2 in
 >          ARR (N (idescOp :@ [ SIGMA _It mud
 >                             , N (iboxOp :@ [_It, _D -$ [ NV i ], mud, NV x])
 >                             , _P -$ [] ]))
->           (_P -$ [ PAIR (NV i) (CON (NV x)) ]) ] ]
+>           (_P -$ [ PAIR (NV i) (CON (NV x)) ]) ) )
 
 > iinductionOp :: Op
 > iinductionOp = Op
@@ -606,14 +604,14 @@ any auxiliary code.
 >   , opRun = runOpTree $ oLams $ \_I _D i -> OCon $ oLams $ \v _P p -> ORet $
 >       p $$ A i $$ A v
 >         $$ A (imapBoxOp @@ [ _I, _D $$ A i
->                            , (L $ "i" :. [.i.
->                                IMU Nothing (_I -$ []) (_D -$ []) (NV i)])
+>                            , (L $ "i" :. (let i = 0 :: Int in
+>                                IMU Nothing (_I -$ []) (_D -$ []) (NV i)))
 >                            , _P
->                            , L $ "ix" :. [.ix. N $
+>                            , L $ "ix" :. (let ix = 0 :: Int in N $
 >                               iinductionOp :@
 >                                 [ _I -$ [], _D -$ []
 >                                 , N (V ix :$ Fst), N (V ix :$ Snd)
->                                 , _P -$ [], p -$ [] ] ]
+>                                 , _P -$ [], p -$ [] ] )
 >                            , v])
 >   , opSimp = \_ _ -> empty
 >   } where
@@ -622,8 +620,8 @@ any auxiliary code.
 >       "D" :<: ARR _I (idesc $$ A _I) :-: \_D ->
 >       "i" :<: _I :-: \i ->
 >       "v" :<: IMU Nothing _I _D i :-: \v ->
->       "P" :<: (ARR (SIGMA _I (L $ "i" :. [.i.
->                 IMU Nothing (_I -$ []) (_D -$ []) (NV i) ])) SET) :-: \_P ->
+>       "P" :<: (ARR (SIGMA _I (L $ "i" :. (let i = 0 :: Int in
+>                 IMU Nothing (_I -$ []) (_D -$ []) (NV i) ))) SET) :-: \_P ->
 >       "p" :<: (iinductionOpMethodType _I _D _P) :-: \p ->
 >       Target (_P $$ A (PAIR i v))
 
@@ -647,10 +645,10 @@ any auxiliary code.
 > argsOpRun (SCHTY _)       = Right UNIT
 > argsOpRun (SCHEXPPI s t)  =
 >   Right $ SIGMA (schTypeOp @@ [s])
->            (L ("x" :. [.x. N $ argsOp :@ [t -$ [ NV x ]]]))
+>            (L ("x" :. (let x = 0 :: Int in N $ argsOp :@ [t -$ [ NV x ]])))
 > argsOpRun (SCHIMPPI s t)  =
 >   Right $ SIGMA s
->            (L ("x" :. [.x. N $ argsOp :@ [t -$ [ NV x ]]]))
+>            (L ("x" :. (let x = 0 :: Int in N $ argsOp :@ [t -$ [ NV x ]])))
 > argsOpRun (N v)           = Left v
 
 
@@ -658,10 +656,10 @@ any auxiliary code.
 > schTypeOpRun (SCHTY s)       = Right s
 > schTypeOpRun (SCHEXPPI s t)  =
 >   Right $ PI (schTypeOp @@ [s])
->            (L ("x" :. [.x. N $ schTypeOp :@ [t -$ [ NV x ]]]))
+>            (L ("x" :. (let x = 0 :: Int in N $ schTypeOp :@ [t -$ [ NV x ]])))
 > schTypeOpRun (SCHIMPPI s t)  =
 >   Right $ PI s
->            (L ("x" :. [.x. N $ schTypeOp :@ [t -$ [ NV x ]]]))
+>            (L ("x" :. (let x = 0 :: Int in N $ schTypeOp :@ [t -$ [ NV x ]])))
 > schTypeOpRun (N v)           = Left v
 
 > nEOp = Op { opName = "naughtE"
@@ -677,8 +675,8 @@ any auxiliary code.
 >             , opTyTel = "S" :<: SET :-: \ ty ->
 >                         "p" :<: PRF (INH ty) :-: \ p ->
 >                         "P" :<: IMP (PRF (INH ty)) PROP :-: \ pred ->
->                         "m" :<: PI ty (L $ "s" :. [.t.
->                                          pred -$ [ WIT (NV t) ] ]) :-: \ _ ->
+>                         "m" :<: PI ty (L $ "s" :. (let t = 0 :: Int in
+>                                          pred -$ [ WIT (NV t) ] )) :-: \ _ ->
 >                         Target (PRF (pred $$ A p))
 >             , opRun = \[_,p,_,m] -> case p of
 >                                       WIT t -> Right $ m $$ A t
@@ -694,15 +692,15 @@ any auxiliary code.
 >               "p" :<: PRF (equivalenceRelation _X _R) :-: \p ->
 >               "z" :<: QUOTIENT _X _R p                :-: \z ->
 >               "P" :<: ARR (QUOTIENT _X _R p) SET      :-: \_P ->
->               "m" :<: (PI _X $ L $ "x" :. [.x. _P -$ [ CLASS (NV x) ] ])
+>               "m" :<: (PI _X $ L $ "x" :. (let x = 0 :: Int in _P -$ [ CLASS (NV x) ] ))
 >                                                       :-: \m ->
->               "h" :<: PRF (ALL _X $ L $ "x" :. [.x.
->                             ALL (_X -$ []) $ L $ "y" :. [.y.
+>               "h" :<: PRF (ALL _X $ L $ "x" :. (let x = 0 :: Int in
+>                             ALL (_X -$ []) $ L $ "y" :. (let y = 0; x = 1 in
 >                              IMP (_R -$ [ NV x , NV y ])
 >                               (EQBLUE (_P -$ [ CLASS (NV x) ]
 >                                           :>: m -$ [ NV x ])
 >                                       (_P -$ [ CLASS (NV y) ]
->                                           :>: m -$ [ NV y ])) ] ])
+>                                           :>: m -$ [ NV y ])) ) ))
 >                                                       :-: \_ ->
 >               Target $ _P $$ A z
 >   , opRun = run
@@ -749,8 +747,8 @@ any auxiliary code.
 >   } where
 >       typeAtOpTy =  "sig" :<: RSIG :-: \sig ->
 >                     "labels" :<: ENUMT (labelsOp @@ [sig]) :-: \_ ->
->                     Target $ SIGMA RSIG  (L $ "S" :. [.s.
->                                          ARR (N $ recordOp :@ [NV s]) SET])
+>                     Target $ SIGMA RSIG  (L $ "S" :. (let s = 0 :: Int in
+>                                          ARR (N $ recordOp :@ [NV s]) SET))
 >       typeAtOpRun :: [VAL] -> Either NEU VAL
 >       typeAtOpRun [REMPTY, _]              =
 >           error "typeAt: impossible call on Empty"
@@ -787,10 +785,10 @@ any auxiliary code.
 >   } where
 >       atOpTy =  "sig" :<: RSIG :-: \sig ->
 >                 "labels" :<: ENUMT (labelsOp @@ [sig]) :-: \l ->
->                 "rec" :<: recordOp @@ [sig] :-: \rec ->
+>                 "rec" :<: recordOp @@ [sig] :-: \rec' ->
 >                  Target $ typeAtOp @@ [ sig, l ]
 >                             $$ Snd
->                             $$ A (fstsOp @@ [ sig, l, rec])
+>                             $$ A (fstsOp @@ [ sig, l, rec'])
 >       atOpRun :: [VAL] -> Either NEU VAL
 >       atOpRun [REMPTY, _, _]              =
 >           error "at: impossible call on Empty"
@@ -807,9 +805,9 @@ any auxiliary code.
 >                "ab"  :<: SIGMA aA bB                  :-: \ ab ->
 >                "P"   :<: ARR (SIGMA aA bB) SET        :-: \ pP ->
 >                "p"   :<: (
->                  PI aA $ L $ "a" :. [.a.
->                   PI (bB -$ [ NV a ]) $ L $ "b" :. [.b.
->                    pP -$ [ PAIR (NV a) (NV b) ] ] ])  :-: \ p ->
+>                  PI aA $ L $ "a" :. (let a = 0 :: Int in
+>                   PI (bB -$ [ NV a ]) $ L $ "b" :. (let b = 0; a = 1 in
+>                    pP -$ [ PAIR (NV a) (NV b) ] ) ))  :-: \ p ->
 >                Target $ pP $$ A ab
 >   , opRun = runOpTree $
 >       oLams $ \ () () ab () p -> ORet $ p $$ A (ab $$ Fst) $$ A (ab $$ Snd)
@@ -828,22 +826,22 @@ any auxiliary code.
 > descBranches :: Tm In p x
 > descBranches = (PAIR (CONSTD UNIT)
 >                   (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
->                   (PAIR (SIGMAD enumU (L $ "E" :. [._E.
+>                   (PAIR (SIGMAD enumU (L $ "E" :. (let _E = 0 :: Int in
 >                                     (PRODD (TAG "T") (PID (ENUMT (NV _E)) (LK IDD))
->                                            (CONSTD UNIT))]))
+>                                            (CONSTD UNIT)))))
 >                   (PAIR (SIGMAD UID (L $ "u" :. PRODD (TAG "C") IDD (PRODD (TAG "D") IDD (CONSTD UNIT))))
->                   (PAIR (SIGMAD SET (L $ "S" :. [._S.
+>                   (PAIR (SIGMAD SET (L $ "S" :. (let _S = 0 :: Int in
 >                                     (PRODD (TAG "T") (PID (NV _S) (LK IDD))
->                                            (CONSTD UNIT))]))
->                   (PAIR (SIGMAD SET (L $ "S" :. [._S.
+>                                            (CONSTD UNIT)))))
+>                   (PAIR (SIGMAD SET (L $ "S" :. (let _S = 0 :: Int in
 >                                     (PRODD (TAG "T") (PID (NV _S) (LK IDD))
->                                            (CONSTD UNIT))]))
+>                                            (CONSTD UNIT)))))
 >                    VOID))))))
 
 > descD :: Tm In p x
 > descD = SUMD descConstructors
->              (L $ "c" :. [.c. N $
->                  switchDOp :@ [ descConstructors , descBranches , NV c] ])
+>              (L $ "c" :. (let c = 0 :: Int in N $
+>                  switchDOp :@ [ descConstructors , descBranches , NV c] ))
 
 > desc :: Tm In p x
 > desc = MU (Just (ANCHOR (TAG "Desc") SET ALLOWEDEPSILON)) descD
@@ -873,8 +871,8 @@ any auxiliary code.
 
 > enumD :: Tm In p x
 > enumD = SIGMAD  (ENUMT enumConstructors)
->                   (L $ "c" :. [.c. N $
->                       switchDOp :@ [ enumConstructors , enumBranches , NV c] ])
+>                   (L $ "c" :. (let c = 0 :: Int in N $
+>                       switchDOp :@ [ enumConstructors , enumBranches , NV c] ))
 
 > enumU :: Tm In p x
 > enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
@@ -896,64 +894,64 @@ any auxiliary code.
 
 > cohAx = [("Axiom",0),("coh",0)] := (DECL :<: cohType) where
 >   cohType = PRF $
->             ALL SET $ L $ "S" :. [._S.
->             ALL SET $ L $ "T" :. [._T.
+>             ALL SET $ L $ "S" :. (let _S = 0 :: Int in
+>             ALL SET $ L $ "T" :. (let _T = 0; _S = 1 in
 >             ALL (PRF (EQBLUE (SET :>: NV _S) (SET :>: NV _T)))
->                $ L $ "Q" :. [._Q.
->             ALL (NV _S) $ L $ "s" :. [.s.
+>                $ L $ "Q" :. (let _Q = 0; _T = 1; _S = 2 in
+>             ALL (NV _S) $ L $ "s" :. (let s = 0; _Q = 1; _T = 2; _S = 3 in
 >             EQBLUE (NV _S :>: NV s)
 >                    (NV _T :>: N (coe :@ [NV _S, NV _T, NV _Q, NV s]))
->             ]]]]
+>             ))))
 
 > refl = [("Axiom",0),("refl",0)] := (DECL :<: reflType) where
->   reflType = PRF $  ALL SET $ L $ "S" :. [._S.
->                     ALL (NV _S) $ L $ "s" :. [.s.
->                     EQBLUE (NV _S :>: NV s) (NV _S :>: NV s) ]]
+>   reflType = PRF $  ALL SET $ L $ "S" :. (let _S = 0 :: Int in
+>                     ALL (NV _S) $ L $ "s" :. (let s = 0; _S = 1 in
+>                     EQBLUE (NV _S :>: NV s) (NV _S :>: NV s) ))
 
 > substEq = [("Primitive", 0), ("substEq", 0)] := DEFN seDef :<: seTy where
->   seTy = PI SET $ L $ "X" :. [._X.
->              PI (NV _X) $ L $ "x" :. [.x.
->              PI (NV _X) $ L $ "y" :. [.y.
->              PI (PRF (EQBLUE (NV _X :>: NV x) (NV _X :>: NV y))) $ L $ "q" :. [.q.
->              PI (ARR (NV _X) SET) $ L $ "P" :. [._P.
+>   seTy = PI SET $ L $ "X" :. (let _X = 0 :: Int in
+>              PI (NV _X) $ L $ "x" :. (let x = 0; _X = 1 in
+>              PI (NV _X) $ L $ "y" :. (let y = 0; x = 1; _X = 2 in
+>              PI (PRF (EQBLUE (NV _X :>: NV x) (NV _X :>: NV y))) $ L $ "q" :. (let q = 0; y = 1; x = 2; _X = 3 in
+>              PI (ARR (NV _X) SET) $ L $ "P" :. (let _P = 0; q = 1; y = 2; x = 3; _X = 4 in
 >              ARR (N (V _P :$ A (NV x))) (N (V _P :$ A (NV y)))
->              ]]]]]
->   seDef = L $ "X" :. [._X.
->             L $ "x" :. [.x.
->             L $ "y" :. [.y.
->             L $ "q" :. [.q.
->             L $ "P" :. [._P.
->             L $ "px" :. [.px.
+>              )))))
+>   seDef = L $ "X" :. (let _X = 0 :: Int in
+>             L $ "x" :. (let x = 0; _X = 1 in
+>             L $ "y" :. (let y = 0; x = 1; _X = 2 in
+>             L $ "q" :. (let q = 0; y = 1; x = 2; _X = 3 in
+>             L $ "P" :. (let _P = 0; q = 1; y = 2; x = 3; _X = 4 in
+>             L $ "px" :. (let px = 0; _P = 1; q = 2; y = 3; x = 4; _X = 5 in
 >             N (coe :@ [N (V _P :$ A (NV x)), N (V _P :$ A (NV y)),
 >                 CON (N (P refl :$ A (ARR (NV _X) SET) :$ A (NV _P) :$ Out
 >                           :$ A (NV x) :$ A (NV y) :$ A (NV q))),
 >                 NV px])
->             ]]]]]]
+>             ))))))
 
 > symEq = [("Primitive", 0), ("symEq", 0)] := DEFN def :<: ty where
->   ty = PRF $ ALL SET $ L $ "X" :. [._X.
->                  ALL (NV _X) $ L $ "x" :. [.x.
->                  ALL (NV _X) $ L $ "y" :. [.y.
+>   ty = PRF $ ALL SET $ L $ "X" :. (let _X = 0 :: Int in
+>                  ALL (NV _X) $ L $ "x" :. (let x = 0; _X = 1 in
+>                  ALL (NV _X) $ L $ "y" :. (let y = 0; x = 1; _X = 2 in
 >                  IMP (EQBLUE (NV _X :>: NV x) (NV _X :>: NV y))
 >                  (EQBLUE (NV _X :>: NV y) (NV _X :>: NV x))
->              ]]]
->   def = L $ "X" :. [._X.
->         L $ "x" :. [.x.
->         L $ "y" :. [.y.
->         L $ "q" :. [.q.
+>              )))
+>   def = L $ "X" :. (let _X = 0 :: Int in
+>         L $ "x" :. (let x = 0; _X = 1 in
+>         L $ "y" :. (let y = 0; x = 1; _X = 2 in
+>         L $ "q" :. (let q = 0; y = 1; x = 2; _X = 3 in
 >         N (P refl :$ A (ARR (NV _X) SET)
->             :$ A (L $ "z" :. [.z.
->                 PRF (EQBLUE (NV _X :>: NV z) (NV _X :>: NV x))])
+>             :$ A (L $ "z" :. (let z = 0; q = 1; y = 2; x = 3; _X = 4 in
+>                 PRF (EQBLUE (NV _X :>: NV z) (NV _X :>: NV x))))
 >             :$ Out
 >             :$ A (NV x)
 >             :$ A (NV y)
 >             :$ A (NV q)
 >             :$ Fst
 >             :$ A (N (P refl :$ A (NV _X) :$ A (NV x))))
->         ]]]]
+>         ))))
 
 > inIDesc :: VAL
-> inIDesc = L $ "I" :. [._I. LK $ IFSIGMA constructors (cases (NV _I)) ]
+> inIDesc = L $ "I" :. (let _I = 0 :: Int in LK $ IFSIGMA constructors (cases (NV _I)) )
 
 > constructors = (CONSE (TAG "varD")
 >                (CONSE (TAG "constD")
@@ -968,18 +966,18 @@ any auxiliary code.
 > cases _I =
 >  {- varD: -}    (PAIR (ISIGMA _I (LK $ ICONST UNIT))
 >  {- constD: -}  (PAIR (ISIGMA SET (LK $ ICONST UNIT))
->  {- piD: -}     (PAIR (ISIGMA SET (L $ "S" :. [._S.
+>  {- piD: -}     (PAIR (ISIGMA SET (L $ "S" :. (let _S = 0 :: Int in
 >                   (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID))
->                          (ICONST UNIT))]))
->  {- fpiD: -}    (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. [._E.
+>                          (ICONST UNIT)))))
+>  {- fpiD: -}    (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. (let _E = 0 :: Int in
 >                   (IPROD (TAG "T") (IPI (ENUMT (NV _E)) (LK $ IVAR VOID))
->                          (ICONST UNIT))]))
->  {- sigmaD: -}  (PAIR (ISIGMA SET (L $ "S" :. [._S.
+>                          (ICONST UNIT)))))
+>  {- sigmaD: -}  (PAIR (ISIGMA SET (L $ "S" :. (let _S = 0 :: Int in
 >                   (IPROD (TAG "T") (IPI (NV _S) (LK $ IVAR VOID))
->                          (ICONST UNIT))]))
->  {- fsigmaD: -} (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. [._E.
+>                          (ICONST UNIT)))))
+>  {- fsigmaD: -} (PAIR (ISIGMA (enumU -$ []) (L $ "E" :. (let _E = 0 :: Int in
 >                   (IPROD (TAG "T") (IFPI (NV _E) (LK $ IVAR VOID))
->                          (ICONST UNIT))]))
+>                          (ICONST UNIT)))))
 >  {- prodD: -}   (PAIR (ISIGMA UID (L $ "u" :. (IPROD (TAG "C") (IVAR VOID) (IPROD (TAG "D") (IVAR VOID) (ICONST UNIT)))))
 >                   VOID)))))))
 
@@ -988,15 +986,15 @@ any auxiliary code.
 >                  := (FAKE :<: ARR SET (ARR UNIT SET))
 
 > idesc :: VAL
-> idesc = L $ "I" :. [._I.
->           IMU (Just (L $ "i" :. [.i. ANCHOR  (TAG "IDesc")
+> idesc = L $ "I" :. (let _I = 0 :: Int in
+>           IMU (Just (L $ "i" :. (let i = 0; _I = 1 in ANCHOR  (TAG "IDesc")
 >                                              (ARR SET SET)
 >                                              (ALLOWEDCONS  SET
 >                                                            (LK SET)
 >                                                            (N (P refl :$ A SET :$ A (ARR SET SET)))
 >                                                            (NV _I)
->                                                            ALLOWEDEPSILON)]))
->                UNIT (inIDesc -$ [ NV _I]) VOID ]
+>                                                            ALLOWEDEPSILON))))
+>                UNIT (inIDesc -$ [ NV _I]) VOID )
 
 > idescREF :: REF
 > idescREF = [("Primitive", 0), ("IDesc", 0)]
@@ -1013,10 +1011,10 @@ any auxiliary code.
 
 > idescBranchesREF :: REF
 > idescBranchesREF = [("Primitive", 0), ("IDescBranches", 0)]
->                     := (DEFN (L $ "I" :. [._I. cases (NV _I)])) :<:
->                          PI SET (L $ "I" :. [._I.
+>                     := (DEFN (L $ "I" :. (let _I = 0 :: Int in cases (NV _I)))) :<:
+>                          PI SET (L $ "I" :. (let _I = 0 :: Int in
 >                            N $ branchesOp :@ [ constructors,
->                                                LK $ N (P idescREF :$ A UNIT)]])
+>                                                LK $ N (P idescREF :$ A UNIT)]))
 
 > sumilike :: VAL -> VAL -> Maybe (VAL, VAL -> VAL)
 > sumilike _I (IFSIGMA e b)  =
@@ -1026,17 +1024,17 @@ any auxiliary code.
 > equivalenceRelation :: VAL -> VAL -> VAL
 > equivalenceRelation a r =
 >   -- refl
->   AND (ALL a $ L $ "x" :. [.x. x =~ x ]) $
+>   AND (ALL a $ L $ "x" :. (let x = 0 :: Int in x =~ x )) $
 >   -- sym
->   AND (ALL a $ L $ "x" :. [.x.
->         ALL (a -$ []) $ L $ "y" :. [.y.
->          IMP (x =~ y) (y =~ x) ] ]
+>   AND (ALL a $ L $ "x" :. (let x = 0 :: Int in
+>         ALL (a -$ []) $ L $ "y" :. (let y = 0; x = 1 in
+>          IMP (x =~ y) (y =~ x) ))
 >       ) $
 >   -- trans
->       (ALL a $ L $ "x" :. [.x.
->         ALL (a -$ []) $ L $ "y" :. [.y.
->          ALL (a -$ []) $ L $ "z" :. [.z.
->           IMP (x =~ y) (IMP (y =~ z) (x =~ z)) ] ] ]
+>       (ALL a $ L $ "x" :. (let x = 0 :: Int in
+>         ALL (a -$ []) $ L $ "y" :. (let y = 0; x = 1 in
+>          ALL (a -$ []) $ L $ "z" :. (let z = 0; y = 1; x = 2 in
+>           IMP (x =~ y) (IMP (y =~ z) (x =~ z)))))
 >       )
 >   where
 >     x =~ y = r -$ [ NV x , NV y ]

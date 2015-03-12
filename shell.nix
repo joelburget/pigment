@@ -3,6 +3,7 @@
 with import <nixpkgs> {};
 let haskellPackages = pkgs.haskellPackages_ghcjs.override {
       extension = self: super: {
+        reactHaskellGhcjs = self.callPackage ../react-haskell {};
         pigment = self.callPackage ./. {};
       };
     };

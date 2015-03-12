@@ -51,58 +51,62 @@ function js_set_field(obj, field, value) {obj[field] = value;}
 function js_set_field_True(obj, field, value) {obj[field] = true;}
 function js_set_field_False(obj, field, value) {obj[field] = false;}
 
+function wrapEvent(e) {
+    return h$c1(h$ghcjszmprimZCGHCJSziPrimziJSRef_con_e, e);
+}
+
 function js_set_onClick(cb, attrs) {
     attrs.onClick = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onDoubleClick(cb, attrs) {
     attrs.onDoubleClick = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onChange(cb, attrs) {
     attrs.onChange = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onKeyUp(cb, attrs) {
     attrs.onKeyUp = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onKeyPress(cb, attrs) {
     attrs.onKeyPress = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onKeyDown(cb, attrs) {
     attrs.onKeyDown = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onBlur(cb, attrs) {
     attrs.onBlur = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onMouseEnter(cb, attrs) {
     attrs.onMouseEnter = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 function js_set_onMouseLeave(cb, attrs) {
     attrs.onMouseLeave = function(e) {
         e.persist();
-        B(A(cb,[[0,e],0]));
+        cb(wrapEvent(e));
     };
 }
 
@@ -243,11 +247,13 @@ function js_React_DOM_leaf(name, a) { return React.DOM[name](a); }
 function js_React_DOM_parent(name, a, c) { return React.DOM[name](a, c); }
 
 function js_parseChangeEvent(raw) {
+    var raw = raw.d1; // XXX
     // wrap the string in two constructors - Ptr and JSString
     return [0, raw.target.value];
 }
 
 function js_parseKeyboardEvent(raw) {
+    var raw = raw.d1; // XXX
     return [
         0,
         [
@@ -268,6 +274,7 @@ function js_parseKeyboardEvent(raw) {
 }
 
 function js_parseMouseEvent(raw) {
+    var raw = raw.d1; // XXX
     return [
         0,
         [
@@ -315,7 +322,7 @@ function js_parseMouseEvent(raw) {
 
 function js_raf(cb) {
     return window.requestAnimationFrame(function(time) {
-        B(A(cb,[[0,time],0]));
+        cb(time);
     });
 }
 

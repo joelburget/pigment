@@ -31,3 +31,6 @@ executable pigment
       react-haskell-ghcjs == 1.3.0.0
   main-is:        Main.lhs
   hs-source-dirs: src
+  js-sources:
+      src/js/react.js
+      src/js/react-stubs.js

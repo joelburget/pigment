@@ -61,7 +61,7 @@ cochon loc = do -- runWebGUI $ \webview -> do
     Just e <- documentGetElementById doc ("inject" :: JSString)
     let startCtx = B0 :< loc
     validateDevelopment startCtx
-    cls <- createClassCrazy page animDispatch (startState startCtx) () []
+    cls <- createClass page animDispatch (startState startCtx) () []
     render e cls
     return ()
 

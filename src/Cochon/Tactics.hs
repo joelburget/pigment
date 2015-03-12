@@ -1,9 +1,6 @@
-{-# OPTIONS_GHC -F -pgmF she #-}
 {-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds,
   LambdaCase, LiberalTypeSynonyms #-}
-
 module Cochon.Tactics (cochonTactics, infoHypotheses, reactBKind, runProofState) where
-
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error
@@ -12,7 +9,6 @@ import qualified Data.Foldable as Foldable
 import Data.List
 import Data.String
 import Data.Traversable
-
 import Cochon.CommandLexer
 import Cochon.Error
 import Cochon.Model
@@ -53,7 +49,6 @@ import ProofState.Interface.Solving
 import ProofState.Interface.Parameter
 import ProofState.Structure.Developments
 import ProofState.Structure.Entries
-
 import Tactics.Data
 import Tactics.Elimination
 import Tactics.IData
@@ -64,9 +59,7 @@ import Tactics.Record
 import Tactics.Relabel
 import Tactics.ShowHaskell
 import Tactics.Unification
-
 import React
-
 cochonTactics :: [CochonTactic]
 cochonTactics = sort
     [ applyTac
@@ -113,13 +106,11 @@ cochonTactics = sort
     , relabelTac
     , haskellTac
     ]
-
 {-
 We have some shortcuts for building common kinds of tactics: `simpleCT`
 builds a tactic that works in the proof state, and there are various
 specialised versions of it for nullary and unary tactics.
 -}
-
 simpleCT :: String
          -> Parsley Token (Bwd CochonArg)
          -> ([CochonArg] -> ProofState (Pure React'))
@@ -131,65 +122,50 @@ simpleCT name parser eval help = CochonTactic
     ,  ctxTrans = simpleOutput . eval
     ,  ctHelp = help
     }
-
 nullaryCT :: String -> ProofState (Pure React') -> String -> CochonTactic
 nullaryCT name eval help =
     simpleCT name (pure B0) (const eval) (Left (fromString help))
-
 unaryExCT :: String -> (DExTmRN -> ProofState (Pure React')) -> String -> CochonTactic
 unaryExCT name eval help = simpleCT
     name
-    (| (B0 :<) tokenExTm
-     | (B0 :<) tokenAscription |)
+    (((pure (B0 :<)) <*> tokenExTm) <|> ((pure (B0 :<)) <*> tokenAscription))
     (eval . argToEx . head)
     (Left (fromString help))
-
 unaryInCT :: String -> (DInTmRN -> ProofState (Pure React')) -> String -> CochonTactic
 unaryInCT name eval help = simpleCT
     name
-    (| (B0 :<) tokenInTm |)
+    ((pure (B0 :<)) <*> tokenInTm)
     (eval . argToIn . head)
     (Left (fromString help))
-
 unDP :: DExTm p x -> x
 unDP (DP ref ::$ []) = ref
-
 unaryNameCT :: String -> (RelName -> ProofState (Pure React')) -> String -> CochonTactic
 unaryNameCT name eval help = simpleCT
     name
-    (| (B0 :<) tokenName |)
+    ((pure (B0 :<)) <*> tokenName)
     (eval . unDP . argToEx . head)
     (Left (fromString help))
-
 unaryStringCT :: String
               -> (String -> ProofState (Pure React'))
               -> String
               -> CochonTactic
 unaryStringCT name eval help = simpleCT
     name
-    (| (B0 :<) tokenString |)
+    ((pure (B0 :<)) <*> tokenString)
     (eval . argToStr . head)
     (Left (fromString help))
-
-
 -- Construction Tactics
-
 applyTac = nullaryCT "apply" (apply >> return "Applied.")
   "apply - applies the last entry in the development to a new subgoal."
-
 doneTac = nullaryCT "done" (done >> return "Done.")
   "done - solves the goal with the last entry in the development."
-
 giveTac = unaryInCT "give" (\tm -> elabGiveNext tm >> return "Thank you.")
   "give <term> - solves the goal with <term>."
-
 -- TODO(joel) - rename lambda
-
 lambdaTac = simpleCT
     "lambda"
-     (| (|bwdList (pSep (keyword KwComma) tokenString) (%keyword KwAsc%)|) :< tokenInTm
-      | bwdList (pSep (keyword KwComma) tokenString)
-      |)
+     ((((pure (:<)) <*> ((((pure bwdList) <*> (pSep (keyword KwComma) tokenString)) <* (keyword KwAsc)) )) <*> (tokenInTm
+      )) <|> ((pure bwdList) <*> (pSep (keyword KwComma) tokenString)))
      (\ args -> case args of
         [] -> return "This lambda needs no introduction!"
         _ -> case last args of
@@ -207,10 +183,9 @@ lambdaTac = simpleCT
          , ("<type>", "(optional) their type")
          ]
      ))
-
 letTac = simpleCT
     "let"
-    (| (| (B0 :< ) tokenString |) :< tokenScheme |)
+    (((pure (:<)) <*> (((pure (B0 :< )) <*> tokenString) )) <*> (tokenScheme ))
     (\ [StrArg x, SchemeArg s] -> do
         elabLet (x :<: s)
         optional' problemSimplify
@@ -225,13 +200,11 @@ letTac = simpleCT
         , ("<type>", "(optional) their type")
         ]
     ))
-
 makeTac = simpleCT
     "make"
-    (| (|(B0 :<) tokenString (%keyword KwAsc%)|) :< tokenInTm
-     | (|(B0 :<) tokenString (%keyword KwDefn%) |) <><
-         (| (\ (tm :<: ty) -> InArg tm :> InArg ty :> F0) pAscription |)
-     |)
+    ((((pure (:<)) <*> ((((pure (B0 :<)) <*> tokenString) <* (keyword KwAsc)) )) <*> (tokenInTm
+     )) <|> (((pure (<><)) <*> ((((pure (B0 :<)) <*> tokenString) <* (keyword KwDefn)) )) <*> (((pure (\ (tm :<: ty) -> InArg tm :> InArg ty :> F0)) <*> pAscription)
+     )))
     (\ (StrArg s:tyOrTm) -> case tyOrTm of
         [InArg ty] -> do
             elabMake (s :<: ty)
@@ -253,14 +226,12 @@ makeTac = simpleCT
         , ("<type>", "its type (this could be a hole (\"?\"))")
         ]
     ))
-
 moduleTac = unaryStringCT "module"
     (\s -> makeModule DevelopModule s >> goIn >> return "Made module.")
     "module <x> - creates a module with name <x>."
-
 piTac = simpleCT
     "pi"
-     (| (|(B0 :<) tokenString (%keyword KwAsc%)|) :< tokenInTm |)
+     (((pure (:<)) <*> ((((pure (B0 :<)) <*> tokenString) <* (keyword KwAsc)) )) <*> (tokenInTm ))
     (\ [StrArg s, InArg ty] -> elabPiParam (s :<: ty) >> return "Made pi!")
     (Right (TacticHelp
         "pi <x> : <type>"
@@ -271,10 +242,9 @@ piTac = simpleCT
         , ("<type>", "its type")
         ]
     ))
-
 programTac = simpleCT
     "program"
-    (|bwdList (pSep (keyword KwComma) tokenString)|)
+    ((pure bwdList) <*> (pSep (keyword KwComma) tokenString))
     (\ as -> elabProgram (map argToStr as) >> return "Programming.")
     (Right (TacticHelp
         "program <labels>"
@@ -284,56 +254,38 @@ programTac = simpleCT
         [ ("<labels>", "One or more names to introduce")
         ]
     ))
-
 ungawaTac = nullaryCT "ungawa" (ungawa >> return "Ungawa!")
     "ungawa - tries to solve the current goal in a stupid way."
-
-
 -- Navigation Tactics
-
 inTac = nullaryCT "in" (goIn >> return "Going in...")
     "in - moves to the bottom-most development within the current one."
-
 outTac = nullaryCT "out" (goOutBelow >> return "Going out...")
     "out - moves to the development containing the current one."
-
 upTac = nullaryCT "up" (goUp >> return "Going up...")
     "up - moves to the development above the current one."
-
 downTac = nullaryCT "down" (goDown >> return "Going down...")
     "down - moves to the development below the current one."
-
 topTac = nullaryCT "top" (many' goUp >> return "Going to top...")
     "top - moves to the top-most development at the current level."
-
 bottomTac = nullaryCT "bottom" (many' goDown >> return "Going to bottom...")
     "bottom - moves to the bottom-most development at the current level."
-
 previousTac = nullaryCT "previous" (prevGoal >> return "Going to previous goal...")
     "previous - searches for the previous goal in the proof state."
-
 rootTac = nullaryCT "root" (many' goOut >> return "Going to root...")
     "root - moves to the root of the proof state."
-
 nextTac = nullaryCT "next" ( nextGoal >> return "Going to next goal...")
     "next - searches for the next goal in the proof state."
-
 firstTac = nullaryCT "first"  (some' prevGoal >> return "Going to first goal...")
     "first - searches for the first goal in the proof state."
-
 lastTac = nullaryCT "last"   (some' nextGoal >> return "Going to last goal...")
     "last - searches for the last goal in the proof state."
-
 jumpTac = unaryNameCT "jump" (\ x -> do
     (n := _) <- resolveDiscard x
     goTo n
     return $ fromString $ "Jumping to " ++ showName n ++ "..."
   )
     "jump <name> - moves to the definition of <name>."
-
-
 -- Miscellaneous tactics
-
 -- TODO visual display of previous states
 undoTac = CochonTactic
     {  ctName = "undo"
@@ -351,10 +303,8 @@ undoTac = CochonTactic
            []
        )
     }
-
 validateTac = nullaryCT "validate" (validateHere >> return "Validated.")
     "validate - re-checks the definition at the current location."
-
 dataTac = CochonTactic
     {  ctName = "data"
     ,  ctParse = do
@@ -386,11 +336,9 @@ dataTac = CochonTactic
            ]
        )
     }
-
 eliminateTac = simpleCT
     "eliminate"
-    (|(|(B0 :<) (tokenOption tokenName)|) :< (|id tokenExTm
-                                              |id tokenAscription |)|)
+    (((pure (:<)) <*> (((pure (B0 :<)) <*> (tokenOption tokenName)) )) <*> ((((pure id) <*> tokenExTm) <|> ((pure id) <*> tokenAscription))))
     (\[n,e] -> elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
     (Right (TacticHelp
         "eliminate [<comma>] <eliminator>"
@@ -401,13 +349,11 @@ eliminateTac = simpleCT
         , ("<eliminator>", "TODO(joel)")
         ]
     ))
-
 retTac = unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Ta.")
     "= <term> - solves the programming problem by returning <term>."
-
 defineTac = simpleCT
      "define"
-     (| (| (B0 :<) tokenExTm |) :< (%keyword KwDefn%) tokenInTm |)
+     ((((pure (:<)) <*> (((pure (B0 :<)) <*> tokenExTm) )) <* (keyword KwDefn)) <*> (tokenInTm ))
      (\ [ExArg rl, InArg tm] -> defineCTactic rl tm)
     (Right (TacticHelp
         "define <prob> := <term>"
@@ -418,14 +364,11 @@ defineTac = simpleCT
         , ("<term>", "solution to the problem")
         ]
     ))
-
 -- The By gadget, written `<=`, invokes elimination with a motive, then
 -- simplifies the methods and moves to the first subgoal remaining.
-
 byTac = simpleCT
     "<="
-    (|(|(B0 :<) (tokenOption tokenName)|) :< (|id tokenExTm
-                                              |id tokenAscription |)|)
+    (((pure (:<)) <*> (((pure (B0 :<)) <*> (tokenOption tokenName)) )) <*> ((((pure id) <*> tokenExTm) <|> ((pure id) <*> tokenAscription))))
     (\ [n,e] -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
     (Right (TacticHelp
         "<= [<comma>] <eliminator>"
@@ -436,17 +379,12 @@ byTac = simpleCT
         , ("<eliminator>", "TODO(joel)")
         ]
     ))
-
 -- The Refine gadget relabels the programming problem, then either defines
 -- it or eliminates with a motive.
-
 refineTac = simpleCT
     "refine"
-    (|(|(B0 :<) tokenExTm|) :< (|id (%keyword KwEq%) tokenInTm
-                                |id (%keyword KwBy%) tokenExTm
-                                |id (%keyword KwBy%) tokenAscription
-                                |)
-     |)
+    (((pure (:<)) <*> (((pure (B0 :<)) <*> tokenExTm) )) <*> (((((pure id) <* (keyword KwEq)) <*> tokenInTm) <|> ((((pure id) <* (keyword KwBy)) <*> tokenExTm) <|> (((pure id) <* (keyword KwBy)) <*> tokenAscription)))
+     ))
     (\ [ExArg rl, arg] -> case arg of
         InArg tm -> defineCTactic rl tm
         ExArg tm -> relabel rl >> byCTactic Nothing tm)
@@ -461,10 +399,9 @@ refineTac = simpleCT
         , ("<eliminator>", "TODO(joel)")
         ]
     ))
-
 solveTac = simpleCT
     "solve"
-    (| (| (B0 :<) tokenName |) :< tokenInTm |)
+    (((pure (:<)) <*> (((pure (B0 :<)) <*> tokenName) )) <*> (tokenInTm ))
     (\ [ExArg (DP rn ::$ []), InArg tm] -> do
         (ref, spine, _) <- resolveHere rn
         _ :<: ty <- inferHere (P ref $:$ toSpine spine)
@@ -482,7 +419,6 @@ solveTac = simpleCT
         , ("<term>", "Its solution")
         ]
     ))
-
 idataTac = CochonTactic
     {  ctName = "idata"
     ,  ctParse = do
@@ -490,15 +426,14 @@ idataTac = CochonTactic
          pars <- tokenListArgs (bracket Round $ tokenPairArgs
            tokenString
            (keyword KwAsc)
-           tokenInTm) (|()|)
+           tokenInTm) (pure ())
          keyword KwAsc
          indty <- tokenAppInTm
          keyword KwArr
          keyword KwSet
          keyword KwDefn
          scs <- tokenListArgs (bracket Round $ tokenPairArgs
-           (|id (%keyword KwTag%)
-                tokenString |)
+           (((pure id) <* (keyword KwTag)) <*> tokenString)
            (keyword KwAsc)
            tokenInTm)
           (keyword KwSemi)
@@ -518,33 +453,25 @@ idataTac = CochonTactic
            ]
        )
     }
-
 {-
 The `elm` Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation
 of the final type-term pair (using a quick hack).
 -}
-
 elmCT :: DExTmRN -> ProofState (Pure React')
 elmCT tm = do
     suspend ("elab" :<: sigSetTM :=>: sigSetVAL) (ElabInferProb tm)
     startScheduler
     infoElaborate (DP [("elab", Rel 0)] ::$ [])
-
 elmTac = unaryExCT "elm" elmCT "elm <term> - elaborate <term>, stabilise and print type-term pair."
-
 elaborateTac = unaryExCT "elaborate" infoElaborate
   "elaborate <term> - elaborates, evaluates, quotes, distills and pretty-prints <term>."
-
 inferTac = unaryExCT "infer" infoInfer
   "infer <term> - elaborates <term> and infers its type."
-
 parseTac = unaryInCT "parse" (return . fromString . show)
   "parse <term> - parses <term> and displays the internal display-sytnax representation."
-
 schemeTac = unaryNameCT "scheme" infoScheme
   "scheme <name> - looks up the scheme on the definition <name>."
-
 showTac = unaryStringCT "show" (\case
     "inscope"  -> infoInScope
     "context"  -> infoContext
@@ -554,24 +481,21 @@ showTac = unaryStringCT "show" (\case
     _          -> return "show: please specify exactly what to show."
   )
   "show <inscope/context/dump/hyps/state> - displays useless information."
-
 whatisTac = unaryExCT "whatis" infoWhatIs
   "whatis <term> - prints the various representations of <term>."
-
 {-
 For testing purposes, we define a @match@ tactic that takes a telescope
 of parameters to solve for, a neutral term for which those parameters
 are in scope, and another term of the same type. It prints out the
 resulting substitution.
 -}
-
 matchTac = simpleCT
     "match"
     (do
         pars <- tokenListArgs (bracket Round $ tokenPairArgs
                                       tokenString
                                       (keyword KwAsc)
-                                      tokenInTm) (| () |)
+                                      tokenInTm) (pure ())
         keyword KwSemi
         tm1 <- tokenExTm
         keyword KwSemi
@@ -589,10 +513,8 @@ matchTac = simpleCT
         , ("<term>", "TODO(joel)")
         ]
     ))
-
 simplifyTac = nullaryCT "simplify" (problemSimplify >> optional' seekGoal >> return "Simplified.")
     "simplify - simplifies the current problem."
-
 {-
 TODO(joel) - how did this ever work? pars is not bound here either
 https://github.com/joelburget/pigment/blob/bee79687c30933b8199bd9ae6aaaf8048a0c1cf9/src/Tactics/Record.lhs
@@ -615,16 +537,11 @@ recordTac = CochonTactic
     ,  ctHelp = "record <name> [<para>]* := [(<label> : <ty>) ;]* - builds a record type."
     }
 -}
-
 relabelTac = unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
     "relabel <pattern> - changes names of arguments in label to pattern"
-
 haskellTac = unaryExCT "haskell" (\ t -> elabInfer' t >>= dumpHaskell)
     "haskell - renders an Epigram term as a Haskell definition."
-
 -- end tactics, begin a bunch of weird "info" stuff and other helpers
-
-
 -- The `propSimplify` tactic attempts to simplify the type of the current
 -- goal, which should be propositional. Usually one will want to use
 -- `simplify` instead, or simplification will happen automatically (with
@@ -633,7 +550,6 @@ haskellTac = unaryExCT "haskell" (\ t -> elabInfer' t >>= dumpHaskell)
 --
 -- propsimplifyTac = nullaryCT "propsimplify" propSimplifyTactic
 --     "propsimplify - applies propositional simplification to the current goal."
-
 propSimplifyTactic :: ProofState (Pure React')
 propSimplifyTactic = do
     subs <- propSimplifyHere
@@ -647,46 +563,37 @@ propSimplifyTactic = do
   where
     prettyType :: INTM -> ProofState String
     prettyType ty = prettyHere (SET :>: ty) >>= return . renderHouseStyle
-
 infoInScope :: ProofState (Pure React')
 infoInScope = do
     pc <- get
     inScope <- getInScope
     return (fromString (showEntries (inBScope pc) inScope))
-
 infoDump :: ProofState (Pure React')
 infoDump = gets (fromString . show)
-
 -- The `infoElaborate` command calls `elabInfer` on the given neutral
 -- display term, evaluates the resulting term, bquotes it and returns a
 -- pretty-printed string representation. Note that it works in its own
 -- module which it discards at the end, so it will not leave any subgoals
 -- lying around in the proof state.
-
 infoElaborate :: DExTmRN -> ProofState (Pure React')
 infoElaborate tm = draftModule "__infoElaborate" $ do
     (tm' :=>: tmv :<: ty) <- elabInfer' tm
     tm'' <- bquoteHere tmv
     s <- reactHere (ty :>: tm'')
     return s
-
 -- The `infoInfer` command is similar to `infoElaborate`, but it returns a
 -- string representation of the resulting type.
-
 infoInfer :: DExTmRN -> ProofState (Pure React')
 infoInfer tm = draftModule "__infoInfer" $ do
     (_ :<: ty) <- elabInfer' tm
     ty' <- bquoteHere ty
     s <- reactHere (SET :>: ty')
     return s
-
 -- The `infoContextual` command displays a distilled list of things in the
 -- context, parameters if the argument is False or definitions if the
 -- argument is True.
-
 infoHypotheses  = infoContextual False
 infoContext     = infoContextual True
-
 infoContextual :: Bool -> ProofState (Pure React')
 infoContextual gals = do
     inScope <- getInScope
@@ -719,12 +626,10 @@ infoContextual gals = do
     removeShared :: Spine TT REF -> TY -> TY
     removeShared []       ty        = ty
     removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
-
 -- This old implementation is written using a horrible imperative hack that
 -- saves the state, throws away bits of the context to produce an answer,
 -- then restores the saved state. We can get rid of it once we are
 -- confident that the new version (above) produces suitable output.
-
 infoContextual' :: Bool -> ProofState (Pure React')
 infoContextual' gals = do
     save <- get
@@ -775,7 +680,6 @@ infoContextual' gals = do
                    reactKword KwAsc
                    reactTy
            (_, es' :< _) -> putEntriesAbove es' >> hyps bsc me
-
 infoScheme :: RelName -> ProofState (Pure React')
 infoScheme x = do
     (_, as, ms) <- resolveHere x
@@ -784,9 +688,7 @@ infoScheme x = do
             d <- reactSchemeHere (applyScheme sch as)
             return d
         Nothing -> return (fromString (showRelName x ++ " does not have a scheme."))
-
 -- The `infoWhatIs` command displays a term in various representations.
-
 infoWhatIs :: DExTmRN -> ProofState (Pure React')
 infoWhatIs tmd = draftModule "__infoWhatIs" $ do
     tm :=>: tmv :<: tyv <- elabInfer' tmd
@@ -805,7 +707,6 @@ infoWhatIs tmd = draftModule "__infoWhatIs" $ do
         ,   "Distilled type:", fromString (show tys)
         ,   "Pretty-printed type:", reactify tys
         ]
-
 byCTactic :: Maybe RelName -> DExTmRN -> ProofState (Pure React')
 byCTactic n e = do
     elimCTactic n e
@@ -814,13 +715,11 @@ byCTactic n e = do
     many' goUp                          -- go back up to motive
     optional' seekGoal                  -- jump to goal
     return "Eliminated and simplified."
-
 defineCTactic :: DExTmRN -> DInTmRN -> ProofState (Pure React')
 defineCTactic rl tm = do
     relabel rl
     elabGiveNext (DLRET tm)
     return "Hurrah!"
-
 matchCTactic :: [(String, DInTmRN)]
              -> DExTmRN
              -> DInTmRN
@@ -838,7 +737,6 @@ matchCTactic xs a b = draftModule "__match" $ do
         tt  <- elaborate' (SET :>: t)
         r   <- assumeParam (s :<: tt)
         return (r, Nothing)
-
 elimCTactic :: Maybe RelName -> DExTmRN -> ProofState (Pure React')
 elimCTactic c r = do
     c' <- traverse resolveDiscard c
@@ -846,7 +744,6 @@ elimCTactic c r = do
     elim c' (elimTy :>: e)
     toFirstMethod
     return "Eliminated. Subgoals awaiting work..."
-
 simpleOutput :: ProofState (Pure React') -> Cmd ()
 simpleOutput eval = do
     locs :< loc <- getCtx
@@ -858,19 +755,15 @@ simpleOutput eval = do
         Right (msg, loc') -> do
             setCtx (locs :< loc :< loc')
             displayUser msg
-
 -- The `reactBKind` function reactifies a `ParamKind` if supplied with an
 -- element representing its name and type.
-
 reactBKind :: ParamKind -> React a b c () -> React a b c ()
 reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
 reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
 reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
-
 -- Given a proof state command and a context, we can run the command with
 -- `runProofState` to produce a message (either the response from the
 -- command or the error message) and `Maybe` a new proof context.
-
 runProofState
     :: ProofState a
     -> ProofContext

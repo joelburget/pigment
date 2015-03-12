@@ -1,26 +1,20 @@
-.PHONY: build debug clean server docs web
+.PHONY: build clean docs web install_less_deps
 
-debug: src/css/index.css
-	cd src; hastec Main.lhs --with-js=js/react-stubs.js --ddisable-js-opts --debug; cd -
+# debug: src/css/index.css
+# 	cabal install --ghcjs
 
-build: src/css/index.css
-	cd src; hastec Main.lhs --with-js=js/react-stubs.js; cd -
+build: build/index.css
+	cabal install --ghcjs
 
 clean:
 	git clean -xf
-	cd src; rm -rf main; cd -
-
-server:
-	cd src; python -m SimpleHTTPServer 8765
 
 web:
 	cp -r src/{index.html,css,js,Main.js} web
+	cp dist/build/pigment/pigment.jsexe/all.js web/js/
 
-src/css/index.css: src/css/index.less
-	cd src/css; lessc index.less index.css --autoprefix=""; cd -
-
-src/js/out.js: src/js/react.js src/js/support.js
-	cd src/js; ./node_modules/bin/browserify support.js -o out.js; cd -
+build/index.css: src/css/index.less
+	lessc src/css/index.less build/index.css --autoprefix=""
 
 install_less_deps:
 	npm install -g less less-plugin-autoprefix

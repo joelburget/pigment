@@ -1,11 +1,10 @@
 Tm
 ==
 
-> {-# OPTIONS_GHC -F -pgmF she #-}
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
 >     FlexibleContexts, ScopedTypeVariables, ConstraintKinds,
->     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds #-}
+>     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds, TupleSections #-}
 
 > module Evidences.Tm where
 
@@ -776,54 +775,63 @@ TODO(joel) rename to throwErrorTm
 > convertErrorVALs (ErrorVAL tt)          = ErrorVAL tt
 
 > instance Traversable Can where
->     traverse f Set       = (|Set|)
->     traverse f (Pi s t)  = (|Pi (f s) (f t)|)
->     traverse f (Con t)   = (|Con (f t)|)
->     traverse _ Anchors = (| Anchors |)
->     traverse f (Anchor u t ts) = (|Anchor (f u) (f t) (f ts)|)
->     traverse f (AllowedBy t) = (|AllowedBy (f t)|)
->     traverse f AllowedEpsilon = (|AllowedEpsilon|)
->     traverse f (AllowedCons _S _T q s ts) = (|AllowedCons (f _S) (f _T) (f q) (f s) (f ts)|)
->     traverse f (Mu l) = (|Mu (traverse f l)|)
->     traverse f (EnumT e)    = (|EnumT (f e)|)
->     traverse f Ze           = (|Ze|)
->     traverse f (Su n)       = (|Su (f n)|)
+>     traverse f Set       = pure Set
+>     traverse f (Pi s t)  = Pi <$> f s <*> f t
+>     traverse f (Con t)   = Con <$> f t
+>     traverse _ Anchors = pure Anchors
+>     traverse f (Anchor u t ts) = Anchor <$> f u <*> f t <*> f ts
+>     traverse f (AllowedBy t) = AllowedBy <$> f t
+>     traverse f AllowedEpsilon = pure AllowedEpsilon
+>     traverse f (AllowedCons _S _T q s ts) =
+>         AllowedCons <$> f _S <*> f _T <*> f q <*> f s <*> f ts
+>     traverse f (Mu l) = Mu <$> traverse f l
+>     traverse f (EnumT e)    = EnumT <$> f e
+>     traverse f Ze           = pure Ze
+>     traverse f (Su n)       = Su <$> f n
 >     traverse f (EqBlue (pty :>: p) (qty :>: q)) =
->       (|EqBlue (|(:>:) (f pty) (f p)|) (|(:>:) (f qty) (f q)|)|)
->     traverse f (Monad d x)   = (| Monad (f d) (f x) |)
->     traverse f (Return x)    = (| Return (f x) |)
->     traverse f (Composite x) = (| Composite (f x) |)
->     traverse f (IMu l i)     = (|IMu (traverse f l) (f i)|)
->     traverse f (Label l t) = (| Label (f l) (f t) |)
->     traverse f (LRet t)    = (| LRet (f t) |)
->     traverse f (Nu t) = (|Nu (traverse f t)|)
->     traverse f (CoIt d sty g s) = (|CoIt (f d) (f sty) (f g) (f s)|)
->     traverse _ Prob = (| Prob |)
->     traverse f (ProbLabel u s a) = (|ProbLabel (f u) (f s) (f a)|)
->     traverse f (PatPi u s p) = (|PatPi (f u) (f s) (f p)|)
->     traverse _ Sch = (| Sch |)
->     traverse f (SchTy t)      = (|SchTy (f t)|)
->     traverse f (SchExpPi s t) = (|SchExpPi (f s) (f t)|)
->     traverse f (SchImpPi s t) = (|SchImpPi (f s) (f t)|)
->     traverse _ Prop      = (|Prop|)
->     traverse f (Prf p)   = (|Prf (f p)|)
->     traverse f (All p q) = (|All (f p) (f q)|)
->     traverse f (And p q) = (|And (f p) (f q)|)
->     traverse _ Trivial   = (|Trivial|)
->     traverse _ Absurd    = (|Absurd|)
->     traverse f (Box p)   = (|Box (traverse f p)|)
->     traverse f (Inh ty)  = (|Inh (f ty)|)
->     traverse f (Wit t)   = (|Wit (f t)|)
->     traverse f (Quotient x r p) = (| Quotient (f x) (f r) (f p) |)
->     traverse f RSig           = (|RSig|)
->     traverse f REmpty         = (|REmpty|)
->     traverse f (RCons s i t)  = (|RCons (f s) (f i) (f t)|)
->     traverse f Unit         = (|Unit|)
->     traverse f Void         = (|Void|)
->     traverse f (Sigma s t)  = (|Sigma (f s) (f t)|)
->     traverse f (Pair x y)   = (|Pair (f x) (f y)|)
->     traverse f UId          = (|UId|)
->     traverse f (Tag s)      = (|(Tag s)|)
+>       let trav1 = (:>:) <$> f pty <*> f p
+>           trav2 = (:>:) <$> f qty <*> f q
+>       in EqBlue <$> trav1 <*> trav2
+>     traverse f (Monad d x)   = Monad <$> f d <*> f x
+>     traverse f (Return x)    = Return <$> f x
+>     traverse f (Composite x) = Composite <$> f x
+>     traverse f (IMu l i)     = IMu <$> traverse f l <*> f i
+>     traverse f (Label l t) = Label <$> f l <*> f t
+>     traverse f (LRet t)    = LRet <$> f t
+>     traverse f (Nu t) = Nu <$> traverse f t
+>     traverse f (CoIt d sty g s) = CoIt <$> f d <*> f sty <*> f g <*> f s
+>     traverse _ Prob = pure Prob
+>     traverse f (ProbLabel u s a) = ProbLabel <$> f u <*> f s <*> f a
+>     traverse f (PatPi u s p) = PatPi <$> f u <*> f s <*> f p
+>     traverse _ Sch = pure Sch
+>     traverse f (SchTy t)      = SchTy <$> f t
+>     traverse f (SchExpPi s t) = SchExpPi <$> f s <*> f t
+>     traverse f (SchImpPi s t) = SchImpPi <$> f s <*> f t
+>     traverse _ Prop      = pure Prop
+>     traverse f (Prf p)   = Prf <$> f p
+>     traverse f (All p q) = All <$> f p <*> f q
+>     traverse f (And p q) = And <$> f p <*> f q
+>     traverse _ Trivial   = pure Trivial
+>     traverse _ Absurd    = pure Absurd
+>     traverse f (Box p)   = Box <$> traverse f p
+>     traverse f (Inh ty)  = Inh <$> f ty
+>     traverse f (Wit t)   = Wit <$> f t
+>     traverse f (Quotient x r p) = Quotient <$> f x <*> f r <*> f p
+>     traverse f RSig           = pure RSig
+>     traverse f REmpty         = pure REmpty
+>     traverse f (RCons s i t)  = RCons <$> f s <*> f i <*> f t
+>     traverse f Unit         = pure Unit
+>     traverse f Void         = pure Void
+>     traverse f (Sigma s t)  = Sigma <$> f s <*> f t
+>     traverse f (Pair x y)   = Pair <$> f x <*> f y
+>     traverse f UId          = pure UId
+>     traverse f (Tag s)      = pure (Tag s)
+
+> instance Functor Can where
+>     fmap = fmapDefault
+
+> instance Foldable Can where
+>     foldMap = foldMapDefault
 
 > instance HalfZip Can where
 >     halfZip Set        Set        = Just Set
@@ -834,17 +842,17 @@ TODO(joel) rename to throwErrorTm
 >     halfZip (AllowedBy t1) (AllowedBy t2) = Just $ AllowedBy (t1, t2)
 >     halfZip AllowedEpsilon AllowedEpsilon = Just $ AllowedEpsilon
 >     halfZip (AllowedCons _S1 _T1 q1 s1 ts1) (AllowedCons _S2 _T2 q2 s2 ts2) = Just $ AllowedCons (_S1, _S2) (_T1, _T2) (q1, q2) (s1, s2) (ts1, ts2)
->     halfZip (Mu t0) (Mu t1) = (| Mu (halfZip t0 t1) |)
+>     halfZip (Mu t0) (Mu t1) = Mu <$> halfZip t0 t1
 >     halfZip (EnumT t0) (EnumT t1) = Just (EnumT (t0,t1))
 >     halfZip Ze Ze = Just Ze
 >     halfZip (Su t0) (Su t1) = Just (Su (t0,t1))
 >     halfZip (Monad d1 x1) (Monad d2 x2) = Just (Monad (d1, d2) (x1, x2))
 >     halfZip (Return x) (Return y) = Just (Return (x, y))
 >     halfZip (Composite x) (Composite y) = Just (Composite (x, y))
->     halfZip (IMu l0 i0) (IMu l1 i1) = (|(\p -> IMu p (i0,i1)) (halfZip l0 l1)|)
+>     halfZip (IMu l0 i0) (IMu l1 i1) = IMu <$> halfZip l0 l1 <*> pure (i0,i1)
 >     halfZip (Label l1 t1) (Label l2 t2) = Just (Label (l1,l2) (t1,t2))
 >     halfZip (LRet x) (LRet y)           = Just (LRet (x,y))
->     halfZip (Nu t0) (Nu t1)  = (| Nu (halfZip t0 t1) |)
+>     halfZip (Nu t0) (Nu t1)  = Nu <$> halfZip t0 t1
 >     halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
 >       Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
 >     halfZip Prob Prob = Just Prob
@@ -870,21 +878,33 @@ TODO(joel) rename to throwErrorTm
 >     halfZip _          _          = Nothing
 
 > instance Traversable Elim where
->   traverse f (A s)  = (|A (f s)|)
->   traverse _ Out    = (|Out|)
->   traverse f (Call l) = (| Call (f l) |)
->   traverse f Fst  = (|Fst|)
->   traverse f Snd  = (|Snd|)
+>   traverse f (A s)  = A <$> f s
+>   traverse _ Out    = pure Out
+>   traverse f (Call l) = Call <$> f l
+>   traverse f Fst  = pure Fst
+>   traverse f Snd  = pure Snd
+
+> instance Functor Elim where
+>     fmap = fmapDefault
+
+> instance Foldable Elim where
+>     foldMap = foldMapDefault
 
 > instance HalfZip Elim where
 >   halfZip (A s) (A t)  = Just $ A (s, t)
 >   halfZip (Call t1) (Call t2) = Just (Call (t1, t2))
->   halfZip Fst Fst = (|Fst|)
->   halfZip Snd Snd = (|Snd|)
+>   halfZip Fst Fst = pure Fst
+>   halfZip Snd Snd = pure Snd
 >   halfZip _ _          = Nothing
 
 > instance Traversable Irr where
->   traverse f (Irr x) = (|Irr (f x)|)
+>   traverse f (Irr x) = Irr <$> f x
+
+> instance Functor Irr where
+>     fmap = fmapDefault
+
+> instance Foldable Irr where
+>     foldMap = foldMapDefault
 
 > instance Show x => Show (Tm dir phase x) where
 >   show (L s)       = "L (" ++ show s ++ ")"
@@ -906,25 +926,45 @@ TODO(joel) rename to throwErrorTm
 >   show = opName
 
 > instance Traversable (Scope p) where
->   traverse f (x :. t)   = (|(x :.) (traverse f t)|)
->   traverse f (K t)      = (|K (traverse f t)|)
->   traverse f (H (e, s) x t)  = (|H (| (traverse (traverse f) e) , ~s|) ~x (traverse f t)|)
+>   traverse f (x :. t)   = (x :.) <$> traverse f t
+>   traverse f (K t)      = K <$> traverse f t
+>   traverse f (H (e, s) x t)  =
+>     let foo = (,s) <$> traverse (traverse f) e
+>     in H <$> foo <*> pure x <*> traverse f t
+
+> instance Functor (Scope p) where
+>     fmap = fmapDefault
+
+> instance Foldable (Scope p) where
+>     foldMap = foldMapDefault
 
 > instance Traversable f => Traversable (Labelled f) where
->   traverse f (mt :?=: ft)  = (| traverse f mt :?=: traverse f ft |)
+>   traverse f (mt :?=: ft)  = (:?=:) <$> traverse f mt <*> traverse f ft
+
+> instance Traversable f => Functor (Labelled f) where
+>     fmap = fmapDefault
+
+> instance Traversable f => Foldable (Labelled f) where
+>     foldMap = foldMapDefault
 
 > instance (Traversable f, HalfZip f) => HalfZip (Labelled f) where
 >   halfZip (Just a  :?=: fs)  (Just b :?=: ft)  =
->     (| (Just (a, b)  :?=:) (halfZip fs ft) |)
+>     (Just (a, b)  :?=:) <$> halfZip fs ft
 >   halfZip (_       :?=: fs)  (_      :?=: ft)  =
->     (| (Nothing  :?=:) (halfZip fs ft) |)
+>     (Nothing  :?=:) <$> halfZip fs ft
 
 > instance Traversable (Tm d p) where
->   traverse f (L sc)     = (|L (traverse f sc)|)
->   traverse f (C c)      = (|C (traverse (traverse f) c)|)
->   traverse f (N n)      = (|N (traverse f n)|)
->   traverse f (P x)      = (|P (f x)|)
+>   traverse f (L sc)     = L <$> traverse f sc
+>   traverse f (C c)      = C <$> traverse (traverse f) c
+>   traverse f (N n)      = N <$> traverse f n
+>   traverse f (P x)      = P <$> f x
 >   traverse f (V i)      = pure (V i)
->   traverse f (t :$ u)   = (|(:$) (traverse f t) (traverse (traverse f) u)|)
->   traverse f (op :@ ts) = (|(op :@) (traverse (traverse f) ts)|)
->   traverse f (tm :? ty) = (|(:?) (traverse f tm) (traverse f ty)|)
+>   traverse f (t :$ u)   = (:$) <$> traverse f t <*> traverse (traverse f) u
+>   traverse f (op :@ ts) = (op :@) <$> traverse (traverse f) ts
+>   traverse f (tm :? ty) = (:?) <$> traverse f tm <*> traverse f ty
+
+> instance Functor (Tm d p) where
+>     fmap = fmapDefault
+
+> instance Foldable (Tm d p) where
+>     foldMap = foldMapDefault
