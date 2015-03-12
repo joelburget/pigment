@@ -3,8 +3,11 @@
 # debug: src/css/index.css
 # 	cabal install --ghcjs
 
-build: build/index.css
+build: build/index.css assemble
 	cabal install --ghcjs
+
+assemble:
+	cp src/index.html build
 
 clean:
 	git clean -xf
