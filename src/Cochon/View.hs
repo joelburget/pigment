@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
-  MultiParamTypeClasses, EmptyDataDecls, LambdaCase, LiberalTypeSynonyms #-}
+  MultiParamTypeClasses, LambdaCase, LiberalTypeSynonyms #-}
 
 module Cochon.View where
 
