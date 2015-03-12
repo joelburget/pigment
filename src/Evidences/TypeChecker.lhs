@@ -9,6 +9,7 @@
 
 > import Control.Applicative
 > import Control.Monad.Except
+> import Data.Functor.Identity
 > import Data.Monoid ((<>))
 > import Data.Traversable
 > import Kit.BwdFwd
@@ -75,11 +76,11 @@ function traversing the types derivation tree can be expressed using
 >     ssv@(s :=>: sv) <- chev (_Sv :>: s)
 >     tstsv <- chev (ALLOWEDBY (_Tv $$ (A sv)) :>: ts)
 >     return $ AllowedCons _SSv _TTv qqv ssv tstsv
-> canTy chev (Set :>: Mu (ml :?=: Id x))     = do
+> canTy chev (Set :>: Mu (ml :?=: Identity x))     = do
 >   mlv <- traverse (chev . (ANCHORS :>:)) ml
 >   xxv@(x :=>: xv) <- chev (desc :>: x)
->   return $ Mu (mlv :?=: Id xxv)
-> canTy chev (t@(Mu (_ :?=: Id x)) :>: Con y) = do
+>   return $ Mu (mlv :?=: Identity xxv)
+> canTy chev (t@(Mu (_ :?=: Identity x)) :>: Con y) = do
 >   yyv@(y :=>: yv) <- chev (descOp @@ [x, C t] :>: y)
 >   return $ Con yyv
 > canTy chev (Set :>: EnumT e)  = do
@@ -108,13 +109,13 @@ function traversing the types derivation tree can be expressed using
 > canTy chev (Monad d x :>: Composite y) = do
 >   yyv@(y :=>: yv) <- chev (descOp @@ [d, MONAD d x] :>: y)
 >   return $ Composite yyv
-> canTy chev (Set :>: IMu (ml :?=: (Id ii :& Id x)) i)  = do
+> canTy chev (Set :>: IMu (ml :?=: (Identity ii :& Identity x)) i)  = do
 >   iiiiv@(ii :=>: iiv) <- chev (SET :>: ii)
 >   mlv <- traverse (chev . (ARR iiv ANCHORS :>:)) ml
 >   xxv@(x :=>: xv) <- chev (ARR iiv (idesc $$ A iiv) :>: x)
 >   iiv <- chev (iiv :>: i)
->   return $ IMu (mlv :?=: (Id iiiiv :& Id xxv)) iiv
-> canTy chev (IMu tt@(_ :?=: (Id ii :& Id x)) i :>: Con y) = do
+>   return $ IMu (mlv :?=: (Identity iiiiv :& Identity xxv)) iiv
+> canTy chev (IMu tt@(_ :?=: (Identity ii :& Identity x)) i :>: Con y) = do
 >   yyv <- chev (idescOp @@ [ ii
 >                           , x $$ A i
 >                           , L $ "i" :. (let i = 0 in
@@ -128,14 +129,14 @@ function traversing the types derivation tree can be expressed using
 > canTy chev (Label l ty :>: LRet t) = do
 >    ttv@(t :=>: tv) <- chev (ty :>: t)
 >    return (LRet ttv)
-> canTy chev (Set :>: Nu (ml :?=: Id x))     = do
+> canTy chev (Set :>: Nu (ml :?=: Identity x))     = do
 >   mlv <- traverse (chev . (SET :>:)) ml
 >   xxv@(x :=>: xv) <- chev (desc :>: x)
->   return $ Nu (mlv :?=: Id xxv)
-> canTy chev (t@(Nu (_ :?=: Id x)) :>: Con y) = do
+>   return $ Nu (mlv :?=: Identity xxv)
+> canTy chev (t@(Nu (_ :?=: Identity x)) :>: Con y) = do
 >   yyv <- chev (descOp @@ [x, C t] :>: y)
 >   return $ Con yyv
-> canTy chev (Nu (_ :?=: Id x) :>: CoIt d sty f s) = do
+> canTy chev (Nu (_ :?=: Identity x) :>: CoIt d sty f s) = do
 >   dv <- chev (desc :>: d)
 >   sstyv@(sty :=>: styv) <- chev (SET :>: sty)
 >   fv <- chev (ARR styv (descOp @@ [x,styv]) :>: f)
@@ -197,11 +198,11 @@ function traversing the types derivation tree can be expressed using
 >   iiv@(i :=>: iv) <- chev (UID :>: id)
 >   ttv@(t :=>: tv) <- chev (ARR (recordOp @@ [sv]) SET  :>: ty)
 >   return $ RCons ssv iiv ttv
-> canTy chev (Set :>: Record (ml :?=: Id r)) = do
+> canTy chev (Set :>: Record (ml :?=: Identity r)) = do
 >   mlv <- traverse (chev . (SET :>:)) ml
 >   rrv@(r :=>: rv) <- chev (RSIG :>: r)
->   return $ Record (mlv :?=: Id rrv)
-> canTy chev (tv@(Record (_ :?=: Id x)) :>: Con y) = do
+>   return $ Record (mlv :?=: Identity rrv)
+> canTy chev (tv@(Record (_ :?=: Identity x)) :>: Con y) = do
 >   yyv@(y :=>: yv) <- chev (recordOp @@ [x] :>: y)
 >   return $ Con yyv
 > canTy _   (Set :>: Unit) = return Unit
@@ -247,17 +248,17 @@ want.
 > elimTy chev (f :<: Pi s t) (A e) = do
 >   eev@(e :=>: ev) <- chev (s :>: e)
 >   return $ (A eev, t $$ A ev)
-> elimTy chev (_ :<: t@(Mu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
+> elimTy chev (_ :<: t@(Mu (_ :?=: Identity d))) Out = return (Out, descOp @@ [d , C t])
 > elimTy chev (_ :<: Prf (EQBLUE (t0 :>: x0) (t1 :>: x1))) Out =
 >   return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
-> elimTy chev (_ :<: (IMu tt@(_ :?=: (Id ii :& Id x)) i)) Out =
+> elimTy chev (_ :<: (IMu tt@(_ :?=: (Identity ii :& Identity x)) i)) Out =
 >   return (Out,
 >     idescOp @@ [  ii , x $$ A i
 >                ,  L $ "i" :. (let i = 0 in C (IMu (fmap (-$ []) tt) (NV i)) ) ])
 > elimTy chev (_ :<: Label _ t) (Call l) = do
 >    llv@(l :=>: lv) <- chev (t :>: l)
 >    return (Call llv, t)
-> elimTy chev (_ :<: t@(Nu (_ :?=: Id d))) Out = return (Out, descOp @@ [d , C t])
+> elimTy chev (_ :<: t@(Nu (_ :?=: Identity d))) Out = return (Out, descOp @@ [d , C t])
 > elimTy chev (f :<: Prf (ALL p q))      (A e)  = do
 >   eev@(e :=>: ev) <- chev (p :>: e)
 >   return $ (A eev, PRF (q $$ A ev))

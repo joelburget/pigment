@@ -6,6 +6,7 @@
 
 > module DisplayLang.PrettyPrint where
 
+> import Data.Functor.Identity
 > import Data.List
 > import Text.PrettyPrint.HughesPJ
 > import ProofState.Structure.Developments
@@ -57,7 +58,7 @@ being with $\Pi$-types.
 >     pretty AllowedEpsilon = const empty
 >     pretty (AllowedCons _ _ _ s ts) = wrapDoc (pretty s ArgSize <> pretty ts ArgSize) ArgSize
 >     pretty (Mu (Just l   :?=: _)) = pretty l
->     pretty (Mu (Nothing  :?=: Id t))  = wrapDoc
+>     pretty (Mu (Nothing  :?=: Identity t))  = wrapDoc
 >         (kword KwMu <> pretty t ArgSize)
 >         AppSize
 >     pretty (EnumT t)  = wrapDoc (kword KwEnum <> pretty t ArgSize) AppSize
@@ -80,7 +81,7 @@ being with $\Pi$-types.
 >     pretty (IMu (Just l   :?=: _) i)  = wrapDoc
 >         (pretty l AppSize <> pretty i ArgSize)
 >         AppSize
->     pretty (IMu (Nothing  :?=: (Id ii :& Id d)) i)  = wrapDoc
+>     pretty (IMu (Nothing  :?=: (Identity ii :& Identity d)) i)  = wrapDoc
 >         (kword KwIMu <> pretty ii ArgSize <> pretty d ArgSize <> pretty i ArgSize)
 >         AppSize
 >     pretty (Label l t) = const (kword KwLabel <>
@@ -88,7 +89,7 @@ being with $\Pi$-types.
 >         <> kword KwLabelEnd)
 >     pretty (LRet x) = wrapDoc (kword KwRet <> pretty x ArgSize) ArgSize
 >     pretty (Nu (Just l :?=: _))  = pretty l
->     pretty (Nu (Nothing :?=: Id t))  =
+>     pretty (Nu (Nothing :?=: Identity t))  =
 >       wrapDoc (kword KwNu <> pretty t ArgSize) ArgSize
 >     pretty (CoIt d sty f s) = wrapDoc
 >         (kword KwCoIt <> pretty sty ArgSize
@@ -179,7 +180,7 @@ than a $\lambda$-term is reached.
 >         (pretty t ArgSize <> kword KwEqBlue <> pretty u ArgSize)
 >         ArgSize
 >     pretty (DIMu (Just s   :?=: _) _)  = pretty s
->     pretty (DIMu (Nothing  :?=: (Id ii :& Id d)) i)  = wrapDoc
+>     pretty (DIMu (Nothing  :?=: (Identity ii :& Identity d)) i)  = wrapDoc
 >         (kword KwIMu <> pretty ii ArgSize <> pretty d ArgSize <> pretty i ArgSize)
 >         AppSize
 >     pretty (DTAG s)     = const (kword KwTag <> text s)

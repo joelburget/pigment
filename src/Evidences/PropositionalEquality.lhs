@@ -8,6 +8,7 @@ Observational Equality
 > module Evidences.PropositionalEquality where
 
 > import Control.Applicative
+> import Data.Functor.Identity
 
 > import Kit.MissingLibrary
 > import Evidences.Tm
@@ -58,7 +59,7 @@ follows,
 >           ALL (sS1 -$ []) $ L $ "s1" :. (let { s1 = 0; s2 = 1 } in
 >            IMP  (EQBLUE ((sS2 -$ []) :>: NV s2) ((sS1 -$ []) :>: NV s1)) $
 >             (SET :>: (tT1 -$ [ NV s1 ])) <:-:> (SET :>: (tT2 -$ [ NV s2 ])) ) )
-> opRunEqGreen [SET, C (Mu (_ :?=: Id t0)), SET, C (Mu (_ :?=: Id t1))] =
+> opRunEqGreen [SET, C (Mu (_ :?=: Identity t0)), SET, C (Mu (_ :?=: Identity t1))] =
 >     opRunEqGreen [desc, t0, desc, t1]
 
 Unless overridden by a feature or preceding case, we determine equality
@@ -140,7 +141,7 @@ system, they should not inspect the proof, but may eliminate it with
 >          t1 = f1 -$ [ s1 ]
 >     in   coe :@ [  tT1 -$ [ s1 ], tT2 -$ [ NV s2 ]
 >                 ,  CON $ (q $$ Snd) -$ [ NV s2 , s1 , sq ] , t1 ] )
-> coerce (Mu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
+> coerce (Mu (Just (l0,l1) :?=: Identity (d0,d1))) q (CON x) =
 >   let typ = ARR desc (ARR ANCHORS SET)
 >       vap = L $ "d" :. (let d = 0 :: Int in L $ "l" :. (let {l = 0; d = 1} in N $
 >               descOp :@ [NV d,MU (Just $ NV l) (NV d)] ) )
@@ -151,7 +152,7 @@ system, they should not inspect the proof, but may eliminate it with
 >                              $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
 >                              $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
 >            , x ]
-> coerce (Mu (Nothing :?=: Id (d0,d1))) q (CON x) =
+> coerce (Mu (Nothing :?=: Identity (d0,d1))) q (CON x) =
 >   let typ = ARR desc SET
 >       vap = L $ "d" :. (let d = 0 :: Int in N $
 >               descOp :@ [NV d,MU Nothing (NV d)] )
@@ -180,7 +181,7 @@ system, they should not inspect the proof, but may eliminate it with
 >     ]
 > -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > coerce (IMu (Just (l0,l1) :?=:
->             (Id (iI0,iI1) :& Id (d0,d1))) (i0,i1)) q (CON x) =
+>             (Identity (iI0,iI1) :& Identity (d0,d1))) (i0,i1)) q (CON x) =
 >   let ql  = CON $ q $$ Fst
 >       qiI = CON $ q $$ Snd $$ Fst
 >       qi  = CON $ q $$ Snd $$ Snd $$ Snd
@@ -216,7 +217,7 @@ system, they should not inspect the proof, but may eliminate it with
 >                              $$ A i0 $$ A i1 $$ A qi
 >                              $$ A l0 $$ A l1 $$ A ql
 >            , x ]
-> coerce (IMu (Nothing :?=: (Id (iI0,iI1) :& Id (d0,d1))) (i0,i1)) q (CON x) =
+> coerce (IMu (Nothing :?=: (Identity (iI0,iI1) :& Identity (d0,d1))) (i0,i1)) q (CON x) =
 >   let qiI = CON $ q $$ Fst
 >       qi  = CON $ q $$ Snd $$ Snd
 >       qd = CON $ q $$ Snd $$ Fst
@@ -247,7 +248,7 @@ system, they should not inspect the proof, but may eliminate it with
 > coerce (Label (l1, l2) (t1, t2)) q (LRET t) =
 >     Right $ LRET $ coe @@ [t1, t2, CON (q $$ Snd), t]
 > -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
-> coerce (Nu (Just (l0,l1) :?=: Id (d0,d1))) q (CON x) =
+> coerce (Nu (Just (l0,l1) :?=: Identity (d0,d1))) q (CON x) =
 >   let typ = ARR desc (ARR SET SET)
 >       vap = L $ "d" :. (let { d = 0 :: Int } in L $ "l" :. (let { l = 0; d = 1 } in N $
 >               descOp :@ [NV d,NU (Just $ NV l) (NV d)]))
@@ -258,7 +259,7 @@ system, they should not inspect the proof, but may eliminate it with
 >                              $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
 >                              $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
 >            , x ]
-> coerce (Nu (Nothing :?=: Id (d0,d1))) q (CON x) =
+> coerce (Nu (Nothing :?=: Identity (d0,d1))) q (CON x) =
 >   let typ = ARR desc SET
 >       vap = L $ "d" :. (let { d = 0 :: Int } in N $
 >               descOp :@ [NV d,NU Nothing (NV d)])

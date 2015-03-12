@@ -10,6 +10,7 @@ Display Terms
 
 > import Control.Applicative
 > import Data.Foldable hiding (foldl)
+> import Data.Functor.Identity
 > import Data.Traversable
 
 > import Evidences.Tm
@@ -55,7 +56,7 @@ Thanks to this hack, we can use `deriving Traversable`.
 >     DT     :: InTmWrap p x     ->  DInTm p x -- embedding
 >     DAnchor :: String -> DInTm p x -> DInTm p x
 >     DEqBlue :: DExTm p x -> DExTm p x -> DInTm p x
->     DIMu :: Labelled (Id :*: Id) (DInTm p x) -> DInTm p x  -> DInTm p x
+>     DIMu :: Labelled (Identity :*: Identity) (DInTm p x) -> DInTm p x  -> DInTm p x
 >     DTag :: String -> [DInTm p x] -> DInTm p x
 >  deriving (Functor, Foldable, Traversable, Show)
 
@@ -188,7 +189,7 @@ appropriate places.
 > pattern DLK t       = DL (DK t)
 > pattern DTY ty tm   = DType ty ::$ [A tm]
 > pattern DANCHOR s args = DAnchor s args
-> pattern DMU l x        = DC (Mu (l :?=: Id x))
+> pattern DMU l x        = DC (Mu (l :?=: Identity x))
 > pattern DIDD           = DCON (DPAIR  DZE
 >                                       DVOID)
 > pattern DCONSTD x      = DCON (DPAIR  (DSU DZE)
@@ -216,7 +217,7 @@ appropriate places.
 > pattern DISIGMAN   = DSU (DSU (DSU (DSU DZE)))
 > pattern DIFSIGMAN  = DSU (DSU (DSU (DSU (DSU DZE))))
 > pattern DIPRODN    = DSU (DSU (DSU (DSU (DSU (DSU DZE)))))
-> pattern DIMU l ii x i  = DIMu (l :?=: (Id ii :& Id x)) i
+> pattern DIMU l ii x i  = DIMu (l :?=: (Identity ii :& Identity x)) i
 > pattern DIVAR i        = DCON (DPAIR DIVARN     (DPAIR i DVOID))
 > pattern DIPI s t       = DCON (DPAIR DIPIN      (DPAIR s (DPAIR t DVOID)))
 > pattern DIFPI s t      = DCON (DPAIR DIFPIN     (DPAIR s (DPAIR t DVOID)))
@@ -226,7 +227,7 @@ appropriate places.
 > pattern DIPROD u x y   = DCON (DPAIR DIPRODN    (DPAIR u (DPAIR x (DPAIR y DVOID))))
 > pattern DLABEL l t = DC (Label l t)
 > pattern DLRET t    = DC (LRet t)
-> pattern DNU l t = DC (Nu (l :?=: Id t))
+> pattern DNU l t = DC (Nu (l :?=: Identity t))
 > pattern DCOIT d sty f s = DC (CoIt d sty f s)
 > pattern DPROP        = DC Prop
 > pattern DPRF p       = DC (Prf p)
@@ -244,7 +245,7 @@ appropriate places.
 > pattern DRSIG         = DC RSig
 > pattern DREMPTY       = DC REmpty
 > pattern DRCONS s i t  = DC (RCons s i t)
-> pattern DRECORD l s   = DC (Record (l :?=: Id s))
+> pattern DRECORD l s   = DC (Record (l :?=: Identity s))
 > pattern DSIGMA p q = DC (Sigma p q)
 > pattern DPAIR  p q = DC (Pair p q)
 > pattern DUNIT      = DC Unit

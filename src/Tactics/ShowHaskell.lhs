@@ -5,8 +5,10 @@
 > module Tactics.ShowHaskell where
 
 > import Prelude hiding (any, foldl)
+> import Data.Functor.Identity
 > import Data.List
 > import Data.String (fromString)
+
 > import Evidences.Tm
 > import ProofState.Structure.Developments
 > import ProofState.Edition.ProofState
@@ -74,13 +76,13 @@ Converting Epigram definitions to Haskell
 >     showHaskell bs Absurd      = "ABSURD"
 >     showHaskell bs (Inh t)     = "(INH " ++ showHaskell bs t ++ ")"
 >     showHaskell bs (Wit t)     = "(WIT " ++ showHaskell bs t ++ ")"
->     showHaskell bs (Mu (l :?=: Id x))  = "(MU " ++ showHaskell bs l ++ " " ++ showHaskell bs x ++ ")"
->     showHaskell bs (IMu (l :?=: (Id ii :& Id x)) i) = "(IMU " ++ showHaskell bs l ++ " " ++ showHaskell bs ii ++ " " ++ showHaskell bs x ++ " " ++ showHaskell bs i ++ ")"
+>     showHaskell bs (Mu (l :?=: Identity x))  = "(MU " ++ showHaskell bs l ++ " " ++ showHaskell bs x ++ ")"
+>     showHaskell bs (IMu (l :?=: (Identity ii :& Identity x)) i) = "(IMU " ++ showHaskell bs l ++ " " ++ showHaskell bs ii ++ " " ++ showHaskell bs x ++ " " ++ showHaskell bs i ++ ")"
 >     showHaskell bs (EqBlue ss tt) = "(EQBLUE " ++ showHaskell bs ss ++ " " ++ showHaskell bs tt ++ ")"
 >     showHaskell bs (Monad s t) = "(MONAD " ++ showHaskell bs s ++ " " ++ showHaskell bs t ++ ")"
 >     showHaskell bs (Return x) = "(RETURN " ++ showHaskell bs x ++ ")"
 >     showHaskell bs (Composite t) = "(COMPOSITE " ++ showHaskell bs t ++ ")"
->     showHaskell bs (Nu (l :?=: Id t)) = "(NU " ++ showHaskell bs l ++ " " ++ showHaskell bs t ++ ")"
+>     showHaskell bs (Nu (l :?=: Identity t)) = "(NU " ++ showHaskell bs l ++ " " ++ showHaskell bs t ++ ")"
 >     showHaskell bs (CoIt d sty f s) = "(COIT " ++ showHaskell bs d ++ " " ++ showHaskell bs sty ++ " " ++ showHaskell bs f ++ " " ++ showHaskell bs s ++ ")"
 >     showHaskell bs (Label l t) = "(LABEL " ++ showHaskell bs l ++ " " ++ showHaskell bs t ++ ")"
 >     showHaskell bs (LRet t) = "(LRET " ++ showHaskell bs t ++ ")"
@@ -88,7 +90,7 @@ Converting Epigram definitions to Haskell
 >     showHaskell bs RSig = "RSIG"
 >     showHaskell bs REmpty = "REMPTY"
 >     showHaskell bs (RCons s i t) = "(RCONS " ++ showHaskell bs s ++ " " ++ showHaskell bs i ++ " " ++ showHaskell bs t ++ ")"
->     showHaskell bs (Record (l :?=: Id s)) = "(RECORD " ++ showHaskell bs l ++ " " ++ showHaskell bs s ++ ")"
+>     showHaskell bs (Record (l :?=: Identity s)) = "(RECORD " ++ showHaskell bs l ++ " " ++ showHaskell bs s ++ ")"
 >     showHaskell bs x           = error "showHaskell: can't show " ++ show x
 
 > instance ShowHaskell (Elim (Tm d p REF)) where

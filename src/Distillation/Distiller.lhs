@@ -7,6 +7,7 @@
 > module Distillation.Distiller where
 
 > import Control.Monad.State
+> import Data.Functor.Identity
 
 > import Text.PrettyPrint.HughesPJ (Doc)
 > import React
@@ -142,7 +143,7 @@ return refl instead.
 >     unfold DU        = []
 >     unfold (DPAIR s t)  = s : unfold t
 >     unfold t            = [t]
-> distill es (SET :>: tm@(C (IMu ltm@(Just l :?=: (Id _I :& Id s)) i))) = do
+> distill es (SET :>: tm@(C (IMu ltm@(Just l :?=: (Identity _I :& Identity s)) i))) = do
 >     let lab = evTm ((l :? ARR _I ANCHORS) :$ A i)
 >     labTm                <- bquoteHere lab
 >     (labDisplay :=>: _)  <- distill es (ANCHORS :>: labTm)

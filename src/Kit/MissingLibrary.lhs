@@ -9,6 +9,8 @@ Missing Library
 > import Control.Newtype
 > import Control.Monad.Writer
 > import Data.Foldable
+> import Data.Functor.Constant
+> import Data.Functor.Identity
 > import Data.Traversable
 
 Renaming
@@ -50,34 +52,10 @@ HalfZip
 Functor Kit
 -----------
 
-TODO(joel) replace with Identity, Constant, Sum, Product
-
-> newtype Id       x = Id {unId :: x}        deriving Show
-> newtype Ko a     x = Ko {unKo :: a}        deriving Show
-> data (p :+: q)  x = Le (p x) | Ri (q x)    deriving Show
 > data (p :*: q)  x = p x :& q x             deriving Show
-
-> instance Functor Id where
->   fmap f (Id x) = Id (f x)
-
-> instance Functor (Ko a) where
->   fmap _ (Ko a) = Ko a
-
-> instance (Functor p, Functor q) => Functor (p :+: q) where
->   fmap f (Le px)  = Le (fmap f px)
->   fmap f (Ri qx)  = Ri (fmap f qx)
 
 > instance (Functor p, Functor q) => Functor (p :*: q) where
 >   fmap f (px :& qx)  = fmap f px :& fmap f qx
-
-> instance Foldable Id where
->   foldMap = foldMapDefault
-
-> instance Foldable (Ko a) where
->   foldMap = foldMapDefault
-
-> instance (Traversable p, Traversable q) => Foldable (p :+: q) where
->     foldMap = foldMapDefault
 
 > instance (Traversable p, Traversable q) => Foldable (p :*: q) where
 >     foldMap = foldMapDefault
@@ -95,34 +73,16 @@ TODO(joel) replace with version from recursion-schemes
 >           (fd {- :: f (Fix f)-})
 >      {- :: f v -})
 
-> instance Traversable Id where
->   traverse f (Id x) = Id <$> f x
-
-> instance Traversable (Ko a) where
->   traverse _ (Ko c) = pure (Ko c)
-
-> instance (Traversable p, Traversable q) => Traversable (p :+: q) where
->   traverse f (Le px)  = Le <$> traverse f px
->   traverse f (Ri qx)  = Ri <$> traverse f qx
-
 > instance (Traversable p, Traversable q) => Traversable (p :*: q) where
 >   traverse f (px :& qx)  = (:&) <$> traverse f px <*> traverse f qx
 
-> instance Applicative Id where  -- makes fmap from traverse
->   pure = Id
->   Id f <*> Id s = Id (f s)
-
-> instance Monoid c => Applicative (Ko c) where-- makes crush from traverse
->   -- pure :: x -> K c x
->   pure _ = Ko mempty
->   -- (<*>) :: K c (s -> t) -> K c s -> K c t
->   Ko f <*> Ko s = Ko (mappend f s)
-
 > crush :: (Traversable f, Monoid c) => (x -> c) -> f x -> c
-> crush m fx = unKo $ traverse (Ko . m) fx
+> crush m = getConstant . traverse (Constant . m)
 
 > reduce :: (Traversable f, Monoid c) => f c -> c
 > reduce = crush id
+
+TODO(joel) - remove this instance, explicitly use Sum
 
 > instance Monoid Int where
 >   mempty = 0
@@ -131,16 +91,11 @@ TODO(joel) replace with version from recursion-schemes
 > size :: (Functor f, Traversable f) => Fix f -> Int
 > size = rec ((1+) . reduce)
 
-> instance HalfZip Id where
->   halfZip (Id x) (Id y) = pure (Id (x,y))
+> instance HalfZip Identity where
+>   halfZip (Identity x) (Identity y) = pure (Identity (x,y))
 
-> instance (Eq a) => HalfZip (Ko a) where
->   halfZip (Ko x) (Ko y) | x == y = pure (Ko x)
->   halfZip _ _ = Nothing
-
-> instance (HalfZip p, HalfZip q) => HalfZip (p :+: q) where
->   halfZip (Le x) (Le y) = Le <$> halfZip x y
->   halfZip (Ri x) (Ri y) = Ri <$> halfZip x y
+> instance (Eq a) => HalfZip (Constant a) where
+>   halfZip (Constant x) (Constant y) | x == y = pure (Constant x)
 >   halfZip _ _ = Nothing
 
 > instance (HalfZip p, HalfZip q) => HalfZip (p :*: q) where
@@ -148,23 +103,12 @@ TODO(joel) replace with version from recursion-schemes
 
 >   -- HalfZip xs xs = Just (fmap (\x -> (x,x)) xs)
 
-> infixl 4 $>
-
-> -- | Flipped version of '<$'.
-> --
-> -- /Since: 4.7.0.0/
-> ($>) :: Functor f => f a -> b -> f b
-> ($>) = flip (<$)
-
-> void :: Functor f => f a -> f ()
-> void = fmap (const ())
-
 Newtype Unwrapping
 ------------------
 
-> instance Newtype (Id a) a where
->   pack = Id
->   unpack = unId
+> instance Newtype (Identity a) a where
+>   pack = Identity
+>   unpack = runIdentity
 
 Applicative Kit
 ---------------

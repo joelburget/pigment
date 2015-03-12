@@ -7,6 +7,7 @@
 
 > module DisplayLang.Reactify where
 
+> import Data.Functor.Identity
 > import Data.List
 > import Data.Monoid ((<>))
 > import Data.String (fromString)
@@ -46,7 +47,7 @@ elements.
 >     reactify AllowedEpsilon = ""
 >     reactify (AllowedCons _ _ _ s ts) = reactify s >> reactify ts
 >     reactify (Mu (Just l   :?=: _)) = reactify l
->     reactify (Mu (Nothing  :?=: Id t)) = reactKword KwMu >> reactify t
+>     reactify (Mu (Nothing  :?=: Identity t)) = reactKword KwMu >> reactify t
 >     reactify (EnumT t)  = reactKword KwEnum >> reactify t
 >     reactify Ze         = "0"
 >     reactify (Su t)     = reactifyEnumIndex 1 t
@@ -59,7 +60,7 @@ elements.
 >     reactify (Return x)    = reactKword KwReturn >> reactify x
 >     reactify (Composite x) = reactKword KwCon >> reactify x
 >     reactify (IMu (Just l   :?=: _) i)  = reactify l >> reactify i
->     reactify (IMu (Nothing  :?=: (Id ii :& Id d)) i)  = do
+>     reactify (IMu (Nothing  :?=: (Identity ii :& Identity d)) i)  = do
 >         reactKword KwIMu
 >         reactify ii
 >         reactify d
@@ -72,7 +73,7 @@ elements.
 >         reactKword KwLabelEnd
 >     reactify (LRet x) = reactKword KwRet >> reactify x
 >     reactify (Nu (Just l :?=: _))  = reactify l
->     reactify (Nu (Nothing :?=: Id t))  = reactKword KwNu >> reactify t
+>     reactify (Nu (Nothing :?=: Identity t))  = reactKword KwNu >> reactify t
 >     reactify (CoIt d sty f s) = do
 >         reactKword KwCoIt
 >         reactify sty
@@ -151,7 +152,7 @@ a $\lambda$-term is reached.
 >     reactify DU              = reactKword KwUnderscore
 >     reactify (DEqBlue t u) = reactify t >> reactKword KwEqBlue >> reactify u
 >     reactify (DIMu (Just s   :?=: _) _) = reactify s
->     reactify (DIMu (Nothing  :?=: (Id ii :& Id d)) i) = do
+>     reactify (DIMu (Nothing  :?=: (Identity ii :& Identity d)) i) = do
 >         reactKword KwIMu
 >         reactify ii
 >         reactify d

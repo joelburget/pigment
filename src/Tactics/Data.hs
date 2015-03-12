@@ -8,6 +8,7 @@ module Tactics.Data where
 import Control.Applicative
 import Control.Monad.Except
 import Control.Monad.Identity
+import Data.Functor.Constant
 import Data.Monoid hiding (All)
 import Data.Traversable
 import Kit.MissingLibrary
@@ -113,10 +114,10 @@ ty2h r ps x = do
     unless b $ throwError (sErr "Not SP")
     return (UNIT, 0)
 
-occursM :: REF -> Mangle (Ko Any) REF REF
+occursM :: REF -> Mangle (Constant Any) REF REF
 occursM r = Mang
-    {  mangP = \ x _ -> Ko (Any (r == x))
-    ,  mangV = \ _ _ -> Ko (Any False)
+    {  mangP = \ x _ -> Constant (Any (r == x))
+    ,  mangV = \ _ _ -> Constant (Any False)
     ,  mangB = \ _ -> occursM r
     }
 
@@ -139,7 +140,7 @@ capM r i = Mang
     }
 
 occurs :: REF -> INTM -> Bool
-occurs r i = getAny (unKo (occursM r % i))
+occurs r i = getAny (getConstant (occursM r % i))
 
 uncur :: Int -> EXTM -> EXTM -> INTM
 uncur 1 v t = N (v :$ A (N t))

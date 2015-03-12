@@ -8,6 +8,8 @@
 > module Evidences.DefinitionalEquality where
 
 > import Control.Applicative
+> import Data.Functor.Identity
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Evidences.Tm
@@ -108,8 +110,8 @@ term. The result is a binding of `v` in the quoted term.
 >      fresh ("__etaExpandB" :<: s)
 >      (\v  -> inQuote (t $$ A v :>: (f $$ A v))) r)
 > etaExpand (Prf p :>: x) r = Just (BOX (Irr (inQuote (PRF p :>: x) r)))
-> etaExpand (Record (_ :?=: Id REMPTY) :>: v) r = Just $ CON UNIT
-> etaExpand (Record (_ :?=: Id (RCONS sig i ty)) :>: p) r =
+> etaExpand (Record (_ :?=: Identity REMPTY) :>: v) r = Just $ CON UNIT
+> etaExpand (Record (_ :?=: Identity (RCONS sig i ty)) :>: p) r =
 >     -- XXX: to be implemented
 >     undefined
 > etaExpand (Unit :>: v) r = Just VOID

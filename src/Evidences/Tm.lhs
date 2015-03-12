@@ -15,6 +15,7 @@ Tm
 > import qualified Data.Monoid as M
 > import Data.Monoid (mempty, mappend, (<>))
 > import Data.Foldable
+> import Data.Functor.Identity
 > import Data.List hiding (foldl)
 > import Data.Traversable
 > import Kit.MissingLibrary
@@ -157,7 +158,7 @@ binding complicates the definition.
 >     AllowedBy      :: t -> Can t
 >     AllowedEpsilon :: Can t
 >     AllowedCons    :: t -> t -> t -> t -> t -> Can t
->     Mu             :: Labelled Id t -> Can t
+>     Mu             :: Labelled Identity t -> Can t
 >     EnumT          :: t -> Can t
 >     Ze             :: Can t
 >     Su             :: t -> Can t
@@ -165,10 +166,10 @@ binding complicates the definition.
 >     Monad          :: t -> t -> Can t
 >     Return         :: t -> Can t
 >     Composite      :: t -> Can t
->     IMu            :: Labelled (Id :*: Id) t -> t -> Can t
+>     IMu            :: Labelled (Identity :*: Identity) t -> t -> Can t
 >     Label          :: t -> t -> Can t
 >     LRet           :: t -> Can t
->     Nu             :: Labelled Id t -> Can t
+>     Nu             :: Labelled Identity t -> Can t
 >     CoIt           :: t -> t -> t -> t -> Can t
 >     Prob           :: Can t
 >     ProbLabel      :: t -> t -> t -> Can t
@@ -187,7 +188,7 @@ binding complicates the definition.
 >     Inh            :: t -> Can t
 >     Wit            :: t -> Can t
 >     Quotient       :: t -> t -> t -> Can t
->     Record         :: Labelled Id t -> Can t
+>     Record         :: Labelled Identity t -> Can t
 >     REmpty         :: Can t
 >     RCons          :: t -> t -> t -> Can t
 >     RSig           :: Can t
@@ -310,7 +311,7 @@ We have some pattern synonyms for common, er, patterns.
 > pattern PRODN   = SU (SU (SU ZE))
 > pattern SIGMAN  = SU (SU (SU (SU ZE)))
 > pattern PIN     = SU (SU (SU (SU (SU ZE))))
-> pattern MU l x        = C (Mu (l :?=: Id x))
+> pattern MU l x        = C (Mu (l :?=: Identity x))
 > pattern IDD           = CON (PAIR IDN     VOID)
 > pattern CONSTD x      = CON (PAIR CONSTN  (PAIR x VOID))
 > pattern SUMD e b      = CON (PAIR SUMN    (PAIR e (PAIR b VOID)))
@@ -335,7 +336,7 @@ We have some pattern synonyms for common, er, patterns.
 > pattern ISIGMAN   = SU (SU (SU (SU ZE)))
 > pattern IFSIGMAN  = SU (SU (SU (SU (SU ZE))))
 > pattern IPRODN    = SU (SU (SU (SU (SU (SU ZE)))))
-> pattern IMU l ii x i  = C (IMu (l :?=: (Id ii :& Id x)) i)
+> pattern IMU l ii x i  = C (IMu (l :?=: (Identity ii :& Identity x)) i)
 > pattern IVAR i        = CON (PAIR IVARN     (PAIR i VOID))
 > pattern IPI s t       = CON (PAIR IPIN      (PAIR s (PAIR t VOID)))
 > pattern IFPI s t      = CON (PAIR IFPIN     (PAIR s (PAIR t VOID)))
@@ -345,7 +346,7 @@ We have some pattern synonyms for common, er, patterns.
 > pattern IPROD u x y   = CON (PAIR IPRODN    (PAIR u (PAIR x (PAIR y VOID))))
 > pattern LABEL l t = C (Label l t)
 > pattern LRET t    = C (LRet t)
-> pattern NU l t = C (Nu (l :?=: Id t))
+> pattern NU l t = C (Nu (l :?=: Identity t))
 > pattern COIT d sty f s = C (CoIt d sty f s)
 > pattern PROB             = C Prob
 > pattern PROBLABEL u s a  = C (ProbLabel u s a)
@@ -370,7 +371,7 @@ We have some pattern synonyms for common, er, patterns.
 > pattern RSIG         = C RSig
 > pattern REMPTY       = C REmpty
 > pattern RCONS s i t  = C (RCons s i t)
-> pattern RECORD l s   = C (Record (l :?=: Id s))
+> pattern RECORD l s   = C (Record (l :?=: Identity s))
 > pattern SIGMA p q = C (Sigma p q)
 > pattern PAIR  p q = C (Pair p q)
 > pattern UNIT      = C Unit

@@ -22,6 +22,7 @@ executable pigment
       base >= 4.6,
       lens-family == 1.2.0,
       mtl >= 2.2,
+      transformers == 0.4.1.0,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
