@@ -17,7 +17,6 @@ import Kit.ListZip
 import Kit.Parsley
 import ProofState.Edition.ProofContext
 
-import GHCJS.Marshal
 import Lens.Family2
 import React
 
@@ -157,15 +156,6 @@ quite cumbersome.
     , _rightPaneVisible :: Visibility
     , _currentPane :: Pane
     } deriving (Generic)
-
--- instance FromJSRef InteractionState where
--- instance FromJSRef CommandFocus where
--- instance FromJSRef AutocompleteState where
--- instance FromJSRef Pane where
--- instance FromJSRef Visibility where
--- instance FromJSRef Command where
--- instance FromJSRef ProofContext where
--- instance FromJSRef CochonTactic where
 
 startState :: Bwd ProofContext -> InteractionState
 startState pc = InteractionState pc (InPresent "") F0 Stowed Visible Log

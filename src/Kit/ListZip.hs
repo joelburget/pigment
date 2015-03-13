@@ -5,8 +5,6 @@ import Data.Foldable
 import Data.Monoid
 import GHC.Generics
 
-import GHCJS.Marshal
-
 import Kit.BwdFwd
 
 data ListZip a = ListZip
@@ -14,8 +12,6 @@ data ListZip a = ListZip
     , focus  :: a
     , earlier :: Fwd a
     } deriving Generic
-
-instance FromJSRef a => FromJSRef (ListZip a) where
 
 listZipFromFwd :: Fwd a -> Maybe (ListZip a)
 listZipFromFwd (a :> as) = Just (ListZip B0 a as)
