@@ -15,5 +15,6 @@ in pkgs.callPackage ./. {
        };
      };
      inherit (haskellPackages) ghcjsBase ghcjsDom ghcjsPrim lensFamily
-                               mtl newtype reactHaskellGhcjs void;
+                               mtl newtype reactHaskellGhcjs void
+                               recursionSchemes;
    }

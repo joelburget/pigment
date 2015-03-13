@@ -26,6 +26,7 @@ executable pigment
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
+      recursion-schemes == 4.1,
       ghcjs-base >= 0.1,
       ghcjs-dom >=0.1.1.1,
       ghcjs-prim >= 0.1.0.0,

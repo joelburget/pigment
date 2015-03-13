@@ -10,6 +10,7 @@ Missing Library
 > import Control.Monad.Writer
 > import Data.Foldable
 > import Data.Functor.Constant
+> import Data.Functor.Foldable hiding (Foldable)
 > import Data.Functor.Identity
 > import Data.Traversable
 
@@ -60,19 +61,6 @@ Functor Kit
 > instance (Traversable p, Traversable q) => Foldable (p :*: q) where
 >     foldMap = foldMapDefault
 
-TODO(joel) replace with version from recursion-schemes
-
-> newtype Fix f = InF (f (Fix f))  -- tying the knot
-
-> instance Show (f (Fix f)) => Show (Fix f) where
->   show (InF x) = "InF (" ++ show x ++ ")"
-
-> rec :: Functor f => (f v -> v) -> Fix f -> v
-> rec m (InF fd) = m
->     (fmap (rec m {- :: Fix f -> v -})
->           (fd {- :: f (Fix f)-})
->      {- :: f v -})
-
 > instance (Traversable p, Traversable q) => Traversable (p :*: q) where
 >   traverse f (px :& qx)  = (:&) <$> traverse f px <*> traverse f qx
 
@@ -89,7 +77,7 @@ TODO(joel) - remove this instance, explicitly use Sum
 >   mappend = (+)
 
 > size :: (Functor f, Traversable f) => Fix f -> Int
-> size = rec ((1+) . reduce)
+> size = cata ((1+) . reduce)
 
 > instance HalfZip Identity where
 >   halfZip (Identity x) (Identity y) = pure (Identity (x,y))
