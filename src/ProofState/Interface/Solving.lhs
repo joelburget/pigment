@@ -119,7 +119,7 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 The `ungawa` command looks for a truly obvious thing to do, and does it.
 
 > ungawa :: ProofState ()
-> ungawa =  ignore done <|> ignore apply <|> ignore (lambdaParam "ug")
+> ungawa =  void done <|> void apply <|> void (lambdaParam "ug")
 >           `pushError` sErr "ungawa: no can do."
 
 Refining the proof state

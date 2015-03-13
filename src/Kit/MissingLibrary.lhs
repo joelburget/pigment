@@ -132,11 +132,3 @@ throws away the results.
 
 > much :: Alternative f => f () -> f ()
 > much f = (f *> much f) <|> pure ()
-
-Monadic Kit
------------
-
-> ignore :: Monad m => m a -> m ()
-> ignore f = do
->     f
->     return ()

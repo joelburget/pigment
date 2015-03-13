@@ -77,7 +77,7 @@ elaborates it and runs the scheduler.
 >     make (AnchElabInferFully :<: sigSetTM)
 >     goIn
 >     (tm :=>: _, status) <- runElab WorkCurrentGoal (sigSetVAL :>: makeElabInfer (Loc 0) tm)
->     when (status == ElabSuccess) (ignore (give tm))
+>     when (status == ElabSuccess) (void (give tm))
 >     startScheduler
 >     (tm :=>: v) <- getCurrentDefinition
 >     goOut
