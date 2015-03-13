@@ -67,17 +67,10 @@ Functor Kit
 > crush :: (Traversable f, Monoid c) => (x -> c) -> f x -> c
 > crush m = getConstant . traverse (Constant . m)
 
+ie `fold`
+
 > reduce :: (Traversable f, Monoid c) => f c -> c
 > reduce = crush id
-
-TODO(joel) - remove this instance, explicitly use Sum
-
-> instance Monoid Int where
->   mempty = 0
->   mappend = (+)
-
-> size :: (Functor f, Traversable f) => Fix f -> Int
-> size = cata ((1+) . reduce)
 
 > instance HalfZip Identity where
 >   halfZip (Identity x) (Identity y) = pure (Identity (x,y))

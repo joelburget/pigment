@@ -3,8 +3,12 @@ Name management
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes #-}
+
 > module ProofState.Interface.Name where
+
 > import Data.Foldable
+> import Data.Monoid
+
 > import NameSupply.NameSupply
 > import ProofState.Structure.Developments
 > import ProofState.Structure.Entries
@@ -44,4 +48,5 @@ XXX(joel)
 > pickName' prefix = do
 >     m <- getCurrentName
 >     r <- getDevNSupply
->     return $ prefix ++ show (foldMap snd m + snd r)
+>     let suffix = getSum (foldMap (Sum . snd) m) + snd r
+>     return $ prefix ++ show suffix
