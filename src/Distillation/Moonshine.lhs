@@ -1,7 +1,7 @@
 <a name="Distillation.Moonshine">The Moonshine distillery</a>
 ========================
 
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternSynonyms #-}
 
 > module Distillation.Moonshine where
 

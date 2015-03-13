@@ -75,7 +75,7 @@ data type is really supposed to be a list, as in `EnumD`).
 >     | r == "EnumU" = do
 >       Con (DPAIR _ (DPAIR s (DPAIR t _)) :=>: v) <- canTy  (distill es)
 >                                                            (ty :>: c)
->       return ((DPAIR s t) :=>: CON v)
+>       return (DPAIR s t :=>: CON v)
 
 If we have a canonical value in `MU s`, where `s` starts with a finite
 sum, then we can (probably) turn it into a tag applied to some
@@ -150,7 +150,7 @@ return refl instead.
 >     _It :=>: _Iv         <- distill es (SET :>: _I)
 >     st :=>: sv           <- distill es (ARR _Iv (idesc $$ A _Iv) :>: s)
 >     it :=>: iv           <- distill es (_Iv :>: i)
->     return $ (DIMU (Just labDisplay) _It st it :=>: evTm tm)
+>     return (DIMU (Just labDisplay) _It st it :=>: evTm tm)
 
 To avoid an infinite loop when distilling, we have to be a little
 cleverer and call canTy directly rather than letting distill do it for
@@ -192,16 +192,16 @@ not be necessary.)
 
 > distillBase entries (ty :>: l@(L sc)) = do
 >     let x = fortran l
->     (kind, dom, cod) <- lambdable ty `catchMaybe`  (StackError
+>     (kind, dom, cod) <- lambdable ty `catchMaybe`  StackError
 >         [ err "distill: type "
 >         , errVal ty
 >         , err " is not lambdable."
->         ])
+>         ]
 >     tm' :=>: _ <-  freshRef (x :<: dom) $ \ref ->
 >                    distill  (entries :< EPARAM  ref (mkLastName ref) kind
 >                                                 (error "distill: type undefined") AnchNo True)
 >                             (cod (pval ref) :>: underScope sc ref)
->     return $ DL (convScope sc x tm') :=>: (evTm $ L sc)
+>     return $ DL (convScope sc x tm') :=>: evTm (L sc)
 >   where
 >     convScope :: Scope TT REF -> String -> DInTmRN -> DSCOPE
 >     convScope (_ :. _)  x  tm = x ::. tm
@@ -303,7 +303,7 @@ Typed identity functions applied to an argument can simply be removed.
 We do this because they are inserted by elaboration of type annotations;
 if a user manually creates one, we can safely remove it anyway.
 
-> distillInfer entries (L (_ :. NV 0) :? PI ty _) ((A a):spine) =
+> distillInfer entries (L (_ :. NV 0) :? PI ty _) (A a:spine) =
 >     distillInfer entries (a :? ty) spine
 
 Otherwise, we have no choice but distilling both side of the type
@@ -344,7 +344,7 @@ application.
 >     -- Distill structurally the eliminator `a`
 >     (e1, ty1) <- elimTy (distill entries) (v :<: ty) a
 >     -- Further distill the spine
->     (es, ty2) <- distillSpine entries (v $$ (fmap valueOf e1) :<: ty1) spine
+>     (es, ty2) <- distillSpine entries (v $$ fmap valueOf e1 :<: ty1) spine
 >     -- Return distilled spine and type of the application
 >     return (fmap termOf e1 : es, ty2)
 > distillSpine entries  (v :<: ty)    spine      = throwErrorS

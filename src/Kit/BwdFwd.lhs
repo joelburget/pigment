@@ -90,7 +90,7 @@ Backward and forward lists, applicative with zipping.
 >           help (xs :< x) ys = s (help xs (x :> ys)) x ys
 
 > elemIndex :: Eq x => x -> Bwd x -> Maybe Int
-> elemIndex x = bwdFoldCtxt (\_ -> Nothing)
+> elemIndex x = bwdFoldCtxt (const Nothing)
 >                            (\t y i ->
 >                             if y == x then
 >                                 Just $ sum i

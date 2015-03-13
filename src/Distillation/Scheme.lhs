@@ -1,7 +1,7 @@
 <a name="Distillation.Scheme">The Scheme distiller</a>
 ====================
 
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, LiberalTypeSynonyms #-}
+> {-# LANGUAGE GADTs, TypeOperators, LiberalTypeSynonyms #-}
 
 > module Distillation.Scheme where
 
@@ -105,8 +105,8 @@ For ease of use, `distillScheme` is packaged specially for easy
 ProofState usage.
 
 > distillSchemeHere :: Scheme INTM -> ProofState (Scheme DInTmRN)
-> distillSchemeHere sch = do
->     return . fst =<< (liftErrorState DTIN $ distillScheme B0 B0 sch)
+> distillSchemeHere sch =
+>     return . fst =<< liftErrorState DTIN (distillScheme B0 B0 sch)
 > prettySchemeHere :: Scheme INTM -> ProofState Doc
 > prettySchemeHere sch = do
 >     sch' <- distillSchemeHere sch
