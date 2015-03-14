@@ -162,6 +162,7 @@ than a $\lambda$-term is reached.
 
 > instance Pretty DSCOPE where
 >     pretty s = prettyLambda (B0 :< dScopeName s) (dScopeTm s)
+
 > prettyLambda :: Bwd String -> DInTmRN -> Size -> Doc
 > prettyLambda vs (DL s) = prettyLambda (vs :< dScopeName s) (dScopeTm s)
 > prettyLambda vs tm = wrapDoc
@@ -193,10 +194,12 @@ than a $\lambda$-term is reached.
 >     pretty (n ::$ els)  = wrapDoc
 >         (pretty n AppSize <> hsep (map (`pretty` ArgSize) els))
 >         AppSize
+
 > instance Pretty DHEAD where
 >     pretty (DP x)       = const (text (showRelName x))
 >     pretty (DType ty)   = const (parens (kword KwAsc <> pretty ty maxBound))
 >     pretty (DTEx ex)    = const (quotes . text . show $ ex)
+
 > instance Pretty (Scheme DInTmRN) where
 >     pretty (SchType ty) = wrapDoc (kword KwAsc <> pretty ty maxBound) ArrSize
 >     pretty (SchExplicitPi (x :<: schS) schT) = wrapDoc (
@@ -207,12 +210,14 @@ than a $\lambda$-term is reached.
 >         braces (text x <> kword KwAsc <> pretty s maxBound)
 >             <> pretty schT maxBound
 >         ) ArrSize
+
 > prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
 > prettyEnumIndex n DZE      = const (int n)
 > prettyEnumIndex n (DSU t)  = prettyEnumIndex (succ n) t
 > prettyEnumIndex n tm       = wrapDoc
 >     (int n <> kword KwPlus <> pretty tm ArgSize)
 >     AppSize
+
 > prettyAll :: Doc -> DInTmRN -> Size -> Doc
 > prettyAll bs (DALL (DPRF p) (DL (DK q))) = prettyAllMore bs
 >   (pretty p (pred PiSize) <> kword KwImp <> pretty q PiSize)
@@ -222,16 +227,20 @@ than a $\lambda$-term is reached.
 > prettyAll bs (DALL s t) = prettyAllMore bs
 >   (kword KwAll <> pretty s minBound <> pretty t minBound)
 > prettyAll bs tm = prettyAllMore bs (pretty tm PiSize)
+
 > prettyAllMore :: Doc -> Doc -> Size -> Doc
 > prettyAllMore bs d
 >   | isEmpty bs  = wrapDoc d PiSize
 >   | otherwise   = wrapDoc (bs <> kword KwImp <> d) PiSize
+
 > prettyPair :: DInTmRN -> Size -> Doc
 > prettyPair p = const (brackets (prettyPairMore empty p))
+
 > prettyPairMore :: Doc -> DInTmRN -> Doc
 > prettyPairMore d DVOID        = d
 > prettyPairMore d (DPAIR a b)  = prettyPairMore (d <> pretty a minBound) b
 > prettyPairMore d t            = d <> kword KwComma <> pretty t maxBound
+
 > prettySigma :: Doc -> DInTmRN -> Size -> Doc
 > prettySigma d DUNIT                      = prettySigmaDone d empty
 > prettySigma d (DSIGMA s (DL (x ::. t)))  = prettySigma
@@ -241,6 +250,7 @@ than a $\lambda$-term is reached.
 > prettySigma d (DSIGMA s t) = prettySigmaDone d
 >     (kword KwSig <> pretty s minBound <> pretty t minBound)
 > prettySigma d t = prettySigmaDone d (pretty t maxBound)
+
 > prettySigmaDone :: Doc -> Doc -> Size -> Doc
 > prettySigmaDone s t
 >   | isEmpty s  = wrapDoc t AppSize

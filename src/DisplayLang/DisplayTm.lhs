@@ -203,8 +203,8 @@ appropriate places.
 > pattern DPID s t       = DCON (DPAIR  (DSU (DSU (DSU (DSU (DSU DZE)))))
 >                                       (DPAIR s (DPAIR t DVOID)))
 > pattern DENUMT e    = DC (EnumT e)
-> pattern DNILE       = DCON (DPAIR {-(DTAG "nil")-} DZE DVOID)
-> pattern DCONSE t e  = DCON (DPAIR {- (DTAG "cons") -} (DSU DZE) (DPAIR t (DPAIR e DVOID)))
+> pattern DNILE       = DCON (DPAIR DZE DVOID)
+> pattern DCONSE t e  = DCON (DPAIR (DSU DZE) (DPAIR t (DPAIR e DVOID)))
 > pattern DZE         = DC Ze
 > pattern DSU n       = DC (Su n)
 > pattern DMONAD d x = DC (Monad d x)

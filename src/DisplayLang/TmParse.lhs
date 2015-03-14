@@ -154,44 +154,80 @@ features can extend the parser.
 
 > inDTmParsersSpecial :: SizedParserList DInTmRN
 > inDTmParsersSpecial = arrange [
->   (AndSize, DMU Nothing <$ keyword KwMu <*> sizedDInTm ArgSize),
->   (ArgSize, mkNum <$> (read <$> digits) <*> optional (keyword KwPlus *> sizedDInTm ArgSize)),
->   (AndSize, DENUMT <$ keyword KwEnum <*> sizedDInTm ArgSize),
->   (ArgSize, DRETURN <$ keyword KwReturn <*> sizedDInTm ArgSize),
->   (AndSize, DMONAD <$ keyword KwMonad <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->   (AndSize, DIMU Nothing <$ keyword KwIMu <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->   (ArgSize, DLABEL <$ keyword KwLabel <*> sizedDInTm AppSize <* keyword KwAsc <*> sizedDInTm ArgSize <* keyword KwLabelEnd),
->   (ArgSize, DLRET <$ keyword KwRet <*> sizedDInTm ArgSize),
->   (AndSize, DNU Nothing <$ keyword KwNu <*> sizedDInTm ArgSize),
->   (AndSize, DCOIT DU <$ keyword KwCoIt <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->   (ArgSize, DPROP     <$ keyword KwProp),
->   (ArgSize, DABSURD   <$ keyword KwAbsurd),
->   (ArgSize, DTRIVIAL  <$ keyword KwTrivial),
->   (AndSize, DPRF <$ keyword KwPrf <*> sizedDInTm AndSize),
->   (AndSize, DINH <$ keyword KwInh <*> sizedDInTm ArgSize),
->   (AndSize, DWIT <$ keyword KwWit <*> sizedDInTm ArgSize),
->   (AndSize, DALL <$ keyword KwAll <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->   (AndSize, DQUOTIENT <$ keyword KwQuotient <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->   (AndSize, DRECORD Nothing <$ keyword KwRecord <*> sizedDInTm ArgSize),
->   (ArgSize, DRSIG <$ keyword KwRSig),
->   (ArgSize, DREMPTY <$ keyword KwREmpty),
->   (ArgSize, DRCONS <$ keyword KwRCons <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->   (ArgSize, bracket Square tuple),
->   (ArgSize, keyword KwSig *> bracket Round sigma),
->   (ArgSize, DSIGMA <$ keyword KwSig <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->   (ArgSize, DUID <$ keyword KwUId),
->   (ArgSize, DTAG <$ keyword KwTag <*> ident),
->   (AppSize, DTag <$ keyword KwTag <*> ident <*> many (sizedDInTm ArgSize)),
-
+>     (AndSize, DMU Nothing <$ keyword KwMu <*> sizedDInTm ArgSize),
+>     (ArgSize, mkNum <$> (read <$> digits)
+>                     <*> optional (keyword KwPlus *> sizedDInTm ArgSize)),
+>     (AndSize, DENUMT <$ keyword KwEnum <*> sizedDInTm ArgSize),
+>     (ArgSize, DRETURN <$ keyword KwReturn <*> sizedDInTm ArgSize),
+>     (AndSize, DMONAD <$  keyword KwMonad
+>                      <*> sizedDInTm ArgSize
+>                      <*> sizedDInTm ArgSize),
+>     (AndSize, DIMU Nothing <$  keyword KwIMu
+>                            <*> sizedDInTm ArgSize
+>                            <*> sizedDInTm ArgSize
+>                            <*> sizedDInTm ArgSize),
+>     (ArgSize, DLABEL <$  keyword KwLabel
+>                      <*> sizedDInTm AppSize
+>                      <*  keyword KwAsc
+>                      <*> sizedDInTm ArgSize
+>                      <*  keyword KwLabelEnd),
+>     (ArgSize, DLRET <$ keyword KwRet <*> sizedDInTm ArgSize),
+>     (AndSize, DNU Nothing <$ keyword KwNu <*> sizedDInTm ArgSize),
+>     (AndSize, DCOIT DU <$  keyword KwCoIt
+>                        <*> sizedDInTm ArgSize
+>                        <*> sizedDInTm ArgSize
+>                        <*> sizedDInTm ArgSize),
+>     (ArgSize, DPROP     <$ keyword KwProp),
+>     (ArgSize, DABSURD   <$ keyword KwAbsurd),
+>     (ArgSize, DTRIVIAL  <$ keyword KwTrivial),
+>     (AndSize, DPRF <$ keyword KwPrf <*> sizedDInTm AndSize),
+>     (AndSize, DINH <$ keyword KwInh <*> sizedDInTm ArgSize),
+>     (AndSize, DWIT <$ keyword KwWit <*> sizedDInTm ArgSize),
+>     (AndSize, DALL <$  keyword KwAll
+>                    <*> sizedDInTm ArgSize
+>                    <*> sizedDInTm ArgSize),
+>     (AndSize, DQUOTIENT <$  keyword KwQuotient
+>                         <*> sizedDInTm ArgSize
+>                         <*> sizedDInTm ArgSize
+>                         <*> sizedDInTm ArgSize),
+>     (AndSize, DRECORD Nothing <$ keyword KwRecord <*> sizedDInTm ArgSize),
+>     (ArgSize, DRSIG <$ keyword KwRSig),
+>     (ArgSize, DREMPTY <$ keyword KwREmpty),
+>     (ArgSize, DRCONS <$  keyword KwRCons
+>                      <*> sizedDInTm ArgSize
+>                      <*> sizedDInTm ArgSize
+>                      <*> sizedDInTm ArgSize),
+>     (ArgSize, bracket Square tuple),
+>     (ArgSize, keyword KwSig *> bracket Round sigma),
+>     (ArgSize, DSIGMA <$  keyword KwSig
+>                      <*> sizedDInTm ArgSize
+>                      <*> sizedDInTm ArgSize),
+>     (ArgSize, DUID <$ keyword KwUId),
+>     (ArgSize, DTAG <$ keyword KwTag <*> ident),
+>     (AppSize, DTag <$ keyword KwTag
+>                    <*> ident
+>                    <*> many (sizedDInTm ArgSize)),
 >     (ArgSize, DSET <$ keyword KwSet),
 >     (ArgSize, DQ <$> pFilter questionFilter ident),
 >     (ArgSize, DU <$ keyword KwUnderscore),
 >     (ArgSize, DCON <$ keyword KwCon <*> sizedDInTm ArgSize),
->     (ArgSize, iter mkDLAV <$ keyword KwLambda <*> some (ident <|> underscore) <* keyword KwArr <*> pDInTm),
->     (AndSize, DPI <$ keyword KwPi <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
->     -- TODO(joel) this is a mess
->     (PiSize, ((pure (flip iter) <*> some (bracket Round
->                        (((,) <$> (ident <|> underscore) <* keyword KwAsc) <*> pDInTm))) <*> ((pure (uncurry mkDPIV) <* keyword KwArr) <|> (pure (uncurry mkDALLV) <* keyword KwImp))) <*> pDInTm)
+>     (ArgSize, iter mkDLAV <$  keyword KwLambda
+>                           <*> some (ident <|> underscore)
+>                           <*  keyword KwArr
+>                           <*> pDInTm),
+>     (AndSize, DPI <$  keyword KwPi
+>                   <*> sizedDInTm ArgSize
+>                   <*> sizedDInTm ArgSize),
+>     (PiSize, flip iter
+>         <$> some (bracket Round
+>             ((,) <$> (ident <|> underscore)
+>                  <*  keyword KwAsc
+>                  <*> pDInTm
+>             ))
+>         <*> ((uncurry mkDPIV  <$ keyword KwArr)
+>          <|> (uncurry mkDALLV <$ keyword KwImp))
+>         <*> pDInTm
+>     )
 >     ]
 
 > inDTmParsersMore :: ParamParserList DInTmRN DInTmRN
@@ -261,9 +297,17 @@ Parsing schemes
 > pScheme = mkScheme <$> many pSchemeBit <* keyword KwAsc <*> pDInTm
 >   where
 >     pSchemeBit :: Parsley Token (String, Either (Scheme DInTmRN) DInTmRN)
->     pSchemeBit = bracket Round ((,) <$> ident <* keyword KwAsc <*> (Left . SchType <$> pDInTm))
->              <|> bracket Curly ((,) <$> ident <* keyword KwAsc <*> (Right <$> pDInTm))
->     mkScheme :: [(String, Either (Scheme DInTmRN) DInTmRN)] -> DInTmRN -> Scheme DInTmRN
+>     pSchemeBit = bracket Round ((,) <$> ident
+>                                     <*  keyword KwAsc
+>                                     <*> (Left . SchType <$> pDInTm))
+>              <|> bracket Curly ((,) <$> ident
+>                                     <*  keyword KwAsc
+>                                     <*> (Right <$> pDInTm))
+>     mkScheme :: [(String, Either (Scheme DInTmRN) DInTmRN)]
+>              -> DInTmRN
+>              -> Scheme DInTmRN
 >     mkScheme [] ty = SchType ty
->     mkScheme ((x, Left   s) : bits) ty = SchExplicitPi  (x :<: s) (mkScheme bits ty)
->     mkScheme ((x, Right  s) : bits) ty = SchImplicitPi  (x :<: s) (mkScheme bits ty)
+>     mkScheme ((x, Left s) : bits) ty =
+>         SchExplicitPi (x :<: s) (mkScheme bits ty)
+>     mkScheme ((x, Right s) : bits) ty =
+>         SchImplicitPi (x :<: s) (mkScheme bits ty)
