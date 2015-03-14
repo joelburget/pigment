@@ -2,7 +2,10 @@ Relative Names
 ==============
 
 > module DisplayLang.Name where
+
+> import Control.Arrow
 > import Data.List
+
 > import NameSupply.NameSupply
 > import Evidences.Tm
 > import DisplayLang.DisplayTm
@@ -46,4 +49,4 @@ The `showName` function converts an absolute name to a string
 absolutely.
 
 > showName :: Name -> String
-> showName = showRelName . map (\(x, i) -> (x, Abs i))
+> showName = showRelName . map (second Abs)

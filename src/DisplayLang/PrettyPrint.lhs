@@ -108,7 +108,7 @@ being with $\Pi$-types.
 >     pretty (Wit t)        = wrapDoc (kword KwWit <> pretty t ArgSize) AppSize
 >     pretty (Quotient x r p) = wrapDoc
 >         (sep [ kword KwQuotient
->              , nest 2 $ fsep $ map (flip pretty ArgSize) [x,r,p]
+>              , nest 2 $ fsep $ map (`pretty` ArgSize) [x,r,p]
 >              ])
 >         ArgSize
 >     pretty RSig              =  const $ text "RSignature"
@@ -165,7 +165,7 @@ than a $\lambda$-term is reached.
 > prettyLambda :: Bwd String -> DInTmRN -> Size -> Doc
 > prettyLambda vs (DL s) = prettyLambda (vs :< dScopeName s) (dScopeTm s)
 > prettyLambda vs tm = wrapDoc
->     (kword KwLambda <> text (intercalate " " (trail vs)) <> kword KwArr
+>     (kword KwLambda <> text (unwords (trail vs)) <> kword KwArr
 >         <> pretty tm ArrSize)
 >     ArrSize
 
@@ -185,13 +185,13 @@ than a $\lambda$-term is reached.
 >         AppSize
 >     pretty (DTAG s)     = const (kword KwTag <> text s)
 >     pretty (DTag s xs)  = wrapDoc (kword KwTag <> text s
->         <> hsep (map (flip pretty ArgSize) xs)) AppSize
+>         <> hsep (map (`pretty` ArgSize) xs)) AppSize
 >     pretty indtm           = const (quotes . text . show $ indtm)
 
 > instance Pretty DExTmRN where
 >     pretty (n ::$ [])   = pretty n
 >     pretty (n ::$ els)  = wrapDoc
->         (pretty n AppSize <> hsep (map (flip pretty ArgSize) els))
+>         (pretty n AppSize <> hsep (map (`pretty` ArgSize) els))
 >         AppSize
 > instance Pretty DHEAD where
 >     pretty (DP x)       = const (text (showRelName x))

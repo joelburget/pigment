@@ -52,7 +52,7 @@ implement a function to crush tokens down to strings.
 > crushToken (Identifier s) = s
 > crushToken (Keyword s) = key s
 > crushToken (Brackets bra toks) = showOpenB bra ++
->     (intercalate " " (map crushToken toks)) ++ showCloseB bra
+>     unwords (map crushToken toks) ++ showCloseB bra
 >   where
 >     showOpenB   Round        = "("
 >     showOpenB   Square       = "["
@@ -79,9 +79,7 @@ that, an identifier. Hence, we can recognize a token with the following
 parser:
 
 > parseToken :: Parsley Char Token
-> parseToken = id parseBrackets
->          <|> id parseKeyword
->          <|> id parseIdent
+> parseToken = parseBrackets <|> parseKeyword <|> parseIdent
 
 Tokenizing an input string then simply consists in matching a bunch of
 token separated by spaces. For readability, we are also glutton in
@@ -103,7 +101,7 @@ A space is one of the following character:
 So, we look for `many` of them:
 
 > spaces :: Parsley Char ()
-> spaces = (many $ tokenFilter (flip elem space)) *> pure ()
+> spaces = many (tokenFilter (`elem` space)) *> pure ()
 
 Parsing words
 
@@ -116,10 +114,10 @@ the parsed word. For example, "foo," lexes into first `Idenfitier foo`
 then `Keyword ,`. In `Parsley`, this translates to:
 
 > parseWord :: Parsley Char String
-> parseWord = (id <$> (some $ tokenFilter filter))
->         <|> ((: []) <$> (tokenFilter (flip elem protected)))
+> parseWord = some (tokenFilter filter)
+>         <|> ((: []) <$> tokenFilter (`elem` protected))
 >     where protected = ",`';"
->           filter t = not $ elem t $ space ++ bracketChars ++ protected
+>           filter t = notElem t $ space ++ bracketChars ++ protected
 
 As we are at it, we can test for word equality, that is build a parser
 matching a given word:
@@ -261,7 +259,7 @@ found in the `keywords` list.
 
 > parseKeyword :: Parsley Char Token
 > parseKeyword = pFilter
->     (\t -> fmap (Keyword . snd) $ find ((t ==) . fst) keywords)
+>     (\t -> (Keyword . snd) <$> find ((t ==) . fst) keywords)
 >     parseWord
 
 Lexing identifiers
@@ -297,7 +295,7 @@ opening bracket with the one of the closing bracket.
 > parseBrackets :: Parsley Char Token
 > parseBrackets = do
 >   bra <- parseOpenBracket
->   (Brackets bra) <$> (tokenize <* parseCloseBracket bra)
+>   Brackets bra <$> (tokenize <* parseCloseBracket bra)
 >     where parseOpenBracket :: Parsley Char Bracket
 >           parseOpenBracket =
 >                 tokenEq '(' *> ((RoundB <$> possibleWord <* tokenEq '|')
@@ -313,7 +311,7 @@ opening bracket with the one of the closing bracket.
 >           parseCloseBracket (RoundB s) = matchBracketB s ')'
 >           parseCloseBracket (SquareB s) = matchBracketB s ']'
 >           parseCloseBracket (CurlyB s) = matchBracketB s '}'
->           parseBracket x = tokenFilter (flip elem x)
+>           parseBracket x = tokenFilter (`elem` x)
 >           matchBracketB :: String -> Char -> Parsley Char ()
 >           matchBracketB s bra = void $
 >               tokenEq '|' >> wordEq s >> tokenEq bra
@@ -359,5 +357,5 @@ for the bracketted tokens:
 > bracket :: Bracket -> Parsley Token x -> Parsley Token x
 > bracket bra p = pFilter filterBra nextToken
 >     where filterBra (Brackets bra' toks) | bra == bra' =
->               either (\_ ->Nothing) Just $ parse p toks
+>               either (const Nothing) Just $ parse p toks
 >           filterBra _ = Nothing

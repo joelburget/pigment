@@ -2,9 +2,14 @@
 =============
 
 > {-# LANGUAGE TypeOperators, GADTs #-}
+
 > module DisplayLang.TmParse where
+
 > import Control.Applicative
 > import Data.Char
+> import Data.Maybe
+> import Data.Foldable hiding (notElem, concatMap)
+
 > import Kit.MissingLibrary
 > import Kit.Parsley
 > import DisplayLang.DisplayTm
@@ -39,7 +44,7 @@ A relative name is a list of idents separated by dots, and possibly with
 >         <|> ((,) <$> pNameWord <*> pure (Rel 0))
 
 > pNameWord :: Parsley Char String
-> pNameWord = some (tokenFilter (\c -> not (c `elem` "_^.")))
+> pNameWord = some (tokenFilter (`notElem` "_^."))
 
 > pNameOffset :: Parsley Char String
 > pNameOffset = some (tokenFilter isDigit)
@@ -74,12 +79,12 @@ from the largest size again. Concrete syntax is matched using the lists
 of parsers defined in the following subsection.
 
 > sizedDExTm :: Size -> Parsley Token DExTmRN
-> sizedDExTm z = ((::$ []) <$> (specialHead z)) <|>
+> sizedDExTm z = ((::$ []) <$> specialHead z) <|>
 >       (if z > minBound  then pLoop (sizedDExTm (pred z)) (moreDExTm z)
 >                         else bracket Round pDExTm)
 
 > sizedDInTm :: Size -> Parsley Token DInTmRN
-> sizedDInTm z = specialDInTm z <|> ((DN . (::$ [])) <$> (specialHead z)) <|>
+> sizedDInTm z = specialDInTm z <|> ((DN . (::$ [])) <$> specialHead z) <|>
 >       (if z > minBound  then pLoop (sizedDInTm (pred z)) (moreInEx z)
 >                         else bracket Round pDInTm)
 
@@ -114,33 +119,29 @@ We can construct such a list from a list of size-parser pairs thus:
 > arrange xs = map (\ s -> (s,  pick s xs)) (enumFromTo minBound maxBound)
 >   where
 >     pick :: Eq a => a -> [(a, b)] -> [b]
->     pick x = concatMap (\ (a , b) -> if a == x then [b] else [])
+>     pick x = concatMap (\(a , b) -> [b | a == x])
 
 To parse using a list at a particular size, we try all the parsers at
 that size in order:
 
 > sizeListParse :: SizedParserList a -> Size -> Parsley Token a
-> sizeListParse sps s = pTryList . unJust $ lookup s sps
+> sizeListParse sps s = pTryList . fromJust $ lookup s sps
 
 > paramListParse :: ParamParserList a b -> Size -> a -> Parsley Token b
-> paramListParse sfs s a = pTryList . map ($ a) . unJust $ lookup s sfs
-
-> unJust :: Maybe a -> a
-> unJust (Just x) = x
+> paramListParse sfs s a = pTryList . map ($ a) . fromJust $ lookup s sfs
 
 > pTryList :: [Parsley Token a] -> Parsley Token a
-> pTryList (p:ps)  = p <|> pTryList ps
-> pTryList []      = empty
+> pTryList = asum
 
 Now we define the lists of parsers that actually match bits of the
 concrete syntax. Note that each list has a corresponding aspect so
 features can extend the parser.
 
 > headParsers :: SizedParserList DHEAD
-> headParsers = arrange $
->    (ArgSize, DType <$> bracket Round (keyword KwAsc *> pDInTm)) :
->    (ArgSize, DP <$> nameParse) :
->    []
+> headParsers = arrange
+>    [ (ArgSize, DType <$> bracket Round (keyword KwAsc *> pDInTm))
+>    , (ArgSize, DP <$> nameParse)
+>    ]
 
 > elimParsers :: SizedParserList (Elim DInTmRN)
 > elimParsers = arrange [
@@ -154,50 +155,52 @@ features can extend the parser.
 > inDTmParsersSpecial :: SizedParserList DInTmRN
 > inDTmParsersSpecial = arrange [
 >   (AndSize, DMU Nothing <$ keyword KwMu <*> sizedDInTm ArgSize),
->   (ArgSize, mkNum <$> (read <$> digits) <*> (optional $ (keyword KwPlus) *> sizedDInTm ArgSize)),
->   (AndSize, (((pure DENUMT) <* (keyword KwEnum)) <*> (sizedDInTm ArgSize))),
->   (ArgSize, (((pure DRETURN) <* (keyword KwReturn)) <*> (sizedDInTm ArgSize))),
->   (AndSize, ((((pure DMONAD) <* (keyword KwMonad)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
->   (AndSize, (((((pure (DIMU Nothing)) <* (keyword KwIMu)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
->   (ArgSize, ((((((pure DLABEL) <* (keyword KwLabel)) <*> (sizedDInTm AppSize)) <* (keyword KwAsc)) <*> (sizedDInTm ArgSize)) <* (keyword KwLabelEnd))),
->   (ArgSize, (((pure DLRET) <* (keyword KwRet)) <*> (sizedDInTm ArgSize))),
->   (AndSize, (((pure (DNU Nothing)) <* (keyword KwNu)) <*> (sizedDInTm ArgSize))),
->   (AndSize, (((((pure (DCOIT DU)) <* (keyword KwCoIt)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
+>   (ArgSize, mkNum <$> (read <$> digits) <*> optional (keyword KwPlus *> sizedDInTm ArgSize)),
+>   (AndSize, DENUMT <$ keyword KwEnum <*> sizedDInTm ArgSize),
+>   (ArgSize, DRETURN <$ keyword KwReturn <*> sizedDInTm ArgSize),
+>   (AndSize, DMONAD <$ keyword KwMonad <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
+>   (AndSize, DIMU Nothing <$ keyword KwIMu <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
+>   (ArgSize, DLABEL <$ keyword KwLabel <*> sizedDInTm AppSize <* keyword KwAsc <*> sizedDInTm ArgSize <* keyword KwLabelEnd),
+>   (ArgSize, DLRET <$ keyword KwRet <*> sizedDInTm ArgSize),
+>   (AndSize, DNU Nothing <$ keyword KwNu <*> sizedDInTm ArgSize),
+>   (AndSize, DCOIT DU <$ keyword KwCoIt <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
 >   (ArgSize, DPROP     <$ keyword KwProp),
 >   (ArgSize, DABSURD   <$ keyword KwAbsurd),
 >   (ArgSize, DTRIVIAL  <$ keyword KwTrivial),
->   (AndSize, (((pure DPRF) <* (keyword KwPrf)) <*> (sizedDInTm AndSize))),
->   (AndSize, (((pure DINH) <* (keyword KwInh)) <*> (sizedDInTm ArgSize))),
->   (AndSize, (((pure DWIT) <* (keyword KwWit)) <*> (sizedDInTm ArgSize))),
->   (AndSize, ((((pure DALL) <* (keyword KwAll)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
->   (AndSize, (((((pure DQUOTIENT) <* (keyword KwQuotient)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
->   (AndSize, (((pure (DRECORD Nothing)) <* (keyword KwRecord)) <*> (sizedDInTm ArgSize))),
+>   (AndSize, DPRF <$ keyword KwPrf <*> sizedDInTm AndSize),
+>   (AndSize, DINH <$ keyword KwInh <*> sizedDInTm ArgSize),
+>   (AndSize, DWIT <$ keyword KwWit <*> sizedDInTm ArgSize),
+>   (AndSize, DALL <$ keyword KwAll <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
+>   (AndSize, DQUOTIENT <$ keyword KwQuotient <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
+>   (AndSize, DRECORD Nothing <$ keyword KwRecord <*> sizedDInTm ArgSize),
 >   (ArgSize, DRSIG <$ keyword KwRSig),
 >   (ArgSize, DREMPTY <$ keyword KwREmpty),
->   (ArgSize, (((((pure (DRCONS)) <* (keyword KwRCons)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
->   (ArgSize, ((pure id) <*> (bracket Square tuple))),
->   (ArgSize, (((pure id) <* (keyword KwSig)) <*> (bracket Round sigma))),
->   (ArgSize, ((((pure DSIGMA) <* (keyword KwSig)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
->   (ArgSize, ((pure DUID) <* (keyword KwUId))),
->   (ArgSize, (((pure DTAG) <* (keyword KwTag)) <*> ident)),
->   (AppSize, ((((pure DTag) <* (keyword KwTag)) <*> ident) <*> (many (sizedDInTm ArgSize)))),
+>   (ArgSize, DRCONS <$ keyword KwRCons <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
+>   (ArgSize, bracket Square tuple),
+>   (ArgSize, keyword KwSig *> bracket Round sigma),
+>   (ArgSize, DSIGMA <$ keyword KwSig <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
+>   (ArgSize, DUID <$ keyword KwUId),
+>   (ArgSize, DTAG <$ keyword KwTag <*> ident),
+>   (AppSize, DTag <$ keyword KwTag <*> ident <*> many (sizedDInTm ArgSize)),
 
 >     (ArgSize, DSET <$ keyword KwSet),
 >     (ArgSize, DQ <$> pFilter questionFilter ident),
 >     (ArgSize, DU <$ keyword KwUnderscore),
->     (ArgSize, (((pure DCON) <* (keyword KwCon)) <*> (sizedDInTm ArgSize))),
->     (ArgSize, (((((pure (iter mkDLAV)) <* (keyword KwLambda)) <*> (some (ident <|> underscore))) <* (keyword KwArr)) <*> pDInTm)),
->     (AndSize, ((((pure DPI) <* (keyword KwPi)) <*> (sizedDInTm ArgSize)) <*> (sizedDInTm ArgSize))),
->     (PiSize, ((((pure (flip iter)) <*> (some (bracket Round
->                        ((((pure (,)) <*> ((ident <|> underscore) )) <* (keyword KwAsc)) <*> (pDInTm))))) <*> (((pure (uncurry mkDPIV)) <* (keyword KwArr)) <|> ((pure (uncurry mkDALLV)) <* (keyword KwImp)))) <*> pDInTm))
+>     (ArgSize, DCON <$ keyword KwCon <*> sizedDInTm ArgSize),
+>     (ArgSize, iter mkDLAV <$ keyword KwLambda <*> some (ident <|> underscore) <* keyword KwArr <*> pDInTm),
+>     (AndSize, DPI <$ keyword KwPi <*> sizedDInTm ArgSize <*> sizedDInTm ArgSize),
+>     -- TODO(joel) this is a mess
+>     (PiSize, ((pure (flip iter) <*> some (bracket Round
+>                        (((,) <$> (ident <|> underscore) <* keyword KwAsc) <*> pDInTm))) <*> ((pure (uncurry mkDPIV) <* keyword KwArr) <|> (pure (uncurry mkDALLV) <* keyword KwImp))) <*> pDInTm)
 >     ]
 
 > inDTmParsersMore :: ParamParserList DInTmRN DInTmRN
 > inDTmParsersMore = arrange [
->     (EqSize, \ t -> ((((pure DEqBlue) <*> (pFilter isEx (pure t))) <* (keyword KwEqBlue)) <*> (pFilter isEx (sizedDInTm (pred EqSize))))),
->     (AndSize, \ s -> (((pure (DAND s)) <* (keyword KwAnd)) <*> (sizedDInTm AndSize))),
->     (ArrSize, \ s -> (((pure (DIMP s)) <* (keyword KwImp)) <*> (sizedDInTm PiSize))),
->     (ArrSize, \ s -> (((pure (DARR s)) <* (keyword KwArr)) <*> (sizedDInTm PiSize)))
+>     (EqSize, \ t -> DEqBlue <$> (pFilter isEx (pure t) <* keyword KwEqBlue)
+>                             <*> pFilter isEx (sizedDInTm (pred EqSize))),
+>     (AndSize, \ s -> DAND s <$ keyword KwAnd <*> sizedDInTm AndSize),
+>     (ArrSize, \ s -> DIMP s <$ keyword KwImp <*> sizedDInTm PiSize),
+>     (ArrSize, \ s -> DARR s <$ keyword KwArr <*> sizedDInTm PiSize)
 >     ]
 
 Parser support code
@@ -213,8 +216,9 @@ Parser support code
 > isEx _        = Nothing
 
 > tuple :: Parsley Token DInTmRN
-> tuple =
->     ((((pure DPAIR) <*> (sizedDInTm ArgSize)) <*> ((((pure id) <* (keyword KwComma)) <*> pDInTm) <|> ((pure id) <*> tuple))) <|> ((pure DVOID) <* ( pEndOfStream )))
+> tuple = (DPAIR <$> sizedDInTm ArgSize
+>                <*> ((keyword KwComma *> pDInTm) <|> tuple))
+>     <|> (DVOID <$ pEndOfStream)
 
 > sigma :: Parsley Token DInTmRN
 > sigma = (mkSigma <$> optional (ident <* keyword KwAsc)
@@ -223,7 +227,9 @@ Parser support code
 >      <|> DUNIT <$ pEndOfStream
 
 > sigmaMore :: Parsley Token DInTmRN
-> sigmaMore = ((((pure id) <* ( keyword KwSemi )) <*> (sigma <|> pDInTm)) <|> (((((pure (\p s -> mkSigma Nothing (DPRF p) s)) <* ( keyword KwPrf )) <*> pDInTm) <*> sigmaMore) <|> (((pure (\x -> DPRF x)) <* ( keyword KwPrf )) <*> pDInTm)))
+> sigmaMore = (keyword KwSemi *> (sigma <|> pDInTm))
+>   <|> (mkSigma Nothing . DPRF <$ keyword KwPrf <*> pDInTm <*> sigmaMore)
+>   <|> (DPRF <$ keyword KwPrf <*> pDInTm)
 
 > mkSigma :: Maybe String -> DInTmRN -> DInTmRN -> DInTmRN
 > mkSigma Nothing s t = DSIGMA s (DL (DK t))
@@ -252,11 +258,11 @@ Parsing schemes
 ---------------
 
 > pScheme :: Parsley Token (Scheme DInTmRN)
-> pScheme = ((((pure mkScheme) <*> (many pSchemeBit)) <* (keyword KwAsc)) <*> pDInTm)
+> pScheme = mkScheme <$> many pSchemeBit <* keyword KwAsc <*> pDInTm
 >   where
 >     pSchemeBit :: Parsley Token (String, Either (Scheme DInTmRN) DInTmRN)
->     pSchemeBit = bracket Round ((((pure (,)) <*> (ident )) <* (keyword KwAsc)) <*> (((pure (Left . SchType)) <*> pDInTm) ))
->                  <|> bracket Curly ((((pure (,)) <*> (ident )) <* (keyword KwAsc)) <*> (((pure Right) <*> pDInTm) ))
+>     pSchemeBit = bracket Round ((,) <$> ident <* keyword KwAsc <*> (Left . SchType <$> pDInTm))
+>              <|> bracket Curly ((,) <$> ident <* keyword KwAsc <*> (Right <$> pDInTm))
 >     mkScheme :: [(String, Either (Scheme DInTmRN) DInTmRN)] -> DInTmRN -> Scheme DInTmRN
 >     mkScheme [] ty = SchType ty
 >     mkScheme ((x, Left   s) : bits) ty = SchExplicitPi  (x :<: s) (mkScheme bits ty)
