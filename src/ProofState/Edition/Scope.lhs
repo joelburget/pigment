@@ -71,7 +71,7 @@ us extract such spine from a list of entries:
 
 Similarly, `applySpine` applies a reference to a given spine of
 parameters, provided as a spine. These are the shared parameters of a
-$\lambda$-lifted definition.
+lambda-lifted definition.
 
 > applySpine :: REF -> Entries -> EXTM :=>: VAL
 > applySpine ref aus = tm :=>: evTm tm

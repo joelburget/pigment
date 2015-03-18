@@ -248,9 +248,11 @@ makeTac = simpleCT
         , ("<type>", "its type (this could be a hole (\"?\"))")
         ]
     ))
+
 moduleTac = unaryStringCT "module"
     (\s -> makeModule DevelopModule s >> goIn >> return "Made module.")
     "module <x> - creates a module with name <x>."
+
 piTac = simpleCT
     "pi"
     ((:<) <$> ((B0 :<) <$> tokenString <* keyword KwAsc) <*> tokenInTm)
@@ -264,6 +266,7 @@ piTac = simpleCT
         , ("<type>", "its type")
         ]
     ))
+
 programTac = simpleCT
     "program"
     (bwdList <$> pSep (keyword KwComma) tokenString)
@@ -276,6 +279,7 @@ programTac = simpleCT
         [ ("<labels>", "One or more names to introduce")
         ]
     ))
+
 ungawaTac = nullaryCT "ungawa" (ungawa >> return "Ungawa!")
     "ungawa - tries to solve the current goal in a stupid way."
 -- Navigation Tactics
@@ -357,6 +361,7 @@ dataTac = CochonTactic
            ]
        )
     }
+
 eliminateTac = simpleCT
     "eliminate"
     ((:<) <$> ((B0 :<) <$> tokenOption tokenName)

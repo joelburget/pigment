@@ -25,7 +25,7 @@ syntax. A `Scheme` is defined by:
 | (x : Scheme) -> Scheme | an explicit Pi        |
 | { x : ty } -> Scheme   | an implicit Pi        |
 
-Crucially, an implicit $\Pi$ hides a real type, not another scheme: we
+Crucially, an implicit `Pi` hides a real type, not another scheme: we
 forbid "higher-schemes" for mental sanity reasons. For the sake of
 generality, we will parameterise over the exact representation of types:
 
@@ -50,7 +50,7 @@ generality, we will parameterise over the exact representation of types:
 Extracting names
 ----------------
 
-Given a scheme, we can extract the names of its $\Pi$s:
+Given a scheme, we can extract the names of its `Pi`s:
 
 > schemeNames :: Scheme x -> [String]
 > schemeNames (SchType _) = []
@@ -61,7 +61,7 @@ Turning schemes to terms
 ------------------------
 
 We can also convert a `Scheme x` to an `x`, if we are given a way to
-interpret $\Pi$-bindings:
+interpret `Pi`-bindings:
 
 > schemeToType :: (String -> x -> x -> x) -> Scheme x -> x
 > schemeToType _ (SchType ty) = ty
@@ -81,7 +81,7 @@ With two direct special cases:
 Unlifting schemes
 -----------------
 
-Schemes are stored fully $\Pi$-lifted with `SchExplicitPI`s, so we may
+Schemes are stored fully `Pi`-lifted with `SchExplicitPi`s, so we may
 need to apply them to a spine of shared parameters:
 
 > applyScheme :: Scheme INTM -> [REF] -> Scheme INTM

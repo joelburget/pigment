@@ -1,7 +1,7 @@
 <a name="Tactics.Matching">Matching</a>
 ========
 
-> {-# LANGUAGE GADTs, TypeOperators, PatternGuards, PatternSynonyms #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternSynonyms #-}
 
 > module Tactics.Matching where
 
@@ -78,6 +78,7 @@ references occur.
 >         then  lift (checkSafe zs t) >> insertSubst x t
 >         else  matchValue' zs (ty :>: (NP x, t))
 > matchValue zs tvv = matchValue' zs tvv
+
 > matchValue' :: Bwd REF -> TY :>: (VAL, VAL) -> StateT MatchSubst ProofState ()
 > matchValue' zs (PI s t :>: (v, w)) = do
 >     rs <- get
@@ -115,6 +116,7 @@ along with the matching substitution.
 >             return (pty x)
 >         else matchNeutral' zs (P x) t
 > matchNeutral zs a b = matchNeutral' zs a b
+
 > matchNeutral' :: Bwd REF -> NEU -> NEU -> StateT MatchSubst ProofState TY
 > matchNeutral' zs (P x)  (P y)  | x == y            = return (pty x)
 > matchNeutral' zs (f :$ e) (g :$ d)                 = do
@@ -122,10 +124,10 @@ along with the matching substitution.
 >     case halfZip e d of
 >         Nothing  -> throwError $ sErr "matchNeutral: unmatched eliminators!"
 >         Just ed  -> do
->             (_, ty') <- (mapStateT $ mapStateT $ liftError' (error "matchNeutral: unconvertable error!")) $ elimTy (chevMatchValue zs) (N f :<: ty) ed
+>             (_, ty') <- (mapStateT $ mapStateT $ liftError' unconvertable) $ elimTy (chevMatchValue zs) (N f :<: ty) ed
 >             return ty'
 > matchNeutral' zs (fOp :@ as) (gOp :@ bs) | fOp == gOp = do
->     (_, ty) <- (mapStateT $ mapStateT $ liftError' (error "matchNeutral: unconvertable error!")) $ opTy fOp (chevMatchValue zs) (zip as bs)
+>     (_, ty) <- (mapStateT $ mapStateT $ liftError' unconvertable) $ opTy fOp (chevMatchValue zs) (zip as bs)
 >     return ty
 > matchNeutral' zs a b = throwError $ StackError
 >     [ err "matchNeutral: unmatched "
@@ -133,6 +135,8 @@ along with the matching substitution.
 >     , err "and"
 >     , errVal (N b)
 >     ]
+
+unconvertable = error "matchNeutral: unconvertable error!"
 
 As noted above, fresh references generated when expanding $\Pi$-types
 must not occur as solutions to matching problems. The `checkSafe`

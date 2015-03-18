@@ -42,13 +42,13 @@ Grr.
 
 > instance Monoid (IO ()) where
 >   mempty = return ()
->   mappend x y = do x; y
+>   mappend x y = x >> y
 
 HalfZip
 -------
 
 > class Functor f => HalfZip f where
->   halfZip :: f x -> f y -> Maybe (f (x,y))
+>   halfZip :: f x -> f y -> Maybe (f (x, y))
 
 Functor Kit
 -----------
