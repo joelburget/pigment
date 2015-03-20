@@ -136,7 +136,7 @@ along with the matching substitution.
 >     , errVal (N b)
 >     ]
 
-unconvertable = error "matchNeutral: unconvertable error!"
+> unconvertable = error "matchNeutral: unconvertable error!"
 
 As noted above, fresh references generated when expanding $\Pi$-types
 must not occur as solutions to matching problems. The `checkSafe`
