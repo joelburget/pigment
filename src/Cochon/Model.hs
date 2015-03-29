@@ -1,4 +1,4 @@
-{-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric #-}
+{-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric, TemplateHaskell #-}
 
 module Cochon.Model where
 
@@ -17,6 +17,7 @@ import Kit.Parsley
 import ProofState.Edition.ProofContext
 
 import Lens.Family2
+import Lens.Family2.TH
 import React
 
 -- TODO(joel) - give this a [CochonArg] reader?
@@ -147,32 +148,10 @@ data InteractionState = InteractionState
     , _currentPane :: Pane
     } deriving (Generic)
 
+$(makeLenses ''InteractionState)
+
 startState :: Bwd ProofContext -> InteractionState
 startState pc = InteractionState pc (InPresent "") F0 Stowed Visible Log
-
-proofCtx :: Lens' InteractionState (Bwd ProofContext)
-proofCtx f state@(InteractionState _proofCtx _ _ _ _ _) =
-    (\x -> state{_proofCtx=x}) <$> f _proofCtx
-
-commandFocus :: Lens' InteractionState CommandFocus
-commandFocus f state@(InteractionState _ _commandFocus _ _ _ _) =
-    (\x -> state{_commandFocus=x}) <$> f _commandFocus
-
-interactions :: Lens' InteractionState InteractionHistory
-interactions f state@(InteractionState _ _ _interactions _ _ _) =
-    (\x -> state{_interactions=x}) <$> f _interactions
-
-autocomplete :: Lens' InteractionState AutocompleteState
-autocomplete f state@(InteractionState _ _ _ _autocomplete _ _) =
-    (\x -> state{_autocomplete=x}) <$> f _autocomplete
-
-rightPaneVisible :: Lens' InteractionState Visibility
-rightPaneVisible f state@(InteractionState _ _ _ _ _rightPaneVisible _) =
-    (\x -> state{_rightPaneVisible=x}) <$> f _rightPaneVisible
-
-currentPane :: Lens' InteractionState Pane
-currentPane f state@(InteractionState _ _ _ _ _ _currentPane) =
-    (\x -> state{_currentPane=x}) <$> f _currentPane
 
 userInput :: InteractionState -> String
 userInput (InteractionState _ _commandFocus _ _ _ _) = case _commandFocus of

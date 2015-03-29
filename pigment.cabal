@@ -21,6 +21,7 @@ executable pigment
   build-depends:
       base >= 4.6,
       lens-family == 1.2.0,
+      lens-family-th == 0.4.1.0,
       mtl >= 2.2,
       transformers == 0.4.2.0,
       void >= 0.7,
