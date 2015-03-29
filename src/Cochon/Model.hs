@@ -1,4 +1,3 @@
-\begin{code}
 {-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric #-}
 
 module Cochon.Model where
@@ -34,21 +33,24 @@ displayUser = tell
 
 tellUser :: String -> Cmd ()
 tellUser = displayUser . fromString
-\end{code}
 
-A Cochon tactic consists of:
+-- A Cochon tactic consists of:
+--
+-- * `ctName` - the name of this tactic
+-- * `ctParse` - parser that parses the arguments for this tactic
+-- * `ctxTrans` - state transition to perform for a given list of arguments and
+--     current context
+-- * `ctHelp` - help text for this tactic
 
-* `ctName` - the name of this tactic
-* `ctParse` - parser that parses the arguments for this tactic
-* `ctxTrans` - state transition to perform for a given list of arguments and
-    current context
-* `ctHelp` - help text for this tactic
-
-\begin{code}
 data CochonTactic = CochonTactic
     { ctName   :: String
+    -- TODO(joel) - I don't want this to be a Parsley. I'd like to use a less
+    -- general format.
     , ctParse  :: Parsley Token (Bwd CochonArg)
     , ctxTrans :: [CochonArg] -> Cmd ()
+    -- TODO(joel) - I don't think this should be a react component. I'd like to
+    -- use a less general / more expressive language so we'd be able to
+    -- introspect.
     , ctHelp   :: Either (Pure React') TacticHelp
     } deriving Generic
 
@@ -56,19 +58,17 @@ instance Show CochonTactic where
     show = ctName
 
 instance Eq CochonTactic where
-    ct1 == ct2 =  ctName ct1 == ctName ct2
+    ct1 == ct2 = ctName ct1 == ctName ct2
 
 instance Ord CochonTactic where
     compare = comparing ctName
-\end{code}
 
-The help for a tactic is:
-* a template showing the syntax of the command
-* an example use
-* a summary of what the command does
-* help for each individual argument (yes, they're named)
+-- The help for a tactic is:
+-- * a template showing the syntax of the command
+-- * an example use
+-- * a summary of what the command does
+-- * help for each individual argument (yes, they're named)
 
-\begin{code}
 data TacticHelp = TacticHelp
     { template :: Pure React' -- TODO highlight each piece individually
     , example :: String
@@ -86,32 +86,26 @@ data Visibility = Visible | Invisible deriving (Eq, Generic)
 toggleVisibility :: Visibility -> Visibility
 toggleVisibility Visible = Invisible
 toggleVisibility Invisible = Visible
-\end{code}
 
-A `Command` is a tactic with arguments and the context it operates on. Also the
-resulting output.
+-- A `Command` is a tactic with arguments and the context it operates on. Also
+-- the resulting output.
 
-\begin{code}
 type CTData = (CochonTactic, [CochonArg])
 
 data Command = Command
     { commandStr :: String
     , commandCtx :: Bwd ProofContext
-\end{code}
 
-Derivative fields - these are less fundamental and can be derived from the
-first two fields.
+-- Derivative fields - these are less fundamental and can be derived from the
+-- first two fields.
 
-\begin{code}
     , commandParsed :: Either String CTData -- is this really necessary?
     , commandOutput :: Pure React'
     } deriving Generic
-\end{code}
 
-we presently need to be able to add a latest, move to earlier / later, and get
-the current value
+-- we presently need to be able to add a latest, move to earlier / later, and
+-- get the current value
 
-\begin{code}
 type InteractionHistory = Fwd Command
 
 data CommandFocus
@@ -130,29 +124,25 @@ data AutocompleteState
 
 data InteractionState = InteractionState
     { _proofCtx :: Bwd ProofContext
-\end{code}
 
-There are two fields dealing with the command history.
+-- There are two fields dealing with the command history.
+--
+-- * `_commandFocus` - the user moves around this by pressing the up and down
+--   arrows. Up moves back in time and down moves forward in time. Exactly the
+--   same as your shell command history. When the user reaches a command they
+--   like and starts to edit it, they're instantly moved forward in time to the
+--   present.
+-- * `_interactions` - a list of all the things the user has ever typed and
+--   pigment's responses.
 
-* `_commandFocus` - the user moves around this by pressing the up and down
-  arrows. Up moves back in time and down moves forward in time. Exactly the
-  same as your shell command history. When the user reaches a command they like
-  and starts to edit it, they're instantly moved forward in time to the
-  present.
-* `_interactions` - a list of all the things the user has ever typed and
-  pigment's responses.
-
-\begin{code}
     , _commandFocus :: CommandFocus
     , _interactions :: InteractionHistory
     , _autocomplete :: AutocompleteState
-\end{code}
 
-Two fields dealing with the right pane (`_currentPane`) is a bit of a misnomer.
-It should perhaps be called something like `_currentRightPaneTab` but that's
-quite cumbersome.
+-- Two fields dealing with the right pane (`_currentPane`) is a bit of a
+-- misnomer.  It should perhaps be called something like `_currentRightPaneTab`
+-- but that's quite cumbersome.
 
-\begin{code}
     , _rightPaneVisible :: Visibility
     , _currentPane :: Pane
     } deriving (Generic)
@@ -188,4 +178,3 @@ userInput :: InteractionState -> String
 userInput (InteractionState _ _commandFocus _ _ _ _) = case _commandFocus of
     (InHistory _ current) -> let Command str _ _ _ = focus current in str
     InPresent str -> str
-\end{code}

@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds,
   LambdaCase, LiberalTypeSynonyms #-}
+
 module Cochon.Tactics (cochonTactics, infoHypotheses, reactBKind, runProofState) where
+
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error
@@ -9,6 +11,7 @@ import qualified Data.Foldable as Foldable
 import Data.List
 import Data.String
 import Data.Traversable
+
 import Cochon.CommandLexer
 import Cochon.Error
 import Cochon.Model
@@ -59,7 +62,9 @@ import Tactics.Record
 import Tactics.Relabel
 import Tactics.ShowHaskell
 import Tactics.Unification
+
 import React
+
 cochonTactics :: [CochonTactic]
 cochonTactics = sort
     [ applyTac
@@ -106,6 +111,7 @@ cochonTactics = sort
     , relabelTac
     , haskellTac
     ]
+
 {-
 We have some shortcuts for building common kinds of tactics: `simpleCT`
 builds a tactic that works in the proof state, and there are various
