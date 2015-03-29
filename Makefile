@@ -8,6 +8,7 @@ build: build/index.css assemble
 
 assemble:
 	cp src/index.html build
+	cp .cabal-sandbox/bin/pigment.jsexe/all.js build/
 
 clean:
 	git clean -xf
