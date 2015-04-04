@@ -7,6 +7,7 @@ import Control.Monad.State
 import Control.Monad.Writer
 import Data.Ord
 import Data.String
+import qualified Data.Text as T
 import GHC.Generics
 
 import Cochon.CommandLexer
@@ -35,9 +36,44 @@ displayUser = tell
 tellUser :: String -> Cmd ()
 tellUser = displayUser . fromString
 
+-- matchTactic' :: TacticFormat -> Text -> Maybe Text
+-- matchTactic' (TfKeyword kw) str = T.stripPrefix kw str -- TODO separator
+-- matchTactic' (TfAlternative formats) str = foldr (<|>) Nothing
+--     (map (`matchTactic'` str) formats)
+-- matchTactic' (TfOption format) str = undefined -- XXX this causes branching
+-- matchTactic' (TfRepeatZero format) str = do
+--     many (matchTactic'
+
+-- instance ToJSRef TacticFormat where
+--     toJSRef a = do
+--         obj <- newObj
+--         case a of
+--             TfKeyword str -> do
+--                 setProp "alt" "TfKeyword" obj
+--                 setProp "val" (toJSRef str) obj
+--             TfAlternative alts -> do
+--                 setProp "alt" "TfAlternative" obj
+--                 setProp "val" (toJSRef alts) obj
+--             TfOption format -> do
+--                 setProp "alt" "TfOption" obj
+--                 setProp "val" (toJSRef format) obj
+--             TfRepeat format -> do
+--                 setProp "alt" "TfRepeat" obj
+--                 setProp "val" (toJSRef format) obj
+--             TfName str -> do
+--                 setProp "alt" "TfName" obj
+--                 setProp "val" (toJSRef format) obj
+--             TfRepeat format -> do
+--                 setProp "alt" "TfRepeat" obj
+--                 setProp "val" (toJSRef format) obj
+--         return obj
+
 -- A Cochon tactic consists of:
 --
 -- * `ctName` - the name of this tactic
+-- * `ctDesc` - high level description of the functionality
+-- * `ctFormat` - description of the command format for both parsing and
+--   contextual help
 -- * `ctParse` - parser that parses the arguments for this tactic
 -- * `ctxTrans` - state transition to perform for a given list of arguments and
 --     current context
@@ -45,13 +81,11 @@ tellUser = displayUser . fromString
 
 data CochonTactic = CochonTactic
     { ctName   :: String
-    -- TODO(joel) - I don't want this to be a Parsley. I'd like to use a less
-    -- general format.
+    , ctDesc   :: TacticFormat
+    -- TODO(joel) - remove
     , ctParse  :: Parsley Token (Bwd CochonArg)
     , ctxTrans :: [CochonArg] -> Cmd ()
-    -- TODO(joel) - I don't think this should be a react component. I'd like to
-    -- use a less general / more expressive language so we'd be able to
-    -- introspect.
+    -- TODO(joel) - remove
     , ctHelp   :: Either (Pure React') TacticHelp
     } deriving Generic
 

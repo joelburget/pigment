@@ -1,17 +1,13 @@
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, PatternGuards #-}
+
 > module Tests.Tactics where
+
+> import Data.Either
+
 > import BwdFwd
 > import Tm
 > import Rules
-
-Some machinery
---------------
-
-> fromRight (Right x) = x
-> fromRight (Left y) = error $ "fromRight: got a left term: " ++ show y
-> isRight (Right _) = True
-> isRight _ = False
 
 Enum
 ----

@@ -2,13 +2,15 @@ Anchor resolution
 =================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
+>              GADTs, RankNTypes, PatternSynonyms #-}
 
 > module ProofState.Interface.Anchor where
 
 > import Control.Applicative
 > import Data.Foldable
 > import Data.Traversable
+> import Data.Monoid
+
 > import Kit.MissingLibrary
 > import Kit.BwdFwd
 > import ProofState.Structure.Developments
@@ -33,7 +35,7 @@ To cope with shadowing, we will need some form of `RelativeAnchor`:
 
 With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 
-> resolveAnchor :: String -> ProofStateT e (Maybe REF)
+> resolveAnchor :: EntityAnchor -> ProofStateT e (Maybe REF)
 > resolveAnchor anchor = do
 >   scope <- getInScope
 >   case seekAnchor scope of
@@ -41,9 +43,9 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 >     _ :< ref -> return $ Just ref
 >     where seekAnchor :: Entries -> Bwd REF
 >           seekAnchor B0 = empty
->           seekAnchor (scope :< EPARAM ref _ _ _ (Just anchor') _)
+>           seekAnchor (scope :< EPARAM ref _ _ _ anchor' _)
 >                            | anchor' == anchor = B0 :< ref
->           seekAnchor (scope :< EPARAM ref _ _ _ Nothing _) = seekAnchor scope
+>           seekAnchor (scope :< EPARAM ref _ _ _ AnchNo _) = seekAnchor scope
 >           seekAnchor (scope :< EDEF ref _ _ dev _ AnchNo _) =
 >                         seekAnchor (devEntries dev)
 >                         <> seekAnchor scope

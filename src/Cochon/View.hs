@@ -67,9 +67,6 @@ import Tactics.Relabel
 import Tactics.ShowHaskell
 import Tactics.Unification
 
--- import Haste hiding (fromString, prompt, focus)
--- import Haste.Prim
--- import Haste.Foreign
 import GHCJS.Foreign
 import Lens.Family2
 import React
@@ -342,7 +339,8 @@ reactEntries :: Fwd (Entry Bwd) -> ProofState InteractionReact
 reactEntries F0 = return ""
 reactEntries (e :> es) = do
     putEntryAbove e
-    (>>) <$> reactEntry e <*> reactEntries es
+    reactEntry e
+    reactEntries es
 
 
 reactEntry :: Entry Bwd -> ProofState InteractionReact

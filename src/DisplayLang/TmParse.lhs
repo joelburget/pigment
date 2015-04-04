@@ -116,7 +116,7 @@ A `SizedParserList` is a list of parsers associated to every size; a
 We can construct such a list from a list of size-parser pairs thus:
 
 > arrange :: [(Size, b)] -> [(Size, [b])]
-> arrange xs = map (\ s -> (s,  pick s xs)) (enumFromTo minBound maxBound)
+> arrange xs = map (\s -> (s,  pick s xs)) (enumFromTo minBound maxBound)
 >   where
 >     pick :: Eq a => a -> [(a, b)] -> [b]
 >     pick x = concatMap (\(a , b) -> [b | a == x])

@@ -95,6 +95,7 @@ either be:
 >     | AnchStr String
 >     -- "Nothing"
 >     | AnchNo
+>     deriving Eq
 
 > instance Show EntityAnchor where
 >     show AnchConc = "conc"

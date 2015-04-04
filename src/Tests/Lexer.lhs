@@ -1,7 +1,8 @@
 > module Tests.Lexer where
->             
-> import Parsley       
+
+> import Parsley
 > import Lexer
+
 > tests = [ "*"                         -- Set
 >         , "#"                         -- Prop
 >         , "(x : *) -> *"              -- Function space
@@ -29,6 +30,7 @@
 >         , "[| fancy |]"               -- empty fancy brackets
 >         , "[foo| bar |foo]"           -- non-empty fancy brackets
 >         ]
-> main = 
+
+> main =
 >     sequence_ $
 >     map (\t -> putStrLn $ show $ parse tokenize t) tests

@@ -15,16 +15,37 @@ are round, square, or curly, and you can make fancy brackets by wedging
 an identifier between open-and-bar, or bar-and-close without whitespace.
 Sequences of non-whitespace are identifiers unless they're keywords.
 
-> {-# LANGUAGE GADTs, TypeSynonymInstances #-}
+> {-# LANGUAGE GADTs, TypeSynonymInstances, CPP, DeriveGeneric #-}
 
 > module DisplayLang.Lexer where
 
 > import Control.Applicative
+> import Data.Char
 > import Data.Functor
 > import Data.List
-> import Data.Char
+> import Data.String ()
+> import GHC.Generics
+
 > import Kit.Parsley
-> import Kit.MissingLibrary hiding (void)
+
+#ifdef __GHCJS__
+
+> import GHCJS.Marshal
+> import GHCJS.Types
+
+This instance is kind of strange, but should work.
+
+> instance ToJSRef Bracket where
+>     toJSRef = (castRef <$>) . toJSRef' where
+>         toJSRef' Round = toJSRef "("
+>         toJSRef' Square = toJSRef "["
+>         toJSRef' Curly = toJSRef "{"
+>         toJSRef' (RoundB str) = toJSRef $ "(" ++ str
+>         toJSRef' (SquareB str) = toJSRef $ "[" ++ str
+>         toJSRef' (CurlyB str) = toJSRef $ "{" ++ str
+>
+
+#endif
 
 What are tokens?
 ----------------
@@ -136,60 +157,66 @@ Lexing keywords
 Keywords are slightly more involved. A keyword is one of the following
 things...
 
-> data Keyword where
->     KwMu         :: Keyword
->     KwEnum       :: Keyword
->     KwPlus       :: Keyword
->     KwEqBlue     :: Keyword
->     KwMonad      :: Keyword
->     KwReturn     :: Keyword
->     KwIMu        :: Keyword
->     KwCall       :: Keyword
->     KwLabel      :: Keyword
->     KwLabelEnd   :: Keyword
->     KwRet        :: Keyword
->     KwNu         :: Keyword
->     KwCoIt       :: Keyword
->     KwProb       :: Keyword
->     KwProbLabel  :: Keyword
->     KwPatPi      :: Keyword
->     KwSch        :: Keyword
->     KwSchTy      :: Keyword
->     KwExpPi      :: Keyword
->     KwImpPi      :: Keyword
->     KwProp       :: Keyword
->     KwAbsurd     :: Keyword
->     KwTrivial    :: Keyword
->     KwPrf        :: Keyword
->     KwAnd        :: Keyword
->     KwArr        :: Keyword
->     KwImp        :: Keyword
->     KwAll        :: Keyword
->     KwInh        :: Keyword
->     KwWit        :: Keyword
->     KwQuotient   :: Keyword
->     KwRecord     :: Keyword
->     KwRSig       :: Keyword
->     KwREmpty     :: Keyword
->     KwRCons      :: Keyword
->     KwFst        :: Keyword
->     KwSnd        :: Keyword
->     KwSig        :: Keyword
->     KwUId        :: Keyword
->     KwTag        :: Keyword
->     KwAsc        :: Keyword
->     KwComma      :: Keyword
->     KwSemi       :: Keyword
->     KwDefn       :: Keyword
->     KwUnderscore :: Keyword
->     KwEq         :: Keyword
->     KwBy         :: Keyword
->     KwSet        :: Keyword
->     KwPi         :: Keyword
->     KwLambda     :: Keyword
->     KwCon        :: Keyword
->     KwOut        :: Keyword
->   deriving (Bounded, Enum, Eq, Show)
+> data Keyword
+>     = KwMu
+>     | KwEnum
+>     | KwPlus
+>     | KwEqBlue
+>     | KwMonad
+>     | KwReturn
+>     | KwIMu
+>     | KwCall
+>     | KwLabel
+>     | KwLabelEnd
+>     | KwRet
+>     | KwNu
+>     | KwCoIt
+>     | KwProb
+>     | KwProbLabel
+>     | KwPatPi
+>     | KwSch
+>     | KwSchTy
+>     | KwExpPi
+>     | KwImpPi
+>     | KwProp
+>     | KwAbsurd
+>     | KwTrivial
+>     | KwPrf
+>     | KwAnd
+>     | KwArr
+>     | KwImp
+>     | KwAll
+>     | KwInh
+>     | KwWit
+>     | KwQuotient
+>     | KwRecord
+>     | KwRSig
+>     | KwREmpty
+>     | KwRCons
+>     | KwFst
+>     | KwSnd
+>     | KwSig
+>     | KwUId
+>     | KwTag
+>     | KwAsc
+>     | KwComma
+>     | KwSemi
+>     | KwDefn
+>     | KwUnderscore
+>     | KwEq
+>     | KwBy
+>     | KwSet
+>     | KwPi
+>     | KwLambda
+>     | KwCon
+>     | KwOut
+>   deriving (Bounded, Enum, Eq, Show, Generic)
+
+#ifdef __GHCJS__
+
+> instance ToJSRef Keyword where
+
+#endif
 
 ...and they look like this:
 
@@ -267,6 +294,7 @@ Lexing identifiers
 Hence, parsing an identifier simply consists in successfully parsing a
 word – which is not a keyword – and saying "oh! it's an `Identifier`".
 
+> parseIdent :: Parsley Char Token
 > parseIdent = id <$ parseKeyword *> empty
 >          <|> Identifier <$> parseWord
 

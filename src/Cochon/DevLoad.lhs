@@ -8,11 +8,13 @@ Loading Developments
 > import Control.Monad.State
 > import Control.Monad.Except
 > import Control.Applicative
+> import Data.Functor
 
 > import Kit.BwdFwd
 > import Kit.Parsley
 > import Cochon.Cochon
 > import Cochon.Error
+> import Cochon.Model
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
 > import DisplayLang.Lexer

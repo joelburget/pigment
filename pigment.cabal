@@ -1,6 +1,6 @@
 name:           pigment
 version:        0.2
-cabal-version:  >= 1.6
+cabal-version:  >= 1.8
 license:        MIT
 license-file:   LICENSE
 category:       Language
@@ -24,6 +24,7 @@ executable pigment
       lens-family-th == 0.4.1.0,
       mtl >= 2.2,
       transformers == 0.4.2.0,
+      text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
@@ -37,3 +38,134 @@ executable pigment
   js-sources:
       src/js/react.js
       src/js/react-stubs.js
+
+library
+  build-depends:
+      base >= 4.6,
+      lens-family == 1.2.0,
+      lens-family-th == 0.4.1.0,
+      mtl >= 2.2,
+      transformers == 0.4.2.0,
+      text >= 1.2,
+      void >= 0.7,
+      newtype == 0.2,
+      pretty >= 1.1,
+      recursion-schemes == 4.1,
+      ghcjs-base >= 0.1,
+      ghcjs-dom >=0.1.1.1,
+      ghcjs-prim >= 0.1.0.0,
+      react-haskell-ghcjs == 1.3.0.0
+  exposed-modules:
+    Cochon.Cochon
+    Cochon.CommandLexer
+    Cochon.Controller
+    -- Cochon.DevLoad
+    Cochon.Error
+    Cochon.Model
+    Cochon.View
+    DisplayLang.DisplayTm
+    DisplayLang.Lexer
+    DisplayLang.Name
+    DisplayLang.PrettyPrint
+    DisplayLang.Reactify
+    DisplayLang.Scheme
+    DisplayLang.TmParse
+    Distillation.Distiller
+    Distillation.Moonshine
+    Distillation.Scheme
+    Elaboration.ElabMonad
+    Elaboration.ElabProb
+    Elaboration.Elaborator
+    Elaboration.MakeElab
+    Elaboration.RunElab
+    Elaboration.Scheduler
+    Elaboration.Wire
+    Evidences.BetaQuotation
+    Evidences.DefinitionalEquality
+    Evidences.Eval
+    Evidences.Mangler
+    Evidences.OperatorDSL
+    Evidences.Operators
+    Evidences.PropositionalEquality
+    Evidences.Tm
+    Evidences.TypeChecker
+    Evidences.Utilities
+    Kit.BwdFwd
+    Kit.ListZip
+    Kit.MissingLibrary
+    Kit.Parsley
+    Kit.Trace
+    NameSupply.NameSupplier
+    NameSupply.NameSupply
+    ProofState.Edition.Entries
+    ProofState.Edition.FakeRef
+    ProofState.Edition.GetSet
+    ProofState.Edition.Navigation
+    ProofState.Edition.News
+    ProofState.Edition.ProofContext
+    ProofState.Edition.ProofState
+    ProofState.Edition.Scope
+    ProofState.Interface.Anchor
+    ProofState.Interface.Definition
+    ProofState.Interface.Lifting
+    ProofState.Interface.Module
+    ProofState.Interface.Name
+    ProofState.Interface.NameResolution
+    ProofState.Interface.Parameter
+    ProofState.Interface.ProofKit
+    ProofState.Interface.Search
+    ProofState.Interface.Solving
+    ProofState.Structure.Developments
+    ProofState.Structure.Entries
+    SourceLang.Elaborator
+    SourceLang.Example
+    SourceLang.Parser
+    SourceLang.Structure
+    Tactics.Data
+    Tactics.Elimination
+    Tactics.IData
+    Tactics.Matching
+    Tactics.ProblemSimplify
+    Tactics.PropositionSimplify
+    Tactics.Record
+    Tactics.Relabel
+    Tactics.ShowHaskell
+    Tactics.Unification
+  ghc-options: -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields -fmax-simplifier-iterations=10
+  hs-source-dirs: src
+
+
+-- quickcheck
+test-suite properties
+  type: exitcode-stdio-1.0
+  main-is: properties.hs
+  ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs: tests
+  build-depends:
+    base,
+    pigment,
+    QuickCheck           >= 2.4,
+    test-framework       >= 0.6,
+    test-framework-hunit >= 0.2,
+    test-framework-th    >= 0.2
+
+test-suite unittests
+  type: exitcode-stdio-1.0
+  main-is: unittests.hs
+  ghc-options: -Wall -threaded
+  hs-source-dirs: tests
+  build-depends:
+    base,
+    pigment,
+    hunit >= 1.2.5
+
+test-suite hlint
+  type: exitcode-stdio-1.0
+  main-is: hlint.hs
+  ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs: tests
+
+  build-depends:
+    base,
+    pigment,
+    hlint >= 1.7
