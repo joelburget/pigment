@@ -110,7 +110,7 @@ handleKey KeyboardEvent{React.key="ArrowDown"} = Just $ CommandKeypress DownArro
 handleKey _ = Nothing
 
 handleCmdChange :: ChangeEvent -> Maybe Transition
-handleCmdChange = Just . CommandTyping . fromJSString . targetValue
+handleCmdChange = Just . CommandTyping . fromJSString . value . target
 
 animDispatch :: Transition
              -> InteractionState
