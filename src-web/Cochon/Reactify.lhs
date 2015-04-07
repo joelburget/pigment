@@ -3,7 +3,7 @@
 
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
 >     TypeSynonymInstances, OverloadedStrings, PatternSynonyms,
->     LiberalTypeSynonyms #-}
+>     LiberalTypeSynonyms, FlexibleContexts #-}
 
 > module Cochon.Reactify where
 

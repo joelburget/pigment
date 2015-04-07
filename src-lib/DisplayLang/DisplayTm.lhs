@@ -26,22 +26,23 @@ interactive development. Hence, in addition to the terms from the
 Evidence language, we have the following:
 
 -   Question marks (holes), which are turned into subgoals during
-    elaboration (Chapter [chap:elaboration]) ;
+    elaboration (Chapter [chap:elaboration])
 
--   Underscores (jokers), which are inferred during elaboration ;
+-   Underscores (jokers), which are inferred during elaboration
 
--   Embedding of evidence terms into display terms ;
+-   Embedding of evidence terms into display terms
 
--   Type annotations ; and
+-   Type annotations
 
 -   Feature-specific extensions, which are imported from an aspect.
 
 However, we have removed the following:
 
--   Type ascriptions, replaced by type annotations ; and
+-   Type ascriptions, replaced by type annotations
 
 -   Operators, replaced by a parameter containing the corresponding
-    reference in `primitives` (Section [Evidences.Operators](#Evidences.Operators))
+    reference in `primitives`
+    (Section [Evidences.Operators](#Evidences.Operators))
 
 Because of a limitation of GHC `deriving Traversable`, we define two
 mutually recursive data types instead of taking a `Dir` parameter.

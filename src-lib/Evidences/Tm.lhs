@@ -4,7 +4,8 @@ Tm
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
 >     FlexibleContexts, ScopedTypeVariables, ConstraintKinds,
->     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds, TupleSections #-}
+>     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds, TupleSections,
+>     CPP #-}
 
 > module Evidences.Tm where
 
@@ -25,6 +26,24 @@ Tm
 > import Kit.MissingLibrary
 > import Kit.BwdFwd
 > import NameSupply.NameSupply
+
+#ifdef __GHCJS__
+
+This is annoying. GHCJS and GHC are using different versions of base or
+something. Even though they're both listed as 4.8.0.0
+
+> import Control.Monad
+
+> instance Alternative (Either (StackError e)) where
+>     empty = Left (errMsgStack "empty alternative")
+>     (Left _) <|> x = x
+>     x        <|> _ = x
+>
+> instance MonadPlus (Either (StackError e)) where
+>     mzero = empty
+>     mplus = (<|>)
+
+#endif
 
 Syntax of Terms and Values
 --------------------------

@@ -7,6 +7,7 @@
 
 > import Control.Applicative
 > import Data.Traversable
+
 > import Kit.BwdFwd
 > import ProofState.Edition.ProofState
 > import Distillation.Distiller

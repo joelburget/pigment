@@ -280,12 +280,13 @@ pCochonTactic  = do
     x <- ident <|> (key <$> anyKeyword)
     case tacticNamed x of
         Just ct -> do
-            args <- ctParse ct
+            args <- parseTactic (ctDesc ct)
 
             -- trailing semicolons are cool, or not
+            -- XXX(joel)
             optional (tokenEq (Keyword KwSemi))
 
             -- this parser is not gonna be happy if there are args left
             -- over
-            return (ct, trail args)
+            return (ct, args)
         Nothing -> fail "unknown tactic name."

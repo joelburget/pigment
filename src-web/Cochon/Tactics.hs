@@ -11,7 +11,7 @@ import qualified Data.Foldable as Foldable
 import Data.List
 import Data.Monoid
 import Data.String
-import Data.Traversable
+import Data.Traversable as Trav
 import qualified Data.Text as T
 import Text.PrettyPrint.HughesPJ
 
@@ -40,7 +40,6 @@ import qualified Evidences.Eval (($$))
 import Evidences.Tm
 import Kit.BwdFwd
 import Kit.ListZip
-import Kit.Parsley
 import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
 import ProofState.Edition.ProofState
@@ -105,7 +104,7 @@ cochonTactics = sort
     , byTac
     , refineTac
     , solveTac
-    , idataTac
+    -- , idataTac
     , elmTac
     , elaborateTac
     -- TODO(joel) - figure out a system for synonyms
@@ -131,16 +130,13 @@ specialised versions of it for nullary and unary tactics.
 simpleCT :: String
          -> Historic
          -> T.Text -- XXX remove
-         -> TacticFormat
-         -> Parsley Token (Bwd CochonArg)
-         -- TODO(joel) TermReact
-         -> ([CochonArg] -> ProofState InteractionReact)
+         -> TacticDescription
+         -> (TacticResult -> ProofState (Pure React'))
          -> Either (Pure React') TacticHelp
          -> CochonTactic
-simpleCT name hist desc fmt parser eval help = CochonTactic
+simpleCT name hist desc fmt eval help = CochonTactic
     {  ctName = name
     ,  ctDesc = fmt
-    ,  ctParse = parser
     ,  ctxTrans = simpleOutput hist . eval
     ,  ctHelp = help
     }
@@ -156,7 +152,6 @@ nullaryCT name hist eval desc = simpleCT
     hist
     (fromString desc)
     (TfPseudoKeyword (fromString name))
-    (pure B0)
     (const eval)
     (Left (fromString (name ++ " - " ++ desc)))
 
@@ -171,10 +166,17 @@ unaryExCT name eval help = simpleCT
     (fromString help)
     (TfSequence
         [ TfPseudoKeyword (fromString name)
-        , TfAlternative (TfExArg "term" Nothing) tfAscription
+        , TfExArg "term" Nothing
+        , TfAlternative
+            ( TfExArg "term" Nothing
+            , TfSequence
+                [ TfInArg "term" Nothing
+                , TfKeyword KwAsc
+                , TfInArg "ty" Nothing
+                ]
+            )
         ]
     )
-    (((B0 :<) <$> tokenExTm) <|> ((B0 :<) <$> tokenAscription))
     ((locally <$>) . (eval . argToEx . head))
     (Left (fromString help))
 
@@ -188,8 +190,7 @@ unaryInCT name eval desc = simpleCT
     Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfInArg "term" Nothing ])
-    ((B0 :<) <$> tokenInTm)
-    (eval . argToIn . head)
+    (eval . argToIn)
     (Left (fromString (name ++ " - " ++ desc)))
 
 
@@ -206,7 +207,6 @@ unaryNameCT name eval desc = simpleCT
     Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "name" ])
-    ((B0 :<) <$> tokenName)
     ((locally <$>) . eval . unDP . argToEx . head)
     (Left (fromString (name ++ " - " ++ desc)))
 
@@ -220,7 +220,6 @@ unaryStringCT name eval desc = simpleCT
     Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "x" ])
-    ((B0 :<) <$> tokenString)
     ((locally <$>) . eval . argToStr . head)
     (Left (fromString (name ++ " - " ++ desc)))
 
@@ -255,16 +254,16 @@ lambdaTac = simpleCT
            )
          ]
      )
-     ((((:<) <$> (bwdList <$> pSep (keyword KwComma) tokenString <* keyword KwAsc)) <*> tokenInTm
-      ) <|> (bwdList <$> pSep (keyword KwComma) tokenString))
-     (\args -> case args of
-        -- TODO(joel) - give an actually useful message
-        [] -> return "This lambda needs no introduction!"
-        _ -> case last args of
-          InArg ty  -> Data.Traversable.mapM (elabLamParam . (:<: ty) . argToStr) (init args)
-                           >> return "Made lambda!"
-          _         -> Data.Traversable.mapM (lambdaParam . argToStr) args
-                           >> return "Made lambda!"
+     (\case
+          -- TODO(joel) - give an actually useful message
+          TrSequence [ _, TrSequence [], _ ] ->
+              return "This lambda needs no introduction!"
+          TrSequence [ _, TrSequence args, TrOption (Just (TrInArg ty)) ] -> do
+              Trav.mapM (elabLamParam . (:<: ty) . argToStr) args
+              return "Lambdafied"
+          TrSequence [ _, TrSequence args, TrOption (Nothing) ] -> do
+              Trav.mapM (lambdaParam . argToStr) args
+              return "Lambdafied"
        )
      (Right (TacticHelp
          "lambda <labels> [ : <type> ]"
@@ -287,12 +286,12 @@ letTac = simpleCT
         , TfScheme "scheme" Nothing -- XXX
         ]
     )
-    ((:<) <$> ((B0 :<) <$> tokenString) <*> tokenScheme)
-    (\ [StrArg x, SchemeArg s] -> do
-        elabLet (x :<: s)
+    (\(TrSequence [ _, TrName name, TrScheme scheme ]) -> do
+        let name' = T.unpack name
+        elabLet (name' :<: scheme)
         optional problemSimplify
         optional seekGoal
-        return (fromString $ "Let there be " ++ x ++ "."))
+        return (fromString $ "Let there be " ++ name' ++ "."))
     (Right (TacticHelp
         "let <label> <scheme> : <type>"
         "let A (m : Nat) : Nat -> Nat"
@@ -311,31 +310,26 @@ makeTac = simpleCT
     (TfSequence
         [ "make"
         , TfName "x"
-        , TfOption (
-            TfSequence
-                [ TfKeyword KwDefn
-                , TfInArg "term" Nothing
-                ]
-          )
-        , tfAscription
+        , TfOption (TfInArg "term" Nothing)
+        , TfInArg "type" Nothing
         ]
     )
-    ((((:<) <$> ((B0 :<) <$> tokenString <* keyword KwAsc)) <*> tokenInTm
-     )
-     <|>
-     ((<><) <$> ((B0 :<) <$> tokenString <* keyword KwDefn)
-            <*> ((\(tm :<: ty) -> InArg tm :> InArg ty :> F0) <$> pAscription)
-    ))
-    (\ (StrArg s:tyOrTm) -> case tyOrTm of
-        [InArg ty] -> do
-            elabMake (s :<: ty)
-            goIn
-            return "Appended goal!"
-        [InArg tm, InArg ty] -> do
-            elabMake (s :<: ty)
-            goIn
-            elabGive tm
-            return "Made."
+    (\(TrSequence
+        [ _
+        , TrName name
+        , TrOption maybeTerm
+        , TrInArg ty
+        ]
+      ) -> let name' = T.unpack name in case maybeTerm of
+          Just (TrInArg term) -> do
+              elabMake (name' :<: ty)
+              goIn
+              elabGive term
+              return "Made."
+          Nothing -> do
+              elabMake (name' :<: ty)
+              goIn
+              return "Appended goal!"
     )
     (Right (TacticHelp
         "make <x> : <type> OR make <x> := <term> : <type>"
@@ -350,7 +344,11 @@ makeTac = simpleCT
 
 
 moduleTac = unaryStringCT "module"
-    (\s -> makeModule DevelopModule s >> goIn >> return "Made module.")
+    (\name -> do
+        makeModule DevelopModule name
+        goIn
+        return "Made module."
+    )
     "creates a module with name <x>."
 
 
@@ -365,8 +363,10 @@ piTac = simpleCT
         , TfInArg "type" Nothing
         ]
     )
-    ((:<) <$> ((B0 :<) <$> tokenString <* keyword KwAsc) <*> tokenInTm)
-    (\ [StrArg s, InArg ty] -> elabPiParam (s :<: ty) >> return "Made pi!")
+    (\(TrSequence [ _, TrName name, TrKeyword, TrInArg ty ]) -> do
+        elabPiParam ((T.unpack name) :<: ty)
+        return "Made pi!"
+    )
     (Right (TacticHelp
         "pi <x> : <type>"
         "pi A : Set"
@@ -387,8 +387,10 @@ programTac = simpleCT
         , TfSep (TfName "label") KwComma
         ]
     )
-    (bwdList <$> pSep (keyword KwComma) tokenString)
-    (\ as -> elabProgram (map argToStr as) >> return "Programming.")
+    (\(TrSequence [ _, TrSep as ]) -> do
+        elabProgram (map argToStr as)
+        return "Programming."
+    )
     (Right (TacticHelp
         "program <labels>"
         "(make plus : Nat -> Nat -> Nat) ; program x, y ;"
@@ -429,6 +431,9 @@ autoTac = simpleCT
     ))
 
 
+-- ungawa: Word used by tarzan to communicate with animals? Also by chance
+-- it's Swahili for "to unite" or "to join"
+-- TODO(joel) - rename
 ungawaTac = nullaryCT "ungawa" Historic (ungawa >> return "Ungawa!")
     "tries to solve the current goal in a stupid way."
 
@@ -509,7 +514,6 @@ jumpTac = unaryNameCT "jump" (\ x -> do
 undoTac = CochonTactic
     { ctName = "undo"
     , ctDesc = "undo"
-    , ctParse = pure B0
     , ctxTrans = \_ -> do
           locs :< loc <- getCtx
           case locs of
@@ -551,25 +555,19 @@ dataTac = CochonTactic
                 )
                 KwSemi
            ]
-    ,  ctParse = do
-         nom <- tokenString
-         pars <- tokenListArgs (bracket Round $ tokenPairArgs
-           tokenString
-           (keyword KwAsc)
-           tokenInTm) (pure ())
-         keyword KwDefn
-         scs <- tokenListArgs
-             (bracket Round $ tokenPairArgs
-                 (keyword KwTag >> tokenString)
-                 (keyword KwAsc)
-                 tokenInTm
-             )
-             (keyword KwSemi)
-         return $ B0 :< nom :< pars :< scs
-    , ctxTrans = \[StrArg nom, pars, cons] -> simpleOutput Historic $ do
-          elabData nom (argList (argPair argToStr argToIn) pars)
-                       (argList (argPair argToStr argToIn) cons)
-          return "Data'd."
+    , ctxTrans = \(TrSequence
+        [ _
+        , TrName name
+        , TrRepeatZero pars
+        , TrKeyword
+        , TrSep cons
+        ]) -> simpleOutput $ do
+            let pars' = undefined pars
+                cons' = undefined cons
+                name' = T.unpack name
+            elabData name' (argList (argPair argToStr argToIn) pars')
+                           (argList (argPair argToStr argToIn) cons')
+            return "Data'd."
     ,  ctHelp = Right (TacticHelp
            "data <name> [<para>]* := [(<con> : <ty>) ;]*"
            "data List (X : Set) := ('nil : List X) ; ('cons : X -> List X -> List X) ;"
@@ -589,12 +587,12 @@ eliminateTac = simpleCT
     (TfSequence
         [ "eliminate"
         , TfOption (TfName "comma")
-        , TfAlternative (TfExArg "eliminator" Nothing) tfAscription
+        , TfAlternative (TfExArg "eliminator" Nothing, tfAscription)
         ]
     )
-    ((:<) <$> ((B0 :<) <$> tokenOption tokenName)
-          <*> (tokenExTm <|> tokenAscription))
-    (\[n,e] -> elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
+    (\(TrSequence [ _, TrOption maybeName, TrAlternative elim ]) ->
+        undefined)
+        -- elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
     (Right (TacticHelp
         "eliminate [<comma>] <eliminator>"
         "eliminate induction NatD m"
@@ -621,8 +619,7 @@ defineTac = simpleCT
         , TfInArg "term" Nothing
         ]
     )
-     ((((:<) <$> ((B0 :<) <$> tokenExTm)) <* keyword KwDefn) <*> tokenInTm)
-     (\ [ExArg rl, InArg tm] -> defineCTactic rl tm)
+    (\(TrSequence [_, TrExArg rl, TrInArg tm]) -> defineCTactic rl tm)
     (Right (TacticHelp
         "define <prob> := <term>"
         "define vappend 'zero 'nil k bs := bs"
@@ -643,12 +640,11 @@ byTac = simpleCT
     (TfSequence
         [ "<="
         , TfOption (TfName "comma")
-        , TfAlternative (TfExArg "eliminator" Nothing) tfAscription
+        , TfAlternative (TfExArg "eliminator" Nothing, tfAscription)
         ]
     )
-    ((:<) <$> ((B0 :<) <$> tokenOption tokenName)
-          <*> (tokenExTm <|> tokenAscription))
-    (\ [n,e] -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
+    -- XXX(joel)
+    (\(TrSequence [_, n, e]) -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
     (Right (TacticHelp
         "<= [<comma>] <eliminator>"
         "<= induction NatD m"
@@ -670,22 +666,17 @@ refineTac = simpleCT
         [ "refine"
         , TfExArg "prob" Nothing
         , TfAlternative
-            (TfSequence [ TfKeyword KwEq, TfInArg "term" Nothing ])
+            ((TfSequence [ TfKeyword KwEq, TfInArg "term" Nothing ]),
             (TfSequence
                 [ TfKeyword KwBy
-                , TfAlternative (TfExArg "prob" Nothing) tfAscription
+                , TfAlternative (TfExArg "prob" Nothing, tfAscription)
                 ]
-            )
+            ))
         ]
     )
-    ((:<) <$> ((B0 :<) <$> tokenExTm)
-          <*> ((keyword KwEq *> tokenInTm)
-           <|> (keyword KwBy *> tokenExTm)
-           <|> (keyword KwBy *> tokenAscription))
-    )
-    (\ [ExArg rl, arg] -> case arg of
-        InArg tm -> defineCTactic rl tm
-        ExArg tm -> relabel rl >> byCTactic Nothing tm)
+    (\(TrSequence [TrExArg rl, arg]) -> case arg of
+        TrInArg tm -> defineCTactic rl tm
+        TrExArg tm -> relabel rl >> byCTactic Nothing tm)
     (Right (TacticHelp
         "refine <prob> = <term> OR refine <prob> <= <eliminator>"
         "refine plus 'zero n = n"
@@ -709,15 +700,14 @@ solveTac = simpleCT
         , TfInArg "term" Nothing
         ]
     )
-    ((:<) <$> ((B0 :<) <$> tokenName) <*> tokenInTm)
-    (\ [ExArg (DP rn ::$ []), InArg tm] -> do
+    (\(TrSequence [TrExArg (DP rn ::$ []), TrInArg tm]) -> do
         (ref, spine, _) <- resolveHere rn
         _ :<: ty <- inferHere (P ref $:$ toSpine spine)
         _ :=>: tv <- elaborate' (ty :>: tm)
         tm' <- bquoteHere tv -- force definitional expansion
         solveHole ref tm'
         return "Solved."
-      )
+    )
     (Right (TacticHelp
         "solve <name> <term>"
         "solve a hole"
@@ -729,6 +719,7 @@ solveTac = simpleCT
     ))
 
 
+{-
 idataTac = CochonTactic
     {  ctName = "idata"
     ,  ctDesc = (
@@ -765,27 +756,23 @@ idataTac = CochonTactic
               )
             ]
         )
-    ,  ctParse = do
-         nom <- tokenString
-         pars <- tokenListArgs (bracket Round $ tokenPairArgs
-           tokenString
-           (keyword KwAsc)
-           tokenInTm) (pure ())
-         keyword KwAsc
-         indty <- tokenAppInTm
-         keyword KwArr
-         keyword KwSet
-         keyword KwDefn
-         scs <- tokenListArgs (bracket Round $ tokenPairArgs
-           (keyword KwTag *> tokenString)
-           (keyword KwAsc)
-           tokenInTm)
-          (keyword KwSemi)
-         return $ B0 :< nom :< pars :< indty :< scs
-    , ctxTrans = \ [StrArg nom, pars, indty, cons] -> simpleOutput Historic $
-                ielabData nom (argList (argPair argToStr argToIn) pars)
-                 (argToIn indty) (argList (argPair argToStr argToIn) cons)
-                  >> return "Data'd."
+    , ctxTrans = \(TrSequence
+        [ _
+        , TrName nom
+        , TrRepeatZero pars
+        , TrKeyword
+        , indty
+        , TrKeyword
+        , TrKeyword
+        , TrKeyword
+        , cons
+        ]) -> simpleOutput $ do
+            ielabData
+                nom
+                (argList (argPair argToStr argToIn) pars)
+                (argToIn indty)
+                (argList (argPair argToStr argToIn) cons)
+            return "Data'd."
     , ctHelp = Right (TacticHelp
            "idata <name> [<para>]* : <inx> -> Set  := [(<con> : <ty>) ;]*"
            "idata Vec (A : Set) : Nat -> Set := ('cons : (n : Nat) -> (a : A) -> (as : Vec A n) -> Vec A ('suc n)) ;"
@@ -797,6 +784,7 @@ idataTac = CochonTactic
            ]
        )
     }
+-}
 
 
 {-
@@ -860,7 +848,8 @@ matchTac = simpleCT
     (TfSequence
         [ "match"
         , TfSequence
-            [ TfRepeatZero -- XXX(joel) - RepeatOne?
+            [ "match"
+            , TfRepeatZero -- XXX(joel) - RepeatOne?
                 (TfBracketed Round
                     (TfSequence
                         [ TfName "tm"
@@ -876,19 +865,8 @@ matchTac = simpleCT
             ]
         ]
     )
-    (do
-        pars <- tokenListArgs (bracket Round $ tokenPairArgs
-                                      tokenString
-                                      (keyword KwAsc)
-                                      tokenInTm) (pure ())
-        keyword KwSemi
-        tm1 <- tokenExTm
-        keyword KwSemi
-        tm2 <- tokenInTm
-        return (B0 :< pars :< tm1 :< tm2)
-     )
-     (\ [pars, ExArg a, InArg b] ->
-         matchCTactic (argList (argPair argToStr argToIn) pars) a b)
+    (\(TrSequence [ _, TrRepeatZero pars, TrExArg a, TrInArg b ]) ->
+        matchCTactic (map (argPair argToStr argToIn) pars) a b)
     (Right (TacticHelp
         "match [<para>]* ; <term> ; <term>"
         "TODO(joel)"
@@ -912,15 +890,6 @@ https://github.com/joelburget/pigment/blob/bee79687c30933b8199bd9ae6aaaf8048a0c1
 
 recordTac = CochonTactic
     {  ctName = "record"
-    ,  ctParse = do
-         nom <- tokenString
-         keyword KwDefn
-         scs <- tokenListArgs (bracket Round $ tokenPairArgs
-           tokenString
-           (keyword KwAsc)
-           tokenInTm)
-          (keyword KwSemi)
-         return $ B0 :< nom :< pars :< scs
     , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
                 elabRecord nom (argList (argPair argToStr argToIn) pars)
                                (argList (argPair argToStr argToIn) cons)

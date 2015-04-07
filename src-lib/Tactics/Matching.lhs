@@ -55,8 +55,10 @@ reference.
 >     help (rs :< (y, m)) fs | x == y = case m of
 >         Nothing  -> put (rs :< (x, Just t) <>< fs)
 >         Just u   -> do
->             guard =<< lift (withNSupply (equal (pty x :>: (t, u))))
->             put (rs :< (y, m) <>< fs)
+>             eq <- lift $ withNSupply (equal (pty x :>: (t, u)))
+>             if eq
+>                 then put (rs :< (y, m) <>< fs)
+>                 else lift $ throwDTmStr "insertSubst: match failed"
 >     help (rs :< (y, m)) fs = help rs ((y, m) :> fs)
 
 The matching commands, defined below, take a matching substitution
@@ -106,7 +108,9 @@ references occur.
 >         return ()
 
 > matchValue' zs (_ :>: (N s, N t)) = matchNeutral zs s t >> return ()
-> matchValue' zs tvv = guard =<< (lift $ withNSupply $ equal tvv)
+> matchValue' zs tvv = lift $ do
+>     matches <- withNSupply $ equal tvv
+>     unless matches $ throwDTmStr "matchValue' failed"
 
 > chevMatchValue :: Bwd REF
 >                -> TY :>: (VAL, VAL)

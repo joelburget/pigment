@@ -56,7 +56,7 @@ type TermReact = ReactTerm React'
 instance GeneralizeSignal TermAction Transition where
     generalizeSignal = TermTransition
 
--- TODO(joel) - give this a [CochonArg] reader?
+-- TODO(joel) - give this a TacticResult reader?
 type Cmd a = WriterT (Pure React') (State (Bwd ProofContext)) a
 
 setCtx :: Bwd ProofContext -> Cmd ()
@@ -116,10 +116,8 @@ tellUser = displayUser . fromString
 
 data CochonTactic = CochonTactic
     { ctName   :: String
-    , ctDesc   :: TacticFormat
-    -- TODO(joel) - remove
-    , ctParse  :: Parsley Token (Bwd CochonArg)
-    , ctxTrans :: [CochonArg] -> Cmd ()
+    , ctDesc   :: TacticDescription
+    , ctxTrans :: TacticResult -> Cmd ()
     -- TODO(joel) - remove
     , ctHelp   :: Either (Pure React') TacticHelp
     } deriving Generic
@@ -160,7 +158,7 @@ toggleVisibility Invisible = Visible
 -- A `Command` is a tactic with arguments and the context it operates on. Also
 -- the resulting output.
 
-type CTData = (CochonTactic, [CochonArg])
+type CTData = (CochonTactic, TacticResult)
 
 data Command = Command
     { commandStr :: String
