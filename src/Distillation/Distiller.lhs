@@ -197,10 +197,14 @@ not be necessary.)
 >         , errVal ty
 >         , err " is not lambdable."
 >         ]
->     tm' :=>: _ <-  freshRef (x :<: dom) $ \ref ->
->                    distill  (entries :< EPARAM  ref (mkLastName ref) kind
->                                                 (error "distill: type undefined") AnchNo True)
->                             (cod (pval ref) :>: underScope sc ref)
+>     tm' :=>: _ <- freshRef (x :<: dom) $ \ref ->
+>         let param = EPARAM ref
+>                            (mkLastName ref)
+>                            kind
+>                            (error "distill: type undefined")
+>                            AnchNo
+>                            True
+>         in distill (entries :< param) (cod (pval ref) :>: underScope sc ref)
 >     return $ DL (convScope sc x tm') :=>: evTm (L sc)
 >   where
 >     convScope :: Scope TT REF -> String -> DInTmRN -> DSCOPE

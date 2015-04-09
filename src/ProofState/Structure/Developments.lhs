@@ -117,7 +117,7 @@ either be:
 >     show AnchTau = "tau"
 >     show AnchDataDef = "data definition"
 >     show (AnchStr str) = str
->     show AnchNo = "AnchNo"
+>     show AnchNo = "(no anchor)"
 
 > data ModulePurpose
 >     -- using a module to hold development
@@ -133,7 +133,15 @@ either be:
 >
 >     -- just a temporary holding place
 >     | Draft
->     deriving Show
+>     deriving (Show)
+
+> showPurpose :: ModulePurpose -> String
+> showPurpose DevelopData = "data development"
+> showPurpose DevelopModule = "module development"
+> showPurpose DevelopOther = "misc development"
+> showPurpose EmptyModule = "empty"
+> showPurpose ToGoal = "to goal (whatever that is)"
+> showPurpose Draft = "draft"
 
 > modulePurposeToAnchor :: ModulePurpose -> EntityAnchor
 > modulePurposeToAnchor DevelopData = AnchDataDef

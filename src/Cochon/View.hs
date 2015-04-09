@@ -8,6 +8,7 @@ import Control.Monad
 import Control.Monad.Error
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
+import Data.Monoid
 import Data.List
 import Data.String
 import Data.Traversable
@@ -68,8 +69,10 @@ import Tactics.ShowHaskell
 import Tactics.Unification
 
 import GHCJS.Foreign
+import GHCJS.Types
 import Lens.Family2
-import React
+import React hiding (label_)
+import React.MaterialUI
 
 import Kit.Trace
 
@@ -81,16 +84,26 @@ instance Reactive EntityAnchor where
 page :: InteractionState -> InteractionReact
 page state = div_ [ class_ "page" ] $ do
     div_ [ class_ "left-pane" ] $ do
-        div_ [ class_ "top-pane" ] $ proofCtxDisplay $ _proofCtx state
+        div_ [ class_ "top-pane" ] $ do
+            -- div_ [ class_ "ctx-layers" ] $
+            --     proofCtxLayers (pcLayers (_proofCtx state))
+            -- elabTrace (show (_proofCtx state))
+            -- elabTrace (renderHouseStyle (pretty (_proofCtx state) maxBound))
+            proofCtxDisplay $ _proofCtx state
         div_ [ class_ "bottom-pane" ] $ do
             locally $ autocompleteView (_autocomplete state)
             prompt state
-            locally $ workingOn state
+            -- locally $ workingOn state
     rightPane state
 
 
 -- The autocomplete overlay
 type Autocomplete a = a AutocompleteState Void ()
+
+
+-- proofCtxLayers :: Bwd Layer -> InteractionReact
+-- proofCtxLayers layers = ol_ $ Foldable.forM_ layers $ \layer ->
+--     li_ "layer"
 
 
 rightPane :: InteractionState -> InteractionReact
@@ -223,10 +236,13 @@ interactionLog logs = div_ [ class_ "interaction-log" ] $
 
 
 proofCtxDisplay :: Bwd ProofContext -> InteractionReact
-proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
-    case runProofState reactProofState ctx of
-        Left err -> locally err
-        Right (display, _) -> display
+proofCtxDisplay (_ :< ctx) = proofContextView ctx
+
+-- proofCtxDisplay :: Bwd ProofContext -> InteractionReact
+-- proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
+--     case runProofState reactProofState ctx of
+--         Left err -> locally err
+--         Right (display, _) -> display
 
 
 longHelp :: TacticHelp -> Pure React'
@@ -256,7 +272,158 @@ renderHelp (Right (TacticHelp _ _ summary _)) = fromString summary
 tacticList :: Pure React'
 tacticList = div_ [ class_ "tactic-list" ] $
     Foldable.forM_ cochonTactics $ \tactic ->
-        div_ [ class_ "tactic-info" ] $ renderHelp $ ctHelp tactic
+        li_ [ class_ "tactic-info" ] $ renderHelp $ ctHelp tactic
+
+
+numEntries :: Layer -> Int
+numEntries (Layer aboveEntries _ belowEntries _ _ _) =
+    foldableSize aboveEntries + 1 + foldableSize belowEntries
+
+
+-- TODO(joel) use Lens lengthOf
+foldableSize :: Foldable t => t a -> Int
+foldableSize = getSum . Foldable.foldMap (const $ Sum 1)
+
+
+layerView :: Layer -> InteractionReact
+layerView layer@(Layer aboveEntries currentEntry belowEntries tip _ suspend) =
+    div_ [ class_ "layer" ] $ do
+        flatButton
+            [ class_ "layer-button"
+            , label_ (reasonableName currentEntry)
+            , onClick (handleGoTo (currentEntryName currentEntry)) ] $
+                -- locally $ currentEntryView currentEntry
+                return ()
+        locally $ div_ [ class_ "layer-info" ] $ do
+            fromString $ "size: " ++ show (numEntries layer)
+            suspendView suspend
+
+
+-- = CDefinition DefKind REF (String, Int) INTM EntityAnchor Bool
+-- | CModule Name Bool ModulePurpose
+--
+-- data DefKind = LETG |  PROG (Scheme INTM)
+--
+-- References are the key way we represent free variables, declared,
+-- defined, and deluded. References carry not only names, but types and
+-- values, and are shared.
+--
+-- data REF = (:=) { refName :: Name, refBody :: (RKind :<: TY)}
+
+
+reasonableName :: CurrentEntry -> JSString -- Pure React'
+reasonableName = fromString . fst . last . currentEntryName
+
+
+entryReasonableName :: Traversable f => Entry f -> JSString
+entryReasonableName = fromString . fst . last . entryName
+
+
+-- currentEntryView :: CurrentEntry -> Pure React'
+-- currentEntryView entry@(CDefinition _ _ _ _ _ expanded) =
+--     div_ [ class_ "current-entry cdefinition" ] $
+--         reasonableName entry
+-- currentEntryView entry@(CModule _ expanded purpose) =
+--     div_ [ class_ "current-entry cmodule" ] $
+--         reasonableName entry
+
+
+-- TODO(joel) think about how to guarantee an ol_'s children are li_'s
+
+entryView :: Traversable f => Entry f -> InteractionReact
+entryView entry@(EEntity _ _ entity term anchor expanded) = li_ [] $
+    div_ [ class_ "entity" ] $ do
+        flatButton
+            [ label_ (entryReasonableName entry)
+            , onClick (handleGoTo (entryName entry)) ] $
+                return ()
+        ul_ $ do
+            li_ $ fromString $ show anchor
+            li_ $ fromString $ "expanded: " ++ show expanded
+entryView entry@(EModule _ dev expanded purpose) = li_ [] $
+    div_ [ class_ "module" ] $ do
+        flatButton
+            [ label_ (entryReasonableName entry)
+            , onClick (handleGoTo (entryName entry)) ] $
+                return ()
+        div_ $ do
+            span_ "(module)"
+            span_ $ fromString $ "purpose: " ++ showPurpose purpose
+
+
+devView :: Traversable f => Dev f -> InteractionReact
+devView (Dev entries tip _ suspend) = div_ [ class_ "dev" ] $ do
+    locally $ div_ [ class_ "dev-header" ] $ do
+        tipView tip
+        div_ [ class_ "dev-header-suspend" ] $ suspendView suspend
+    ol_ [ class_ "dev-entries" ] $ Foldable.forM_ entries entryView
+
+
+-- class Classes a where
+--     classes_ :: JSString -> a
+
+-- instance Classes (AttrOrHandler b) where
+--     classes_ = class_
+
+-- instance Classes a => Classes (a -> AttrOrHandler b) where
+--     classes_ x =
+
+
+suspendView :: SuspendState -> Pure React'
+suspendView state =
+    let (elem, cls) = case state of
+            SuspendNone -> ("not suspended", "none")
+            SuspendStable -> ("suspended (stable)", "stable")
+            SuspendUnstable -> ("suspended (unstable!)", "unstable")
+
+    in div_ [ class_ (fromString ("suspend-state " ++ cls)) ] elem
+
+
+tipView :: Tip -> Pure React'
+tipView Module = div_ [ class_ "tip" ] $ "(module)"
+tipView (Unknown (ty :=>: _)) = div_ [ class_ "tip" ] $ "unknown"
+    -- hk <- getHoleKind
+    -- tyd <- reactHere (SET :>: ty)
+    -- return $ div_ [ class_ "tip" ] $ do
+    --     reactHKind hk
+    --     reactKword KwAsc
+    --     tyd
+tipView (Suspended (ty :=>: _) prob) = div_ [ class_ "tip" ] $ "suspended"
+    -- hk <- getHoleKind
+    -- tyd <- reactHere (SET :>: ty)
+    -- return $ div_ [ class_ "tip" ] $ do
+    --     fromString $ "(SUSPENDED: " ++ show prob ++ ")"
+    --     reactHKind hk
+    --     reactKword KwAsc
+    --     tyd
+tipView (Defined tm (ty :=>: tyv)) = div_ [ class_ "tip" ] $ "defined"
+    -- tyd <- reactHere (SET :>: ty)
+    -- tmd <- reactHereAt (tyv :>: tm)
+    -- return $ div_ [ class_ "tip" ] $ do
+    --     tmd
+    --     reactKword KwAsc
+    --     tyd
+
+
+proofContextView :: ProofContext -> InteractionReact
+proofContextView (PC layers aboveCursor belowCursor) =
+    div_ [ class_ "proof-context" ] $ do
+        div_ [ class_ "proof-context-layers" ] $ do
+            h2_ "layers"
+            -- TODO(joel) - disable current layer
+            ol_ $ do
+                -- TODO(joel) - this is hacky - remove duplication in
+                -- layerView
+                div_ [ class_ "layer first-layer" ] $ do
+                    flatButton
+                        [ class_ "layer-button"
+                        , label_ "root"
+                        , onClick (handleGoTo []) ] $
+                            return ()
+                Foldable.forM_ layers layerView
+        devView aboveCursor
+        locally $ div_ [ class_ "proof-context-below-cursor" ] $
+            ol_ $ Foldable.forM_ belowCursor entryView
 
 
 -- The `reactProofState` command generates a reactified representation of
@@ -283,9 +450,6 @@ renderReact = do
         (_, B0, F0) -> reactEmptyTip
         _ -> do
             d <- reactEntries (es <>> F0)
-
-            -- this is crazy. shit breaks *unless* we trace right here
-            elabTrace "XXX"
 
             d' <- case cs of
                 F0 -> return d
@@ -363,16 +527,16 @@ reactEntry e = do
             return r
          else return ""
 
-    -- anchor :: Pure React' <- case entryAnchor e of
-    --      AnchNo -> ""
-    --      otherAnchor -> div_ [ class_ "anchor" ] $ do
-    --          "[["
-    --          reactify $ entryAnchor e
-    --          "]]"
+    let anchor = case entryAnchor e of
+         AnchNo -> ""
+         otherAnchor -> div_ [ class_ "anchor" ] $ do
+             "[["
+             reactify $ entryAnchor e
+             "]]"
 
     -- TODO entry-module vs entry-entity
     return $ div_ [ class_ "entry entry-entity" ] $ do
-        -- locally anchor
+        locally anchor
         entryHeader e
         description
 
@@ -393,35 +557,18 @@ entryHeader' name = do
         div_ [ class_ "tm-name" ] displayName
 
 
--- “Developments can be of different nature: this is indicated by the Tip”
+-- anchorLink :: EntityAnchor -> AttrOrHandler a
+-- anchorLink
+
+-- "Developments can be of different nature: this is indicated by the Tip"
 
 reactTip :: ProofState InteractionReact
 reactTip = do
+    -- anchor <- getCurrentAnchor
+    -- let link = anchorLink anchor
+
     tip <- getDevTip
-    locally <$> case tip of
-        Module -> return $ div_ [ class_ "tip" ] "(module)"
-        Unknown (ty :=>: _) -> do
-            hk <- getHoleKind
-            tyd <- reactHere (SET :>: ty)
-            return $ div_ [ class_ "tip" ] $ do
-                reactHKind hk
-                reactKword KwAsc
-                tyd
-        Suspended (ty :=>: _) prob -> do
-            hk <- getHoleKind
-            tyd <- reactHere (SET :>: ty)
-            return $ div_ [ class_ "tip" ] $ do
-                fromString $ "(SUSPENDED: " ++ show prob ++ ")"
-                reactHKind hk
-                reactKword KwAsc
-                tyd
-        Defined tm (ty :=>: tyv) -> do
-            tyd <- reactHere (SET :>: ty)
-            tmd <- reactHereAt (tyv :>: tm)
-            return $ div_ [ class_ "tip" ] $ do
-                tmd
-                reactKword KwAsc
-                tyd
+    return $ locally (tipView tip)
 
 
 reactHKind :: HKind -> Pure React'

@@ -13,7 +13,7 @@ Relative Names
 For display and storage purposes, we have a system of local longnames
 for referring to entries. Any component of a local name may have a `^n`
 or `_n` suffix, where `n` is an integer, representing a relative or
-absolute offset. A relative offset `^n` refers to the $n^\mathrm{th}$
+absolute offset. A relative offset `^n` refers to the n-th
 occurrence of the name encountered when searching upwards, so `x^0`
 refers to the same reference as `x`, but `x^1` skips past it and
 refers to the next thing named `x`. An absolute offset `_n`, by

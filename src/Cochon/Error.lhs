@@ -21,8 +21,8 @@ Catching the gremlins before they leave `ProofState`
 
 > catchUnprettyErrors :: StackError DInTmRN -> ProofState a
 > catchUnprettyErrors e = do
->                   e' <- distillErrors e
->                   throwError e'
+>     e' <- distillErrors e
+>     throwError e'
 
 > distillErrors :: StackError DInTmRN -> ProofState (StackError DInTmRN)
 > distillErrors (StackError e) =

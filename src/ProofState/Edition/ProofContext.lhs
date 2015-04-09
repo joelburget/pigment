@@ -56,6 +56,8 @@ data about the working development is the derivative of the Definition and
 Module data-types defined in
 Section [ProofState.Structure.Developments.entry](#ProofState.Structure.Developments.entry).
 
+> -- The Bool in both cases is "expanded"
+> -- TODO(joel) - create an `Expanded` data type
 > data CurrentEntry
 >     = CDefinition DefKind REF (String, Int) INTM EntityAnchor Bool
 >     | CModule Name Bool ModulePurpose

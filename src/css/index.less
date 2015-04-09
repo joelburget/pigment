@@ -1,4 +1,7 @@
 // @import "btns.less";
+@import "reset.less";
+@import "../../ionicons/less/ionicons.less";
+@import "mui.css";
 
 @transparent: rgba(0, 0, 0, 0);
 @transparent1: rgba(0, 0, 0, 0.1);
@@ -26,8 +29,9 @@
 
 .page {
     display: flex;
-    font-family: "Inconsolata", sans-serif;
-    font-weight: lighter;
+    font-family: "Inconsolata", sans-serif !important;
+    font-weight: lighter !important;
+    font-size: 17px !important;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -91,6 +95,7 @@
     height: 55px;
     border: none;
     background-color: @transparent;
+    padding: 10px;
 }
 
 .prompt-input:focus {
@@ -129,7 +134,7 @@
 }
 
 .tip {
-    border-left: 5px solid @tipOrange;
+    // border-left: 5px solid @tipOrange;
 }
 
 .empty-tip {
@@ -153,14 +158,14 @@
 }
 
 .kw {
-    display: table-cell;
+    // display: table-cell;
 }
 
 .anchor {
     background-color: @anchorGreen;
 }
 
-.tm-name, .anchor, .empty-tip, .tip, .hole, .entry span {
+.tm-name, .anchor, .empty-tip, .hole, .entry span {
     display: table-cell;
 }
 
@@ -298,4 +303,51 @@
     margin-bottom: 2px;
 }
 .tactic-help-body {
+}
+
+.layer {
+    border-bottom: 1px solid @rightPaneColor;
+    display: flex;
+}
+
+.first-layer {
+    min-height: 45px;
+}
+
+.dev {
+    margin: 20px;
+}
+
+.proof-context-layers {
+    display: flex;
+
+    h2 {
+        border-bottom: 1px solid #dadada;
+        justify-content: center;
+        flex-direction: column;
+        display: flex;
+        padding: 0 20px;
+    }
+
+    ol {
+        border-left: 1px solid #dadada;
+        flex: auto;
+    }
+}
+
+.dev-header {
+    display: flex;
+    margin-bottom: 40px;
+}
+
+.dev-entries {
+    list-style-type: none;
+}
+
+.entity {
+    display: flex;
+}
+
+.module {
+    display: flex;
 }

@@ -31,7 +31,7 @@ Anchor resolution
 
 To cope with shadowing, we will need some form of `RelativeAnchor`:
 
-< type RelativeAnchor = (Anchor, Int)
+    type RelativeAnchor = (Anchor, Int)
 
 With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 
@@ -44,13 +44,13 @@ With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 >     where seekAnchor :: Entries -> Bwd REF
 >           seekAnchor B0 = empty
 >           seekAnchor (scope :< EPARAM ref _ _ _ anchor' _)
->                            | anchor' == anchor = B0 :< ref
+>               | anchor' == anchor = B0 :< ref
 >           seekAnchor (scope :< EPARAM ref _ _ _ AnchNo _) = seekAnchor scope
 >           seekAnchor (scope :< EDEF ref _ _ dev _ AnchNo _) =
 >                         seekAnchor (devEntries dev)
 >                         <> seekAnchor scope
 >           seekAnchor (scope :< EDEF ref _ _ dev _ anchor' _)
->                            | anchor' == anchor = B0 :< ref
+>               | anchor' == anchor = B0 :< ref
 >           seekAnchor (scope :< EModule _ dev _ _) =
 >                         seekAnchor (devEntries dev)
 >                         <> seekAnchor scope

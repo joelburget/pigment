@@ -75,6 +75,7 @@ import GHCJS.Foreign
 import React hiding (key)
 import qualified React
 
+
 -- The top level page
 type Cochon a = a InteractionState Transition ()
 type InteractionReact = Cochon React'
@@ -92,9 +93,17 @@ data Transition
     | CommandKeypress SpecialKey
     | CommandTyping String
     | ToggleEntry Name
+    | GoTo Name
+
+constTransition :: Transition -> MouseEvent -> Maybe Transition
+constTransition = const . Just
 
 handleToggleEntry :: Name -> MouseEvent -> Maybe Transition
-handleToggleEntry name _ = Just $ ToggleEntry name
+-- handleToggleEntry name _ = Just $ ToggleEntry name
+handleToggleEntry = constTransition . ToggleEntry
+
+handleGoTo :: Name -> MouseEvent -> Maybe Transition
+handleGoTo = constTransition . GoTo
 
 handleSelectPane :: Pane -> MouseEvent -> Maybe Transition
 handleSelectPane pane _ = Just $ SelectPane pane
@@ -149,6 +158,11 @@ dispatch (CommandKeypress DownArrow) state = historyDownArrow state
 
 dispatch (ToggleEntry name) state@InteractionState{_proofCtx=ctxs :< ctx} =
     case execProofState (toggleEntryVisibility name) ctx of
+        Left err -> state -- XXX(joel) show errors somewhere
+        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
+
+dispatch (GoTo name) state@InteractionState{_proofCtx=ctxs :< ctx} =
+    case execProofState (goTo name) ctx of
         Left err -> state -- XXX(joel) show errors somewhere
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
 

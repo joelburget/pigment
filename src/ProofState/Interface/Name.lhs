@@ -26,8 +26,8 @@ the spine of shared parameters.
 > lookupName name = do
 >     inScope <- getInScope
 >     case find ((name ==) . entryName) inScope of
->       Just (EEntity ref _ _ _ _ _)  -> return $ Just $ applySpine ref inScope
->       Nothing             ->
+>       Just (EEntity ref _ _ _ _ _) -> return $ Just $ applySpine ref inScope
+>       Nothing ->
 >         case find ((name ==) . refName . snd) primitives of
 >           Just (_, ref)  -> return $ Just $ applySpine ref inScope
 >           Nothing        -> return Nothing
@@ -36,7 +36,7 @@ The `pickName` command takes a prefix suggestion and a name suggestion
 (either of which may be empty), and returns a more-likely-to-be-unique
 name if the name suggestion is empty.
 
-XXX(joel)
+XXX(joel) - this picks poor names
 
 > pickName :: String -> EntityAnchor -> ProofState String
 > pickName "" s = pickName "x" s

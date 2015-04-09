@@ -185,7 +185,7 @@ data InteractionState = InteractionState
 $(makeLenses ''InteractionState)
 
 startState :: Bwd ProofContext -> InteractionState
-startState pc = InteractionState pc (InPresent "") F0 Stowed Visible Log
+startState pc = InteractionState pc (InPresent "") F0 Stowed Invisible Log
 
 userInput :: InteractionState -> String
 userInput (InteractionState _ _commandFocus _ _ _ _) = case _commandFocus of
