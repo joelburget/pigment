@@ -18,7 +18,7 @@ web:
 	cp -r src/{index.html,css,js,Main.js} web
 	cp dist/build/pigment/pigment.jsexe/all.js web/js/
 
-build/index.css: src/css/index.less
+build/index.css: src/css/index.less src/css/mui.css
 	lessc src/css/index.less build/index.css --autoprefix=""
 
 build/mui.css: src/css/mui.css

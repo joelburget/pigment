@@ -15,7 +15,6 @@ import DisplayLang.Name
 import DisplayLang.TmParse
 import DisplayLang.DisplayTm
 import DisplayLang.PrettyPrint
-import DisplayLang.Reactify
 import DisplayLang.Scheme
 
 import ProofState.Edition.ProofContext
@@ -39,6 +38,7 @@ import Cochon.Model
 import Cochon.View
 import Cochon.Controller
 import Cochon.Tactics
+import Cochon.Reactify
 
 import Kit.BwdFwd
 

@@ -48,7 +48,7 @@ mutually recursive data types instead of taking a `Dir` parameter.
 Thanks to this hack, we can use `deriving Traversable`.
 
 > data DInTm :: * -> * -> * where
->     DL     :: DScope p x       ->  DInTm p x -- (lambda)
+>     DL     :: DScope p x       ->  DInTm p x -- lambda
 >     DC     :: Can (DInTm p x)  ->  DInTm p x -- canonical
 >     DN     :: DExTm p x        ->  DInTm p x -- neutral
 >     DQ     :: String           ->  DInTm p x -- hole
@@ -56,7 +56,9 @@ Thanks to this hack, we can use `deriving Traversable`.
 >     DT     :: InTmWrap p x     ->  DInTm p x -- embedding
 >     DAnchor :: String -> DInTm p x -> DInTm p x
 >     DEqBlue :: DExTm p x -> DExTm p x -> DInTm p x
->     DIMu :: Labelled (Identity :*: Identity) (DInTm p x) -> DInTm p x  -> DInTm p x
+>     DIMu :: Labelled (Identity :*: Identity) (DInTm p x)
+>          -> DInTm p x
+>          -> DInTm p x
 >     DTag :: String -> [DInTm p x] -> DInTm p x
 >  deriving (Functor, Foldable, Traversable, Show)
 

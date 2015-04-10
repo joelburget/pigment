@@ -64,12 +64,12 @@ library
     -- Cochon.DevLoad
     Cochon.Error
     Cochon.Model
+    Cochon.Reactify
     Cochon.View
     DisplayLang.DisplayTm
     DisplayLang.Lexer
     DisplayLang.Name
     DisplayLang.PrettyPrint
-    DisplayLang.Reactify
     DisplayLang.Scheme
     DisplayLang.TmParse
     Distillation.Distiller
@@ -131,7 +131,6 @@ library
     Tactics.PropositionSimplify
     Tactics.Record
     Tactics.Relabel
-    Tactics.ShowHaskell
     Tactics.Unification
   ghc-options: -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields -fmax-simplifier-iterations=10
   hs-source-dirs: src

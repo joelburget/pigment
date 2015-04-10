@@ -14,7 +14,6 @@
 > import DisplayLang.Scheme
 > import DisplayLang.Name
 > import DisplayLang.PrettyPrint
-> import DisplayLang.Reactify
 > import NameSupply.NameSupplier
 > import Evidences.Tm
 > import Evidences.Mangler
@@ -111,8 +110,3 @@ ProofState usage.
 > prettySchemeHere sch = do
 >     sch' <- distillSchemeHere sch
 >     return $ pretty sch' maxBound
-
-> reactSchemeHere :: Scheme INTM -> ProofState (Pure React')
-> reactSchemeHere sch = do
->     sch' <- distillSchemeHere sch
->     return $ reactify sch'

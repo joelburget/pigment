@@ -250,8 +250,8 @@
 }
 
 .working-on {
-    color: white;
-    padding: 10px;
+    // color: white;
+    // padding: 10px;
 }
 
 .autocomplete, .tactic-help {
@@ -350,4 +350,31 @@
 
 .module {
     display: flex;
+}
+
+.can-label {
+    &::before {
+        content: "«";
+    }
+    &::after {
+        content: "»";
+    }
+}
+
+.can-return {
+}
+
+.lambda {
+}
+
+.kw-arr::before {
+    content: "→";
+}
+
+.kw-imp::before {
+    content: "⇒";
+}
+
+.kw-lambda::before {
+    content: "λ";
 }

@@ -16,12 +16,12 @@ import qualified Data.Text as T
 import Cochon.CommandLexer
 import Cochon.Error
 import Cochon.Model
+import Cochon.Reactify
 import DisplayLang.Lexer
 import DisplayLang.Name
 import DisplayLang.TmParse
 import DisplayLang.DisplayTm
 import DisplayLang.PrettyPrint
-import DisplayLang.Reactify
 import DisplayLang.Scheme
 import Distillation.Distiller
 import Distillation.Scheme
@@ -61,7 +61,6 @@ import Tactics.ProblemSimplify
 import Tactics.PropositionSimplify
 import Tactics.Record
 import Tactics.Relabel
-import Tactics.ShowHaskell
 import Tactics.Unification
 
 import React
@@ -103,6 +102,8 @@ cochonTactics = sort
     , idataTac
     , elmTac
     , elaborateTac
+    -- TODO(joel) - figure out a system for synonyms
+    , elabTac
     , inferTac
     , parseTac
     , schemeTac
@@ -111,7 +112,6 @@ cochonTactics = sort
     , matchTac
     , simplifyTac
     , relabelTac
-    , haskellTac
     ]
 
 
@@ -124,7 +124,7 @@ simpleCT :: String
          -> T.Text -- XXX remove
          -> TacticFormat
          -> Parsley Token (Bwd CochonArg)
-         -> ([CochonArg] -> ProofState (Pure React'))
+         -> ([CochonArg] -> ProofState InteractionReact)
          -> Either (Pure React') TacticHelp
          -> CochonTactic
 simpleCT name desc fmt parser eval help = CochonTactic
@@ -136,7 +136,7 @@ simpleCT name desc fmt parser eval help = CochonTactic
     }
 
 
-nullaryCT :: String -> ProofState (Pure React') -> String -> CochonTactic
+nullaryCT :: String -> ProofState InteractionReact -> String -> CochonTactic
 nullaryCT name eval desc = simpleCT
     name
     (fromString desc)
@@ -147,7 +147,7 @@ nullaryCT name eval desc = simpleCT
 
 
 unaryExCT :: String
-          -> (DExTmRN -> ProofState (Pure React'))
+          -> (DExTmRN -> ProofState InteractionReact)
           -> String
           -> CochonTactic
 unaryExCT name eval help = simpleCT
@@ -164,7 +164,7 @@ unaryExCT name eval help = simpleCT
 
 
 unaryInCT :: String
-          -> (DInTmRN -> ProofState (Pure React'))
+          -> (DInTmRN -> ProofState InteractionReact)
           -> String
           -> CochonTactic
 unaryInCT name eval desc = simpleCT
@@ -181,7 +181,7 @@ unDP (DP ref ::$ []) = ref
 
 
 unaryNameCT :: String
-            -> (RelName -> ProofState (Pure React'))
+            -> (RelName -> ProofState InteractionReact)
             -> String
             -> CochonTactic
 unaryNameCT name eval desc = simpleCT
@@ -194,7 +194,7 @@ unaryNameCT name eval desc = simpleCT
 
 
 unaryStringCT :: String
-              -> (String -> ProofState (Pure React'))
+              -> (String -> ProofState InteractionReact)
               -> String
               -> CochonTactic
 unaryStringCT name eval desc = simpleCT
@@ -532,7 +532,7 @@ eliminateTac = simpleCT
     ))
 
 
-retTac = unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Ta.")
+retTac = unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Solved.")
     "solves the programming problem by returning <term>."
 
 
@@ -726,7 +726,7 @@ The `elm` Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation
 of the final type-term pair (using a quick hack).
 -}
-elmCT :: DExTmRN -> ProofState (Pure React')
+elmCT :: DExTmRN -> ProofState InteractionReact
 elmCT tm = do
     suspend ("elab" :<: sigSetTM :=>: sigSetVAL) (ElabInferProb tm)
     startScheduler
@@ -738,6 +738,11 @@ elmTac = unaryExCT "elm" elmCT "elm <term> - elaborate <term>, stabilise and pri
 
 elaborateTac = unaryExCT "elaborate" infoElaborate
   "elaborate <term> - elaborates, evaluates, quotes, distills and pretty-prints <term>."
+
+
+-- TEMP(joel)
+elabTac = unaryExCT "elab" infoElaborate
+  "elab <term> - elaborates, evaluates, quotes, distills and pretty-prints <term>."
 
 
 inferTac = unaryExCT "infer" infoInfer
@@ -852,10 +857,6 @@ relabelTac = unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
     "relabel <pattern> - changes names of arguments in label to pattern"
 
 
-haskellTac = unaryExCT "haskell" (elabInfer' >=> dumpHaskell)
-    "haskell - renders an Epigram term as a Haskell definition."
-
-
 -- end tactics, begin a bunch of weird "info" stuff and other helpers
 -- The `propSimplify` tactic attempts to simplify the type of the current
 -- goal, which should be propositional. Usually one will want to use
@@ -865,7 +866,7 @@ haskellTac = unaryExCT "haskell" (elabInfer' >=> dumpHaskell)
 --
 -- propsimplifyTac = nullaryCT "propsimplify" propSimplifyTactic
 --     "applies propositional simplification to the current goal."
-propSimplifyTactic :: ProofState (Pure React')
+propSimplifyTactic :: ProofState InteractionReact
 propSimplifyTactic = do
     subs <- propSimplifyHere
     case subs of
@@ -880,14 +881,14 @@ propSimplifyTactic = do
     prettyType ty = liftM renderHouseStyle (prettyHere (SET :>: ty))
 
 
-infoInScope :: ProofState (Pure React')
+infoInScope :: ProofState InteractionReact
 infoInScope = do
     pc <- get
     inScope <- getInScope
     return (fromString (showEntries (inBScope pc) inScope))
 
 
-infoDump :: ProofState (Pure React')
+infoDump :: ProofState InteractionReact
 infoDump = gets (fromString . show)
 
 
@@ -896,7 +897,7 @@ infoDump = gets (fromString . show)
 -- pretty-printed string representation. Note that it works in its own
 -- module which it discards at the end, so it will not leave any subgoals
 -- lying around in the proof state.
-infoElaborate :: DExTmRN -> ProofState (Pure React')
+infoElaborate :: DExTmRN -> ProofState InteractionReact
 infoElaborate tm = draftModule "__infoElaborate" $ do
     (tm' :=>: tmv :<: ty) <- elabInfer' tm
     tm'' <- bquoteHere tmv
@@ -905,7 +906,7 @@ infoElaborate tm = draftModule "__infoElaborate" $ do
 
 -- The `infoInfer` command is similar to `infoElaborate`, but it returns a
 -- string representation of the resulting type.
-infoInfer :: DExTmRN -> ProofState (Pure React')
+infoInfer :: DExTmRN -> ProofState InteractionReact
 infoInfer tm = draftModule "__infoInfer" $ do
     (_ :<: ty) <- elabInfer' tm
     ty' <- bquoteHere ty
@@ -919,17 +920,17 @@ infoHypotheses  = infoContextual False
 infoContext     = infoContextual True
 
 
-infoContextual :: Bool -> ProofState (Pure React')
+infoContextual :: Bool -> ProofState InteractionReact
 infoContextual gals = do
     inScope <- getInScope
     bsc <- gets inBScope
     help bsc inScope
   where
-    help :: BScopeContext -> Entries -> ProofState (Pure React')
+    help :: BScopeContext -> Entries -> ProofState InteractionReact
     help bsc B0 = return ""
     help bsc (es :< EPARAM ref _ k _ _ _) | not gals = do
         ty       <- bquoteHere (pty ref)
-        reactTy  <- reactHereAt (SET :>: ty)
+        reactTy  <- reactHere (SET :>: ty)
         d        <- help bsc es
         return $ do
             d
@@ -956,7 +957,7 @@ infoContextual gals = do
 -- saves the state, throws away bits of the context to produce an answer,
 -- then restores the saved state. We can get rid of it once we are
 -- confident that the new version (above) produces suitable output.
-infoContextual' :: Bool -> ProofState (Pure React')
+infoContextual' :: Bool -> ProofState InteractionReact
 infoContextual' gals = do
     save <- get
     let bsc = inBScope save
@@ -966,7 +967,7 @@ infoContextual' gals = do
     put save
     return $ sequence_ $ d:reverse ds
  where
-   hypsHere :: BScopeContext -> Name -> ProofState (Pure React')
+   hypsHere :: BScopeContext -> Name -> ProofState InteractionReact
    hypsHere bsc me = do
        es <- getEntriesAbove
        d <- hyps bsc me
@@ -975,7 +976,7 @@ infoContextual' gals = do
    killBelow = do
        l <- getLayer
        replaceLayer (l { belowEntries = NF F0 })
-   hyps :: BScopeContext -> Name -> ProofState (Pure React')
+   hyps :: BScopeContext -> Name -> ProofState InteractionReact
    hyps bsc me = do
        es <- getEntriesAbove
        case (gals, es) of
@@ -1008,7 +1009,7 @@ infoContextual' gals = do
            (_, es' :< _) -> putEntriesAbove es' >> hyps bsc me
 
 
-infoScheme :: RelName -> ProofState (Pure React')
+infoScheme :: RelName -> ProofState InteractionReact
 infoScheme x = do
     (_, as, ms) <- resolveHere x
     case ms of
@@ -1017,7 +1018,7 @@ infoScheme x = do
 
 
 -- The `infoWhatIs` command displays a term in various representations.
-infoWhatIs :: DExTmRN -> ProofState (Pure React')
+infoWhatIs :: DExTmRN -> ProofState InteractionReact
 infoWhatIs tmd = draftModule "__infoWhatIs" $ do
     tm :=>: tmv :<: tyv <- elabInfer' tmd
     tmq <- bquoteHere tmv
@@ -1036,7 +1037,7 @@ infoWhatIs tmd = draftModule "__infoWhatIs" $ do
         ,   "Pretty-printed type:", reactify tys
         ]
 
-byCTactic :: Maybe RelName -> DExTmRN -> ProofState (Pure React')
+byCTactic :: Maybe RelName -> DExTmRN -> ProofState InteractionReact
 byCTactic n e = do
     elimCTactic n e
     optional' problemSimplify           -- simplify first method
@@ -1045,7 +1046,7 @@ byCTactic n e = do
     optional' seekGoal                  -- jump to goal
     return "Eliminated and simplified."
 
-defineCTactic :: DExTmRN -> DInTmRN -> ProofState (Pure React')
+defineCTactic :: DExTmRN -> DInTmRN -> ProofState InteractionReact
 defineCTactic rl tm = do
     relabel rl
     elabGiveNext (DLRET tm)
@@ -1054,7 +1055,7 @@ defineCTactic rl tm = do
 matchCTactic :: [(String, DInTmRN)]
              -> DExTmRN
              -> DInTmRN
-             -> ProofState (Pure React')
+             -> ProofState InteractionReact
 matchCTactic xs a b = draftModule "__match" $ do
     rs <- traverse matchHyp xs
     (_ :=>: av :<: ty) <- elabInfer' a
@@ -1069,7 +1070,7 @@ matchCTactic xs a b = draftModule "__match" $ do
         r   <- assumeParam (s :<: tt)
         return (r, Nothing)
 
-elimCTactic :: Maybe RelName -> DExTmRN -> ProofState (Pure React')
+elimCTactic :: Maybe RelName -> DExTmRN -> ProofState InteractionReact
 elimCTactic c r = do
     c' <- traverse resolveDiscard c
     (e :=>: _ :<: elimTy) <- elabInferFully r
@@ -1077,7 +1078,7 @@ elimCTactic c r = do
     toFirstMethod
     return "Eliminated. Subgoals awaiting work..."
 
-simpleOutput :: ProofState (Pure React') -> Cmd ()
+simpleOutput :: ProofState InteractionReact -> Cmd ()
 simpleOutput eval = do
     locs :< loc <- getCtx
     case runProofState (eval <* startScheduler) loc of
@@ -1087,7 +1088,9 @@ simpleOutput eval = do
             displayUser err
         Right (msg, loc') -> do
             setCtx (locs :< loc :< loc')
-            displayUser msg
+            -- XXX(joel) - line up (Pure React') / InteractionReact here
+            -- displayUser msg
+            displayUser "something mysterious went wrong. sorry!"
 
 -- The `reactBKind` function reactifies a `ParamKind` if supplied with an
 -- element representing its name and type.

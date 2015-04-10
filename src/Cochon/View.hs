@@ -19,12 +19,12 @@ import Cochon.Controller
 import Cochon.Error
 import Cochon.Model
 import Cochon.Tactics
+import Cochon.Reactify
 import DisplayLang.Lexer
 import DisplayLang.Name
 import DisplayLang.TmParse
 import DisplayLang.DisplayTm
 import DisplayLang.PrettyPrint
-import DisplayLang.Reactify
 import DisplayLang.Scheme
 import Distillation.Distiller
 import Distillation.Scheme
@@ -65,7 +65,6 @@ import Tactics.ProblemSimplify
 import Tactics.PropositionSimplify
 import Tactics.Record
 import Tactics.Relabel
-import Tactics.ShowHaskell
 import Tactics.Unification
 
 import GHCJS.Foreign
@@ -185,9 +184,25 @@ prompt state = div_ [ class_ "prompt" ] $ do
            ]
 
 
-workingOn :: InteractionState -> Pure React'
-workingOn InteractionState{_proofCtx=_ :< loc} =
-    let runner :: ProofState (Pure React', Pure React')
+prettyDevView :: Traversable f => ProofContext -> Dev f -> InteractionReact
+prettyDevView loc (Dev entries tip _ suspended) =
+    let runner :: ProofState InteractionReact
+        runner = tipView tip
+        val :: InteractionReact
+        val = case runProofState runner loc of
+            Left err -> locally err
+            Right (view, _) -> view
+    in div_ [ class_ "dev" ] $ do
+           div_ [ class_ "dev-header" ] $ do
+               locally $ div_ [ class_ "dev-header-suspended" ] $
+                   suspendView suspended
+               div_ [ class_ "dev-header-tip" ] val
+           ol_ [ class_ "dev-entries" ] $ Foldable.forM_ entries entryView
+
+
+workingOn :: ProofContext -> InteractionReact
+workingOn loc =
+    let runner :: ProofState (InteractionReact, InteractionReact)
         runner = do
             mty <- optional' getHoleGoal
             goal <- case mty of
@@ -201,27 +216,29 @@ workingOn InteractionState{_proofCtx=_ :< loc} =
 
             return (goal, name)
 
-        val :: Pure React'
+        val :: InteractionReact
         val = case runProofState runner loc of
-            Left err -> err
+            Left err -> locally err
             Right ((goal, name), loc') -> goal >> name
 
     in div_ [ class_ "working-on" ] val
 
 
-showGoal :: TY -> ProofState (Pure React')
+showGoal :: TY -> ProofState InteractionReact
 showGoal ty@(LABEL _ _) = do
     h <- infoHypotheses
     s <- reactHere . (SET :>:) =<< bquoteHere ty
     return $ div_ [ class_ "goal" ] $ do
-        h
-        "Programming: "
-        s
+        div_ [ class_ "goal-header" ] "Goal:"
+        div_ [ class_ "goal-body" ] $ do
+            h
+            "Programming: "
+            s
 showGoal ty = do
     s <- reactHere . (SET :>:) =<< bquoteHere ty
     return $ div_ [ class_ "goal" ] $ do
-        "Goal: "
-        s
+        div_ [ class_ "goal-header" ] "Goal:"
+        div_ [ class_ "goal-body" ] s
 
 
 interactionLog :: InteractionHistory -> Pure React'
@@ -351,13 +368,6 @@ entryView entry@(EModule _ dev expanded purpose) = li_ [] $
             span_ $ fromString $ "purpose: " ++ showPurpose purpose
 
 
-devView :: Traversable f => Dev f -> InteractionReact
-devView (Dev entries tip _ suspend) = div_ [ class_ "dev" ] $ do
-    locally $ div_ [ class_ "dev-header" ] $ do
-        tipView tip
-        div_ [ class_ "dev-header-suspend" ] $ suspendView suspend
-    ol_ [ class_ "dev-entries" ] $ Foldable.forM_ entries entryView
-
 
 -- class Classes a where
 --     classes_ :: JSString -> a
@@ -379,34 +389,43 @@ suspendView state =
     in div_ [ class_ (fromString ("suspend-state " ++ cls)) ] elem
 
 
-tipView :: Tip -> Pure React'
-tipView Module = div_ [ class_ "tip" ] $ "(module)"
-tipView (Unknown (ty :=>: _)) = div_ [ class_ "tip" ] $ "unknown"
-    -- hk <- getHoleKind
-    -- tyd <- reactHere (SET :>: ty)
-    -- return $ div_ [ class_ "tip" ] $ do
-    --     reactHKind hk
-    --     reactKword KwAsc
-    --     tyd
-tipView (Suspended (ty :=>: _) prob) = div_ [ class_ "tip" ] $ "suspended"
-    -- hk <- getHoleKind
-    -- tyd <- reactHere (SET :>: ty)
-    -- return $ div_ [ class_ "tip" ] $ do
-    --     fromString $ "(SUSPENDED: " ++ show prob ++ ")"
-    --     reactHKind hk
-    --     reactKword KwAsc
-    --     tyd
-tipView (Defined tm (ty :=>: tyv)) = div_ [ class_ "tip" ] $ "defined"
-    -- tyd <- reactHere (SET :>: ty)
-    -- tmd <- reactHereAt (tyv :>: tm)
-    -- return $ div_ [ class_ "tip" ] $ do
-    --     tmd
-    --     reactKword KwAsc
-    --     tyd
+tipView :: Tip -> ProofState InteractionReact
+tipView Module = return $ div_ [ class_ "tip" ] $ "(module)"
+tipView (Unknown (ty :=>: _)) = do
+    hk <- getHoleKind
+    tyd <- reactHere (SET :>: ty)
+    x <- prettyHere (SET :>: ty)
+    elabTrace $ renderHouseStyle x
+    return $ div_ [ class_ "tip" ] $ do
+        reactHKind hk
+        reactKword KwAsc
+        tyd
+tipView (Suspended (ty :=>: _) prob) = do
+    hk <- getHoleKind
+    tyd <- reactHere (SET :>: ty)
+    x <- prettyHere (SET :>: ty)
+    elabTrace $ renderHouseStyle x
+    return $ div_ [ class_ "tip" ] $ do
+        fromString $ "(SUSPENDED: " ++ show prob ++ ")"
+        reactHKind hk
+        reactKword KwAsc
+        tyd
+tipView (Defined tm (ty :=>: tyv)) = do
+    tyd <- reactHere (SET :>: ty)
+    tmd <- reactHere (tyv :>: tm)
+
+    x <- prettyHere (SET :>: ty)
+    y <- prettyHere (tyv :>: tm)
+    elabTrace $ renderHouseStyle x
+    elabTrace $ renderHouseStyle y
+    return $ div_ [ class_ "tip" ] $ do
+        tmd
+        reactKword KwAsc
+        tyd
 
 
 proofContextView :: ProofContext -> InteractionReact
-proofContextView (PC layers aboveCursor belowCursor) =
+proofContextView pc@(PC layers aboveCursor belowCursor) =
     div_ [ class_ "proof-context" ] $ do
         div_ [ class_ "proof-context-layers" ] $ do
             h2_ "layers"
@@ -421,7 +440,8 @@ proofContextView (PC layers aboveCursor belowCursor) =
                         , onClick (handleGoTo []) ] $
                             return ()
                 Foldable.forM_ layers layerView
-        devView aboveCursor
+        prettyDevView pc aboveCursor
+        locally $ workingOn pc
         locally $ div_ [ class_ "proof-context-below-cursor" ] $
             ol_ $ Foldable.forM_ belowCursor entryView
 
@@ -510,7 +530,7 @@ reactEntries (e :> es) = do
 reactEntry :: Entry Bwd -> ProofState InteractionReact
 reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor expanded)  = do
     ty' <- bquoteHere ty
-    tyd <- reactHereAt (SET :>: ty')
+    tyd <- reactHere (SET :>: ty')
 
     return $ reactBKind k $ div_ [ class_ "entry entry-param" ] $ do
         div_ [ class_ "tm-name" ] $ fromString x
@@ -568,10 +588,11 @@ reactTip = do
     -- let link = anchorLink anchor
 
     tip <- getDevTip
-    return $ locally (tipView tip)
+    view <- tipView tip
+    return $ locally view
 
 
-reactHKind :: HKind -> Pure React'
+reactHKind :: HKind -> React a b c ()
 reactHKind kind = span_ [ class_ "hole" ] $ case kind of
     Waiting    -> "?"
     Hoping     -> "HOPE?"

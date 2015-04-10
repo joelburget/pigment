@@ -2973,7 +2973,7 @@ hr {
   padding-top: 5px;
   margin-bottom: 15px;
   letter-spacing: 0;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   font-weight: 500;
   color: rgba(0, 0, 0, 0.87);
 }
@@ -3591,7 +3591,7 @@ hr {
   padding-top: 5px;
   margin-bottom: 15px;
   letter-spacing: 0;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   font-weight: 500;
   border-radius: 2px;
   user-select: none;

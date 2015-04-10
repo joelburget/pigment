@@ -48,7 +48,7 @@ the first argument and construct a function that takes the current size
 by partially applying `wrapDoc` to a document and its size.
 
 The `Can` functor is fairly easy to pretty-print, the only complexity
-being with $\Pi$-types.
+being with Pi types.
 
 > instance Pretty (Can DInTmRN) where
 >     pretty Set       = const (kword KwSet)

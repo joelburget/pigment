@@ -15,11 +15,31 @@ import DisplayLang.Lexer
 import Kit.BwdFwd
 import Kit.ListZip
 import Kit.Parsley
+import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
 
 import Lens.Family2
 import Lens.Family2.TH
 import React
+
+data SpecialKey
+    = Enter
+    | Tab
+    | UpArrow
+    | DownArrow
+    deriving Show
+
+data Transition
+    = SelectPane Pane
+    | ToggleRightPane
+    | CommandKeypress SpecialKey
+    | CommandTyping String
+    | ToggleEntry Name
+    | GoTo Name
+
+-- The top level page
+type Cochon a = a InteractionState Transition ()
+type InteractionReact = Cochon React'
 
 -- TODO(joel) - give this a [CochonArg] reader?
 type Cmd a = WriterT (Pure React') (State (Bwd ProofContext)) a

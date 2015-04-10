@@ -23,7 +23,6 @@
 > import DisplayLang.Scheme
 > import DisplayLang.Name
 > import DisplayLang.PrettyPrint
-> import DisplayLang.Reactify
 > import NameSupply.NameSupplier
 > import Evidences.Tm
 > import Evidences.Mangler
@@ -390,11 +389,3 @@ passes it to the pretty-printer.
 > prettyHereAt size tt = do
 >     dtm :=>: _ <- distillHere tt
 >     return (pretty dtm size)
-
-> reactHere :: (TY :>: INTM) -> ProofState (Pure React')
-> reactHere = reactHereAt
-
-> reactHereAt :: (TY :>: INTM) -> ProofState (Pure React')
-> reactHereAt tt = do
->     dtm :=>: _ <- distillHere tt
->     return $ reactify dtm

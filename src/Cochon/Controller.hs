@@ -22,7 +22,6 @@ import DisplayLang.Name
 import DisplayLang.TmParse
 import DisplayLang.DisplayTm
 import DisplayLang.PrettyPrint
-import DisplayLang.Reactify
 import DisplayLang.Scheme
 import Distillation.Distiller
 import Distillation.Scheme
@@ -64,7 +63,6 @@ import Tactics.ProblemSimplify
 import Tactics.PropositionSimplify
 import Tactics.Record
 import Tactics.Relabel
-import Tactics.ShowHaskell
 import Tactics.Unification
 
 import Lens.Family2
@@ -75,25 +73,6 @@ import GHCJS.Foreign
 import React hiding (key)
 import qualified React
 
-
--- The top level page
-type Cochon a = a InteractionState Transition ()
-type InteractionReact = Cochon React'
-
-data SpecialKey
-    = Enter
-    | Tab
-    | UpArrow
-    | DownArrow
-    deriving Show
-
-data Transition
-    = SelectPane Pane
-    | ToggleRightPane
-    | CommandKeypress SpecialKey
-    | CommandTyping String
-    | ToggleEntry Name
-    | GoTo Name
 
 constTransition :: Transition -> MouseEvent -> Maybe Transition
 constTransition = const . Just
@@ -215,8 +194,7 @@ runCmd cmd ctx =
     let ((_, react), ctx') = runState (runWriterT cmd) ctx
     in (react, ctx')
 
-runAndLogCmd :: InteractionState
-             -> InteractionState
+runAndLogCmd :: InteractionState -> InteractionState
 runAndLogCmd state =
     let cmdStr = userInput state
         ctx = state^.proofCtx

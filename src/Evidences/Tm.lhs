@@ -54,7 +54,7 @@ We can push types into:
 * canonical terms; and
 * inferred terms.
 
->   L     :: Scope p x          -> Tm In p   x -- \(\lambda\)
+>   L     :: Scope p x          -> Tm In p   x -- lambda
 >   C     :: Can (Tm In p x)    -> Tm In p   x -- canonical
 >   N     :: Tm Ex p x          -> Tm In p   x -- `Ex` to `In`
 
