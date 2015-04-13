@@ -46,7 +46,7 @@ proof system will insert goals itself, with a somewhat changing mood such as
 
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
->     goalName <- pickName "Goal: " name
+>     goalName <- pickName "" name
 >     let n = mkName nsupply goalName
 
 >     -- Make a reference for the goal, with a lambda-lifted type

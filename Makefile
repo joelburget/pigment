@@ -1,8 +1,11 @@
 .PHONY: build clean docs web install_less_deps
 
+SOURCE_FILES = $(wildcard src/**/*hs)
+LHS_FILES = $(wildcard src/**/*.lhs)
+
 build: build/index.css build/mui.css build/index.html build/all.js
 
-.cabal-sandbox/bin/pigment.jsexe/all.js: .cabal-sandbox $(wildcard src/**/*hs)
+.cabal-sandbox/bin/pigment.jsexe/all.js: .cabal-sandbox $(SOURCE_FILES)
 	cabal install --ghcjs
 
 .cabal-sandbox:
@@ -33,11 +36,14 @@ build/all.js: .cabal-sandbox/bin/pigment.jsexe/all.js
 install_less_deps:
 	npm install -g less less-plugin-autoprefix
 
+# http://blog.jgc.org/2015/04/the-one-line-you-should-add-to-every.html
+print-%: ; @echo $*=$($*)
+
 # *caution*
-# docs:
-# 	rm -rf docs
-# 	mkdir docs
-# 	cd src; rsync -R $(wildcard **.lhs) ../docs; cd -
-# 	cd docs; find . -name "*.lhs" -exec rename -v 's/\.lhs$$/\.md/i' "{}" ";"; cd -
-# 	cd docs; ls | xargs sed -i '' -e's/^> /    /'; cd -
-# 	mkdocs build
+docs:
+	rm -rf docs
+	mkdir docs
+	cd src; rsync -R $(LHS_FILES) docs; cd -
+	cd docs; find . -name "*.lhs" -exec rename -v 's/\.lhs$$/\.md/i' "{}" ";"; cd -
+	cd docs; ls | xargs sed -i '' -e's/^> /    /'; cd -
+	mkdocs build

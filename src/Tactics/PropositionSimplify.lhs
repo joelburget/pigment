@@ -500,6 +500,6 @@ the type of the given reference, and returns its term representation.
 
 >     makeSubgoal :: REF :<: INTM -> ProofState INTM
 >     makeSubgoal (ref :<: q') = do
->         x         <- pickName "q" (AnchStr (fst (last (refName ref))))
+>         x         <- pickName' "q"
 >         t :=>: _  <- make (AnchStr x :<: q')
 >         return (N t)

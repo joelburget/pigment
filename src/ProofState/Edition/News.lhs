@@ -55,6 +55,9 @@ Adding news
 The `addNews` function adds the given news to the bulletin, if it is
 newsworthy.
 
+TODO(joel) - I don't understand why we always return the worse news here - why
+couldn't the better news cancel out the worse? Also see `mergeNews`.
+
 > addNews :: (REF, News) -> NewsBulletin ->  NewsBulletin
 > addNews (_,  NoNews)  old  = old
 > addNews (r,  n)       old  = (r, n `mappend` n') : old' where

@@ -26,19 +26,19 @@ It caches the value representations of terms it contains.
 
 > data ElabProb x
 >     =  ElabDone (InTm x :=>: Maybe VAL)
->        -- succeed with given term
+>        -- ^ succeed with given term
 >     |  ElabHope
->        -- hope for a solution to turn up
+>        -- ^ hope for a solution to turn up
 >     |  ElabProb (DInTm x RelName)
->        -- elaborate `In` display term
+>        -- ^ elaborate `In` display term
 >     |  ElabInferProb (DExTm x RelName)
->        -- elaborate and infer type of `Ex` display term
+>        -- ^ elaborate and infer type of `Ex` display term
 >     |  WaitCan (InTm x :=>: Maybe VAL) (ElabProb x)
->        -- wait for value to become canonical
+>        -- ^ wait for value to become canonical
 >     |  WaitSolve x (InTm x :=>: Maybe VAL) (ElabProb x)
->        -- wait for reference to be solved with term
+>        -- ^ wait for reference to be solved with term
 >     |  ElabSchedule (ElabProb x)
->        -- kick off the scheduler
+>        -- ^ kick off the scheduler
 
 `ElabProb` is a traversable functor, parameterised by the type of
 references, which are typically `REF`s. Note that traversal will discard

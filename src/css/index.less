@@ -27,6 +27,10 @@
 @anchorGreen: #c5e7c5;
 @tmPurple: rgb(192, 202, 255);
 
+li {
+    list-style-type: none;
+}
+
 .page {
     display: flex;
     font-family: "Inconsolata", sans-serif !important;
@@ -67,7 +71,7 @@
 }
 
 .ctx-display {
-    margin: 10px;
+    // margin: 10px;
 }
 .ctx-display pre {
     font-family: "Inconsolata", monospace;
@@ -158,6 +162,7 @@
 }
 
 .kw {
+    margin-right: 3px;
     // display: table-cell;
 }
 
@@ -166,7 +171,7 @@
 }
 
 .tm-name, .anchor, .empty-tip, .hole, .entry span {
-    display: table-cell;
+    // display: table-cell;
 }
 
 .entries-name {
@@ -247,11 +252,6 @@
 
 .selected-pane {
     border-bottom: 3px solid @selectedPaneBlueUnderline;
-}
-
-.working-on {
-    // color: white;
-    // padding: 10px;
 }
 
 .autocomplete, .tactic-help {
@@ -337,6 +337,7 @@
 
 .dev-header {
     display: flex;
+    flex-direction: column;
     margin-bottom: 40px;
 }
 
@@ -369,6 +370,7 @@
 
 .kw-arr::before {
     content: "→";
+    vertical-align: middle;
 }
 
 .kw-imp::before {
@@ -377,4 +379,38 @@
 
 .kw-lambda::before {
     content: "λ";
+}
+
+.working-on {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+    margin-top: 20px;
+}
+
+.goal-inscope, .goal-hypotheses, .goal-context, .goal-body, .dev {
+    div {
+        display: inline-block;
+    }
+}
+
+.goal-inscope-list {
+    display: flex;
+    flex-direction: row;
+}
+
+.param-entry-asc {
+}
+
+.collapsed-entry {
+    display: flex;
+    flex-direction: row;
+}
+
+.def-entry {
+    margin: 10px;
+}
+
+.dhead {
+    margin-right: 5px;
 }

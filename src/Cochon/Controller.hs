@@ -17,6 +17,8 @@ import Cochon.CommandLexer
 import Cochon.Error
 import Cochon.Model
 import Cochon.Tactics
+import Cochon.TermController
+
 import DisplayLang.Lexer
 import DisplayLang.Name
 import DisplayLang.TmParse
@@ -73,14 +75,13 @@ import GHCJS.Foreign
 import React hiding (key)
 import qualified React
 
-
-constTransition :: Transition -> MouseEvent -> Maybe Transition
-constTransition = const . Just
+import Debug.Trace
 
 handleToggleEntry :: Name -> MouseEvent -> Maybe Transition
 -- handleToggleEntry name _ = Just $ ToggleEntry name
 handleToggleEntry = constTransition . ToggleEntry
 
+-- TODO(joel) this and handleEntryClick duplicate functionality
 handleGoTo :: Name -> MouseEvent -> Maybe Transition
 handleGoTo = constTransition . GoTo
 
@@ -135,21 +136,34 @@ dispatch (CommandKeypress DownArrow)
     autocompleteDownArrow state
 dispatch (CommandKeypress DownArrow) state = historyDownArrow state
 
-dispatch (ToggleEntry name) state@InteractionState{_proofCtx=ctxs :< ctx} =
-    case execProofState (toggleEntryVisibility name) ctx of
-        Left err -> state -- XXX(joel) show errors somewhere
-        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
+dispatch (ToggleEntry name) state = toggleTerm name state
+dispatch (GoTo name) state = goToTerm name state
 
-dispatch (GoTo name) state@InteractionState{_proofCtx=ctxs :< ctx} =
-    case execProofState (goTo name) ctx of
-        Left err -> state -- XXX(joel) show errors somewhere
-        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
+dispatch (TermTransition (GoToTerm name)) state = goToTerm name state
+dispatch (TermTransition (ExpandTerm name)) state = toggleTerm name state
+
+dispatch (TermTransition act) state = termDispatch act state
 
 dispatch _ state = state
 
+
+toggleTerm :: Name -> InteractionState -> InteractionState
+toggleTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
+    case execProofState (toggleEntryVisibility name) ctx of
+        Left err -> trace err state
+        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
+
+
+goToTerm :: Name -> InteractionState -> InteractionState
+goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
+    case execProofState (goTo name) ctx of
+        Left err -> trace err state
+        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
+
+
 execProofState :: ProofState a
                -> ProofContext
-               -> Either (Pure React') ProofContext
+               -> Either String ProofContext
 execProofState state = right snd . runProofState state
 
 autocompleteUpArrow :: InteractionState -> InteractionState

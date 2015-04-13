@@ -40,13 +40,13 @@ of `Bwd`, and to store a `SuspendState`, giving:
 
 `Tip`
 
-There are two kinds of Developments available: modules and definitions.
-A `Module` is a development that cannot have a type or value, but simply
-packs up some other developments. A development holding a definition can
-be in one of three states: an `Unknown` of the given type, a `Suspended`
-elaboration problem for producing a value of the type (see
-section [Elaboration.ElabMonad](#Elaboration.ElabMonad)), or a `Defined` term of the type.
-Note that the type is presented as both a term and a value for
+There are two kinds of Developments available: modules and definitions.  A
+`Module` is a development that cannot have a type or value, but simply packs up
+some other developments. A development holding a definition can be in one of
+three states: an `Unknown` of the given type, a `Suspended` elaboration problem
+for producing a value of the type (see
+section [Elaboration.ElabMonad](#Elaboration.ElabMonad)), or a `Defined` term
+of the type.  Note that the type is presented as both a term and a value for
 performance purposes.
 
 > data Tip

@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds,
   LambdaCase, LiberalTypeSynonyms #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
-module Cochon.Tactics (cochonTactics, infoHypotheses, reactBKind, runProofState) where
+module Cochon.Tactics (cochonTactics, runProofState) where
 
 import Control.Applicative
 import Control.Monad
@@ -66,6 +67,8 @@ import Tactics.Unification
 import React
 
 
+import Data.Void
+
 cochonTactics :: [CochonTactic]
 cochonTactics = sort
     [ applyTac
@@ -107,7 +110,7 @@ cochonTactics = sort
     , inferTac
     , parseTac
     , schemeTac
-    , showTac
+    , dumpTac
     , whatisTac
     , matchTac
     , simplifyTac
@@ -124,6 +127,7 @@ simpleCT :: String
          -> T.Text -- XXX remove
          -> TacticFormat
          -> Parsley Token (Bwd CochonArg)
+         -- TODO(joel) TermReact
          -> ([CochonArg] -> ProofState InteractionReact)
          -> Either (Pure React') TacticHelp
          -> CochonTactic
@@ -147,7 +151,7 @@ nullaryCT name eval desc = simpleCT
 
 
 unaryExCT :: String
-          -> (DExTmRN -> ProofState InteractionReact)
+          -> (DExTmRN -> ProofState TermReact)
           -> String
           -> CochonTactic
 unaryExCT name eval help = simpleCT
@@ -159,7 +163,7 @@ unaryExCT name eval help = simpleCT
         ]
     )
     (((B0 :<) <$> tokenExTm) <|> ((B0 :<) <$> tokenAscription))
-    (eval . argToEx . head)
+    ((locally <$>) . (eval . argToEx . head))
     (Left (fromString help))
 
 
@@ -181,7 +185,7 @@ unDP (DP ref ::$ []) = ref
 
 
 unaryNameCT :: String
-            -> (RelName -> ProofState InteractionReact)
+            -> (RelName -> ProofState TermReact)
             -> String
             -> CochonTactic
 unaryNameCT name eval desc = simpleCT
@@ -189,12 +193,12 @@ unaryNameCT name eval desc = simpleCT
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "name" ])
     ((B0 :<) <$> tokenName)
-    (eval . unDP . argToEx . head)
+    ((locally <$>) . eval . unDP . argToEx . head)
     (Left (fromString (name ++ " - " ++ desc)))
 
 
 unaryStringCT :: String
-              -> (String -> ProofState InteractionReact)
+              -> (String -> ProofState TermReact)
               -> String
               -> CochonTactic
 unaryStringCT name eval desc = simpleCT
@@ -202,7 +206,7 @@ unaryStringCT name eval desc = simpleCT
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "x" ])
     ((B0 :<) <$> tokenString)
-    (eval . argToStr . head)
+    ((locally <$>) . eval . argToStr . head)
     (Left (fromString (name ++ " - " ++ desc)))
 
 
@@ -726,7 +730,7 @@ The `elm` Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation
 of the final type-term pair (using a quick hack).
 -}
-elmCT :: DExTmRN -> ProofState InteractionReact
+elmCT :: DExTmRN -> ProofState TermReact
 elmCT tm = do
     suspend ("elab" :<: sigSetTM :=>: sigSetVAL) (ElabInferProb tm)
     startScheduler
@@ -757,15 +761,9 @@ schemeTac = unaryNameCT "scheme" infoScheme
   "looks up the scheme on the definition <name>."
 
 
-showTac = unaryStringCT "show" (\case
-    "inscope"  -> infoInScope
-    "context"  -> infoContext
-    "dump"     -> infoDump
-    "hyps"     -> infoHypotheses
-    -- "state"    -> reactProofState
-    _          -> return "show: please specify exactly what to show."
-  )
-  "displays useless information."
+dumpTac = nullaryCT "dump"
+    (gets (fromString . show))
+    "displays useless information."
 
 
 whatisTac = unaryExCT "whatis" infoWhatIs
@@ -881,23 +879,12 @@ propSimplifyTactic = do
     prettyType ty = liftM renderHouseStyle (prettyHere (SET :>: ty))
 
 
-infoInScope :: ProofState InteractionReact
-infoInScope = do
-    pc <- get
-    inScope <- getInScope
-    return (fromString (showEntries (inBScope pc) inScope))
-
-
-infoDump :: ProofState InteractionReact
-infoDump = gets (fromString . show)
-
-
 -- The `infoElaborate` command calls `elabInfer` on the given neutral
 -- display term, evaluates the resulting term, bquotes it and returns a
 -- pretty-printed string representation. Note that it works in its own
 -- module which it discards at the end, so it will not leave any subgoals
 -- lying around in the proof state.
-infoElaborate :: DExTmRN -> ProofState InteractionReact
+infoElaborate :: DExTmRN -> ProofState TermReact
 infoElaborate tm = draftModule "__infoElaborate" $ do
     (tm' :=>: tmv :<: ty) <- elabInfer' tm
     tm'' <- bquoteHere tmv
@@ -906,119 +893,26 @@ infoElaborate tm = draftModule "__infoElaborate" $ do
 
 -- The `infoInfer` command is similar to `infoElaborate`, but it returns a
 -- string representation of the resulting type.
-infoInfer :: DExTmRN -> ProofState InteractionReact
+infoInfer :: DExTmRN -> ProofState TermReact
 infoInfer tm = draftModule "__infoInfer" $ do
     (_ :<: ty) <- elabInfer' tm
     ty' <- bquoteHere ty
     reactHere (SET :>: ty')
 
 
--- The `infoContextual` command displays a distilled list of things in the
--- context, parameters if the argument is False or definitions if the
--- argument is True.
-infoHypotheses  = infoContextual False
-infoContext     = infoContextual True
-
-
-infoContextual :: Bool -> ProofState InteractionReact
-infoContextual gals = do
-    inScope <- getInScope
-    bsc <- gets inBScope
-    help bsc inScope
-  where
-    help :: BScopeContext -> Entries -> ProofState InteractionReact
-    help bsc B0 = return ""
-    help bsc (es :< EPARAM ref _ k _ _ _) | not gals = do
-        ty       <- bquoteHere (pty ref)
-        reactTy  <- reactHere (SET :>: ty)
-        d        <- help bsc es
-        return $ do
-            d
-            reactBKind k $ do
-                fromString $ showRelName $ christenREF bsc ref
-                reactKword KwAsc
-                reactTy
-    help bsc (es :< EDEF ref _ _ _ _ _ _) | gals = do
-        ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
-        reactTy  <- reactHere (SET :>: ty)
-        d        <- help bsc es
-        return $ do
-            d
-            fromString $ showRelName $ christenREF bsc ref
-            reactKword KwAsc
-            reactTy
-    help bsc (es :< _) = help bsc es
-    removeShared :: Spine TT REF -> TY -> TY
-    removeShared []       ty        = ty
-    removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
-
-
--- This old implementation is written using a horrible imperative hack that
--- saves the state, throws away bits of the context to produce an answer,
--- then restores the saved state. We can get rid of it once we are
--- confident that the new version (above) produces suitable output.
-infoContextual' :: Bool -> ProofState InteractionReact
-infoContextual' gals = do
-    save <- get
-    let bsc = inBScope save
-    me <- getCurrentName
-    ds <- many' (hypsHere bsc me <* optional' killBelow <* goOut <* removeEntryAbove)
-    d <- hypsHere bsc me
-    put save
-    return $ sequence_ $ d:reverse ds
- where
-   hypsHere :: BScopeContext -> Name -> ProofState InteractionReact
-   hypsHere bsc me = do
-       es <- getEntriesAbove
-       d <- hyps bsc me
-       putEntriesAbove es
-       return d
-   killBelow = do
-       l <- getLayer
-       replaceLayer (l { belowEntries = NF F0 })
-   hyps :: BScopeContext -> Name -> ProofState InteractionReact
-   hyps bsc me = do
-       es <- getEntriesAbove
-       case (gals, es) of
-           (_, B0) -> return ""
-           (False, es' :< EPARAM ref _ k _ _ _) -> do
-               putEntriesAbove es'
-               ty' <- bquoteHere (pty ref)
-               reactTy <- reactHere (SET :>: ty')
-               d <- hyps bsc me
-               return $ do
-                   d
-                   reactBKind k $ do
-                       fromString $ showRelName $ christenREF bsc ref
-                       reactKword KwAsc
-                       reactTy
-           (True, es' :< EDEF ref _ _ _ _ _ _) -> do
-               goIn
-               es <- getEntriesAbove
-               (ty :=>: _) <- getGoal "hyps"
-               ty' <- bquoteHere (evTm (inferGoalType es ty))
-               reactTy <- reactHere (SET :>: ty')
-               goOut
-               putEntriesAbove es'
-               d <- hyps bsc me
-               return $ do
-                   d
-                   fromString (showRelName (christenREF bsc ref))
-                   reactKword KwAsc
-                   reactTy
-           (_, es' :< _) -> putEntriesAbove es' >> hyps bsc me
-
-
-infoScheme :: RelName -> ProofState InteractionReact
+infoScheme :: RelName -> ProofState TermReact
 infoScheme x = do
     (_, as, ms) <- resolveHere x
     case ms of
-        Just sch -> reactSchemeHere (applyScheme sch as)
-        Nothing -> return (fromString (showRelName x ++ " does not have a scheme."))
+        Just sch -> do
+            sch' <- distillSchemeHere (applyScheme sch as)
+            return $ reactify sch'
+        Nothing -> return $
+            fromString (showRelName x ++ " does not have a scheme.")
 
 
 -- The `infoWhatIs` command displays a term in various representations.
-infoWhatIs :: DExTmRN -> ProofState InteractionReact
+infoWhatIs :: DExTmRN -> ProofState TermReact
 infoWhatIs tmd = draftModule "__infoWhatIs" $ do
     tm :=>: tmv :<: tyv <- elabInfer' tmd
     tmq <- bquoteHere tmv
@@ -1085,19 +979,17 @@ simpleOutput eval = do
         Left err -> do
             setCtx (locs :< loc)
             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
-            displayUser err
+            displayUser $ fromString err
         Right (msg, loc') -> do
             setCtx (locs :< loc :< loc')
             -- XXX(joel) - line up (Pure React') / InteractionReact here
-            -- displayUser msg
-            displayUser "something mysterious went wrong. sorry!"
+            displayUser $ locally msg
 
--- The `reactBKind` function reactifies a `ParamKind` if supplied with an
--- element representing its name and type.
-reactBKind :: ParamKind -> React a b c () -> React a b c ()
-reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
-reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
-reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
+
+-- XXX
+instance GeneralizeSignal Transition Void where
+    generalizeSignal = undefined
+
 
 -- Given a proof state command and a context, we can run the command with
 -- `runProofState` to produce a message (either the response from the
@@ -1105,9 +997,9 @@ reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
 runProofState
     :: ProofState a
     -> ProofContext
-    -> Either (Pure React') (a, ProofContext)
+    -> Either String (a, ProofContext)
 runProofState m loc =
     case runStateT (m `catchError` catchUnprettyErrors) loc of
         Right (s, loc') -> Right (s, loc')
         Left ss         ->
-            Left $ fromString $ renderHouseStyle $ prettyStackError ss
+            Left $ renderHouseStyle $ prettyStackError ss

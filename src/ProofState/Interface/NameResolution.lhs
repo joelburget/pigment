@@ -6,6 +6,7 @@
 > module ProofState.Interface.NameResolution where
 
 > import Control.Applicative
+> import Control.Arrow
 > import Control.Monad.State
 > import Data.Foldable hiding (elem, find)
 > import Data.List
@@ -40,8 +41,8 @@ We can extract such a thing from a `ProofContext` using `inBScope`:
 
 > inBScope :: ProofContext -> BScopeContext
 > inBScope (PC layers dev _) =
->   (  fmap (\l -> (aboveEntries l, last . currentEntryName . currentEntry $ l)) layers
->   ,  devEntries dev)
+>   ( (aboveEntries &&& last . currentEntryName . currentEntry) <$> layers
+>   , devEntries dev)
 
 An `FScopeContext` is the forwards variant:
 
@@ -120,7 +121,7 @@ discarding any shared parameters it should be applied to.
 > resolveDiscard x = resolveHere x >>= (\ (r, _, _) -> return r)
 
 There are four stages relating to whether we are looking up or down (`^` or
-`_`) and whether or nor we are navigating the part of the proof state which is
+`_`) and whether or not we are navigating the part of the proof state which is
 on the way back to (or from) the root of the tree to the cursor position.
 
 We start off in `resolve`, which calls `lookUp` (for `^`) or `lookDown` (for
@@ -585,6 +586,7 @@ names, and the name part of references, respectively.
 > christenName :: BScopeContext -> Name -> RKind -> RelName
 > christenName bsc target rk = s
 >   where (s, _, _) = unresolve target rk (paramSpine . (uncurry flat) $ bsc) bsc B0
+
 > christenREF :: BScopeContext -> REF -> RelName
 > christenREF bsc (target := rk :<: _) = christenName bsc target rk
 

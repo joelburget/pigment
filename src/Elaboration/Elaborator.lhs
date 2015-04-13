@@ -42,22 +42,24 @@
 Elaborating terms
 -----------------
 
-The `elaborate` command elaborates a term in display syntax, given its
-type, to produce an elaborated term and its value representation. It
-behaves similarly to `check` from
-subsection [Evidences.TypeChecker.type-checking](#Evidences.TypeChecker.type-checking), except that it
-operates in the `Elab` monad, so it can create subgoals and
-$\lambda$-lift terms.
+The `elaborate` command elaborates a term in display syntax, given its type, to
+produce an elaborated term and its value representation. It behaves similarly
+to `check` from
+subsection [Evidences.TypeChecker.type-checking](#Evidences.TypeChecker.type-checking),
+except that it operates in the `Elab` monad, so it can create subgoals and
+lambda-lift terms.
 
 > elaborate :: Loc -> (TY :>: DInTmRN) -> ProofState (INTM :=>: VAL)
 > elaborate loc (ty :>: tm) = runElab WorkElsewhere (ty :>: makeElab loc tm)
 >     >>= return . fst
+
 > elaborate' = elaborate (Loc 0)
 
 > elaborateHere :: Loc -> DInTmRN -> ProofState (INTM :=>: VAL, ElabStatus)
 > elaborateHere loc tm = do
 >     _ :=>: ty <- getHoleGoal
 >     runElab WorkCurrentGoal (ty :>: makeElab loc tm)
+
 > elaborateHere' = elaborateHere (Loc 0)
 
 > elabInfer :: Loc -> DExTmRN -> ProofState (INTM :=>: VAL :<: TY)
@@ -65,6 +67,7 @@ $\lambda$-lift terms.
 >     (tt, _) <- runElab WorkElsewhere (sigSetVAL :>: makeElabInfer loc tm)
 >     let (tt' :<: _ :=>: ty) = extractNeutral tt
 >     return (tt' :<: ty)
+
 > elabInfer' = elabInfer (Loc 0)
 
 Sometimes (for example, if we are about to apply elimination with a

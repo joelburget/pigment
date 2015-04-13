@@ -331,6 +331,7 @@ we can represent as an evidence term or value (`sigSetTM` or
 
 > sigSetVAL :: Tm In p x
 > sigSetVAL = SIGMA SET (idVAL "ssv")
+
 > sigSetTM :: INTM
 > sigSetTM =  sigSetVAL
 

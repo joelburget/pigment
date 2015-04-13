@@ -82,7 +82,10 @@ and spine for elaboration and pretty-printing.
 
 > dfortran :: DInTm p x -> String
 > dfortran (DL (x ::. _)) | not (null x) = x
-> dfortran _ = "x"
+> -- A user should never see this name. I (joel) am not sure whether that's
+> -- currently the case, but when binding non-constants, the previous case
+> -- gives the name.
+> dfortran _ = "_"
 
 Scopes, canonical objects and eliminators
 

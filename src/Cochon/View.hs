@@ -1,21 +1,23 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
-  MultiParamTypeClasses, LambdaCase, LiberalTypeSynonyms #-}
+  MultiParamTypeClasses, LambdaCase, LiberalTypeSynonyms, DataKinds,
+  NamedFieldPuns #-}
 
 module Cochon.View where
 
 import Control.Applicative
-import Control.Monad
+import Control.Monad as Monad
 import Control.Monad.Error
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
 import Data.Monoid
 import Data.List
 import Data.String
-import Data.Traversable
+import Data.Traversable as Traversable
 import Data.Void
 
 import Cochon.CommandLexer
 import Cochon.Controller
+import Cochon.TermController
 import Cochon.Error
 import Cochon.Model
 import Cochon.Tactics
@@ -92,7 +94,6 @@ page state = div_ [ class_ "page" ] $ do
         div_ [ class_ "bottom-pane" ] $ do
             locally $ autocompleteView (_autocomplete state)
             prompt state
-            -- locally $ workingOn state
     rightPane state
 
 
@@ -184,61 +185,166 @@ prompt state = div_ [ class_ "prompt" ] $ do
            ]
 
 
+showEntry :: Entry f -> Bool
+showEntry (EEntity _ _ _ _ AnchNo _) = True
+showEntry _ = True
+
+
 prettyDevView :: Traversable f => ProofContext -> Dev f -> InteractionReact
 prettyDevView loc (Dev entries tip _ suspended) =
-    let runner :: ProofState InteractionReact
+    let runner :: ProofState TermReact
         runner = tipView tip
-        val :: InteractionReact
+        val :: TermReact
         val = case runProofState runner loc of
-            Left err -> locally err
+            Left err -> fromString err
             Right (view, _) -> view
+
+        -- XXX(joel) we're no longer showing the implementation entry
+        entriesWeCareAbout = filter showEntry $ Foldable.toList entries
+
     in div_ [ class_ "dev" ] $ do
            div_ [ class_ "dev-header" ] $ do
-               locally $ div_ [ class_ "dev-header-suspended" ] $
-                   suspendView suspended
-               div_ [ class_ "dev-header-tip" ] val
-           ol_ [ class_ "dev-entries" ] $ Foldable.forM_ entries entryView
+               -- locally $ div_ [ class_ "dev-header-suspended" ] $
+               --     suspendView suspended
+               locally $ div_ [ class_ "dev-header-tip" ] val
+           ol_ [ class_ "dev-entries" ] $
+               Foldable.forM_ entriesWeCareAbout (locally . entryView loc)
 
 
 workingOn :: ProofContext -> InteractionReact
 workingOn loc =
-    let runner :: ProofState (InteractionReact, InteractionReact)
+    let runner :: ProofState InteractionReact
         runner = do
             mty <- optional' getHoleGoal
-            goal <- case mty of
-                Just (_ :=>: ty) -> showGoal ty
+            case mty of
+                Just (_ :=>: ty) -> workingOn' ty
                 Nothing          -> return ""
-
-            mn <- optional' getCurrentName
-            let name = fromString $ case mn of
-                    Just n   -> showName n
-                    Nothing  -> ""
-
-            return (goal, name)
 
         val :: InteractionReact
         val = case runProofState runner loc of
-            Left err -> locally err
-            Right ((goal, name), loc') -> goal >> name
+            -- TODO(joel) isn't there something to abstract out this error
+            -- handling? is it repeated in a few places? should we be
+            -- running the proof state just once?
+            Left err -> fromString err
+            Right (goal, _) -> goal
 
-    in div_ [ class_ "working-on" ] val
+    in val
 
 
-showGoal :: TY -> ProofState InteractionReact
-showGoal ty@(LABEL _ _) = do
-    h <- infoHypotheses
-    s <- reactHere . (SET :>:) =<< bquoteHere ty
-    return $ div_ [ class_ "goal" ] $ do
-        div_ [ class_ "goal-header" ] "Goal:"
+workingOn' :: TY -> ProofState InteractionReact
+workingOn' ty@(LABEL _ _) = do
+    inScope <- infoInScope
+    hypotheses <- infoHypotheses
+    context <- infoContext
+    goal <- reactHere . (SET :>:) =<< bquoteHere ty
+
+    return $ div_ [ class_ "working-on" ] $ do
+        div_ [ class_ "goal-inscope" ] $ do
+            div_ "in scope: "
+            ul_ [ class_ "goal-inscope-list" ] inScope
+        div_ [ class_ "goal-hypotheses" ] $ do
+            div_ "hypotheses: "
+            div_ hypotheses
+        div_ [ class_ "goal-context" ] $ do
+            div_ "context: "
+            div_ context
         div_ [ class_ "goal-body" ] $ do
-            h
-            "Programming: "
-            s
-showGoal ty = do
-    s <- reactHere . (SET :>:) =<< bquoteHere ty
+            div_ "programming: "
+            locally $ div_ goal
+
+workingOn' ty = do
+    goal <- reactHere . (SET :>:) =<< bquoteHere ty
     return $ div_ [ class_ "goal" ] $ do
         div_ [ class_ "goal-header" ] "Goal:"
-        div_ [ class_ "goal-body" ] s
+        div_ [ class_ "goal-body" ] (locally goal)
+
+
+infoInScope :: ProofState InteractionReact
+infoInScope = do
+    pc <- get
+    inScope <- getInScope
+    return (locally (reactEntries' (inBScope pc) inScope))
+
+
+reactEntries' :: (Traversable f, Traversable g)
+              => BScopeContext
+              -> f (Entry g)
+              -> TermReact
+reactEntries' bsc fs = Foldable.forM_ fs $ \entry ->
+    -- TODO(joel) what is this even doing?
+    case entryRef entry of
+        Just ref -> li_ $ paramEntryView entry
+        Nothing -> return ()
+
+
+
+reactEntriesAbs :: Traversable f => f (Entry f) -> TermReact
+reactEntriesAbs = div_ . Foldable.foldMap f
+  where f e = fromString (showName (entryName e))
+
+
+-- The `reactBKind` function reactifies a `ParamKind` if supplied with an
+-- element representing its name and type.
+reactBKind :: ParamKind -> React a b c () -> React a b c ()
+reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
+reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
+reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
+
+
+data ContextualInfo = InfoHypotheses | InfoContextual
+    deriving Eq
+
+
+infoHypotheses  = infoContextual InfoHypotheses
+infoContext     = infoContextual InfoContextual
+
+
+infoContextual :: ContextualInfo -> ProofState InteractionReact
+infoContextual gals = do
+    inScope <- getInScope
+    bsc <- gets inBScope
+    entries <- Traversable.mapM (entryHelp gals bsc) inScope
+    return $ div_ $ Foldable.sequence_ entries
+  where
+    entryHelp :: Traversable f
+              => ContextualInfo
+              -> BScopeContext
+              -> Entry f
+              -> ProofState InteractionReact
+    entryHelp InfoHypotheses bsc p@(EPARAM ref _ k _ _ _) = do
+        ty       <- bquoteHere (pty ref)
+        reactTy  <- reactHere (SET :>: ty)
+        return $ locally $ div_ [ class_ "param-entry" ] $ do
+            paramEntryView p
+            div_ [ class_ "param-entry-asc" ] $ do
+                reactKword KwAsc
+                reactTy
+    entryHelp InfoContextual bsc d@(EDEF ref _ _ _ _ _ _) = do
+        -- ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
+        ty       <- bquoteHere $ pty ref
+        reactTy  <- reactHere (SET :>: ty)
+        return $ locally $ div_ [ class_ "def-entry" ] $ do
+            fromString $ showRelName $ christenREF bsc ref
+            reactKword KwAsc
+            reactTy
+    entryHelp _ _ _ = return $ return ()
+
+    -- paramEntry :: Traversable f => Entry f -> TermReact
+    -- paramEntry (EPARAM ref _ k _ _ _) = div_ [ class_ "param-entry" ] $ do
+    --     reactBKind k $ do
+    --         fromString $ showRelName $ christenREF bsc ref
+    --         reactKword KwAsc
+    --         reactTy
+
+    -- defEntry :: Traversable f => Entry f -> TermReact
+    -- defEntry (EDEF ref _ _ _ _ _ _) = div_ [ class_ "def-entry" ] $ do
+    --     fromString $ showRelName $ christenREF bsc ref
+    --     reactKword KwAsc
+    --     reactTy
+
+    removeShared :: Spine TT REF -> TY -> TY
+    removeShared []       ty        = ty
+    removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
 
 
 interactionLog :: InteractionHistory -> Pure React'
@@ -253,13 +359,8 @@ interactionLog logs = div_ [ class_ "interaction-log" ] $
 
 
 proofCtxDisplay :: Bwd ProofContext -> InteractionReact
-proofCtxDisplay (_ :< ctx) = proofContextView ctx
-
--- proofCtxDisplay :: Bwd ProofContext -> InteractionReact
--- proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
---     case runProofState reactProofState ctx of
---         Left err -> locally err
---         Right (display, _) -> display
+proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
+    proofContextView ctx
 
 
 longHelp :: TacticHelp -> Pure React'
@@ -309,26 +410,15 @@ layerView layer@(Layer aboveEntries currentEntry belowEntries tip _ suspend) =
             [ class_ "layer-button"
             , label_ (reasonableName currentEntry)
             , onClick (handleGoTo (currentEntryName currentEntry)) ] $
-                -- locally $ currentEntryView currentEntry
                 return ()
         locally $ div_ [ class_ "layer-info" ] $ do
+            -- XXX(joel) this size no longer (did it ever) reflects the
+            -- number of entries shown
             fromString $ "size: " ++ show (numEntries layer)
             suspendView suspend
 
 
--- = CDefinition DefKind REF (String, Int) INTM EntityAnchor Bool
--- | CModule Name Bool ModulePurpose
---
--- data DefKind = LETG |  PROG (Scheme INTM)
---
--- References are the key way we represent free variables, declared,
--- defined, and deluded. References carry not only names, but types and
--- values, and are shared.
---
--- data REF = (:=) { refName :: Name, refBody :: (RKind :<: TY)}
-
-
-reasonableName :: CurrentEntry -> JSString -- Pure React'
+reasonableName :: CurrentEntry -> JSString
 reasonableName = fromString . fst . last . currentEntryName
 
 
@@ -345,28 +435,64 @@ entryReasonableName = fromString . fst . last . entryName
 --         reasonableName entry
 
 
+paramEntryView :: Traversable f => Entry f -> TermReact
+paramEntryView entry@(EEntity _ _ entity term _ _) =
+    div_ [ class_ "entry"
+        , onClick (handleEntryGoTo (entryName entry))
+        -- ] $ fromString $ showRelName $ christenREF bsc ref
+        ] $
+        div_ [ class_ "entity" ] $
+            flatButton
+                [ label_ (entryReasonableName entry)
+                , onClick (handleEntryGoTo (entryName entry))
+                ] $ return ()
+paramEntryView _ = div_ "(module)" -- TODO(joel) I don't know what to show
+
+
 -- TODO(joel) think about how to guarantee an ol_'s children are li_'s
 
-entryView :: Traversable f => Entry f -> InteractionReact
-entryView entry@(EEntity _ _ entity term anchor expanded) = li_ [] $
-    div_ [ class_ "entity" ] $ do
-        flatButton
-            [ label_ (entryReasonableName entry)
-            , onClick (handleGoTo (entryName entry)) ] $
-                return ()
-        ul_ $ do
-            li_ $ fromString $ show anchor
-            li_ $ fromString $ "expanded: " ++ show expanded
-entryView entry@(EModule _ dev expanded purpose) = li_ [] $
+entryView :: Traversable f => ProofContext -> Entry f -> TermReact
+entryView pc entry@(EEntity _ _ entity term anchor expanded) = li_ $
+    div_ [ class_ "entry" ] $ if expanded
+        then expandedEntry pc entry
+        else collapsedEntry entry
+entryView _ entry@(EModule _ dev expanded purpose) = li_ $
     div_ [ class_ "module" ] $ do
         flatButton
             [ label_ (entryReasonableName entry)
-            , onClick (handleGoTo (entryName entry)) ] $
+            , onClick (handleEntryToggle (entryName entry)) ] $
                 return ()
         div_ $ do
             span_ "(module)"
             span_ $ fromString $ "purpose: " ++ showPurpose purpose
 
+
+expandedEntry :: Traversable f => ProofContext -> Entry f -> TermReact
+expandedEntry ctx entry@EEntity{term} =
+    let runner :: ProofState TermReact
+        runner = reactHere (SET :>: term)
+        val :: TermReact
+        val = case runProofState runner ctx of
+            Left err -> fromString err
+            Right (view, _) -> div_ [ class_ "collapsed-entry" ] $ do
+                flatButton
+                    [ label_ "collapse"
+                    , onClick (handleEntryToggle (entryName entry))
+                    ] $ return ()
+                div_ $ do
+                    text_ $ entryReasonableName entry
+                    reactKword KwAsc
+                locally view
+    in val
+expandedEntry _ _ = return ()
+
+
+collapsedEntry :: Traversable f => Entry f -> TermReact
+collapsedEntry entry = flatButton
+    [ label_ (entryReasonableName entry)
+    , onClick (handleEntryToggle (entryName entry)) ] $
+        return ()
+collapsedEntry _ = return ()
 
 
 -- class Classes a where
@@ -389,7 +515,7 @@ suspendView state =
     in div_ [ class_ (fromString ("suspend-state " ++ cls)) ] elem
 
 
-tipView :: Tip -> ProofState InteractionReact
+tipView :: Tip -> ProofState TermReact
 tipView Module = return $ div_ [ class_ "tip" ] $ "(module)"
 tipView (Unknown (ty :=>: _)) = do
     hk <- getHoleKind
@@ -440,10 +566,11 @@ proofContextView pc@(PC layers aboveCursor belowCursor) =
                         , onClick (handleGoTo []) ] $
                             return ()
                 Foldable.forM_ layers layerView
+        workingOn pc
         prettyDevView pc aboveCursor
-        locally $ workingOn pc
-        locally $ div_ [ class_ "proof-context-below-cursor" ] $
-            ol_ $ Foldable.forM_ belowCursor entryView
+        -- XXX(joel) bring this back
+        -- locally $ div_ [ class_ "proof-context-below-cursor" ] $
+        --     ol_ $ Foldable.forM_ belowCursor entryView
 
 
 -- The `reactProofState` command generates a reactified representation of
@@ -527,6 +654,10 @@ reactEntries (e :> es) = do
     reactEntries es
 
 
+-- reactEntry' :: Traversable f => Entry f -> TermReact
+-- reactEntry' (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor expanded)  = do
+
+
 reactEntry :: Entry Bwd -> ProofState InteractionReact
 reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor expanded)  = do
     ty' <- bquoteHere ty
@@ -577,16 +708,10 @@ entryHeader' name = do
         div_ [ class_ "tm-name" ] displayName
 
 
--- anchorLink :: EntityAnchor -> AttrOrHandler a
--- anchorLink
-
 -- "Developments can be of different nature: this is indicated by the Tip"
 
 reactTip :: ProofState InteractionReact
 reactTip = do
-    -- anchor <- getCurrentAnchor
-    -- let link = anchorLink anchor
-
     tip <- getDevTip
     view <- tipView tip
     return $ locally view

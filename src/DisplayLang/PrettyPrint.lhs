@@ -131,12 +131,19 @@ non(dependent) $\Pi$-type is found, then calls `prettyPiMore` to produce
 the final document.
 
 > prettyPi :: Doc -> DInTmRN -> Size -> Doc
+> -- bs -> s -> t
+> -- (cut off domains, show arrow)
 > prettyPi bs (DPI s (DL (DK t))) = prettyPiMore bs
 >     (pretty s (pred PiSize) <> kword KwArr <> pretty t PiSize)
+> -- bs (x : s) (pretty t)
+> -- (continue accumulating domains)
 > prettyPi bs (DPI s (DL (x ::. t))) =
 >     prettyPi (bs <> parens (text x <> kword KwAsc <> pretty s maxBound)) t
+> -- bs -> pi s t
+> -- (cut off domains, show pi)
 > prettyPi bs (DPI s t) = prettyPiMore bs
 >     (kword KwPi <> pretty s minBound <> pretty t minBound)
+> -- bs -> (pretty tm)
 > prettyPi bs tm = prettyPiMore bs (pretty tm PiSize)
 
 The `prettyPiMore` function takes a bunch of domains (which may be

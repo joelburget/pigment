@@ -25,23 +25,25 @@ language, then write an interpreter to run the syntax in the
 `ProofState` monad.
 
 > eLambda      :: String -> Elab REF
->              -- create a $\lambda$ and return its REF
+>              -- ^ create a lambda and return its REF
 > eGoal        :: Elab TY
->              -- return the type of the goal
+>              -- ^ return the type of the goal
 > eWait        :: String -> TY -> Elab (EXTM :=>: VAL)
->              -- create a subgoal corresponding to a question mark
+>              -- ^ create a subgoal corresponding to a question mark
 > eCry         :: StackError DInTmRN -> Elab a
->              -- give up with an error
+>              -- ^ give up with an error
 > eElab        :: Loc -> EProb -> Elab a
->              -- solve a suspendable elaboration problem and return the result
+>              -- ^ solve a suspendable elaboration problem and return the
+>              --   result
 > eCompute     :: (TY :>: Elab (INTM :=>: VAL)) -> Elab (INTM :=>: VAL)
->              -- execute commands to produce an element of a given type
+>              -- ^ execute commands to produce an element of a given type
 > eFake        :: Elab (REF, Spine TT REF)
->              -- return a fake reference to the current goal and the current spine
+>              -- ^ return a fake reference to the current goal and the current
+>              --   spine
 > eResolve     :: RelName -> Elab (INTM :=>: VAL, Maybe (Scheme INTM))
->              -- resolve a name to a term and maybe a scheme
+>              -- ^ resolve a name to a term and maybe a scheme
 > eAskNSupply  :: Elab NameSupply
->              -- return a fresh name supply
+>              -- ^ return a fresh name supply
 
 The instruction signature given above is implemented using the following
 monad.
@@ -71,6 +73,7 @@ Now we can define the instructions we wanted:
 > eAnchor       = EAnchor EReturn
 > eResolve      = flip EResolve EReturn
 > eAskNSupply   = EAskNSupply EReturn
+
 > eFaker :: Elab (EXTM :=>: VAL)
 > eFaker = do
 >   (r, sp) <- eFake

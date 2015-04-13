@@ -1,4 +1,5 @@
-{-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric, TemplateHaskell #-}
+{-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric, TemplateHaskell,
+  MultiParamTypeClasses #-}
 
 module Cochon.Model where
 
@@ -36,10 +37,22 @@ data Transition
     | CommandTyping String
     | ToggleEntry Name
     | GoTo Name
+    | TermTransition TermAction
+
+data TermAction
+    = ExpandTerm Name
+    | GoToTerm Name
+    | BeginDrag Name
 
 -- The top level page
 type Cochon a = a InteractionState Transition ()
 type InteractionReact = Cochon React'
+
+type ReactTerm a = a ProofContext TermAction ()
+type TermReact = ReactTerm React'
+
+instance GeneralizeSignal TermAction Transition where
+    generalizeSignal = TermTransition
 
 -- TODO(joel) - give this a [CochonArg] reader?
 type Cmd a = WriterT (Pure React') (State (Bwd ProofContext)) a

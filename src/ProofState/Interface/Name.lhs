@@ -39,7 +39,6 @@ name if the name suggestion is empty.
 XXX(joel) - this picks poor names
 
 > pickName :: String -> EntityAnchor -> ProofState String
-> pickName "" s = pickName "x" s
 > pickName prefix AnchNo = pickName' prefix
 > pickName prefix (AnchStr "") = pickName' prefix
 > pickName prefix s   = return $ prefix ++ show s
@@ -49,4 +48,5 @@ XXX(joel) - this picks poor names
 >     m <- getCurrentName
 >     r <- getDevNSupply
 >     let suffix = getSum (foldMap (Sum . snd) m) + snd r
->     return $ prefix ++ show suffix
+>         prefix' = if prefix == "" then "x" else prefix
+>     return $ prefix' ++ show suffix

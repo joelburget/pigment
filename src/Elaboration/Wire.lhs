@@ -257,7 +257,9 @@ For paranoia purposes, the following test might be helpful:
 <                                 show tmL', "is not of type", show ty' ]
 
 >     let ref = name := DEFN (evTm tmL') :<: tyv'
->     return  (addNews (ref, GoodNews {-min (min n n') n''-}) news,
+>     -- TODO(joel) what should go here?
+>     -- return  (addNews (ref, min (min n n') n'') news,
+>     return  (addNews (ref, GoodNews) news,
 >             EDEF ref sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor expanded)
 
 The `tellCurrentEntry` function informs the current entry about a news

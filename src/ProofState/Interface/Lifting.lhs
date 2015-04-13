@@ -36,10 +36,10 @@ Binding a term
 The `parBind` function $\lambda$-binds a term over a list $\Delta$ of
 entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
 
-> parBind ::  {- $\Delta$ :: -} Bwd (Entry Bwd) {- $\Gamma$ -} ->
->             {- $\nabla$ :: -} Bwd (Entry Bwd) {- $\Gamma, \Delta$ -} ->
->             INTM {- $\Gamma, \Delta, \nabla$ -} ->
->             INTM {- $\Gamma$ -}
+> parBind :: Bwd (Entry Bwd) -- Delta
+>         -> Bwd (Entry Bwd) -- Nabla
+>         -> INTM
+>         -> INTM
 > parBind delta nabla t = help delnab nabla (delnab -| t) where
 >     delnab = delta <> nabla
 >     help B0                                        B0            t = t

@@ -27,30 +27,40 @@
 
 > import React hiding (key)
 
+> import DisplayLang.PrettyPrint
+> import Kit.Trace
+
 The `reactKword` function gives a react element representing a `Keyword`.
 
 > reactKword :: Keyword -> React a b c ()
-> reactKword kw = span_ [ class_ "kw" ] $ case kw of
+> reactKword kw = div_ [ class_ "kw" ] $ case kw of
 >     KwArr -> span_ [ class_ "kw-arr" ] $ return ()
 >     KwImp -> span_ [ class_ "kw-imp" ] $ return ()
 >     KwLambda -> span_ [ class_ "kw-lambda" ] $ return ()
 >     _ -> fromString (key kw)
 
-> parens :: React a b c d -> React a b c ()
-> parens r = "(" >> r >> ")"
+> reactBrackets :: Bracket -> React a b c d -> React a b c ()
+> reactBrackets br r = do
+>     fromString (showOpenB br)
+>     r
+>     fromString (showCloseB br)
 
 The `Reactive` class describes things that can be made into React
 elements.
 
 > class Reactive x where
->     reactify :: x -> InteractionReact
+>     reactify :: x -> TermReact
 
 > instance Reactive (Can DInTmRN) where
 >     reactify x = div_ [ class_ "can-dintmrn" ] $ canReactify x
 
-> canReactify :: Can DInTmRN -> InteractionReact
+> canReactify :: Can DInTmRN -> TermReact
 > canReactify Set       = reactKword KwSet
 > canReactify (Pi s t)  = reactPi (DPI s t)
+> canReactify (Label l t) = div_ [ class_ "can-label" ] $ do
+>     reactify l
+>     reactKword KwAsc
+>     reactify t
 
   canReactify (Con x)   = reactKword KwCon >> reactify x
   canReactify (Anchor (DTAG u) t ts) = fromString u >> reactify ts
@@ -77,10 +87,6 @@ elements.
       reactify ii
       reactify d
       reactify i
-  canReactify (Label l t) = div_ [ class_ "can-label" ] $ do
-      reactify l
-      reactKword KwAsc
-      reactify t
   canReactify (LRet x) = reactKword KwRet >> reactify x
   canReactify (Nu (Just l :?=: _))  = reactify l
   canReactify (Nu (Nothing :?=: Identity t))  = reactKword KwNu >> reactify t
@@ -118,28 +124,42 @@ elements.
 
 > canReactify can       = fromString $ "TODO(joel) - " ++ show can
 
-The `reactPi` function takes a term and the current size. It accumulates
-domains until a non(dependent) $\Pi$-type is found, then calls
-`reactPiMore` to produce the final element.
+`reactPi` accumulates domains until a non-dependent pi is found.
 
-> reactPi :: DInTmRN -> InteractionReact
-> reactPi tm = div_ [ class_ "pi" ] $ reactPi' "" tm
+> reactPi :: DInTmRN -> TermReact
+> reactPi tm = div_ [ class_ "pi" ] $ do
+>     -- elabTrace $ renderHouseStyle $ pretty tm PiSize
+>     reactPi' tm
 
-> -- TODO(joel) - figure out `bs` - (a bunch of domains)
-> reactPi' :: InteractionReact -> DInTmRN -> InteractionReact
-> reactPi' bs (DPI s (DL (DK t))) = reactPiMore bs
->     (reactify s >> reactKword KwArr >> reactify t)
-> reactPi' bs (DPI s (DL (x ::. t))) = reactPi'
->     (bs >> "(" >> (fromString x >> reactKword KwAsc >> reactify s) >> ")")
->     t
-> reactPi' bs (DPI s t) = reactPiMore bs
->     (reactKword KwPi >> reactify s >> reactify t)
-> reactPi' bs tm = reactPiMore bs (reactify tm)
+> reactPi' :: DInTmRN -> TermReact
+> -- IE `s -> t`
+> reactPi' (DPI s (DL (DK t))) = do
+>     reactify s
+>     reactKword KwArr
+>     reactify t
+> -- IE `(x : s) -> t`
+> reactPi' (DPI s (DL (x ::. t))) = do
+>     reactBrackets Round $ do
+>         fromString x
+>         reactKword KwAsc
+>         reactify s
+>     -- TODO(joel) we don't *always* want this arrow here. it's not a huge
+>     -- deal for now - nobody will notice, but it would be nice to elide
+>     -- arrows
+>     reactKword KwArr
+>     reactPi' t
+> -- IE `pi s t`
+> reactPi' (DPI s t) = do
+>     reactKword KwPi
+>     reactify s
+>     reactify t
+> -- IE `tm`
+> reactPi' tm = reactify tm
 
 The `reactPiMore` function takes a bunch of domains (which may be empty)
 and a codomain, and represents them appropriately for the current size.
 
-> reactPiMore :: InteractionReact -> InteractionReact -> InteractionReact
+> reactPiMore :: TermReact -> TermReact -> TermReact
 > reactPiMore bs d = bs >> reactKword KwArr >> d
 
 To reactify a scope, we accumulate arguments until something other than
@@ -148,13 +168,11 @@ a $\lambda$-term is reached.
 > instance Reactive DSCOPE where
 >     reactify s = reactLambda (B0 :< dScopeName s) (dScopeTm s)
 
-> reactLambda :: Bwd String -> DInTmRN -> InteractionReact
+> reactLambda :: Bwd String -> DInTmRN -> TermReact
 > reactLambda vs (DL s) = reactLambda (vs :< dScopeName s) (dScopeTm s)
 > reactLambda vs tm = div_ [ class_ "lambda" ] $ do
 >     reactKword KwLambda
->     "("
->     fromString $ unwords $ trail vs
->     ")"
+>     reactBrackets Round $ fromString $ unwords $ trail vs
 >     reactKword KwArr
 >     reactify tm
 
@@ -167,25 +185,30 @@ a $\lambda$-term is reached.
 > instance Reactive DInTmRN where
 >     reactify (DL s)          =
 >         div_ [ class_ "dintmrn-canonical"
->              , onClick (handleLambdaContext s) ] $
->              reactify s
+>              -- , onClick (handleLambdaContext s)
+>              ] $
+>             reactify s
 >     reactify (DC c)          =
 >         div_ [ class_ "dintmrn-canonical"
->              , onClick (handleCanonicalContext c) ] $
->              reactify c
+>              -- , onClick (handleCanonicalContext c)
+>              ] $
+>             reactify c
 >     reactify (DN n)          =
 >         div_ [ class_ "dintmrn-neutral"
->              , onClick (handleNeutralContext n) ] $
->              reactify n
+>              -- , onClick (handleNeutralContext n)
+>              ] $
+>             reactify n
 >     reactify (DQ x)          =
 >         div_ [ class_ "dintmrn-question"
->              , onClick (handleQuestionContext x) ] $
+>              -- , onClick (handleQuestionContext x)
+>              ] $
 >             fromString $ '?':x
 >     reactify DU              =
->         div_ [ class_ "dintmrn-unerscore"
+>         div_ [ class_ "dintmrn-underscore"
 >              -- TODO(joel) - provide some info so we can locate this
 >              -- underscore!
->              , onClick (handleUnderscoreContext) ] $
+>              -- , onClick (handleUnderscoreContext)
+>              ] $
 >             reactKword KwUnderscore
 
       reactify (DEqBlue t u) = reactify t >> reactKword KwEqBlue >> reactify u
@@ -205,21 +228,29 @@ a $\lambda$-term is reached.
 >     reactify indtm           = fromString $ "TODO(joel) - " ++ show indtm
 
 > instance Reactive DExTmRN where
->     reactify (n ::$ els)  = reactify n >> mapM_ reactify els
+>     reactify (n ::$ els)  = div_ [ class_ "dextmrn" ] $ do
+>         reactify n
+>         mapM_ reactify els
 
 > instance Reactive DHEAD where
->     reactify (DP x)       = fromString (showRelName x)
->     reactify (DType ty)   = reactKword KwAsc >> reactify ty
->     reactify (DTEx ex)    = fromString $ show ex
+>     reactify dh = div_ [ class_ "dhead" ] $ reactify' dh where
+>         reactify' (DP x)       = fromString (showRelName x)
+>         reactify' (DType ty)   = reactKword KwAsc >> reactify ty
+>         reactify' (DTEx ex)    = fromString $ show ex
 
 > instance Reactive (Scheme DInTmRN) where
->     reactify (SchType ty) = reactKword KwAsc >> reactify ty
->     reactify (SchExplicitPi (x :<: schS) schT) = do
->         "(" >> fromString x >> reactify schS >> ")"
->         reactify schT
->     reactify (SchImplicitPi (x :<: s) schT) = do
->         "[" >> fromString x >> reactKword KwAsc >> reactify s >> "]"
->         reactify schT
+>     reactify sch = div_ [ class_ "scheme-dintmrn" ] $ reactify' sch where
+>
+>         reactify' (SchType ty) = reactKword KwAsc >> reactify ty
+>         reactify' (SchExplicitPi (x :<: schS) schT) = do
+>             reactBrackets Round (fromString x >> reactify schS)
+>             reactify schT
+>         reactify' (SchImplicitPi (x :<: s) schT) = do
+>             reactBrackets Square $ do
+>                 fromString x
+>                 reactKword KwAsc
+>                 reactify s
+>             reactify schT
 
   reactifyEnumIndex :: Int -> DInTmRN -> Pure React'
   reactifyEnumIndex n DZE      = fromString $ show n
@@ -234,7 +265,8 @@ a $\lambda$-term is reached.
     bs
     (reactify p >> reactKword KwImp >> reactify q)
   reactifyAll bs (DALL s (DL (x ::. t))) = reactifyAll
-      (bs >> parens (fromString x >> reactKword KwAsc >> reactify s))
+      (bs >>
+       reactBrackets Round (fromString x >> reactKword KwAsc >> reactify s))
       t
   reactifyAll bs (DALL s (DL (DK t))) = reactifyAll bs
       (DALL s (DL ("_" ::. t)))
@@ -269,22 +301,18 @@ a $\lambda$-term is reached.
 
   reactifySigmaDone :: Pure React' -> Pure React' -> Pure React'
   reactifySigmaDone s t = div_ [ class_ "sigma-done" ] $
-      reactKword KwSig >> "(" >> s >> t >> ")"
+      reactKword KwSig >> reactBrackets Round (s >> t)
 
 The `Elim` functor is straightforward.
 
 > instance Reactive (Elim DInTmRN) where
->     reactify (A t)  = reactify t
->     reactify Out    = reactKword KwOut
->     reactify (Call _) = reactKword KwCall
->     reactify elim   = fromString $ show elim
+>     reactify elim = div_ [ class_ "elim-dintmrn" ] $ reactify' elim where
+>         reactify' (A t)  = reactify t
+>         reactify' Out    = reactKword KwOut
+>         reactify' (Call _) = reactKword KwCall
+>         reactify' elim   = fromString $ show elim
 
-> reactHere :: (TY :>: INTM) -> ProofState InteractionReact
+> reactHere :: (TY :>: INTM) -> ProofState TermReact
 > reactHere tt = do
 >     dtm :=>: _ <- distillHere tt
 >     return $ reactify dtm
-
-> reactSchemeHere :: Scheme INTM -> ProofState InteractionReact
-> reactSchemeHere sch = do
->     sch' <- distillSchemeHere sch
->     return $ reactify sch'
