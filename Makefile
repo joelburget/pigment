@@ -2,24 +2,30 @@
 
 SOURCE_FILES = $(wildcard src/**/*hs)
 LHS_FILES = $(wildcard src/**/*.lhs)
+SANDBOX = /home/vagrant/pigment-sandbox
 
 build: build/index.css build/mui.css build/index.html build/all.js
 
-.cabal-sandbox/bin/pigment.jsexe/all.js: .cabal-sandbox $(SOURCE_FILES)
-	cabal install --ghcjs
+install_less_deps:
+	npm install -g less less-plugin-autoprefix
 
-.cabal-sandbox:
-	cabal sandbox init
-	cabal sandbox add-source ../react-haskell
-	cabal sandbox add-source ../material-ui
+# http://blog.jgc.org/2015/04/the-one-line-you-should-add-to-every.html
+print-%: ; @echo $*=$($*)
 
 clean:
 	git clean -xf
-	rm -rf .cabal-sandbox # TODO(joel) - why isn't this part of the git clean?
 
 web:
 	cp -r src/{index.html,css,js,Main.js} web
 	cp dist/build/pigment/pigment.jsexe/all.js web/js/
+
+$(SANDBOX)/bin/pigment.jsexe/all.js: $(SANDBOX) $(SOURCE_FILES)
+	cabal install --ghcjs
+
+$(SANDBOX):
+	cabal sandbox init --sandbox $(SANDBOX)
+	cabal sandbox add-source ../react-haskell
+	cabal sandbox add-source ../material-ui
 
 build/index.css: src/css/index.less src/css/mui.css
 	lessc src/css/index.less build/index.css --autoprefix=""
@@ -30,14 +36,8 @@ build/mui.css: src/css/mui.css
 build/index.html: src/index.html
 	cp src/index.html build/
 
-build/all.js: .cabal-sandbox/bin/pigment.jsexe/all.js
-	cp .cabal-sandbox/bin/pigment.jsexe/all.js build/
-
-install_less_deps:
-	npm install -g less less-plugin-autoprefix
-
-# http://blog.jgc.org/2015/04/the-one-line-you-should-add-to-every.html
-print-%: ; @echo $*=$($*)
+build/all.js: $(SANDBOX)/bin/pigment.jsexe/all.js
+	cp $(SANDBOX)/bin/pigment.jsexe/all.js build/
 
 # *caution*
 docs:
