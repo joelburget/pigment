@@ -145,7 +145,7 @@ Datatype declaration
 >   goIn
 >   i <- lambdaParam "i"
 >   (cs' :=>: _) <- giveOutBelow (foldr PAIR VOID (map (\(_,_,c,_) -> N (c :$ A (NP i))) cs))
->   make (AnchDataTy :<: ARR (N indtye) SET)
+>   make ((AnchDataTy nom) :<: ARR (N indtye) SET)
 >   goIn
 >   i <- lambdaParam "i"
 >   let d = L $ "i" :.IFSIGMA (N e) (N (cs' :$ A (NV 0)))

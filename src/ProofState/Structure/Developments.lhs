@@ -78,7 +78,7 @@ either be:
 >     | AnchConName String
 >     | AnchConDescs
 >     | AnchDataDesc
->     | AnchDataTy
+>     | AnchDataTy String
 >     | AnchInd
 >     | AnchIndTy
 >     | AnchTy String
@@ -103,7 +103,7 @@ either be:
 >     show (AnchConName str) = str
 >     show AnchConDescs = "constructor descriptions"
 >     show AnchDataDesc = "data description"
->     show AnchDataTy = "data type"
+>     show (AnchDataTy str) = str
 >     show AnchInd = "ind"
 >     show AnchIndTy = "ind type"
 >     show (AnchTy str) = str

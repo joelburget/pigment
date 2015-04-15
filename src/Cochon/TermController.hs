@@ -20,6 +20,16 @@ handleEntryGoTo :: Name -> MouseEvent -> Maybe TermAction
 handleEntryGoTo = constTransition . GoToTerm
 
 
+-- TODO(joel) - stop faking this
+handleAddAnnotation :: Name -> MouseEvent -> Maybe TermAction
+handleAddAnnotation _ _ = Nothing
+
+
+-- TODO(joel) - stop faking this
+handleAddConstructor :: Name -> MouseEvent -> Maybe TermAction
+handleAddConstructor _ _ = Nothing
+
+
 termDispatch :: TermAction -> InteractionState -> InteractionState
 termDispatch (ExpandTerm name) state = state
 termDispatch (GoToTerm name) state = state

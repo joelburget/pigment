@@ -219,7 +219,7 @@ elabData nom pars scs = do
       -- lt :=>: _ <- getFakeCurrentEntry XXX
 
       -- the type of the data type we just created is Set
-      make (AnchDataTy :<: SET)
+      make ((AnchDataTy nom) :<: SET)
       goIn
       let (allowingTy, allowedBy) = mkAllowed pars'
           anchor = ANCHOR (TAG nom) allowingTy allowedBy

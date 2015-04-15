@@ -234,9 +234,11 @@ a $\lambda$-term is reached.
 
 > instance Reactive DHEAD where
 >     reactify dh = div_ [ class_ "dhead" ] $ reactify' dh where
->         reactify' (DP x)       = fromString (showRelName x)
+>         -- Parameter (RelName)
+>         -- TODO(joel) this is the same as `reasonableName`
+>         reactify' (DP x)       = fromString $ fst $ last x
 >         reactify' (DType ty)   = reactKword KwAsc >> reactify ty
->         reactify' (DTEx ex)    = fromString $ show ex
+>         reactify' (DTEx ex)    = "TODO(joel) - DTEx"
 
 > instance Reactive (Scheme DInTmRN) where
 >     reactify sch = div_ [ class_ "scheme-dintmrn" ] $ reactify' sch where

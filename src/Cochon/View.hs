@@ -446,7 +446,9 @@ paramEntryView entry@(EEntity _ _ entity term _ _) =
                 [ label_ (entryReasonableName entry)
                 , onClick (handleEntryGoTo (entryName entry))
                 ] $ return ()
-paramEntryView _ = div_ "(module)" -- TODO(joel) I don't know what to show
+paramEntryView mod = div_ $ do
+    text_ $ entryReasonableName mod
+    " (module)" -- TODO(joel) I don't know what to show
 
 
 -- TODO(joel) think about how to guarantee an ol_'s children are li_'s
@@ -467,23 +469,55 @@ entryView _ entry@(EModule _ dev expanded purpose) = li_ $
             span_ $ fromString $ "purpose: " ++ showPurpose purpose
 
 
+-- TODO(joel)
+-- * The first expandedEntry case below is weird - maybe inline this?
+dataRunner :: Traversable f => ProofContext -> Entry f -> TermReact
+dataRunner ctx entry@(EEntity _ _ (Definition LETG dev) _ AnchDataDef _) = do
+    -- elabTrace (renderHouseStyle (pretty ctx PiSize))
+    div_ [ class_ "data-entry" ] $ do
+       ol_ [ class_ "data-entries" ] $
+           let entries = filter dataConDecl $
+                   Foldable.toList $
+                   devEntries dev
+           in Foldable.forM_ entries $ li_ . expandedEntry' ctx
+       div_ [ class_ "data-controls" ] $ do
+           flatButton
+               [ label_ "add constructor"
+               , onClick (handleAddConstructor (entryName entry))
+               ] $ return ()
+           flatButton
+               [ label_ "add annotation"
+               , onClick (handleAddAnnotation (entryName entry))
+               ] $ return ()
+dataRunner _ _ = error "unexpected non-data-development"
+
+
+termRunner :: INTM -> ProofState TermReact
+termRunner term = reactHere (SET :>: term)
+
+
+-- Show an entry without the collapse button
+expandedEntry' :: Traversable f => ProofContext -> Entry f -> TermReact
+expandedEntry' ctx entry@EEntity{term} =
+    case runProofState (termRunner term) ctx of
+        Left err -> fromString err
+        Right (view, _) -> view
+
+
+-- Show an expanded entry with the collapse button
 expandedEntry :: Traversable f => ProofContext -> Entry f -> TermReact
+expandedEntry ctx entry@(EEntity _ _ (Definition LETG dev) _ AnchDataDef _) =
+    dataRunner ctx entry
 expandedEntry ctx entry@EEntity{term} =
-    let runner :: ProofState TermReact
-        runner = reactHere (SET :>: term)
-        val :: TermReact
-        val = case runProofState runner ctx of
-            Left err -> fromString err
-            Right (view, _) -> div_ [ class_ "collapsed-entry" ] $ do
-                flatButton
-                    [ label_ "collapse"
-                    , onClick (handleEntryToggle (entryName entry))
-                    ] $ return ()
-                div_ $ do
-                    text_ $ entryReasonableName entry
-                    reactKword KwAsc
-                locally view
-    in val
+    div_ [ class_ "expanded-entry" ] $ do
+        flatButton
+            [ label_ "collapse"
+            , onClick (handleEntryToggle (entryName entry))
+            ] $ return ()
+        div_ $ do
+            text_ $ entryReasonableName entry
+            reactKword KwAsc
+        expandedEntry' ctx entry
 expandedEntry _ _ = return ()
 
 
@@ -619,16 +653,14 @@ renderReact = do
                 tip
 
 
-dataWeCareAbout :: Entry a -> Bool
-dataWeCareAbout (EEntity _ _ _ _ (AnchConName _) _) = True
-dataWeCareAbout (EEntity _ _ _ _ AnchDataDef _) = True
-dataWeCareAbout (EEntity _ _ _ _ AnchDataDesc _) = True
-dataWeCareAbout _ = False
+dataConDecl :: Entry a -> Bool
+dataConDecl (EEntity _ _ _ _ (AnchConName _) _) = True
+dataConDecl _ = False
 
 
 viewDataDevelopment :: CurrentEntry -> Entries -> ProofState InteractionReact
 viewDataDevelopment (CDefinition _ (name := _) _ _ _ _) entries = do
-    let weCareAbout = filterBwd dataWeCareAbout entries
+    let weCareAbout = filterBwd dataConDecl entries
     entries <- reactEntries (weCareAbout <>> F0)
 
     return $ div_ [ class_ "data-develop" ] entries
