@@ -170,8 +170,13 @@ mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
                 allowedTy
         in (allowingTy'', allowedBy)
 
-elabData :: String -> [ (String , DInTmRN) ] ->
-                      [ (String , DInTmRN) ] -> ProofState (EXTM :=>: VAL)
+elabData :: String
+         -- ^ Name of the data type
+         -> [ (String , DInTmRN) ]
+         -- ^ Parameters (Name, Type)
+         -> [ (String , DInTmRN) ]
+         -- ^ Schemes (Name, Type)
+         -> ProofState (EXTM :=>: VAL)
 elabData nom pars scs = do
       oldaus <- paramSpine <$> getInScope
 

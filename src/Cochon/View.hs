@@ -473,13 +473,30 @@ entryView _ entry@(EModule _ dev expanded purpose) = li_ $
 -- * The first expandedEntry case below is weird - maybe inline this?
 dataRunner :: Traversable f => ProofContext -> Entry f -> TermReact
 dataRunner ctx entry@(EEntity _ _ (Definition LETG dev) _ AnchDataDef _) = do
-    -- elabTrace (renderHouseStyle (pretty ctx PiSize))
+    let entries = Foldable.toList (devEntries dev)
     div_ [ class_ "data-entry" ] $ do
+       div_ [ class_ "data-header" ] $ do
+           div_ [ class_ "data-name" ] $ do
+               "data "
+               text_ $ entryReasonableName entry
+           let params = filter paramDecl entries
+           ul_ [ class_ "data-params" ] $ Foldable.forM_ params $
+               -- TODO(joel) have paramDecl return the name
+               \entry@(EEntity _ _ _ _ (AnchParTy name) _) -> li_ $
+                   reactBrackets Round $ do
+                       fromString name
+                       ": "
+                       expandedEntry' ctx entry
        ol_ [ class_ "data-entries" ] $
-           let entries = filter dataConDecl $
-                   Foldable.toList $
-                   devEntries dev
-           in Foldable.forM_ entries $ li_ . expandedEntry' ctx
+           let constrs = filter dataConDecl entries
+           -- in Foldable.forM_ entries $ li_ . expandedEntry' ctx
+           in Foldable.forM_ constrs $ \entry -> do
+               elabTrace ("entry anchor: " ++ show (entryAnchor entry))
+               li_ $ expandedEntry' ctx entry
+
+       -- Also show:
+       -- * Induction Scheme
+
        div_ [ class_ "data-controls" ] $ do
            flatButton
                [ label_ "add constructor"
@@ -526,7 +543,6 @@ collapsedEntry entry = flatButton
     [ label_ (entryReasonableName entry)
     , onClick (handleEntryToggle (entryName entry)) ] $
         return ()
-collapsedEntry _ = return ()
 
 
 -- class Classes a where
@@ -655,7 +671,13 @@ renderReact = do
 
 dataConDecl :: Entry a -> Bool
 dataConDecl (EEntity _ _ _ _ (AnchConName _) _) = True
+-- dataConDecl (EEntity _ _ _ _ AnchConDescs _) = True
 dataConDecl _ = False
+
+
+paramDecl :: Entry a -> Bool
+paramDecl (EEntity _ _ _ _ (AnchParTy name) _) = True
+paramDecl _ = False
 
 
 viewDataDevelopment :: CurrentEntry -> Entries -> ProofState InteractionReact
