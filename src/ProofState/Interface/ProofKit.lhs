@@ -6,7 +6,10 @@
 
 > module ProofState.Interface.ProofKit where
 
-> import Control.Monad.Except
+> import Control.Error
+> import Control.Monad
+> import Control.Monad.Trans.Class
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import NameSupply.NameSupply
@@ -41,7 +44,8 @@ generates new namespaces.
 >             putDevNSupply nsupply'
 >             f ref
 >           ) nsupply
->     forkNSupply = error "ProofState does not provide forkNSupply"
+>     forkNSupply _ _ _ =
+>         lift (Left (errMsgStack "ProofState does not provide forkNSupply"))
 >     askNSupply = getDevNSupply
 
 We also provide an operator to lift functions from a name supply to
@@ -68,10 +72,11 @@ command $\beta$-quotes a term using the local name supply.
 Secondly, any type-checking problem (defined in the `Check` monad) can
 be executed in the `ProofState`.
 
-> runCheckHere :: (ErrorTok e -> ErrorTok DInTmRN) -> Check e a -> ProofState a
-> runCheckHere f c = do
->     me <- withNSupply $ liftError' f . typeCheck c
->     lift me
+> runCheckHere :: (ErrorTok e -> ErrorTok DInTmRN)
+>              -> Check e a
+>              -> ProofState a
+> runCheckHere f c =
+>     join $ withNSupply $ lift . liftError' f . typeCheck c
 
 As a consequence, we have `checkHere` to `check` terms against types:
 
@@ -96,25 +101,25 @@ location, which may be useful for paranoia purposes.
 >         CDefinition _ (_ := DEFN tm :<: ty) _ _ _ _ -> do
 >             ty' <- bquoteHere ty
 >             checkHere (SET :>: ty')
->                 `pushError`  (StackError
->                     [ err "validateHere: definition type failed to type-check: SET does not admit"
+>                 `pushError` (stackItem
+>                     [ errMsg "validateHere: definition type failed to type-check: SET does not admit"
 >                     , errTyVal (ty :<: SET)
->                     ])
+>                     ] :: StackError DInTmRN)
 >             tm' <- bquoteHere tm
 >             checkHere (ty :>: tm')
->                 `pushError`  (StackError
->                     [ err "validateHere: definition failed to type-check:"
+>                 `pushError` (stackItem
+>                     [ errMsg "validateHere: definition failed to type-check:"
 >                     , errTyVal (ty :<: SET)
->                     , err "does not admit"
+>                     , errMsg "does not admit"
 >                     , errTyVal (tm :<: ty)
->                     ])
+>                     ] :: StackError DInTmRN)
 >             return ()
 >         CDefinition _ (_ := HOLE _ :<: ty) _ _ _ _ -> do
 >             ty' <- bquoteHere ty
 >             checkHere (SET :>: ty')
->                 `pushError`  (StackError
->                     [ err "validateHere: hole type failed to type-check: SET does not admit"
+>                 `pushError` (stackItem
+>                     [ errMsg "validateHere: hole type failed to type-check: SET does not admit"
 >                     , errTyVal (ty :<: SET)
->                     ])
+>                     ] :: StackError DInTmRN)
 >             return ()
 >         _ -> return ()

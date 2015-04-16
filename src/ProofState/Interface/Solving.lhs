@@ -2,12 +2,16 @@ Solving goals
 =============
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes, PatternSynonyms #-}
+>              GADTs, RankNTypes, PatternSynonyms, NamedFieldPuns #-}
 
 > module ProofState.Interface.Solving where
 
 > import Control.Applicative
-> import Control.Monad.Except
+> import Control.Monad
+> import qualified Data.Foldable as Foldable
+
+> import Control.Error
+
 > import Kit.MissingLibrary
 > import ProofState.Structure.Developments
 > import ProofState.Edition.ProofContext
@@ -21,9 +25,14 @@ Solving goals
 > import ProofState.Interface.Definition
 > import ProofState.Interface.Parameter
 > import DisplayLang.DisplayTm
+> import DisplayLang.Name
 > import Evidences.Tm
 > import Evidences.Eval
 > import Elaboration.Wire
+
+> import Kit.Trace
+> import Debug.Trace
+> import ProofState.Structure.Entries
 
 Giving a solution
 -----------------
@@ -33,36 +42,48 @@ it type-checks. At the end of the operation, the cursor has not moved:
 we are still under the goal, which has now been `Defined`. Note that
 entries below the cursor are (lazily) notified of the good news.
 
+> traceGive :: Show a => a -> a
+> traceGive a = trace ("give: " ++ show a) a
+
 > give :: INTM -> ProofState (EXTM :=>: VAL)
 > give tm = do
+>     elabTrace "hello0"
 >     tip <- getDevTip
+>     elabTrace "hello1"
 >     case tip of
 >         Unknown (tipTyTm :=>: tipTy) -> do
 >             -- Working on a goal
 >             -- The `tm` is of the expected type
+>             elabTrace "hello2"
 >             checkHere (tipTy :>: tm)
 >                 `pushError`
->                 StackError
->                      [ err "give: typechecking failed:"
+>                 (traceGive (stackItem
+>                      [ errMsg "give: typechecking failed:"
 >                      , errTm (DTIN tm)
->                      , err "is not of type"
+>                      , errTm (DTIN tipTyTm)
+>                      , errMsg "is not of type"
 >                      , errTyVal (tipTy :<: SET)
 >                      ]
+>                 ) :: StackError DInTmRN)
+>             elabTrace "hello3"
 >
 >             -- Lambda lift the given solution
 >             globalScope <- getGlobalScope
 >             above <- getEntriesAbove
 >             let tmv = evTm $ parBind globalScope above tm
 >             -- Update the entry as Defined, together with its definition
->             CDefinition kind (name := _ :<: ty) xn tyTm anchor expanded <- getCurrentEntry
+>             CDefinition kind (name := _ :<: ty) xn tyTm anchor meta
+>                 <- getCurrentEntry
 >             let ref = name := DEFN tmv :<: ty
 >             putDevTip $ Defined tm $ tipTyTm :=>: tipTy
->             putCurrentEntry $ CDefinition kind ref xn tyTm anchor expanded
+>             putCurrentEntry $
+>                 CDefinition kind ref xn tyTm anchor meta
 >             -- Propagate the good news
 >             updateRef ref
 >             -- Return the reference
->             return $ applySpine ref globalScope
->         _  -> throwError $ sErr "give: only possible for incomplete goals."
+>             elabTrace "hello4"
+>             return $ traceGive $ applySpine ref globalScope
+>         _  -> elabTrace "hello5" >> (throwDTmStr "give: only possible for incomplete goals.")
 
 For convenience, we combine giving a solution and moving. Indeed, after
 `give`, the cursor stands in a rather boring position: under a `Defined`
@@ -73,6 +94,14 @@ one is available.
 
 > giveOutBelow :: INTM -> ProofState (EXTM :=>: VAL)
 > giveOutBelow tm = give tm <* goOutBelow
+
+type InTm   = Tm In TT
+type INTM   = InTm REF
+type InTmRN = InTm RelName
+type DInTmRN = DInTm REF RelName
+
+elabGiveNext :: DInTmRN -> ProofState (EXTM :=>: VAL)
+elabGiveNext tm = elabGive' tm <* startScheduler <* (nextGoal <|> goOut)
 
 > giveNext :: INTM -> ProofState (EXTM :=>: VAL)
 > giveNext tm = give tm <* (nextGoal <|> goOut)
@@ -92,7 +121,7 @@ are therefore left to `give` this definition. This is the role of the
 >     -- The entry above is indeed a definition
 >     EDEF ref _ _ _ _ _ _ -> giveOutBelow $ NP ref
 >     -- The entry was not a definition
->     _ -> throwError $ sErr "done: entry above cursor must be a definition."
+>     _ -> throwDTmStr "done: entry above cursor must be a definition."
 
 Slightly more sophisticated is the well-known `apply` tactic in Coq: we
 are trying to solve a goal of type `T` while we have a definition of
@@ -113,14 +142,28 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 >         make $ AnchStr "t" :<: _TTm
 >         goIn
 >         giveOutBelow $ N $ P f :$ A (N sTm)
->     _ -> throwError $ sErr  $ "apply: last entry in the development"
->                             ++ " must be a definition with a pi-type."
+>     _ -> throwDTmStr $ "apply: last entry in the development" ++
+>                        " must be a definition with a pi-type."
 
 The `ungawa` command looks for a truly obvious thing to do, and does it.
 
 > ungawa :: ProofState ()
 > ungawa =  void done <|> void apply <|> void (lambdaParam "ug")
->           `pushError` sErr "ungawa: no can do."
+>           `pushError` (errMsgStack "ungawa: no can do." :: StackError DInTmRN)
+
+
+> demoMagic :: ProofState ()
+> demoMagic = do
+>     -- entries <- getEntriesAbove
+>     -- elabTrace $ show $ length $ Foldable.toList entries
+>     entries <- getInScope
+>     forM_ (Foldable.toList entries) (elabTrace . show)
+>     -- Try just returning the entry
+>     let f e@EEntity{term, ref} = traceShow "here1" $ void (elabTrace "giving" >> give (NP ref))
+>         f e@EModule{} = traceShow "here2" $ return ()
+>     -- ... for each entry
+>     foldl (<|>) (void done) (map f (Foldable.toList entries))
+
 
 Refining the proof state
 ------------------------

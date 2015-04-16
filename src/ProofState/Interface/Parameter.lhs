@@ -6,7 +6,8 @@ Making Parameters
 
 > module ProofState.Interface.Parameter where
 
-> import Control.Monad.Except
+> import Control.Error
+
 > import Kit.MissingLibrary
 > import NameSupply.NameSupplier
 > import ProofState.Structure.Developments
@@ -37,15 +38,15 @@ working on a goal.
 >             freshRef (x :<: s) $ \ref -> do
 >               sTm <- bquoteHere s
 >               -- Insert the parameter above the cursor
->               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind sTm AnchNo True
+>               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind sTm AnchNo emptyMetadata
 >               -- Update the Tip
 >               let tipTy = t $ pval ref
 >               tipTyTm <- bquoteHere tipTy
 >               putDevTip (Unknown (tipTyTm :=>: tipTy))
 >               -- Return the reference to the parameter
 >               return ref
->         _  -> throwError $ sErr "lambdaParam: goal is not a pi-type or all-proof."
->       _    -> throwError $ sErr "lambdaParam: only possible for incomplete goals."
+>         _  -> throwDTmStr "lambdaParam: goal is not a pi-type or all-proof."
+>       _    -> throwDTmStr "lambdaParam: only possible for incomplete goals."
 
 Assumptions
 -----------
@@ -64,9 +65,9 @@ provided type under the given module.
 >         -- Working under a module
 >         freshRef (x :<: ty) $ \ref -> do
 >           -- Simply make the reference
->           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm AnchNo True
+>           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm AnchNo emptyMetadata
 >           return ref
->       _    -> throwError $ sErr "assumeParam: only possible for modules."
+>       _    -> throwDTmStr "assumeParam: only possible for modules."
 
 `Pi`-abstraction
 ----------------
@@ -90,7 +91,7 @@ indeed a type, so it requires further attention.
 >           -- Working on a goal of type `Set`
 >           freshRef (s :<: ty) $ \ref -> do
 >             -- Simply introduce the parameter
->             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm AnchNo True
+>             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm AnchNo emptyMetadata
 >             return ref
->         Unknown _  -> throwError $ sErr "piParam: goal is not of type SET."
->         _          -> throwError $ sErr "piParam: only possible for incomplete goals."
+>         Unknown _  -> throwDTmStr "piParam: goal is not of type SET."
+>         _ -> throwDTmStr "piParam: only possible for incomplete goals."

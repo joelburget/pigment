@@ -6,11 +6,13 @@ Unification
 > module Tactics.Unification where
 
 > import Prelude hiding (any, elem)
-> import Control.Monad.Except
 > import Control.Newtype
 > import Data.Foldable
 > import qualified Data.Monoid as M
 
+> import Control.Error
+
+> import DisplayLang.Name
 > import Evidences.Tm
 > import Evidences.Eval
 > import ProofState.Structure.Developments
@@ -56,8 +58,8 @@ old dependency holes with the new ones.
 >   where
 >     pass :: Entry Bwd -> ProofState (EXTM :=>: VAL)
 >     pass (EDEF def@(defName := _) _ _ _ _ _ _)
->       | name == defName && occurs def = throwError $
->           sErr "solveHole: you can't define something in terms of itself!"
+>       | name == defName && occurs def = throwDTmStr
+>           "solveHole: you can't define something in terms of itself!"
 >       | name == defName = do
 >           cursorUp
 >           news <- makeDeps deps []
@@ -73,11 +75,14 @@ old dependency holes with the new ones.
 >           solveHole' ref ((def, ty):deps) tm
 >       | otherwise = goIn >> solveHole' ref deps tm
 >     pass (EPARAM param _ _ _ _ _)
->       | occurs param = throwErrorS
->             [ err "solveHole: param"
->             , errRef param
->             , err "occurs illegally."
->             ]
+>       | occurs param =
+>             let items :: [ErrorItem DInTmRN]
+>                 items =
+>                     [ errMsg "solveHole: param"
+>                     , errRef param
+>                     , errMsg "occurs illegally."
+>                     ]
+>             in throwErrorS items
 >       | otherwise = cursorUp >> solveHole' ref deps tm
 >     pass (EModule modName _ _ _) = goIn >> solveHole' ref deps tm
 
@@ -91,12 +96,12 @@ old dependency holes with the new ones.
 >         makeKinded k (AnchStr (fst (last name)) :<: ty')
 >         EDEF ref _ _ _ _ _ _ <- getEntryAbove
 >         makeDeps deps ((name := DEFN (NP ref) :<: tyv, GoodNews) : news)
->     makeDeps _ _ = throwErrorS
->         [ err "makeDeps: bad reference kind! Perhaps "
->         , err "solveHole was called with a term containing unexpanded definitions?"
+>     makeDeps _ _ = throwDInTmRN $ stackItem
+>         [ errMsg "makeDeps: bad reference kind! Perhaps "
+>         , errMsg "solveHole was called with a term containing unexpanded definitions?"
 >         ]
-> solveHole' ref _ _ = throwError (StackError
->     [ err "solveHole:"
+> solveHole' ref _ _ = throwDInTmRN (stackItem
+>     [ errMsg "solveHole:"
 >     , errRef ref
 >     ])
 
@@ -111,7 +116,7 @@ old dependency holes with the new ones.
 >     stripShared' n (es :< EModule _ _ _ _)     = stripShared' n es
 >     stripShared' n es =
 >       -- |proofTrace $ "stripShared: fail on " ++ show n|
->       throwErrorS
->           [ err "stripShared: fail on"
+>       throwDInTmRN $ stackItem
+>           [ errMsg "stripShared: fail on"
 >           , errVal (N n)
 >           ]

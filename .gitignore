@@ -15,3 +15,4 @@ dist/
 src/main/
 *.iml
 node_modules
+build

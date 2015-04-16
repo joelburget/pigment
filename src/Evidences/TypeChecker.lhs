@@ -8,10 +8,13 @@
 > module Evidences.TypeChecker where
 
 > import Control.Applicative
-> import Control.Monad.Except
+> import Control.Monad.Trans.Class
 > import Data.Functor.Identity
 > import Data.Monoid ((<>))
 > import Data.Traversable
+
+> import Control.Error
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Evidences.Tm
@@ -49,15 +52,15 @@ we can write any type-directed function in term of `canTy`. That is, any
 function traversing the types derivation tree can be expressed using
 `canTy`.
 
-> canTy ::  (Alternative m, MonadError (StackError t) m) =>
->           (TY :>: t -> m (s :=>: VAL)) ->
->           (Can VAL :>: Can t) ->
->           m (Can (s :=>: VAL))
+> canTy :: (Monad m, Functor m, Applicative m, ErrorStack m t)
+>       => (TY :>: t -> m (s :=>: VAL))
+>       -> (Can VAL :>: Can t)
+>       -> m (Can (s :=>: VAL))
 > canTy chev (Set :>: Set)     = return Set
 > canTy chev (Set :>: Pi s t)  = do
->   ssv@(s :=>: sv) <- chev (SET :>: s)
->   ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
->   return $ Pi ssv ttv
+>     ssv@(s :=>: sv) <- chev (SET :>: s)
+>     ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
+>     return $ Pi ssv ttv
 > canTy chev (Set :>: Anchors) = return Anchors
 > canTy chev (Anchors :>: Anchor u t ts) = do
 >     uuv <- chev (UID :>: u)
@@ -77,152 +80,160 @@ function traversing the types derivation tree can be expressed using
 >     tstsv <- chev (ALLOWEDBY (_Tv $$ (A sv)) :>: ts)
 >     return $ AllowedCons _SSv _TTv qqv ssv tstsv
 > canTy chev (Set :>: Mu (ml :?=: Identity x))     = do
->   mlv <- traverse (chev . (ANCHORS :>:)) ml
->   xxv@(x :=>: xv) <- chev (desc :>: x)
->   return $ Mu (mlv :?=: Identity xxv)
+>     mlv <- traverse (chev . (ANCHORS :>:)) ml
+>     xxv@(x :=>: xv) <- chev (desc :>: x)
+>     return $ Mu (mlv :?=: Identity xxv)
 > canTy chev (t@(Mu (_ :?=: Identity x)) :>: Con y) = do
->   yyv@(y :=>: yv) <- chev (descOp @@ [x, C t] :>: y)
->   return $ Con yyv
+>     yyv@(y :=>: yv) <- chev (descOp @@ [x, C t] :>: y)
+>     return $ Con yyv
 > canTy chev (Set :>: EnumT e)  = do
->   eev@(e :=>: ev) <- chev (enumU :>: e)
->   return $ EnumT eev
+>     eev@(e :=>: ev) <- chev (enumU :>: e)
+>     return $ EnumT eev
 > canTy _ (EnumT (CON e) :>: Ze)       | CONSN <- e $$ Fst  = return Ze
 > canTy chev (EnumT (CON e) :>: Su n)  | CONSN <- e $$ Fst  = do
->   nnv@(n :=>: nv) <- chev (ENUMT (e $$ Snd $$ Snd $$ Fst) :>: n)
->   return $ Su nnv
+>     nnv@(n :=>: nv) <- chev (ENUMT (e $$ Snd $$ Snd $$ Fst) :>: n)
+>     return $ Su nnv
 > canTy chev (Prop :>: EqBlue (y0 :>: t0) (y1 :>: t1)) = do
->   y0y0v@(y0 :=>: y0v) <- chev (SET :>: y0)
->   t0t0v@(t0 :=>: t0v) <- chev (y0v :>: t0)
->   y1y1v@(y1 :=>: y1v) <- chev (SET :>: y1)
->   t1t1v@(t1 :=>: t1v) <- chev (y1v :>: t1)
->   return $ EqBlue (y0y0v :>: t0t0v) (y1y1v :>: t1t1v)
+>     y0y0v@(y0 :=>: y0v) <- chev (SET :>: y0)
+>     t0t0v@(t0 :=>: t0v) <- chev (y0v :>: t0)
+>     y1y1v@(y1 :=>: y1v) <- chev (SET :>: y1)
+>     t1t1v@(t1 :=>: t1v) <- chev (y1v :>: t1)
+>     return $ EqBlue (y0y0v :>: t0t0v) (y1y1v :>: t1t1v)
 > canTy chev (Prf (EQBLUE (y0 :>: t0) (y1 :>: t1)) :>: Con p) = do
->   ppv@(p :=>: pv) <- chev (PRF (eqGreen @@ [y0, t0, y1, t1]) :>: p)
->   return $ Con ppv
+>     ppv@(p :=>: pv) <- chev (PRF (eqGreen @@ [y0, t0, y1, t1]) :>: p)
+>     return $ Con ppv
 > canTy chev (Set :>: Monad d x) = do
->   ddv@(d :=>: dv) <- chev (desc :>: d)
->   xxv@(x :=>: xv) <- chev (SET :>: x)
->   return $ Monad ddv xxv
+>     ddv@(d :=>: dv) <- chev (desc :>: d)
+>     xxv@(x :=>: xv) <- chev (SET :>: x)
+>     return $ Monad ddv xxv
 > canTy chev (Monad d x :>: Return v) = do
->   vvv@(v :=>: vv) <- chev (x :>: v)
->   return $ Return vvv
+>     vvv@(v :=>: vv) <- chev (x :>: v)
+>     return $ Return vvv
 > canTy chev (Monad d x :>: Composite y) = do
->   yyv@(y :=>: yv) <- chev (descOp @@ [d, MONAD d x] :>: y)
->   return $ Composite yyv
+>     yyv@(y :=>: yv) <- chev (descOp @@ [d, MONAD d x] :>: y)
+>     return $ Composite yyv
 > canTy chev (Set :>: IMu (ml :?=: (Identity ii :& Identity x)) i)  = do
->   iiiiv@(ii :=>: iiv) <- chev (SET :>: ii)
->   mlv <- traverse (chev . (ARR iiv ANCHORS :>:)) ml
->   xxv@(x :=>: xv) <- chev (ARR iiv (idesc $$ A iiv) :>: x)
->   iiv <- chev (iiv :>: i)
->   return $ IMu (mlv :?=: (Identity iiiiv :& Identity xxv)) iiv
+>     iiiiv@(ii :=>: iiv) <- chev (SET :>: ii)
+>     mlv <- traverse (chev . (ARR iiv ANCHORS :>:)) ml
+>     xxv@(x :=>: xv) <- chev (ARR iiv (idesc $$ A iiv) :>: x)
+>     iiv <- chev (iiv :>: i)
+>     return $ IMu (mlv :?=: (Identity iiiiv :& Identity xxv)) iiv
 > canTy chev (IMu tt@(_ :?=: (Identity ii :& Identity x)) i :>: Con y) = do
->   yyv <- chev (idescOp @@ [ ii
->                           , x $$ A i
->                           , L $ "i" :. (let i = 0 in
->                               C (IMu (fmap (-$ []) tt) (NV i)) )
->                           ] :>: y)
->   return $ Con yyv
+>     yyv <- chev (idescOp @@ [ ii
+>                             , x $$ A i
+>                             , L $ "i" :. (let i = 0 in
+>                                 C (IMu (fmap (-$ []) tt) (NV i)) )
+>                             ] :>: y)
+>     return $ Con yyv
 > canTy chev (Set :>: Label l t) = do
->    ttv@(t :=>: tv) <- chev (SET :>: t)
->    llv@(l :=>: lv) <- chev (tv :>: l)
->    return (Label llv ttv)
+>     ttv@(t :=>: tv) <- chev (SET :>: t)
+>     llv@(l :=>: lv) <- chev (tv :>: l)
+>     return (Label llv ttv)
 > canTy chev (Label l ty :>: LRet t) = do
->    ttv@(t :=>: tv) <- chev (ty :>: t)
->    return (LRet ttv)
+>     ttv@(t :=>: tv) <- chev (ty :>: t)
+>     return (LRet ttv)
 > canTy chev (Set :>: Nu (ml :?=: Identity x))     = do
->   mlv <- traverse (chev . (SET :>:)) ml
->   xxv@(x :=>: xv) <- chev (desc :>: x)
->   return $ Nu (mlv :?=: Identity xxv)
+>     mlv <- traverse (chev . (SET :>:)) ml
+>     xxv@(x :=>: xv) <- chev (desc :>: x)
+>     return $ Nu (mlv :?=: Identity xxv)
 > canTy chev (t@(Nu (_ :?=: Identity x)) :>: Con y) = do
->   yyv <- chev (descOp @@ [x, C t] :>: y)
->   return $ Con yyv
+>     yyv <- chev (descOp @@ [x, C t] :>: y)
+>     return $ Con yyv
 > canTy chev (Nu (_ :?=: Identity x) :>: CoIt d sty f s) = do
->   dv <- chev (desc :>: d)
->   sstyv@(sty :=>: styv) <- chev (SET :>: sty)
->   fv <- chev (ARR styv (descOp @@ [x,styv]) :>: f)
->   sv <- chev (styv :>: s)
->   return (CoIt dv sstyv fv sv)
+>     dv <- chev (desc :>: d)
+>     sstyv@(sty :=>: styv) <- chev (SET :>: sty)
+>     fv <- chev (ARR styv (descOp @@ [x,styv]) :>: f)
+>     sv <- chev (styv :>: s)
+>     return (CoIt dv sstyv fv sv)
 > canTy chev (Set :>: Prob) = return Prob
 > canTy chev (Prob :>: ProbLabel u s a) = do
->   uuv <- chev (UID :>: u)
->   ssv@(_ :=>: sv) <- chev (SCH :>: s)
->   aav <- chev (argsOp @@ [sv] :>: a)
->   return $ ProbLabel uuv ssv aav
+>     uuv <- chev (UID :>: u)
+>     ssv@(_ :=>: sv) <- chev (SCH :>: s)
+>     aav <- chev (argsOp @@ [sv] :>: a)
+>     return $ ProbLabel uuv ssv aav
 > canTy chev (Prob :>: PatPi u s p) = do
->   uuv <- chev (UID :>: u)
->   ssv <- chev (SET :>: s)
->   ppv <- chev (PROB :>: p)
->   return $ PatPi uuv ssv ppv
+>     uuv <- chev (UID :>: u)
+>     ssv <- chev (SET :>: s)
+>     ppv <- chev (PROB :>: p)
+>     return $ PatPi uuv ssv ppv
 > canTy chev (Set :>: Sch) = return Sch
 > canTy chev (Sch :>: SchTy s) = do
->   ssv <- chev (SET :>: s)
->   return $ SchTy ssv
+>     ssv <- chev (SET :>: s)
+>     return $ SchTy ssv
 > canTy chev (Sch :>: SchExpPi s t) = do
->   ssv@(_ :=>: sv) <- chev (SCH :>: s)
->   ttv <- chev (ARR (schTypeOp @@ [sv]) SCH :>: t)
->   return $ SchExpPi ssv ttv
+>     ssv@(_ :=>: sv) <- chev (SCH :>: s)
+>     ttv <- chev (ARR (schTypeOp @@ [sv]) SCH :>: t)
+>     return $ SchExpPi ssv ttv
 > canTy chev (Sch :>: SchImpPi s t) = do
->   ssv@(_ :=>: sv) <- chev (SET :>: s)
->   ttv <- chev (ARR sv SCH :>: t)
->   return $ SchImpPi ssv ttv
+>     ssv@(_ :=>: sv) <- chev (SET :>: s)
+>     ttv <- chev (ARR sv SCH :>: t)
+>     return $ SchImpPi ssv ttv
 > canTy _   (Set :>: Prop) = return Prop
 > canTy chev  (Set :>: Prf p) = Prf <$> chev (PROP :>: p)
 > canTy chev  (Prop :>: All s p) = do
->   ssv@(_ :=>: sv) <- chev (SET :>: s)
->   ppv <- chev (ARR sv PROP :>: p)
->   return $ All ssv ppv
+>     ssv@(_ :=>: sv) <- chev (SET :>: s)
+>     ppv <- chev (ARR sv PROP :>: p)
+>     return $ All ssv ppv
 > canTy chev  (Prop :>: And p q) =
->   And <$> chev (PROP :>: p) <*> chev (PROP :>: q)
+>     And <$> chev (PROP :>: p) <*> chev (PROP :>: q)
 > canTy _  (Prop :>: Trivial) = return Trivial
 > canTy _   (Prop :>: Absurd) = return Absurd
 > canTy chev  (Prf p :>: Box (Irr x)) = Box . Irr <$> chev (PRF p :>: x)
-> canTy chev (Prf (AND p q) :>: Pair x y) = do
->   Pair <$> chev (PRF p :>: x) <*> chev (PRF q :>: y)
+> canTy chev (Prf (AND p q) :>: Pair x y) =
+>     Pair <$> chev (PRF p :>: x) <*> chev (PRF q :>: y)
 > canTy _   (Prf TRIVIAL :>: Void) = return Void
-> canTy chev (Prop :>: Inh ty) = Inh <$> chev (SET :>: ty)
-> canTy chev (Prf (INH ty) :>: Wit t) = Wit <$> chev (ty :>: t)
+> canTy chev (Prop :>: Inh ty) =
+>     Inh <$> chev (SET :>: ty)
+> canTy chev (Prf (INH ty) :>: Wit t) =
+>     Wit <$> chev (ty :>: t)
 > canTy chev (Set :>: Quotient x r p) = do
->   x@(_ :=>: xv) <- chev (SET :>: x)
->   r@(_ :=>: rv) <- chev (ARR xv (ARR xv PROP) :>: r)
->   p@(_ :=>: _ ) <- chev (PRF (equivalenceRelation xv rv) :>: p)
->   return $ Quotient x r p
+>     x@(_ :=>: xv) <- chev (SET :>: x)
+>     r@(_ :=>: rv) <- chev (ARR xv (ARR xv PROP) :>: r)
+>     p@(_ :=>: _ ) <- chev (PRF (equivalenceRelation xv rv) :>: p)
+>     return $ Quotient x r p
 > canTy chev (Quotient a r p :>: Con x) = do
->   x <- chev (a :>: x)
->   return $ Con x
+>     x <- chev (a :>: x)
+>     return $ Con x
 > canTy chev (Set :>: RSig)  = do
 >   return $ RSig
 > canTy chev (RSig :>: REmpty) = do
 >   return $ REmpty
 > canTy chev (RSig :>: RCons sig id ty) = do
->   ssv@(s :=>: sv) <- chev (RSIG :>: sig)
->   iiv@(i :=>: iv) <- chev (UID :>: id)
->   ttv@(t :=>: tv) <- chev (ARR (recordOp @@ [sv]) SET  :>: ty)
->   return $ RCons ssv iiv ttv
+>     ssv@(s :=>: sv) <- chev (RSIG :>: sig)
+>     iiv@(i :=>: iv) <- chev (UID :>: id)
+>     ttv@(t :=>: tv) <- chev (ARR (recordOp @@ [sv]) SET  :>: ty)
+>     return $ RCons ssv iiv ttv
 > canTy chev (Set :>: Record (ml :?=: Identity r)) = do
->   mlv <- traverse (chev . (SET :>:)) ml
->   rrv@(r :=>: rv) <- chev (RSIG :>: r)
->   return $ Record (mlv :?=: Identity rrv)
+>     mlv <- traverse (chev . (SET :>:)) ml
+>     rrv@(r :=>: rv) <- chev (RSIG :>: r)
+>     return $ Record (mlv :?=: Identity rrv)
 > canTy chev (tv@(Record (_ :?=: Identity x)) :>: Con y) = do
->   yyv@(y :=>: yv) <- chev (recordOp @@ [x] :>: y)
->   return $ Con yyv
+>     yyv@(y :=>: yv) <- chev (recordOp @@ [x] :>: y)
+>     return $ Con yyv
 > canTy _   (Set :>: Unit) = return Unit
 > canTy chev  (Set :>: Sigma s t) = do
->   ssv@(s :=>: sv) <- chev (SET :>: s)
->   ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
->   return $ Sigma ssv ttv
+>     ssv@(s :=>: sv) <- chev (SET :>: s)
+>     ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
+>     return $ Sigma ssv ttv
 > canTy _   (Unit :>: Void) = return Void
 > canTy chev  (Sigma s t :>: Pair x y) =  do
->   xxv@(x :=>: xv) <- chev (s :>: x)
->   yyv@(y :=>: yv) <- chev ((t $$ A xv) :>: y)
->   return $ Pair xxv yyv
+>     xxv@(x :=>: xv) <- chev (s :>: x)
+>     yyv@(y :=>: yv) <- chev ((t $$ A xv) :>: y)
+>     return $ Pair xxv yyv
 > canTy _  (Set :>: UId)    = return UId
 > canTy _  (UId :>: Tag s)  = return (Tag s)
-> canTy chev (ty :>: x) = throwError $ StackError
->     [ err "canTy: the proposed value "
+> canTy chev (ty :>: x) = throwStack $ stackItem
+>     [ errMsg "canTy: the proposed value "
 >     , errCan x
->     , err " is not of type "
+>     , errMsg " is not of type "
 >     , errTyVal ((C ty) :<: SET)
 >     ]
+
+> -- | More specific type for canTy
+> canTy' :: (TY :>: t -> Either (StackError t) (s :=>: VAL))
+>        -> (Can VAL :>: Can t)
+>        -> Either (StackError t) (Can (s :=>: VAL))
+> canTy' = canTy
 
 Eliminators
 
@@ -240,38 +251,46 @@ can refer to it in `ErrorItem t`, which disambiguates an instance -
 `ErrorList a => Error [a]` vs `Error [ErrorItem INTM]`, which we
 want.
 
-> elimTy :: forall t m s. MonadError (StackError t) m =>
->            (TY :>: t -> m (s :=>: VAL)) ->
->            (VAL :<: Can VAL) -> Elim t ->
->            m (Elim (s :=>: VAL),TY)
+> elimTy :: (Monad m, ErrorStack m t)
+>        => (TY :>: t -> m (s :=>: VAL))
+>        -> (VAL :<: Can VAL)
+>        -> Elim t
+>        -> m (Elim (s :=>: VAL),TY)
 
 > elimTy chev (f :<: Pi s t) (A e) = do
->   eev@(e :=>: ev) <- chev (s :>: e)
->   return $ (A eev, t $$ A ev)
+>     eev@(e :=>: ev) <- chev (s :>: e)
+>     return $ (A eev, t $$ A ev)
 > elimTy chev (_ :<: t@(Mu (_ :?=: Identity d))) Out = return (Out, descOp @@ [d , C t])
 > elimTy chev (_ :<: Prf (EQBLUE (t0 :>: x0) (t1 :>: x1))) Out =
->   return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
+>     return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
 > elimTy chev (_ :<: (IMu tt@(_ :?=: (Identity ii :& Identity x)) i)) Out =
->   return (Out,
->     idescOp @@ [  ii , x $$ A i
->                ,  L $ "i" :. (let i = 0 in C (IMu (fmap (-$ []) tt) (NV i)) ) ])
+>     return (Out,
+>       idescOp @@ [  ii , x $$ A i
+>                  ,  L $ "i" :. (let i = 0 in C (IMu (fmap (-$ []) tt) (NV i)) ) ])
 > elimTy chev (_ :<: Label _ t) (Call l) = do
->    llv@(l :=>: lv) <- chev (t :>: l)
->    return (Call llv, t)
+>     llv@(l :=>: lv) <- chev (t :>: l)
+>     return (Call llv, t)
 > elimTy chev (_ :<: t@(Nu (_ :?=: Identity d))) Out = return (Out, descOp @@ [d , C t])
 > elimTy chev (f :<: Prf (ALL p q))      (A e)  = do
->   eev@(e :=>: ev) <- chev (p :>: e)
->   return $ (A eev, PRF (q $$ A ev))
+>     eev@(e :=>: ev) <- chev (p :>: e)
+>     return $ (A eev, PRF (q $$ A ev))
 > elimTy chev (_ :<: Prf (AND p q))      Fst    = return (Fst, PRF p)
 > elimTy chev (_ :<: Prf (AND p q))      Snd    = return (Snd, PRF q)
 > elimTy chev (_ :<: Sigma s t) Fst = return (Fst, s)
 > elimTy chev (p :<: Sigma s t) Snd = return (Snd, t $$ A (p $$ Fst))
-> elimTy _  (v :<: t) e = throwError $ StackError
->     [ err "elimTy: failed to eliminate"
+> elimTy _  (v :<: t) e = throwStack $ stackItem
+>     [ errMsg "elimTy: failed to eliminate"
 >     , errTyVal (v :<: (C t))
->     , err "with"
+>     , errMsg "with"
 >     , errElim e
 >     ]
+
+> -- | More specific type for elimTy
+> elimTy' :: (TY :>: t -> Either (StackError t) (s :=>: VAL))
+>         -> (VAL :<: Can VAL)
+>         -> Elim t
+>         -> Either (StackError t) (Elim (s :=>: VAL), TY)
+> elimTy' = elimTy
 
 Operators
 
@@ -291,9 +310,11 @@ However, we had to generalize it. Following the evolution of `canTy` in
 Section [Evidences.TypeChecker.canTy](#Evidences.TypeChecker.canTy), we have adopted the
 following scheme:
 
-> opTy ::  (Alternative m, MonadError (StackError t) m) =>
->          Op -> (TY :>: t -> m (s :=>: VAL)) -> [t] ->
->          m ([s :=>: VAL], TY)
+> opTy :: forall m t s. (Monad m, ErrorStack m t)
+>      => Op
+>      -> (TY :>: t -> m (s :=>: VAL))
+>      -> [t]
+>      -> m ([s :=>: VAL], TY)
 
 First, the `MonadError` constraint allows seamless integration in the
 world of things that might fail. Second, we have extended the evaluation
@@ -305,11 +326,22 @@ after the definition of `canTy` in
 Section [Evidences.TypeChecker.canTy](#Evidences.TypeChecker.canTy).
 
 > opTy op chev ss
->   | length ss == opArity op = telCheck chev (opTyTel op :>: ss)
-> opTy op _ _ = throwError $ StackError
->     [ (err "operator arity error: ")
->     , (err $ opName op)
->     ]
+>     | length ss == opArity op
+>     = telCheck chev (opTyTel op :>: ss)
+> opTy op _ _ =
+>     let stack :: StackError t
+>         stack = stackItem
+>             [ errMsg "operator arity error: "
+>             , errMsg $ opName op
+>             ]
+>     in throwStack stack
+
+> -- | More specific type for opTy
+> opTy' :: Op
+>       -> (TY :>: t -> Either (StackError t) (s :=>: VAL))
+>       -> [t]
+>       -> Either (StackError t) ([s :=>: VAL], TY)
+> opTy' = opTy
 
 <a name="Evidences.TypeChecker.type-checking">Type checking</a>
 -------------
@@ -343,6 +375,7 @@ evaluate the well-typed terms.
 
 As for lambda, it is simple too. We wish the code was simple too. But,
 hey, it isn't. The formal typing rule is the following:
+
 $$\Rule{x : S \vdash T x \ni t}
      {\Pi S\ T \ni \lambda x . t}$$
 
@@ -368,14 +401,17 @@ This translates naturally into the following code:
 >   yv :<: yt <- infer n
 >   case (equal (SET :>: (w, yt)) r) of
 >     True -> return $ N n :=>: yv
->     False -> throwError $ StackError
->         [ err "check: inferred type"
->         , errTyVal (yt :<: SET)
->         , err "of"
->         , errTyVal (yv :<: yt)
->         , err "is not"
->         , errTyVal (w :<: SET)
->         ]
+>     False ->
+>         let stack :: StackError INTM
+>             stack = stackItem
+>                 [ errMsg "check: inferred type"
+>                 , errTyVal (yt :<: SET)
+>                 , errMsg "of"
+>                 , errTyVal (yv :<: yt)
+>                 , errMsg "is not"
+>                 , errTyVal (w :<: SET)
+>                 ]
+>         in throwStack stack
 
 Finally, we can extend the checker with the `Check` aspect. If no rule
 has matched, then we have to give up.
@@ -385,10 +421,10 @@ has matched, then we have to give up.
 >               (\ref -> check (  PRF (q $$ A (pval ref)) :>:
 >                                 underScope sc ref))
 >     return $ L sc :=>: (evTm $ L sc)
-> check (ty :>: tm) = throwError $ StackError
->     [ err "check: type mismatch: type"
+> check (ty :>: tm) = throwStack $ stackItem
+>     [ errMsg "check: type mismatch: type"
 >     , errTyVal (ty :<: SET)
->     , err "does not admit"
+>     , errMsg "does not admit"
 >     , errTm tm
 >     ]
 
@@ -418,7 +454,7 @@ $$\Rule{f \in \Pi\ S\ T  \qquad
      {f x \in {(B x)}^\downarrow}$$
 
 The story is the same in the general case: we infer the eliminated term
-|t| and we type-check the eliminator, using `elimTy`. Because |elimTy|
+`t` and we type-check the eliminator, using `elimTy`. Because `elimTy`
 computes the result type, we have inferred the result type.
 
 > infer (t :$ s)           = do
@@ -427,13 +463,16 @@ computes the result type, we have inferred the result type.
 >         C cty -> do
 >             (s', ty') <- elimTy check (val :<: cty) s
 >             return $ (val $$ (fmap valueOf s')) :<: ty'
->         _ -> throwError $ StackError
->                  [ err "infer: inferred type"
->                  , errTyVal (ty :<: SET)
->                  , err "of"
->                  , errTyVal (val :<: ty)
->                  , err "is not canonical."
->                  ]
+>         _ ->
+>             let stack :: StackError INTM
+>                 stack = stackItem
+>                     [ errMsg "infer: inferred type"
+>                     , errTyVal (ty :<: SET)
+>                     , errMsg "of"
+>                     , errTyVal (val :<: ty)
+>                     , errMsg "is not canonical."
+>                     ]
+>             in throwStack stack
 
 Following exactly the same principle, we can infer the result of an
 operator application:
@@ -457,4 +496,7 @@ Which translates directly into the following code:
 Obviously, if none of the rule above applies, then there is something
 fishy.
 
-> infer _                   = throwError $ sErr "infer: unable to infer type"
+> infer _ =
+>     let stack :: StackError INTM
+>         stack = errMsgStack "infer: unable to infer type"
+>     in throwStack stack

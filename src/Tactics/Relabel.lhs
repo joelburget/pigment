@@ -2,22 +2,26 @@ Relabelling
 ===========
 
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternGuards,
->              FlexibleContexts, PatternSynonyms #-}
+>              FlexibleContexts, PatternSynonyms, ScopedTypeVariables,
+>              FlexibleInstances, MultiParamTypeClasses #-}
 
 > module Tactics.Relabel where
 
 > import Control.Applicative
 > import Control.Monad
-> import Control.Monad.Except
 > import Control.Monad.State
 > import Data.Foldable hiding (foldr)
 > import Data.Traversable
+
+> import Control.Error
+
 > import Evidences.Tm
 > import Evidences.Utilities
 > import Evidences.Eval
 > import Evidences.Operators
 > import Evidences.DefinitionalEquality
 > import Evidences.TypeChecker
+> import ProofState.Edition.ProofContext
 > import ProofState.Edition.ProofState
 > import ProofState.Edition.GetSet
 > import ProofState.Edition.Navigation
@@ -39,7 +43,11 @@ The `partApplyREF` command takes a reference and list of argument values
 scope (i.e. the reference applied to the shared parameters) and a list
 of additional arguments.
 
-> partApplyREF :: REF -> [VAL] -> ProofStateT e (EXTM :=>: VAL :<: TY, [VAL])
+> partApplyREF :: forall e.
+>                 ErrorStack (ProofStateT e) e
+>              => REF
+>              -> [VAL]
+>              -> ProofStateT e (EXTM :=>: VAL :<: TY, [VAL])
 > partApplyREF r@(_ := DECL :<: _) as = return (P r :=>: NP r :<: pty r, as)
 > partApplyREF r as = do
 >     es <- getGlobalScope
@@ -51,12 +59,15 @@ of additional arguments.
 >     help ty cs [] as = do
 >         let t = P r $## fmap NP cs
 >         return (t :=>: evTm t :<: ty, as)
->     help ty cs rs as = throwError $ StackError
->         [ err "partApplyREF: failed on type "
->         , errTyVal (ty :<: SET)
->         , err " with refs "
->         , map ErrorREF rs
->         ]
+>     help ty cs rs as =
+>         let stack :: StackError e
+>             stack = stackItem
+>                 [ errMsg "partApplyREF: failed on type "
+>                 , errTyVal (ty :<: SET)
+>                 , errMsg " with refs "
+>                 , map ErrorREF rs
+>                 ]
+>         in throwStack stack
 
 A relabelling is a map from refrences to strings, giving a new name that
 should be used for the reference.
@@ -75,15 +86,15 @@ determine the renaming, and refines the proof state appropriately.
 >         LABEL (N l) ty -> do
 >             let Just (r, as) = splitSpine l
 >             unless (f == refNameAdvice r) $
->                 throwError $ sErr "relabel: mismatched function name!"
->             ts'  <- traverse unA ts
+>                 throwDTmStr "relabel: mismatched function name!"
+>             ts' <- traverse unA ts
 >             (_ :<: rty, as') <- partApplyREF r as
 >             rl   <- execStateT (relabelArgs rty ts' as') B0
 >             es   <- getEntriesAbove
 >             refineProofState (liftType es tau') (N .($:$ paramSpine es))
 >             introLambdas rl (paramREFs es)
->         _ -> throwError $ sErr "relabel: goal is not a labelled type!"
-> relabel _ = throwError $ sErr "relabel: malformed relabel target!"
+>         _ -> throwDTmStr "relabel: goal is not a labelled type!"
+> relabel _ = throwDTmStr "relabel: malformed relabel target!"
 
 Once the refinement has been made, we need to introduce the hypotheses
 using their new names. The `introLambdas` command takes a relabelling
@@ -98,9 +109,13 @@ reference's new name.
 >     newName = case find ((x ==) . fst) rl of
 >                   Just (_, s)  -> s
 >                   Nothing      -> refNameAdvice x
-> unA :: MonadError (StackError t) m => Elim a -> m a
+
+> unA :: (Monad m, ErrorStack m DInTmRN) => Elim a -> m a
 > unA (A a)  = return a
-> unA _      = throwError $ sErr "unA: not an A!"
+> unA _      =
+>     let stack :: StackError DInTmRN
+>         stack = errMsgStack "unA: not an A!"
+>     in throwStack stack
 
 > extendRelabelling :: REF -> String -> StateT Relabelling (ProofStateT a) ()
 > extendRelabelling r s = do
@@ -108,25 +123,32 @@ reference's new name.
 >     case find ((r ==) . fst) rl of
 >         Nothing                   -> put (rl :< (r, s))
 >         Just (_, t)  | s == t     -> return ()
->                      | otherwise  -> throwErrorS
->             [ err ("relabelValue: inconsistent names '" ++ s ++ "' and '" ++
+>                      | otherwise  -> throwState $ stackItem
+>             [ errMsg ("relabelValue: inconsistent names '" ++ s ++ "' and '" ++
 >                    t ++ "' for")
 >             , errRef r
 >             ]
 
+> throwState :: StackError b -> StateT a (ProofStateT b) c
+> throwState = lift . throwStack
+
 > relabelArgs :: TY -> [DInTmRN] -> [VAL] -> StateT Relabelling ProofState ()
 > relabelArgs _ []  []   = return ()
-> relabelArgs _ []  _    = throwError $ sErr "relabel: too few arguments!"
-> relabelArgs _ _   []   = throwError $ sErr "relabel: too many arguments!"
+> relabelArgs _ []  _    = throwState $ errMsgStack "relabel: too few arguments!"
+> relabelArgs _ _   []   = throwState $ errMsgStack "relabel: too many arguments!"
 > relabelArgs (PI s t) (w:ws) (a:as) = do
 >     relabelValue (s :>: (w, a))
 >     relabelArgs (t $$ A a) ws as
-> relabelArgs ty ws as  = throwErrorS
->     [ err "relabel: unmatched\nty ="
+> relabelArgs ty ws as  = throwState $ stackItem
+>     [ errMsg "relabel: unmatched\nty ="
 >     , errTyVal (ty :<: SET)
->     , err "\nas ="
+>     , errMsg "\nas ="
 >     , foldMap errVal as
 >     ]
+
+-- XXX(joel)
+instance ErrorStack (StateT a (ProofStateT e)) e where
+    throwStack = lift . throwT
 
 > relabelValue :: (TY :>: (DInTmRN, VAL)) -> StateT Relabelling ProofState ()
 
@@ -156,7 +178,7 @@ together (ensuring the constructors match) and use `canTy` to match the
 pieces.
 
 > relabelValue (C cty :>: (DC w, C v)) = case halfZip w v of
->     Nothing -> throwError $ sErr "relabelValue: mismatched constructors!"
+>     Nothing -> throwState $ errMsgStack "relabelValue: mismatched constructors!"
 >     Just wv -> (liftage fst $ canTy chev (cty :>: wv)) >> return ()
 >   where
 >     chev :: (TY :>: (DInTmRN, VAL)) ->
@@ -175,7 +197,7 @@ against an element of an inductive type, we match the tags and values.
 >   | Just (e, f) <- sumlike d = do
 >     ntm :=>: nv  <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
 >     sameTag      <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->     unless sameTag $ throwError $ sErr "relabel: mismatched tags!"
+>     unless sameTag $ throwState $ errMsgStack "relabel: mismatched tags!"
 >     relabelValue (descOp @@ [f t, ty] :>: (foldr DPAIR DVOID as, xs))
 
 Similarly for indexed data types:
@@ -184,7 +206,7 @@ Similarly for indexed data types:
 >   | Just (e, f) <- sumilike _I (d $$ A i) = do
 >     ntm :=>: nv  <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
 >     sameTag      <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->     unless sameTag $ throwError $ sErr "relabel: mismatched tags!"
+>     unless sameTag $ throwState $ errMsgStack "relabel: mismatched tags!"
 >     relabelValue (idescOp @@ [_I, f t,
 >         L $ "i" :. (let i = 0 in
 >                     IMU (fmap (-$ []) l) (_I -$ []) (d -$ []) (NV i)) ]
@@ -195,13 +217,13 @@ Lest we forget, tags may also belong to enumerations!
 > relabelValue (ENUMT e :>: (DTag s [], t)) = do
 >   ntm :=>: nv <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
 >   sameTag <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->   unless sameTag $ lift $ throwError $ sErr "relabel: mismatched tags!"
+>   unless sameTag $ lift $ throwDTmStr "relabel: mismatched tags!"
 
 Nothing else matches? We had better give up.
 
 > relabelValue (ty :>: (w, v)) = lift $ throwErrorS
->     [ err "relabel: can't match"
+>     [ errMsg "relabel: can't match"
 >     , errTm w
->     , err "with"
+>     , errMsg "with"
 >     , errTyVal (v :<: ty)
 >     ]

@@ -7,7 +7,7 @@ Datatype declaration
 
 > import Control.Applicative
 > import Control.Monad.Identity
-> import Control.Monad.Except
+> import Control.Error
 > import Data.Traversable
 
 > import Kit.MissingLibrary
@@ -68,7 +68,7 @@ Datatype declaration
 >         a'' <- ity2h indty r ps a
 >         (b',us) <- freshRef (fortran b:<:a) $ \s -> do
 >             (b', us) <- ity2desc indty r ps ind (b $$ A (NP s))
->             when (occurs s b') $ throwError (sErr "Bad dependency")
+>             when (occurs s b') $ throwDTmStr "Bad dependency"
 >             return (b',us)
 >         return (IPROD (TAG anom) a'' b', anom:us)
 >       else
@@ -77,18 +77,18 @@ Datatype declaration
 >             return (ISIGMA a' (L $ fortran b :. (capM s 0 %% x)), y)
 > ity2desc indty r ps i (N (x :$ A j)) = do
 >     b <- withNSupply (equal (SET :>: (N x, NP r $$$ ps)))
->     unless b $ throwError (sErr "C doesn't target T")
+>     unless b $ throwDTmStr "C doesn't target T"
 >     i' <- bquoteHere i
 >     j' <- bquoteHere j
 >     return (ICONST (PRF (EQBLUE (N indty :>: i') (N indty :>: j'))),[])
-> ity2desc _ _ _ _ _ = throwError
->     (sErr "This doesn't work, Dr Morris something something.")
+> ity2desc _ _ _ _ _ = throwDTmStr
+>     "This doesn't work, Dr Morris something something."
 
 > ity2h :: EXTM -> REF -> [Elim VAL] -> VAL -> ProofState INTM
 > ity2h indty r ps (PI a b) = do
 >   a' <- bquoteHere a
 >   if occurs r a'
->     then throwError (sErr "Not strictly positive")
+>     then throwDTmStr "Not strictly positive"
 >     else do
 >       b' <- freshRef (fortran b :<: a) $ \s -> do
 >           x <- ity2h indty r ps (b $$ A (NP s))
@@ -96,10 +96,10 @@ Datatype declaration
 >       return (IPI a' b')
 > ity2h indty r ps (N (x :$ A i')) = do
 >     b <- withNSupply (equal (SET :>: (N x, NP r $$$ ps)))
->     unless b $ throwError (sErr "Not SP")
+>     unless b $ throwDTmStr "Not SP"
 >     IVAR <$> bquoteHere i'
-> ity2h _ _ _ _ = throwError
->     (sErr "This doesn't work, Dr Morris something something.")
+> ity2h _ _ _ _ = throwDTmStr
+>     "This doesn't work, Dr Morris something something."
 
 > imkAllowed :: (String, EXTM, INTM) -> [(String, EXTM, REF)] -> (INTM, INTM)
 > imkAllowed (s, ty, i) = foldr mkAllowedHelp (ARR (N ty) SET,
@@ -182,7 +182,9 @@ principles (:
 >           moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) caseTy')
 >           giveOutBelow (N caseTm)
 >           return ()
->   mystery1 `catchError` const (return ())
+>       mystery1handler :: StackError DInTmRN -> ProofState ()
+>       mystery1handler = const (return ())
+>   mystery1 `catchStack` mystery1handler
 
 >   let mystery2 = do
 >           (dind,_,_) <- resolveHere [("TData",Rel 0),("tind",Rel 0)]
@@ -200,16 +202,18 @@ principles (:
 >           moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) dindTy')
 >           giveOutBelow (N dindT)
 >           return ()
+>       mystery2handler :: StackError DInTmRN -> ProofState ()
+>       mystery2handler _ = do
+>           let indTm = P (lookupOpRef iinductionOp) :$ A (N indtye) :$ A d
+>           indV :<: indTy <- inferHere indTm
+>           indTy' <- bquoteHere indTy
+>           -- XXX(joel) why is i unused?
+>           make (AnchInd :<: isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) indTy')
+>           goIn
+>           giveOutBelow (N indTm)
+>           return ()
 
->   mystery2 `catchError` \_ -> do
->       let indTm = P (lookupOpRef iinductionOp) :$ A (N indtye) :$ A d
->       indV :<: indTy <- inferHere indTm
->       indTy' <- bquoteHere indTy
->       -- XXX(joel) why is i unused?
->       make (AnchInd :<: isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) indTy')
->       goIn
->       giveOutBelow (N indTm)
->       return ()
+>   mystery2 `catchStack` mystery2handler
 
 >   giveOutBelow $ N dty
 

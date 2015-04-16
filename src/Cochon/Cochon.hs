@@ -6,9 +6,10 @@
 
 module Cochon.Cochon where
 
-import Control.Monad.Except
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
+
+import Control.Error
 
 import DisplayLang.Lexer
 import DisplayLang.Name
@@ -16,6 +17,8 @@ import DisplayLang.TmParse
 import DisplayLang.DisplayTm
 import DisplayLang.PrettyPrint
 import DisplayLang.Scheme
+
+import Evidences.Tm
 
 import ProofState.Edition.ProofContext
 import ProofState.Edition.ProofState
@@ -71,7 +74,7 @@ validateDevelopment locs@(_ :< loc)
     | paranoid = validateCtxt loc
     | otherwise = return ()
     where result = evalStateT
-              (validateHere `catchError` catchUnprettyErrors)
+              (validateHere `catchStack` catchUnprettyErrors)
               loc
           validateCtxt loc = case result of
               Left ss -> do

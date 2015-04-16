@@ -85,7 +85,7 @@ we cannot fail in this code, but we have to be artificially cautious.
 >         "inQuote: impossible! Type " ++ show (fmap (\_ -> ()) cty) ++
 >         " doesn't admit " ++ show cv)
 >     id $ do
->          ct <- canTy chev (cty :>: cv)
+>          ct <- canTy' chev (cty :>: cv)
 >          return $ C $ fmap termOf ct
 >              where chev (t :>: v) = do
 >                    let tv = inQuote (t :>: v) r
@@ -159,7 +159,7 @@ neutral application, while `inQuote`-ing the arguments.
 > exQuote (n :$ v)    r = (n' :$ e') :<: ty'
 >     where (n' :<: ty)  = exQuote n r
 >           e' = fmap termOf e
->           Right (e,ty') = elimTy chev (N n :<: unC ty) v
+>           Right (e,ty') = elimTy' chev (N n :<: unC ty) v
 >           chev (t :>: x) = do
 >             let tx = inQuote (t :>: x) r
 >             return $ tx :=>: x
@@ -173,7 +173,7 @@ constructor which can always compute.
 
 > exQuote (op :@ vs)  r = (op :@ vals) :<: v
 >     where (vs',v) = either  (error "exQuote: impossible happened.")
->                             id $ opTy op chev vs
+>                             id $ opTy' op chev vs
 >           vals = map termOf vs'
 >           chev (t :>: x) = do
 >               let tx = inQuote (t :>: x) r

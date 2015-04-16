@@ -6,7 +6,6 @@ module Cochon.View where
 
 import Control.Applicative
 import Control.Monad as Monad
-import Control.Monad.Error
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
 import Data.Monoid
@@ -14,6 +13,8 @@ import Data.List
 import Data.String
 import Data.Traversable as Traversable
 import Data.Void
+
+import Lens.Family2
 
 import Cochon.CommandLexer
 import Cochon.Controller
@@ -196,7 +197,7 @@ prettyDevView loc (Dev entries tip _ suspended) =
         runner = tipView tip
         val :: TermReact
         val = case runProofState runner loc of
-            Left err -> fromString err
+            Left err -> err
             Right (view, _) -> view
 
         -- XXX(joel) we're no longer showing the implementation entry
@@ -225,7 +226,7 @@ workingOn loc =
             -- TODO(joel) isn't there something to abstract out this error
             -- handling? is it repeated in a few places? should we be
             -- running the proof state just once?
-            Left err -> fromString err
+            Left err -> locally err
             Right (goal, _) -> goal
 
     in val
@@ -427,10 +428,10 @@ entryReasonableName = fromString . fst . last . entryName
 
 
 -- currentEntryView :: CurrentEntry -> Pure React'
--- currentEntryView entry@(CDefinition _ _ _ _ _ expanded) =
+-- currentEntryView entry@(CDefinition _ _ _ _ _ expanded _) =
 --     div_ [ class_ "current-entry cdefinition" ] $
 --         reasonableName entry
--- currentEntryView entry@(CModule _ expanded purpose) =
+-- currentEntryView entry@(CModule _ expanded purpose _) =
 --     div_ [ class_ "current-entry cmodule" ] $
 --         reasonableName entry
 
@@ -438,9 +439,9 @@ entryReasonableName = fromString . fst . last . entryName
 paramEntryView :: Traversable f => Entry f -> TermReact
 paramEntryView entry@(EEntity _ _ entity term _ _) =
     div_ [ class_ "entry"
-        , onClick (handleEntryGoTo (entryName entry))
-        -- ] $ fromString $ showRelName $ christenREF bsc ref
-        ] $
+         , onClick (handleEntryGoTo (entryName entry))
+         -- ] $ fromString $ showRelName $ christenREF bsc ref
+         ] $
         div_ [ class_ "entity" ] $
             flatButton
                 [ label_ (entryReasonableName entry)
@@ -454,11 +455,11 @@ paramEntryView mod = div_ $ do
 -- TODO(joel) think about how to guarantee an ol_'s children are li_'s
 
 entryView :: Traversable f => ProofContext -> Entry f -> TermReact
-entryView pc entry@(EEntity _ _ entity term anchor expanded) = li_ $
-    div_ [ class_ "entry" ] $ if expanded
+entryView pc entry@(EEntity _ _ entity term anchor meta) = li_ $
+    div_ [ class_ "entry" ] $ if meta^.expanded
         then expandedEntry pc entry
         else collapsedEntry entry
-entryView _ entry@(EModule _ dev expanded purpose) = li_ $
+entryView _ entry@(EModule _ dev purpose _) = li_ $
     div_ [ class_ "module" ] $ do
         flatButton
             [ label_ (entryReasonableName entry)
@@ -503,9 +504,13 @@ dataRunner ctx entry@(EEntity _ _ (Definition LETG dev) _ AnchDataDef _) = do
                , onClick (handleAddConstructor (entryName entry))
                ] $ return ()
            flatButton
-               [ label_ "add annotation"
-               , onClick (handleAddAnnotation (entryName entry))
+               [ label_ "toggle annotation"
+               , onClick (handleToggleAnnotate (entryName entry))
                ] $ return ()
+
+       div_ [ class_ "data-meta" ] $ do
+           input_ [ value_ "metadata!!" ]
+
 dataRunner _ _ = error "unexpected non-data-development"
 
 
@@ -517,7 +522,7 @@ termRunner term = reactHere (SET :>: term)
 expandedEntry' :: Traversable f => ProofContext -> Entry f -> TermReact
 expandedEntry' ctx entry@EEntity{term} =
     case runProofState (termRunner term) ctx of
-        Left err -> fromString err
+        Left err -> err
         Right (view, _) -> view
 
 
@@ -642,8 +647,9 @@ renderReact = do
     cs <- putBelowCursor F0
 
     case (entry, es, cs) of
-        (CModule _ _ DevelopData, _, _) -> viewDataDevelopment entry es
-        (CDefinition _ _ _ _ AnchDataDef _, _, _) -> viewDataDevelopment entry es
+        (CModule _ DevelopData _, _, _) -> viewDataDevelopment entry es
+        (CDefinition _ _ _ _ AnchDataDef _, _, _) ->
+            viewDataDevelopment entry es
         (_, B0, F0) -> reactEmptyTip
         _ -> do
             d <- reactEntries (es <>> F0)
@@ -709,11 +715,11 @@ reactEntries (e :> es) = do
 
 
 -- reactEntry' :: Traversable f => Entry f -> TermReact
--- reactEntry' (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor expanded)  = do
+-- reactEntry' (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
 
 
 reactEntry :: Entry Bwd -> ProofState InteractionReact
-reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor expanded)  = do
+reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
     ty' <- bquoteHere ty
     tyd <- reactHere (SET :>: ty')
 

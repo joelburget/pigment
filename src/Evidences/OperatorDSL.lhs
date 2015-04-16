@@ -8,7 +8,7 @@ Operator DSL
 > module Evidences.OperatorDSL where
 >
 > import Control.Applicative
-> import Control.Monad.Except
+> import Control.Error
 > import Evidences.Tm
 > import {-# SOURCE #-} Evidences.Eval
 

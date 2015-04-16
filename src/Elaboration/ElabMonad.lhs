@@ -9,7 +9,7 @@
 
 > import Control.Applicative
 > import Control.Monad
-> import Control.Monad.Except
+> import Control.Error
 
 > import NameSupply.NameSupply
 > import Evidences.Tm
@@ -115,7 +115,7 @@ TODO(joel) - implement monad in terms of these instead of the other way around?
 >     -- TODO(joel)
 
 > instance Monad Elab where
->     fail s  = ECry (sErr $ "fail: " ++ s)
+>     fail s  = ECry (errMsgStack $ "fail: " ++ s)
 >     return  = EReturn
 >     EReturn x        >>= k = k x
 >     ELambda s f      >>= k = ELambda s      ((k =<<) . f)
@@ -129,7 +129,8 @@ TODO(joel) - implement monad in terms of these instead of the other way around?
 >     EResolve rn f    >>= k = EResolve rn    ((k =<<) . f)
 >     EAskNSupply f    >>= k = EAskNSupply    ((k =<<) . f)
 
-> instance (MonadError (StackError DInTmRN)) Elab where
->     throwError e           = ECry e
->     catchError (ECry e) f  = f e
->     catchError x _         = x
+> instance ErrorStack Elab DInTmRN where
+>     throwStack = ECry
+>
+>     catchStack (ECry e) f = f e
+>     catchStack x _        = x

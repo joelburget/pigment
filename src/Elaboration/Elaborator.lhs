@@ -7,9 +7,10 @@
 > module Elaboration.Elaborator where
 
 > import Control.Applicative
-> import Control.Monad.Except
+> import Control.Error
 > import Control.Monad.Identity
 > import Data.Traversable
+
 > import Evidences.Tm
 > import Evidences.Mangler
 > import Evidences.Eval
@@ -111,7 +112,7 @@ the current goal (applied to the appropriate shared parameters).
 >             case status of
 >               ElabSuccess -> give tm'
 >               ElabSuspended -> getDefn
->         _  -> throwError $ sErr "elabGive: only possible for incomplete goals."
+>         _  -> throwDTmStr "elabGive: only possible for incomplete goals."
 >   where
 >     getDefn :: ProofState (EXTM :=>: VAL)
 >     getDefn = do

@@ -183,7 +183,7 @@ We distill structurally through canonical terms:
 >     cc <- canTy (distill entries) (ty :>: c)
 >     return $ (DC $ fmap termOf cc) :=>: evTm (C c)
 
-To distill a $lambda$-abstraction, we speculate a fresh reference and
+To distill a lambda abstraction, we speculate a fresh reference and
 distill under the binder, then convert the scope appropriately. The
 `INTM` version of the entry type should never be used, so we can simply
 omit it. (Hopefully we will switch the entries to `Bwd REF` so this will
@@ -191,18 +191,19 @@ not be necessary.)
 
 > distillBase entries (ty :>: l@(L sc)) = do
 >     let x = fortran l
->     (kind, dom, cod) <- lambdable ty `catchMaybe`  StackError
->         [ err "distill: type "
+>     (kind, dom, cod) <- lambdable ty `catchMaybe` (stackItem
+>         [ errMsg "distill: type "
 >         , errVal ty
->         , err " is not lambdable."
->         ]
+>         , errMsg " is not lambdable."
+>         ] :: StackError INTM
+>         )
 >     tm' :=>: _ <- freshRef (x :<: dom) $ \ref ->
 >         let param = EPARAM ref
 >                            (mkLastName ref)
 >                            kind
 >                            (error "distill: type undefined")
 >                            AnchNo
->                            True
+>                            emptyMetadata
 >         in distill (entries :< param) (cod (pval ref) :>: underScope sc ref)
 >     return $ DL (convScope sc x tm') :=>: evTm (L sc)
 >   where
@@ -219,9 +220,9 @@ If we encounter a neutral term, we switch to `distillInfer`.
 If none of the cases match, we complain loudly.
 
 > distillBase _ (ty :>: tm) =  throwErrorS
->     [ err "distill: can't cope with\n"
+>     [ errMsg "distill: can't cope with\n"
 >     , errTm tm
->     , err " :<: "
+>     , errMsg " :<: "
 >     , errVal ty
 >     ]
 
@@ -327,7 +328,7 @@ If nothing matches, we are unable to distill this term, so we complain
 loudly.
 
 > distillInfer _ tm _ =  throwErrorS
->     [ err "distillInfer: can't cope with "
+>     [ errMsg "distillInfer: can't cope with "
 >     , errTm (N tm)
 >     ]
 
@@ -351,11 +352,11 @@ application.
 >     -- Return distilled spine and type of the application
 >     return (fmap termOf e1 : es, ty2)
 > distillSpine entries  (v :<: ty)    spine      = throwErrorS
->     [ err "distillSpine: cannot cope with"
+>     [ errMsg "distillSpine: cannot cope with"
 >     , errTyVal (v :<: ty)
->     , err "which has non-canonical type"
+>     , errMsg "which has non-canonical type"
 >     , errTyVal (ty :<: SET)
->     , err "applied to spine"
+>     , errMsg "applied to spine"
 >     , map ErrorElim spine
 >     ]
 

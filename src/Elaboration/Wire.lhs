@@ -7,7 +7,8 @@
 > module Elaboration.Wire where
 
 > import Control.Applicative
-> import Control.Monad.Except
+> import Control.Error
+
 > import Kit.BwdFwd
 > import ProofState.Structure.Developments
 > import ProofState.Structure.Entries
@@ -78,17 +79,19 @@ which point everyone knows the news anyway.
 To update a `Parameter`, we check to see if its type has become more
 defined, and pass on the good news if necessary.
 
-> propagateNews  top news
->                (NF (Right (EPARAM (name := DECL :<: tv) sn k ty a e) :> es)) = do
->     case tellNews news ty of
->         (_, NoNews) -> do
->           let ref = name := DECL :<: tv
->           putEntryAbove (EPARAM ref sn k ty a e)
->           propagateNews top news (NF es)
->         (ty', GoodNews) -> do
->           let ref = name := DECL :<: evTm ty'
->           putEntryAbove (EPARAM ref sn k ty' a e)
->           propagateNews top (addNews (ref, GoodNews) news) (NF es)
+> propagateNews
+>     top
+>     news
+>     (NF (Right (EPARAM (name := DECL :<: tv) sn k ty a meta) :> es)) =
+>         case tellNews news ty of
+>             (_, NoNews) -> do
+>               let ref = name := DECL :<: tv
+>               putEntryAbove (EPARAM ref sn k ty a meta)
+>               propagateNews top news (NF es)
+>             (ty', GoodNews) -> do
+>               let ref = name := DECL :<: evTm ty'
+>               putEntryAbove (EPARAM ref sn k ty' a meta)
+>               propagateNews top (addNews (ref, GoodNews) news) (NF es)
 
 To update definitions or modules, we call on `propagateNewsWithin`.
 
@@ -157,10 +160,12 @@ The update of a parameter consists in:
 2.  adding to the news bulletin the fact that this parameter has been
     updated
 
-> tellEntry news (EPARAM (name := DECL :<: tv) sn k ty anchor expanded) = do
->     let (ty' :=>: tv', n)  = tellNewsEval news (ty :=>: tv)
->     let ref = name := DECL :<: tv'
->     return (addNews (ref, n) news, EPARAM ref sn k ty' anchor expanded)
+> tellEntry news (EPARAM (name := DECL :<: tv) sn k ty anchor meta)
+>     = do
+>         let (ty' :=>: tv', n)  = tellNewsEval news (ty :=>: tv)
+>             ref = name := DECL :<: tv'
+>         return ( addNews (ref, n) news
+>                , EPARAM ref sn k ty' anchor meta)
 
 To update a hole, we must first check to see if the news bulletin
 contains a definition for it. If so, we fill in the definition (and do
@@ -177,7 +182,8 @@ If the hole is `Hoping` and we have good news about its type, then we
 restart elaboration to see if it can make any progress.
 
 > tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
->                       dkind dev@(Dev {devTip=Unknown tt}) ty anchor expanded)
+>                       dkind dev@(Dev {devTip=Unknown tt}) ty anchor
+>                       meta)
 >   | Just (ref'@(_ := DEFN tm :<: _), GoodNews) <- getNews news ref = do
 >     -- We have a Definition for it
 >     es   <- getInScope
@@ -185,7 +191,7 @@ restart elaboration to see if it can make any progress.
 >     let  (tt', _) = tellNewsEval news tt
 >          (ty', _) = tellNews news ty
 >     -- Define the hole
->     return (news, EDEF ref' sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor expanded)
+>     return (news, EDEF ref' sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor meta)
 >   | otherwise = do
 >     -- Not a Definition
 >     let  (tt', n)             = tellNewsEval news tt
@@ -195,7 +201,7 @@ restart elaboration to see if it can make any progress.
 >                                  (GoodNews, Hoping)  -> Suspended tt' ElabHope
 >                                  _                   -> Unknown tt'
 >     return  (addNews (ref, min n n') news,
->             EDEF ref sn dkind (dev{devTip=tip}) ty' anchor expanded)
+>             EDEF ref sn dkind (dev{devTip=tip}) ty' anchor meta)
 
 To update a hole with a suspended elaboration problem attached, we
 proceed similarly to the previous case, but we also update the
@@ -204,16 +210,16 @@ better just be hoping for a solution , in which case we can safely
 ignore the attached `ElabHope` process.
 
 > tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
->                       dkind dev@(Dev {devTip=Suspended tt prob}) ty anchor expanded)
+>                       dkind dev@(Dev {devTip=Suspended tt prob}) ty anchor meta)
 >   | Just ne <- getNews news ref = do
 >      -- We have a Definition for it
 >      case prob of
 >       ElabHope  -> do
 >         -- The elaboration strategy \emph{has to} be to `Hope`
->         tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor expanded)
+>         tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor meta)
 >       _         -> do
->         -- TODO(joel) Is that a `throwError` or an `error`?
->         throwError . sErr . unlines $ [
+>         -- TODO(joel) Is that a `throwStack` or an `error`?
+>         throwDTmStr . unlines $ [
 >                     "tellEntry: news bulletin contains update", show ne,
 >                     "for hole", show ref,
 >                     "with suspended computation", show prob]
@@ -228,7 +234,7 @@ ignore the attached `ElabHope` process.
 >                                   else SuspendStable
 >     suspendHierarchy state
 >     return  (addNews (ref, min n n') news,
->             EDEF ref sn dkind (dev{devTip=Suspended tt' prob'}) ty' anchor expanded)
+>             EDEF ref sn dkind (dev{devTip=Suspended tt' prob'}) ty' anchor meta)
 >         where tellEProb :: NewsBulletin -> EProb -> EProb
 >               tellEProb news = fmap (getLatest news)
 
@@ -243,7 +249,7 @@ To update a closed definition (`Defined`), we must:
 4.  update the news bulletin with news about this definition.
 
 > tellEntry news (EDEF  (name := DEFN tmL :<: tyv) sn dkind
->                       dev@(Dev {devTip=Defined tm tt}) ty anchor expanded) = do
+>                       dev@(Dev {devTip=Defined tm tt}) ty anchor meta) = do
 >     let  (tt', n)             = tellNewsEval news tt
 >          (ty' :=>: tyv', n')  = tellNewsEval news (ty :=>: tyv)
 >          (tm', n'')           = tellNews news tm
@@ -260,7 +266,7 @@ For paranoia purposes, the following test might be helpful:
 >     -- TODO(joel) what should go here?
 >     -- return  (addNews (ref, min (min n n') n'') news,
 >     return  (addNews (ref, GoodNews) news,
->             EDEF ref sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor expanded)
+>             EDEF ref sn dkind (dev{devTip=Defined tm' tt'}) ty' anchor meta)
 
 The `tellCurrentEntry` function informs the current entry about a news
 bulletin that her children have already received, and returns the

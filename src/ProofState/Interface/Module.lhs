@@ -6,7 +6,7 @@ Modules in Proof Context
 
 > module ProofState.Interface.Module where
 
-> import Control.Monad.Except
+> import Control.Error
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
@@ -39,8 +39,9 @@ This is mostly used at the programming level. For making modules, we use
 >                   ,  devSuspendState  =  SuspendNone }
 >     putEntryAbove $ EModule  {  name     = n
 >                              ,  dev      = dev
->                              ,  expanded = True
->                              ,  purpose  = purpose }
+>                              ,  purpose  = purpose
+>                              ,  metadata = emptyMetadata
+>                              }
 >     putDevNSupply $ freshName nsupply
 >     return n
 
@@ -55,12 +56,12 @@ Section [Tactics.Elimination.analysis](#Tactics.Elimination.analysis).
 > moduleToGoal :: INTM -> ProofState (EXTM :=>: VAL)
 > moduleToGoal ty = do
 >     (_ :=>: tyv) <- checkHere (SET :>: ty)
->     CModule n expanded purpose <- getCurrentEntry
+>     CModule n purpose meta <- getCurrentEntry
 >     inScope <- getInScope
 >     let  ty' = liftType inScope ty
 >          ref = n := HOLE Waiting :<: evTm ty'
 >     putCurrentEntry $ CDefinition LETG ref (last n) ty'
->         (modulePurposeToAnchor purpose) expanded
+>         (modulePurposeToAnchor purpose) meta
 >     putDevTip $ Unknown (ty :=>: tyv)
 >     return $ applySpine ref inScope
 
@@ -78,5 +79,5 @@ dangling references is high.
 >     mm <- removeEntryAbove
 >     case mm of
 >         Just (EModule _ _ _ _) -> return t
->         _ -> throwError . sErr $ "draftModule: drafty " ++ name
+>         _ -> throwDTmStr $ "draftModule: drafty " ++ name
 >                                  ++ " did not end up in the right place!"

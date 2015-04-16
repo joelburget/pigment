@@ -15,6 +15,7 @@ Making Definitions
 > import ProofState.Interface.Name
 > import ProofState.Interface.ProofKit
 > import DisplayLang.DisplayTm
+> import DisplayLang.Name
 > import Evidences.Tm
 > import Evidences.Eval
 
@@ -38,11 +39,11 @@ proof system will insert goals itself, with a somewhat changing mood such as
 >     -- Check that the type is indeed a type
 >     _ :=>: tyv <- checkHere (SET :>: ty)
 >                     `pushError`
->                     (StackError
->                         [ err "make: "
+>                     (stackItem
+>                         [ errMsg "make: "
 >                         , errTm (DTIN ty)
->                         , err " is not a set."
->                         ])
+>                         , errMsg " is not a set."
+>                         ] :: StackError DInTmRN)
 
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
@@ -69,7 +70,7 @@ proof system will insert goals itself, with a somewhat changing mood such as
 
 >     -- Put the entry in the proof context
 >     putDevNSupply $ freshName nsupply
->     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy name expanded
+>     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy name emptyMetadata
 
 >     -- Return a reference to the goal
 >     return $ applySpine ref inScope

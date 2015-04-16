@@ -3,11 +3,15 @@ Generic name supplier
 
 > {-# LANGUAGE TypeOperators, GADTs, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, ScopedTypeVariables,
->     MultiParamTypeClasses #-}
+>     MultiParamTypeClasses, FlexibleContexts, UndecidableInstances #-}
+
 > module NameSupply.NameSupplier where
+
 > import Control.Applicative
-> import Control.Monad.Except
 > import Control.Monad.Reader
+
+> import Control.Error
+
 > import NameSupply.NameSupply
 > import Evidences.Tm
 
@@ -64,7 +68,9 @@ To illustrate the implementation of a `NameSupplier`, we implement the
 
 > instance NameSupplier ((->) NameSupply) where
 >     freshRef (x :<: ty) f r = f (mkName r x := DECL :<: ty) (freshName r)
->     forkNSupply s child dad nsupply = (dad . child) (freshNSpace nsupply s) (freshName nsupply)
+>     forkNSupply s child dad nsupply = (dad . child)
+>         (freshNSpace nsupply s)
+>         (freshName nsupply)
 >     askNSupply r = r
 
 `ReaderT NameSupply` is a `NameSupplier`
@@ -82,12 +88,32 @@ actually get it for any `ReaderT NameSupply`. This is as simple as:
 >         local freshName (dad c)
 >     askNSupply = ask
 
+Similarly, we can lift a `NameSupplier` to `EitherT`.
+
+> instance (Monad m, Applicative m) => NameSupplier (EitherT f (ReaderT NameSupply m)) where
+>     freshRef (x :<: ty) f = do
+>         nsupply <- askNSupply
+>         let generatedName = mkName nsupply x := DECL :<: ty
+>         f generatedName
+>
+>     forkNSupply s child dad = do
+>         c <- local (`freshNSpace` s) child
+>         local freshName (dad c)
+>     askNSupply = ask
+
+      freshRef    :: (String :<: TY) -> (REF -> m t) -> m t
+      forkNSupply  :: String -> m s -> (s -> m t) -> m t
+      askNSupply   :: m NameSupply
+
 <a name="NameSupply.NameSupplier.check-monad">The `Check` monad is a `NameSupplier`</a>
 -------------------------------------
 
 One such example is the `Check` monad:
 
 > type Check e = ReaderT NameSupply (Either (StackError e))
+
+> instance ErrorStack (Check e) e where
+>     throwStack = lift . Left
 
 That is, a Reader of `NameSupply` on top of an Error of `StackError`.
 Running a type-checking process is therefore a simple `runReader`

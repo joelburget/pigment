@@ -7,9 +7,11 @@
 > module Elaboration.RunElab where
 
 > import Control.Applicative
-> import Control.Monad.Except
 > import Control.Monad.State
 > import Data.Traversable
+
+> import Control.Error
+
 > import NameSupply.NameSupplier
 > import Evidences.Tm
 > import Evidences.Mangler
@@ -99,10 +101,10 @@ we are elaborating to.
 >     Just (_, s, tyf) -> do
 >         ref <- lambdaParam x
 >         runElab WorkCurrentGoal (tyf (NP ref) :>: f ref)
->     Nothing -> throwError $ StackError
->         [ err "runElab: type"
+>     Nothing -> throwDInTmRN $ stackItem
+>         [ errMsg "runElab: type"
 >         , errTyVal (ty :<: SET)
->         , err "is not lambdable!"
+>         , errMsg "is not lambdable!"
 >         ]
 
 `EGoal` retrieves the current goal and passes it to the elaboration
@@ -396,8 +398,8 @@ it using the propositional simplification machinery.
 >         Just (SimplyTrivial prf) -> do
 >             return (prf :=>: evTm prf, ElabSuccess)
 >         Just (SimplyAbsurd _) -> runElab wrk (PRF p :>:
->             ECry (StackError
->                       [ err "simplifyProof: proposition is absurd:"
+>             ECry (stackItem
+>                       [ errMsg "simplifyProof: proposition is absurd:"
 >                       , errTyVal (p :<: PROP)]
 >                  )
 >             )
@@ -526,8 +528,8 @@ will restart if it is unstable.
 >     -- Make a hole
 >     r <- make (AnchStr x :<: termOf tt)
 >     -- Store the suspended problem
->     Just (EDEF ref xn dkind dev@(Dev {devTip=Unknown utt}) tm anchor e) <- removeEntryAbove
->     putEntryAbove (EDEF ref xn dkind (dev{devTip=Suspended utt prob}) tm anchor e)
+>     Just (EDEF ref xn dkind dev@(Dev {devTip=Unknown utt}) tm anchor meta) <- removeEntryAbove
+>     putEntryAbove (EDEF ref xn dkind (dev{devTip=Suspended utt prob}) tm anchor meta)
 >     -- Mark the Suspension state
 >     let ss = if isUnstable prob then SuspendUnstable else SuspendStable
 >     putDevSuspendState ss

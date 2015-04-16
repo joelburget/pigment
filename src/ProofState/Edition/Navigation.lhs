@@ -7,7 +7,6 @@
 > module ProofState.Edition.Navigation where
 
 > import Control.Applicative
-> import Control.Monad.Except
 > import Data.Monoid
 > import Data.Traversable
 
@@ -364,23 +363,25 @@ current entry.
 >     Dev above tip root state <- getAboveCursor
 >     below <- getBelowCursor
 >     let dev = Dev (above <>< below) tip root state
->     case currentEntry of
->         CDefinition dkind ref xn ty a e ->  return $ EDEF ref xn dkind dev ty a e
->         CModule n e p                   ->  return $ EModule n dev e p
+>     return $ case currentEntry of
+>         CDefinition dkind ref xn ty a meta
+>             -> EDEF ref xn dkind dev ty a meta
+>         CModule n p meta
+>             -> EModule n dev p meta
 
 Conversely, when entering a new development, the former entry needs to
 be *unzipped* to form the current development.
 
 > putEnterCurrent :: Entry Bwd -> ProofState ()
-> putEnterCurrent (EDEF ref xn dkind dev ty a e) = do
+> putEnterCurrent (EDEF ref xn dkind dev ty a meta) = do
 >     l <- getLayer
->     replaceLayer $ l { currentEntry = CDefinition dkind ref xn ty a e}
+>     replaceLayer $ l { currentEntry = CDefinition dkind ref xn ty a meta}
 >     putAboveCursor dev
 
 > putEnterCurrent (EModule [] dev _ _) = putAboveCursor dev
-> putEnterCurrent (EModule n dev e p) = do
+> putEnterCurrent (EModule n dev p meta) = do
 >     l <- getLayer
->     replaceLayer $ l { currentEntry = CModule n e p }
+>     replaceLayer $ l { currentEntry = CModule n p meta }
 >     putAboveCursor dev
 
 Cursor navigation
@@ -401,7 +402,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 >             return ()
 >         B0 -> do
 >             -- There is no above..
->             throwError $ sErr "cursorUp: cannot move cursor up."
+>             throwDTmStr "cursorUp: cannot move cursor up."
 
 > cursorDown :: ProofState ()
 > cursorDown = do
@@ -416,7 +417,7 @@ We simply move an entry above the cursor to one below, or vice versa.
 >             return ()
 >         F0 -> do
 >             -- There is no below..
->             throwError $ sErr "cursorDown: cannot move cursor down."
+>             throwDTmStr "cursorDown: cannot move cursor down."
 
 Focus navigation
 
@@ -429,7 +430,7 @@ definition. If one can be found, it enters it and goes at the bottom.
 >     case above of
 >         B0 -> do
 >           -- Nothing above: we cannot go above
->           throwError $ sErr "goIn: you can't go that way."
+>           throwDTmStr "goIn: you can't go that way."
 >         aboveE :< e -> case entryDev e of
 >           Nothing   -> do
 >              -- This entry is not a Definition: look further up
@@ -473,7 +474,7 @@ with the additional burden of dealing with news.
 >             return ()
 >         Nothing -> do
 >             -- Already at outermost position
->             throwError $ sErr "goOut: you can't go that way."
+>             throwDTmStr "goOut: you can't go that way."
 
 The `goOutBelow` variant has a similar effect than `goOut`, excepted
 that it brings the cursor right under the previous point of focus.
@@ -489,7 +490,7 @@ that it brings the cursor right under the previous point of focus.
 >             -- Move cursor up by as many entries there was
 >             Data.Traversable.mapM (const cursorUp) below
 >             return ()
->         B0 -> throwError $ sErr "goOutBelow: you can't go that way."
+>         B0 -> throwDTmStr "goOutBelow: you can't go that way."
 
 The `goUp` command moves the focus upward, looking for a definition. If
 one can be found, the cursor is moved at the bottom of the new
@@ -527,7 +528,7 @@ development.
 >                 goUpAcc $ NF (Right (reverseEntry e) :> visitedBelow)
 >           _ -> do
 >             -- There is no up
->             throwError $ sErr "goUp: you can't go that way."
+>             throwDTmStr "goUp: you can't go that way."
 
 Similarly to `goUp`, the `goDown` command moves the focus downward,
 looking for a definition. If one can be found, the cursor is placed at
@@ -582,7 +583,7 @@ way.
 >                   goDownAcc (visitedAbove :< param') news
 >           _ -> do
 >             -- There is no down
->             throwError $ sErr "goDown: you can't go that way."
+>             throwDTmStr "goDown: you can't go that way."
 
 Many-step Navigation
 --------------------

@@ -3,11 +3,12 @@ Observational Equality
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
->     PatternSynonyms #-}
+>     PatternSynonyms, MultiParamTypeClasses #-}
 
 > module Evidences.PropositionalEquality where
 
 > import Control.Applicative
+> import Control.Error
 > import Data.Functor.Identity
 
 > import Kit.MissingLibrary
@@ -70,11 +71,11 @@ equal.
 
 > opRunEqGreen [C ty0, C t0, C ty1, C t1] =
 >     case halfZip (fmap termOf t0') (fmap termOf t1') of
->         Nothing  -> Right ABSURD
->         Just x   -> Right $ mkEqConj (trail x)
+>         Nothing -> Right ABSURD
+>         Just x  -> Right $ mkEqConj (trail x)
 >   where
->     Right t0'  = canTy (\tx@(t :>: x) -> Right (tx :=>: x)) (ty0 :>: t0)
->     Right t1'  = canTy (\tx@(t :>: x) -> Right (tx :=>: x)) (ty1 :>: t1)
+>     Right t0' = canTy' (\tx@(t :>: x) -> Right (tx :=>: x)) (ty0 :>: t0)
+>     Right t1' = canTy' (\tx@(t :>: x) -> Right (tx :=>: x)) (ty1 :>: t1)
 
 If we are trying to equate a function and a canonical value, we don't
 have much hope.

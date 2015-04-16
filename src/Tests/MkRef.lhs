@@ -4,7 +4,7 @@
 > import Root
 > import Rooty
 > import BwdFwd
-> import Control.Monad.Except
+> import Control.Error
 > testMkRef op = inCheck (check (opTy :>: (N $ P r))) (B0 :< ("tactics",0),0)
 >     where r = mkRef op
 >           opTy = pity $ opTyTel op

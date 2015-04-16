@@ -8,10 +8,11 @@
 
 > import Prelude hiding (any, foldl)
 > import Control.Applicative
-> import Control.Monad.Except
 > import Control.Monad.Reader
 > import Data.Traversable
 > import Data.Monoid
+
+> import Control.Error hiding ((??))
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
@@ -485,9 +486,9 @@ types.
 >     pSimp <- runPropSimplify p
 >     case pSimp of
 >         Nothing                   ->
->             throwError $ sErr "propSimplifyHere: unable to simplify."
+>             throwDTmStr "propSimplifyHere: unable to simplify."
 >         Just (SimplyAbsurd _)     ->
->             throwError $ sErr "propSimplifyHere: oh no, goal is absurd!"
+>             throwDTmStr "propSimplifyHere: oh no, goal is absurd!"
 >         Just (SimplyTrivial prf)  -> give prf >> return B0
 >         Just (Simply pis _ ph)    -> do
 >             subs <- traverse makeSubgoal pis

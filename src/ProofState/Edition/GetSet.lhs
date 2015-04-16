@@ -2,12 +2,13 @@ The Get Set
 ===========
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
+>              GADTs, RankNTypes, ScopedTypeVariables #-}
 
 > module ProofState.Edition.GetSet where
 
-> import Control.Monad.Except
 > import Control.Monad.State
+
+> import Control.Error
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
@@ -42,12 +43,14 @@ Getting in `ProofContext`
 
 And some specialized versions:
 
-> getLayer :: ProofStateT e Layer
+> getLayer :: forall e. ProofStateT e Layer
 > getLayer = do
 >     layers <- getLayers
 >     case layers of
->         _ :< l  -> return l
->         _ -> throwErrorStr "couldn't get layer"
+>         _ :< l -> return l
+>         _ -> throwStack (errMsgStack "couldn't get layer" :: StackError e)
+
+throwErrMsg :: ErrorStack m VAL => String -> m a
 
 Getting in `AboveCursor`
 
@@ -73,16 +76,19 @@ And some specialized versions:
 >     _ :< e <- getEntriesAbove -- XXX this errors on "done"
 >     return e
 
-> getGoal :: String -> ProofStateT e (INTM :=>: TY)
+> getGoal :: forall e. String -> ProofStateT e (INTM :=>: TY)
 > getGoal s = do
 >     tip <- getDevTip
 >     case tip of
 >       Unknown (ty :=>: tyTy) -> return (ty :=>: tyTy)
 >       Defined _ (ty :=>: tyTy) -> return (ty :=>: tyTy)
->       _ -> throwError $ StackError
->           [ err "getGoal: fail to match a goal in "
->           , err s
->           ]
+>       _ ->
+>           let stack :: StackError e
+>               stack = stackItem
+>                   [ errMsg "getGoal: fail to match a goal in "
+>                   , errMsg s
+>                   ]
+>           in throwStack stack
 
 > withGoal :: (VAL -> ProofState ()) -> ProofState ()
 > withGoal f = do
@@ -96,7 +102,7 @@ Getting in the `Layers`
 >     ls <- getLayers
 >     case ls of
 >         _ :< l  -> return (currentEntry l)
->         B0      -> return (CModule [] False EmptyModule)
+>         B0      -> return (CModule [] EmptyModule emptyMetadata)
 
 Getting in the `CurrentEntry`
 
@@ -115,13 +121,15 @@ Getting in the `CurrentEntry`
 
 Getting in the `HOLE`
 
-> getHoleGoal :: ProofStateT e (INTM :=>: TY)
+> getHoleGoal :: forall e. ProofStateT e (INTM :=>: TY)
 > getHoleGoal = do
 >     x <- getCurrentEntry
 >     case x of -- TODO(joel) do this properly with error machinery
 >         CDefinition _ (_ := HOLE _ :<: _) _ _ _ _ -> getGoal "getHoleGoal"
->         CModule _ _ _ -> throwErrorStr "got a module"
->         CDefinition _ _ _ _ _ _ -> throwErrorStr "got a non-hole definition"
+>         CModule _ _ _ -> throwStack
+>             (errMsgStack "got a module" :: StackError e)
+>         CDefinition _ _ _ _ _ _ -> throwStack
+>             (errMsgStack "got a non-hole definition" :: StackError e)
 
 > getHoleKind :: ProofStateT e HKind
 > getHoleKind = do
@@ -227,27 +235,27 @@ Putting in the `PROG`
 
 > putCurrentScheme :: Scheme INTM -> ProofState ()
 > putCurrentScheme sch = do
->     CDefinition _ ref xn ty a e <- getCurrentEntry
->     putCurrentEntry $ CDefinition (PROG sch) ref xn ty a e
+>     CDefinition _ ref xn ty a meta <- getCurrentEntry
+>     putCurrentEntry $ CDefinition (PROG sch) ref xn ty a meta
 
 Putting in the `HOLE`
 
 > putHoleKind :: HKind -> ProofStateT e ()
 > putHoleKind hk = do
->     CDefinition kind (name := HOLE _ :<: ty) xn tm a e <- getCurrentEntry
->     putCurrentEntry $ CDefinition kind (name := HOLE hk :<: ty) xn tm a e
+>     CDefinition kind (name := HOLE _ :<: ty) xn tm a meta <- getCurrentEntry
+>     putCurrentEntry $ CDefinition kind (name := HOLE hk :<: ty) xn tm a meta
 
 Removers
 --------
 
 Remove in `ProofContext`
 
-> removeLayer :: ProofStateT e Layer
+> removeLayer :: forall e. ProofStateT e Layer
 > removeLayer = do
 >     pc <- get
 >     case pc of
 >         PC{pcLayers=ls :< l} -> put pc{pcLayers=ls} >> return l
->         _ -> throwErrorStr "couldn't remove layer"
+>         _ -> throwStack (errMsgStack "couldn't remove layer" :: StackError e)
 
 Removing in `AboveEntries`
 

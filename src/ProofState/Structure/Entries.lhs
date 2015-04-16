@@ -6,6 +6,9 @@
 > module ProofState.Structure.Entries where
 
 > import Data.Traversable
+
+> import Lens.Family2
+
 > import NameSupply.NameSupply
 > import Evidences.Tm
 > import DisplayLang.Scheme
@@ -53,8 +56,8 @@ Hence, we have:
 > entryAnchor EModule{}                   = AnchNo
 
 > entryExpanded :: Traversable f => Entry f -> Bool
-> entryExpanded (EEntity _ _ _ _ _ e) = e
-> entryExpanded (EModule _ _ e _    ) = e
+> entryExpanded (EEntity _ _ _ _ _ meta) = meta^.expanded
+> entryExpanded (EModule _ _ _ meta)     = meta^.expanded
 
 Entry equality
 --------------
@@ -81,7 +84,7 @@ modules, in which case we return an unchanged `Left dev`.
 
 > entryCoerce ::  (Traversable f, Traversable g) =>
 >                 Entry f -> Either (Dev f) (Entry g)
-> entryCoerce param@(EPARAM ref xn k ty anchor expanded) =
->     Right $ EPARAM ref xn k ty anchor expanded
+> entryCoerce param@(EPARAM ref xn k ty anchor meta) =
+>     Right $ EPARAM ref xn k ty anchor meta
 > entryCoerce (EDEF _ _ _ dev _ _ _)     =  Left dev
 > entryCoerce (EModule _ dev _ _)        =  Left dev

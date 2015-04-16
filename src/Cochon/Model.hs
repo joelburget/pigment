@@ -43,6 +43,8 @@ data TermAction
     = ExpandTerm Name
     | GoToTerm Name
     | BeginDrag Name
+    | ToggleAnnotate Name
+    | AnnotationTyping Name T.Text
 
 -- The top level page
 type Cochon a = a InteractionState Transition ()

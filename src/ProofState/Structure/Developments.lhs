@@ -2,18 +2,34 @@
 ============
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
->     PatternSynonyms #-}
->
+>     PatternSynonyms, TemplateHaskell, OverloadedStrings #-}
+
 > module ProofState.Structure.Developments where
->
+
 > import Data.List
+> import qualified Data.Text as T
 > import Data.Traversable
+
+> import Lens.Family2.TH
+
 > import Kit.BwdFwd
 > import NameSupply.NameSupply
 > import Evidences.Tm
 > import Evidences.Eval
 > import Elaboration.ElabProb
 > import DisplayLang.Scheme
+
+> data Metadata = Metadata
+>     { _expanded :: Bool
+>     , _annotation :: T.Text
+>     , _annotationExpanded :: Bool
+>     } deriving Show
+>
+> $(makeLenses ''Metadata)
+
+> emptyMetadata :: Metadata
+> emptyMetadata = Metadata True "" False
+
 
 The `Dev` data-structure
 ------------------------
@@ -100,13 +116,17 @@ either be:
 > instance Show EntityAnchor where
 >     show AnchConc = "conc"
 >     show AnchConNames = "constructor names"
+>     -- show (AnchConName str) = "(AnchConName " ++ str ++ ")"
 >     show (AnchConName str) = str
 >     show AnchConDescs = "constructor descriptions"
 >     show AnchDataDesc = "data description"
+>     -- show (AnchDataTy str) = "(AnchDataTy " ++ str ++ ")"
 >     show (AnchDataTy str) = str
 >     show AnchInd = "ind"
 >     show AnchIndTy = "ind type"
+>     -- show (AnchTy str) = "(AnchTy " ++ str ++ ")"
 >     show (AnchTy str) = str
+>     -- show (AnchParTy str) = "(AnchParTy " ++ str ++ ")"
 >     show (AnchParTy str) = str
 >     show AnchRefine = "refine"
 >     show AnchMotive = "motive"
@@ -116,6 +136,7 @@ either be:
 >     show AnchElabInferFully = "elab infer fully"
 >     show AnchTau = "tau"
 >     show AnchDataDef = "data definition"
+>     -- show (AnchStr str) = "(AnchStr " ++ str ++ ")"
 >     show (AnchStr str) = str
 >     show AnchNo = "(no anchor)"
 
@@ -148,16 +169,20 @@ either be:
 > modulePurposeToAnchor _           = AnchNo
 
 > data Entry f
->   =  EEntity  { ref       :: REF
->               , lastName  :: (String, Int)
->               , entity    :: Entity f
->               , term      :: INTM
->               , anchor    :: EntityAnchor
->               , expanded  :: Bool }
->   |  EModule  { name      :: Name
->               , dev       :: (Dev f)
->               , expanded  :: Bool
->               , purpose   :: ModulePurpose }
+>   = EEntity
+>   { ref      :: REF
+>   , lastName :: (String, Int)
+>   , entity   :: Entity f
+>   , term     :: INTM
+>   , anchor   :: EntityAnchor
+>   , metadata :: Metadata
+>   }
+>   | EModule
+>   { name     :: Name
+>   , dev      :: (Dev f)
+>   , purpose  :: ModulePurpose
+>   , metadata :: Metadata
+>   }
 
 In the Module case, we have already tied the knot, by defining `M` with
 a sub-development. In the Entity case, we give yet another choice of
@@ -170,16 +195,16 @@ is `Bwd`:
 > type Entries = Bwd (Entry Bwd)
 
 > instance Show (Entry Bwd) where
->     show (EEntity ref xn e t a expanded) = intercalate " "
->         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e p) = intercalate " "
->         ["M", show n, show d, show e, show p]
+>     show (EEntity ref xn e t a _) = intercalate " "
+>         ["E", show ref, show xn, show e, show t, show a]
+>     show (EModule n d p _) = intercalate " "
+>         ["M", show n, show d, show p]
 
 > instance Show (Entry Fwd) where
->     show (EEntity ref xn e t a expanded) = intercalate " "
->         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e p) = intercalate " "
->         ["M", show n, show d, show e, show p]
+>     show (EEntity ref xn e t a _) = intercalate " "
+>         ["E", show ref, show xn, show e, show t, show a]
+>     show (EModule n d p _) = intercalate " "
+>         ["M", show n, show d, show p]
 
 [Name caching]
 
@@ -206,10 +231,10 @@ cannot.
 For readability, let us collapse the `Entity` into the `Entry` with
 these useful patterns:
 
-> pattern EPARAM ref name paramKind term anchor expanded =
->     EEntity ref name (Parameter paramKind) term anchor expanded
-> pattern EDEF ref name defKind dev term anchor expanded =
->     EEntity ref name (Definition defKind dev) term anchor expanded
+> pattern EPARAM ref name paramKind term anchor meta =
+>     EEntity ref name (Parameter paramKind) term anchor meta
+> pattern EDEF ref name defKind dev term anchor meta =
+>     EEntity ref name (Definition defKind dev) term anchor meta
 
 Kinds of Definitions:
 

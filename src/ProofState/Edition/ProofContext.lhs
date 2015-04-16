@@ -4,9 +4,11 @@
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
 >              GADTs, RankNTypes, StandaloneDeriving #-}
 > module ProofState.Edition.ProofContext where
+
 > import Control.Applicative
 > import Data.Foldable
 > import Data.List
+> import qualified Data.Text as T
 > import Data.Traversable
 
 > import NameSupply.NameSupply
@@ -59,8 +61,8 @@ Section [ProofState.Structure.Developments.entry](#ProofState.Structure.Develop
 > -- The Bool in both cases is "expanded"
 > -- TODO(joel) - create an `Expanded` data type
 > data CurrentEntry
->     = CDefinition DefKind REF (String, Int) INTM EntityAnchor Bool
->     | CModule Name Bool ModulePurpose
+>     = CDefinition DefKind REF (String, Int) INTM EntityAnchor Metadata
+>     | CModule Name ModulePurpose Metadata
 >     deriving Show
 
 One would expect the `belowEntries` to be an `Entries`, just as the
@@ -88,10 +90,10 @@ piece of kit to deal with this global context.
 >     show (NF ls) = show ls
 
 > instance Show (Entry NewsyFwd) where
->     show (EEntity ref xn e t a expanded) = unwords
->         ["E", show ref, show xn, show e, show t, show a, show expanded]
->     show (EModule n d e p) = unwords
->         ["M", show n, show d, show e, show p]
+>     show (EEntity ref xn e t a _) = unwords
+>         ["E", show ref, show xn, show e, show t, show a]
+>     show (EModule n d p _) = unwords
+>         ["M", show n, show d, show p]
 
 > instance Show (Entity NewsyFwd) where
 >     show (Parameter k) = "Param " ++ show k

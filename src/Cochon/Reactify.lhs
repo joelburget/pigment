@@ -29,6 +29,7 @@
 
 > import DisplayLang.PrettyPrint
 > import Kit.Trace
+> import Debug.Trace
 
 The `reactKword` function gives a react element representing a `Keyword`.
 
@@ -62,12 +63,15 @@ elements.
 >     reactKword KwAsc
 >     reactify t
 
-  canReactify (Con x)   = reactKword KwCon >> reactify x
+> canReactify (Con x)   = reactKword KwCon >> reactify x
+
   canReactify (Anchor (DTAG u) t ts) = fromString u >> reactify ts
   canReactify AllowedEpsilon = ""
   canReactify (AllowedCons _ _ _ s ts) = reactify s >> reactify ts
-  canReactify (Mu (Just l   :?=: _)) = reactify l
-  canReactify (Mu (Nothing  :?=: Identity t)) = reactKword KwMu >> reactify t
+
+> canReactify (Mu (Just l   :?=: _)) = reactify l
+> canReactify (Mu (Nothing  :?=: Identity t)) = reactKword KwMu >> reactify t
+
   canReactify (EnumT t)  = reactKword KwEnum >> reactify t
   canReactify Ze         = "0"
   canReactify (Su t)     = reactifyEnumIndex 1 t
@@ -87,7 +91,9 @@ elements.
       reactify ii
       reactify d
       reactify i
-  canReactify (LRet x) = reactKword KwRet >> reactify x
+
+> canReactify (LRet x) = reactKword KwRet >> reactify (traceShowId x)
+
   canReactify (Nu (Just l :?=: _))  = reactify l
   canReactify (Nu (Nothing :?=: Identity t))  = reactKword KwNu >> reactify t
   canReactify (CoIt d sty f s) = do
@@ -117,8 +123,10 @@ elements.
       reactify t
   canReactify Unit         = reactKword KwSig >> "()"
   canReactify Void         = reactifyPair DVOID
-  canReactify (Sigma s t)  = reactifySigma "" (DSIGMA s t)
-  canReactify (Pair a b)   = reactifyPair (DPAIR a b)
+
+> canReactify (Sigma s t)  = reactifySigma "" (DSIGMA s t)
+> canReactify (Pair a b)   = reactifyPair (DPAIR a b)
+
   canReactify UId      = reactKword KwUId
   canReactify (Tag s)  = reactKword KwTag >> fromString s
 
@@ -163,7 +171,7 @@ and a codomain, and represents them appropriately for the current size.
 > reactPiMore bs d = bs >> reactKword KwArr >> d
 
 To reactify a scope, we accumulate arguments until something other than
-a $\lambda$-term is reached.
+a lambda term is reached.
 
 > instance Reactive DSCOPE where
 >     reactify s = reactLambda (B0 :< dScopeName s) (dScopeTm s)
@@ -280,30 +288,30 @@ a $\lambda$-term is reached.
   reactifyAllMore bs d = div_ [ class_ "all-more" ] $
       bs >> reactKword KwImp >> d
 
-  reactifyPair :: DInTmRN -> Pure React'
-  reactifyPair p = "[" >> reactifyPairMore "" p >> "]"
+> reactifyPair :: DInTmRN -> TermReact
+> reactifyPair p = reactBrackets Square $ reactifyPairMore "" p
 
-  reactifyPairMore :: Pure React' -> DInTmRN -> Pure React'
-  reactifyPairMore d DVOID        = d
-  reactifyPairMore d (DPAIR a b)  = reactifyPairMore
-      (d >> reactify a)
-      b
-  reactifyPairMore d t            = d >> reactKword KwComma >> reactify t
+> reactifyPairMore :: TermReact -> DInTmRN -> TermReact
+> reactifyPairMore d DVOID        = d
+> reactifyPairMore d (DPAIR a b)  = reactifyPairMore
+>     (d >> reactify a)
+>     b
+> reactifyPairMore d t            = d >> reactKword KwComma >> reactify t
 
-  reactifySigma :: Pure React' -> DInTmRN -> Pure React'
-  reactifySigma d DUNIT                      = reactifySigmaDone d ""
-  reactifySigma d (DSIGMA s (DL (x ::. t)))  = reactifySigma
-      (d >> fromString x >> reactKword KwAsc >> reactify s >> reactKword KwSemi)
-      t
-  reactifySigma d (DSIGMA s (DL (DK t)))     = reactifySigma
-      (d >> reactify s >> reactKword KwSemi) t
-  reactifySigma d (DSIGMA s t) = reactifySigmaDone d
-      (reactKword KwSig >> reactify s >> reactify t)
-  reactifySigma d t = reactifySigmaDone d (reactify t)
+> reactifySigma :: TermReact -> DInTmRN -> TermReact
+> reactifySigma d DUNIT                      = reactifySigmaDone d ""
+> reactifySigma d (DSIGMA s (DL (x ::. t)))  = reactifySigma
+>     (d >> fromString x >> reactKword KwAsc >> reactify s >> reactKword KwSemi)
+>     t
+> reactifySigma d (DSIGMA s (DL (DK t)))     = reactifySigma
+>     (d >> reactify s >> reactKword KwSemi) t
+> reactifySigma d (DSIGMA s t) = reactifySigmaDone d
+>     (reactKword KwSig >> reactify s >> reactify t)
+> reactifySigma d t = reactifySigmaDone d (reactify t)
 
-  reactifySigmaDone :: Pure React' -> Pure React' -> Pure React'
-  reactifySigmaDone s t = div_ [ class_ "sigma-done" ] $
-      reactKword KwSig >> reactBrackets Round (s >> t)
+> reactifySigmaDone :: TermReact -> TermReact -> TermReact
+> reactifySigmaDone s t = div_ [ class_ "sigma-done" ] $
+>     reactKword KwSig >> reactBrackets Round (s >> t)
 
 The `Elim` functor is straightforward.
 

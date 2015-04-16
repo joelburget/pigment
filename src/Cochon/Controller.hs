@@ -5,7 +5,6 @@ module Cochon.Controller where
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
-import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Writer
 import qualified Data.Foldable as Foldable
@@ -158,12 +157,6 @@ goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
         Left err -> trace err state
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
 
-
-execProofState :: ProofState a
-               -> ProofContext
-               -> Either String ProofContext
-execProofState state = right snd . runProofState state
-
 autocompleteUpArrow :: InteractionState -> InteractionState
 autocompleteUpArrow state = state & autocomplete %~ \auto -> case auto of
     CompletingTactics zip -> case moveEarlier zip of
@@ -255,7 +248,7 @@ tacticNamed x = find ((== x) . ctName) cochonTactics
 
 describePFailure :: PFailure a -> ([a] -> String) -> String
 describePFailure (PFailure (ts, fail)) f =
-    let errMsg = case fail of
+    let msg = case fail of
             Abort        -> "parser aborted."
             EndOfStream  -> "end of stream."
             EndOfParser  -> "end of parser."
@@ -264,7 +257,7 @@ describePFailure (PFailure (ts, fail)) f =
         sucMsg = if not (null ts)
                then "\nSuccessfully parsed: ``" ++ f ts ++ "''."
                else ""
-    in errMsg ++ sucMsg
+    in msg ++ sucMsg
 
 tacticNames :: [CochonTactic] -> String
 tacticNames = intercalate ", " . map ctName

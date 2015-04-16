@@ -6,7 +6,7 @@ Loading Developments
 > module Cochon.DevLoad () where
 
 > import Control.Monad.State
-> import Control.Monad.Except
+> import Control.Error
 > import Control.Applicative
 > import Data.Functor
 

@@ -5,10 +5,12 @@
 
 > import Prelude hiding (any, foldl, elem)
 > import Control.Applicative
-> import Control.Monad.Except
 > import Control.Monad.Reader
 > import Data.Foldable
 > import Data.Traversable
+
+> import Control.Error hiding ((??))
+
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Kit.Trace
@@ -285,7 +287,7 @@ If we are really lucky, the goal is trivial and we win.
 
 Otherwise, we cannot simplify the problem.
 
-> simplifyGoal _ _ = throwError $ sErr "simplifyGoal: cannot simplify"
+> simplifyGoal _ _ = throwDTmStr "simplifyGoal: cannot simplify"
 
 When at the top level and simplifying a $\Pi$-type, `passHypothesis`
 introduces a hypothesis into the context and continues simplifying. Its

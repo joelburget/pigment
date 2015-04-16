@@ -28,9 +28,7 @@ skip some traces (ML programmer speaking here).
 
 > monadTrace :: Monad m => Trace -> String -> m ()
 > monadTrace t s
->     | traceEnabled t  = do
->         () <- trace  ("[" ++ show t ++ "] " ++ s) $ return ()
->         return ()
+>     | traceEnabled t  = trace ("[" ++ show t ++ "] " ++ s) $ return ()
 >     | otherwise       = return ()
 
 Some handy aliases for the tracing function:

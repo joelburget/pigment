@@ -2,17 +2,18 @@
   LambdaCase, LiberalTypeSynonyms #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Cochon.Tactics (cochonTactics, runProofState) where
+module Cochon.Tactics (cochonTactics) where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Error
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
 import Data.List
 import Data.String
 import Data.Traversable
 import qualified Data.Text as T
+
+import Control.Error
 
 import Cochon.CommandLexer
 import Cochon.Error
@@ -115,6 +116,7 @@ cochonTactics = sort
     , matchTac
     , simplifyTac
     , relabelTac
+    , doitTac
     ]
 
 
@@ -219,6 +221,7 @@ doneTac = nullaryCT "done" (done >> return "Done.")
   "solves the goal with the last entry in the development."
 
 
+-- retTac = unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Solved.")
 giveTac = unaryInCT "give" (\tm -> elabGiveNext tm >> return "Thank you.")
   "solves the goal with <term>."
 
@@ -375,6 +378,20 @@ programTac = simpleCT
         "set up a programming problem"
         [ ("<labels>", "One or more names to introduce")
         ]
+    ))
+
+
+doitTac = simpleCT
+    "demoMagic"
+    "pigment tries to implement it for you"
+    "demoMagic"
+    (pure B0)
+    (\_ -> demoMagic >> return "Did it!")
+    (Right (TacticHelp
+        "demoMagic"
+        "demoMagic"
+        "pigment tries to implement it for you"
+        []
     ))
 
 
@@ -989,17 +1006,3 @@ simpleOutput eval = do
 -- XXX
 instance GeneralizeSignal Transition Void where
     generalizeSignal = undefined
-
-
--- Given a proof state command and a context, we can run the command with
--- `runProofState` to produce a message (either the response from the
--- command or the error message) and `Maybe` a new proof context.
-runProofState
-    :: ProofState a
-    -> ProofContext
-    -> Either String (a, ProofContext)
-runProofState m loc =
-    case runStateT (m `catchError` catchUnprettyErrors) loc of
-        Right (s, loc') -> Right (s, loc')
-        Left ss         ->
-            Left $ renderHouseStyle $ prettyStackError ss

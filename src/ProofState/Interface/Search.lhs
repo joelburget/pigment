@@ -2,10 +2,15 @@ Searching in the Proof Context
 ==============================
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes #-}
+>              GADTs, RankNTypes, LambdaCase #-}
+
 > module ProofState.Interface.Search where
+
 > import Control.Applicative
 > import Control.Monad
+
+> import Lens.Family2
+
 > import Kit.MissingLibrary
 > import NameSupply.NameSupply
 > import ProofState.Structure.Developments
@@ -39,26 +44,41 @@ follow this itinerary to reach our destination.
 >     goTo'  []          =  return () -- Reached the end of the journey
 >     goTo'  x@(xn:xns)  =  goIn >> seek xn >> goTo' xns
 >                           `pushError`
->                           (StackError
->                                [ err "goTo: could not find "
->                                , err (showName x)
->                                ]
+>                           (stackItem
+>                                [ errMsg "goTo: could not find "
+>                                , errMsg (showName x)
+>                                ] :: StackError DInTmRN
 >                           )
 >     -- `seek` find the local short name on our itinerary
 >     seek :: (String, Int) -> ProofState ()
 >     seek xn = goUp `whileA` (guard . (== xn) . last =<< getCurrentName)
 
 
-> toggleEntryVisibility :: Name -> ProofState ()
-> toggleEntryVisibility name = do
+> -- | Perform some action on the given entry. This leaves you back in the same
+> --   place you started.
+> withEntry :: Name -> (CurrentEntry -> CurrentEntry) -> ProofState ()
+> withEntry name action = do
 >     bookmark <- getCurrentName
 >     goTo name
 >     entry <- getCurrentEntry
->     putCurrentEntry $ case entry of
->         CModule name e p -> CModule name (not e) p
->         CDefinition kind ref lastName tm anchor e ->
->             CDefinition kind ref lastName tm anchor (not e)
+>     putCurrentEntry (action entry)
 >     goTo bookmark
+
+
+> toggleEntryVisibility :: Name -> ProofState ()
+> toggleEntryVisibility name = withEntry name $ \case
+>     CModule name p meta -> CModule name p (meta & expanded %~ not)
+>     CDefinition kind ref lastName tm anchor meta ->
+>         CDefinition kind ref lastName tm anchor (meta & expanded %~ not)
+
+
+> -- TODO(joel) - just lensify CurrentEntry
+> -- TODO(joel) - name collision with TermController
+> toggleEntryAnnotate :: Name -> ProofState ()
+> toggleEntryAnnotate name = withEntry name $ \case
+>     CModule name p meta -> CModule name p (meta & annotationExpanded %~ not)
+>     CDefinition kind ref lastName tm anchor meta ->
+>         CDefinition kind ref lastName tm anchor (meta & annotationExpanded %~ not)
 
 
 Searching for a goal
@@ -73,7 +93,8 @@ check the `Tip`.
 >     devTip <- getDevTip
 >     case devTip of
 >         Unknown _ -> return ()
->         _ -> throwErrorStr "couldn't get dev tip"
+>         _ -> throwStack (errMsgStack "couldn't get dev tip"
+>             :: StackError DInTmRN)
 
 Let us start with some gymnastic. We implement `prevStep` and `nextStep`
 that respectively looks for the previous and the next definition in the
@@ -85,12 +106,13 @@ transposes to the case of `nextStep`.
 > prevStep :: ProofState ()
 > prevStep =  (goUp >> much goIn) <|> goOut
 >             `pushError`
->             (sErr "prevStep: no previous steps.")
+>             (errMsgStack "prevStep: no previous steps."
+>                 :: StackError DInTmRN)
 
 > nextStep :: ProofState ()
 > nextStep =  (goIn >> goTop) <|> goDown <|> (goOut `untilA` goDown)
 >             `pushError`
->             (sErr "nextStep: no more steps.")
+>             (errMsgStack "nextStep: no more steps." :: StackError DInTmRN)
 
 It is then straightforward to navigate relatively to goals: we move from
 steps to steps, looking for a step that would be a goal.
@@ -98,12 +120,13 @@ steps to steps, looking for a step that would be a goal.
 > prevGoal :: ProofState ()
 > prevGoal =  prevStep `untilA` isGoal
 >             `pushError`
->             (sErr "prevGoal: no previous goals.")
+>             (errMsgStack "prevGoal: no previous goals."
+>                 :: StackError DInTmRN)
 
 > nextGoal :: ProofState ()
 > nextGoal =  nextStep `untilA` isGoal
 >             `pushError`
->             (sErr "nextGoal: no more goals.")
+>             (errMsgStack "nextGoal: no more goals." :: StackError DInTmRN)
 
 In the very spirit of a theorem prover, we sometimes want to stay at the
 current location if it is a goal, and go to the next goal otherwise.

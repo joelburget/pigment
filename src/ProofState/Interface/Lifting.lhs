@@ -43,7 +43,7 @@ entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
 > parBind delta nabla t = help delnab nabla (delnab -| t) where
 >     delnab = delta <> nabla
 >     help B0                                        B0            t = t
->     help (delta   :< EPARAM _ (x, _)  _ _ _ _)     B0            t =
+>     help (delta   :< EPARAM _ (x, _) _ _ _ _)     B0            t =
 >         help delta B0 (L (x :. t))
 >     help (delta   :< _)                            B0            t =
 >         help delta B0 t
@@ -85,11 +85,11 @@ a $\Pi$.
 
 > inferGoalType :: Bwd (Entry Bwd) -> INTM -> INTM
 > inferGoalType B0 t = t
-> inferGoalType (es :< EPARAM _ (x,_)  ParamLam  s _ _)  t        =
+> inferGoalType (es :< EPARAM _ (x,_)  ParamLam s _ _)  t        =
 >     inferGoalType es (PI (es -| s) (L (x :. t)))
-> inferGoalType (es :< EPARAM _ (x,_)  ParamAll  s _ _)  (PRF t)  =
+> inferGoalType (es :< EPARAM _ (x,_)  ParamAll s _ _)  (PRF t)  =
 >     inferGoalType es (PRF (ALL (es -| s) (L (x :. t))))
-> inferGoalType (es :< EPARAM _ (x,_)  ParamPi   s _ _)  SET      =
+> inferGoalType (es :< EPARAM _ (x,_)  ParamPi  s _ _)  SET      =
 >     inferGoalType es SET
 > inferGoalType (es :< _)                        t        =
 >     inferGoalType es t

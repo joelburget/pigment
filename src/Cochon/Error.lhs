@@ -5,16 +5,30 @@ Cochon error prettier
 
 > module Cochon.Error where
 
-> import Control.Monad.Except
+> import Control.Arrow
+> import Control.Monad.State
 > import Text.PrettyPrint.HughesPJ
-> import Evidences.Tm hiding (In)
+
+> import Evidences.Tm
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
 > import DisplayLang.PrettyPrint
+> import ProofState.Edition.ProofContext
 > import ProofState.Edition.ProofState
 > import ProofState.Interface.ProofKit
 > import Distillation.Distiller
 > import Distillation.Moonshine
+
+> -- Given a proof state command and a context, we can run the command with
+> -- `runProofState` to produce a message (either the response from the
+> -- command or the error message) and `Maybe` a new proof context.
+> runProofState
+>     :: ProofState a
+>     -> ProofContext
+>     -> Either String (a, ProofContext)
+> runProofState m loc =
+>     let result = runStateT (m `catchStack` catchUnprettyErrors) loc
+>     in left (renderHouseStyle . prettyStackError) result
 
 Catching the gremlins before they leave `ProofState`
 ----------------------------------------------------
@@ -22,7 +36,7 @@ Catching the gremlins before they leave `ProofState`
 > catchUnprettyErrors :: StackError DInTmRN -> ProofState a
 > catchUnprettyErrors e = do
 >     e' <- distillErrors e
->     throwError e'
+>     throwStack e'
 
 > distillErrors :: StackError DInTmRN -> ProofState (StackError DInTmRN)
 > distillErrors (StackError e) =
@@ -55,6 +69,6 @@ Pretty-printing the stack trace
 
 The following cases should be avoided as much as possible:
 
-> prettyErrorTok (ErrorREF (name := _))  = text $ showName name
-> prettyErrorTok (ErrorVAL (v :<: _))    = text "ErrorVAL" <>
->                                              brackets (text $ show v)
+> prettyErrorTok (ErrorREF ref) = text $ show ref
+> prettyErrorTok (ErrorVAL (v :<: _)) =
+>     text "ErrorVAL" <> brackets (text (show v))

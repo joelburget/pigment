@@ -9,11 +9,12 @@ Elimination with a Motive
 > import Prelude hiding (elem)
 > import Control.Applicative
 > import Control.Monad
-> import Control.Monad.Except
 > import Data.Foldable
 > import Data.List hiding (elem)
 > import Data.Monoid
 > import Data.Traversable
+
+> import Control.Error hiding ((??))
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
@@ -158,7 +159,7 @@ above) and go to the next subproblem, i.e. making the motive $P$:
 If the eliminator is not a function from motive and methods to return
 type, there is nothing we can do:
 
-> introElim _ = throwError $ sErr "elimination: eliminator not a pi-type!"
+> introElim _ = throwDTmStr "elimination: eliminator not a pi-type!"
 
 Making the methods
 
@@ -189,12 +190,12 @@ some arguments (the targets), which are returned.
 >      isEqual <- withNSupply $ equal (motiveType :>: (evTm returnType, motive))
 >      if isEqual
 >          then return B0
->          else throwError $ sErr "elimination: return type does not use motive!"
+>          else throwDTmStr "elimination: return type does not use motive!"
 > checkTargets (N (f :$ A x)) (PI s t) (motive :<: motiveType) =
 >     freshRef ("s" :<: s) $ \s -> do
 >         xs <- checkTargets (N f) (t $$ (A $ pval s)) (motive :<: motiveType)
 >         return (xs :< x)
-> checkTargets _ _ _ = throwError $ sErr "elimination: your motive is suspicious!"
+> checkTargets _ _ _ = throwDTmStr "elimination: your motive is suspicious!"
 
 Identifiying the motive
 -----------------------

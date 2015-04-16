@@ -10,19 +10,21 @@ Tm
 
 > import Prelude hiding (foldl)
 > import Control.Applicative
-> import Control.Monad.Error
-> import Control.Monad.Except
+> import Control.Monad.State
+> import Control.Monad.Trans.Class
+> import Control.Monad.Trans.Error
 > import qualified Data.Monoid as M
-> import Data.Monoid (mempty, mappend, (<>))
+> import Data.Monoid (mappend, mconcat, mempty, (<>))
 > import Data.Foldable
 > import Data.Functor.Identity
 > import Data.List hiding (foldl)
 > import Data.Traversable
+
+> import Control.Error
+
 > import Kit.MissingLibrary
 > import Kit.BwdFwd
 > import NameSupply.NameSupply
-
-> import Debug.Trace
 
 Syntax of Terms and Values
 --------------------------
@@ -268,15 +270,15 @@ model of `opTy` defined below, this interpretation uses a generic
 checker-evaluator `chev`. Based on this chev, it simply goes over the
 telescope, checking and evaluating as it moves further.
 
-> telCheck ::  (Alternative m, MonadError (StackError t) m) =>
->              (TY :>: t -> m (s :=>: VAL)) ->
->              (TEL x :>: [t]) -> m ([s :=>: VAL] , x)
+> telCheck ::  forall m t s x. (Monad m, ErrorStack m t)
+>          => (TY :>: t -> m (s :=>: VAL))
+>          -> (TEL x :>: [t]) -> m ([s :=>: VAL] , x)
 > telCheck chev (Target x :>: []) = return ([] , x)
 > telCheck chev ((_ :<: sS :-: tT) :>: (s : t)) = do
 >     ssv@(s :=>: sv) <- chev (sS :>: s)
 >     (svs , x) <- telCheck chev ((tT sv) :>: t)
 >     return (ssv : svs , x)
-> telCheck _ _ = throwError $ sErr "telCheck: opTy mismatch"
+> telCheck _ _ = throwStack (errMsgStack "telCheck: opTy mismatch" :: StackError t)
 
 Running the operator
 
@@ -643,26 +645,14 @@ Sensible name advice is a hard problem. The `fortran` function tries to
 extract a useful name from a binder.
 
 > fortran :: Tm In p x -> String
-> fortran x = let str = fortran' x in trace ("fortran: " ++ str) str
-> fortran' :: Tm In p x -> String
-> fortran' (L (x :. _))  | not (null x) = x
-> fortran' (L (H _ x _)) | not (null x) = x
-> fortran' _ = "xf" -- XXX(joel) this is unacceptable
-
-fortran :: Tm In p x -> String
-fortran (L (x :. _))  | not (null x) = x
-fortran (L (H _ x _)) | not (null x) = x
-fortran _ = "xf" -- XXX(joel) this is unacceptable
+> fortran (L (x :. _))  | not (null x) = x
+> fortran (L (H _ x _)) | not (null x) = x
+> fortran _ = "xf" -- XXX(joel) this is unacceptable
 
 Similarly, it is useful to extract name advice from a `REF`.
 
 > refNameAdvice :: REF -> String
-> refNameAdvice r = let str = refNameAdvice' r in trace ("refNameAdvice: " ++ str) str
-> refNameAdvice' :: REF -> String
-> refNameAdvice' = fst . last . refName
-
-refNameAdvice :: REF -> String
-refNameAdvice = fst . last . refName
+> refNameAdvice = fst . last . refName
 
 If we have a bunch of references we can make them into a spine:
 
@@ -675,19 +665,22 @@ Error Stack
 This is a first try, with some shortcomings. Feel free to modify the
 following to make it suit your need.
 
-> data ErrorTok t = StrMsg String
->                 | ErrorTm       (t       :<: Maybe t)
->                 | ErrorCan      (Can t)
->                 | ErrorElim     (Elim t)
->                 | ErrorREF REF
->                 | ErrorVAL      (VAL     :<: Maybe TY)
+> data ErrorTok t
+>     = StrMsg        String
+>     | ErrorTm       (t       :<: Maybe t)
+>     | ErrorCan      (Can t)
+>     | ErrorElim     (Elim t)
+>     | ErrorREF      REF
+>     | ErrorVAL      (VAL     :<: Maybe TY)
+>     deriving Show
+
 > instance Functor ErrorTok where
->     fmap f (StrMsg x)              = StrMsg x
->     fmap f (ErrorTm (t :<: mt))    = ErrorTm (f t :<: fmap f mt)
->     fmap f (ErrorCan t)   = ErrorCan (fmap f t)
->     fmap f (ErrorElim t)  = ErrorElim (fmap f t)
->     fmap f (ErrorREF r)            = ErrorREF r
->     fmap f (ErrorVAL (t :<: mt))   = ErrorVAL (t :<: mt)
+>     fmap f (StrMsg x)            = StrMsg x
+>     fmap f (ErrorTm (t :<: mt))  = ErrorTm (f t :<: fmap f mt)
+>     fmap f (ErrorCan t)          = ErrorCan (fmap f t)
+>     fmap f (ErrorElim t)         = ErrorElim (fmap f t)
+>     fmap f (ErrorREF r)          = ErrorREF r
+>     fmap f (ErrorVAL (t :<: mt)) = ErrorVAL (t :<: mt)
 
 An error is list of error tokens:
 
@@ -697,20 +690,27 @@ Errors a reported in a stack, as failure is likely to be followed by
 further failures. The top of the stack is the head of the list.
 
 > newtype StackError t = StackError { unStackError :: [ErrorItem t] }
+>     deriving Show
 
-< instance MonadPlus (Either (StackError a)) where
-< mzero = Left (StackError [])
-< mplus x@(Right l) \_ = x
-< mplus \_ x = x
-<
-< mplus (Left (StackError xs)) (Left (StackError ys)) =
-< Left (StackError (xs++ys))
-< mplus l@(Left (StackError xs)) \_ = l
-< mplus \_ r@(Left (StackError xs)) = r
-< mplus (Right l) (Right r) =k
+> -- XXX(joel) this is gross
+> -- With ProofStateT, we use the alternative instance for StateT, which
+> -- requires MonadPlus Either, which requires Error (StackError e).
+> instance Error (StackError e) where
+>     noMsg = errMsgStack "something went wrong"
+>     strMsg = errMsgStack
 
-> instance Error (StackError t) where
->   strMsg = sErr
+> class ErrorStack m e where
+>     throwStack :: StackError e -> m a
+>     catchStack :: m a -> (StackError e -> m a) -> m a
+
+> instance ErrorStack (Either (StackError e)) e where
+>     throwStack = Left
+>     catchStack = catchE
+
+> instance (Monad m, ErrorStack m e) => ErrorStack (StateT s m) e where
+>     throwStack = lift . throwStack
+>     catchStack m h = StateT $ \state ->
+>         (runStateT m state) `catchStack` (\e -> runStateT (h e) state)
 
 > instance M.Monoid (StackError t) where
 >   (StackError a) `mappend` (StackError b) = StackError (a ++ b)
@@ -718,11 +718,14 @@ further failures. The top of the stack is the head of the list.
 
 To ease the writing of error terms, we have a bunch of combinators:
 
-> err :: String -> ErrorItem t
-> err s = [StrMsg s]
+> stackItem :: [ErrorItem t] -> StackError t
+> stackItem = StackError . pure . mconcat
 
-> sErr :: String -> StackError t
-> sErr = StackError . pure . err
+> errMsg :: String -> ErrorItem t
+> errMsg s = [StrMsg s]
+
+> errMsgStack :: String -> StackError t
+> errMsgStack = StackError . pure . errMsg
 
 > errTm :: t -> ErrorItem t
 > errTm t = [ErrorTm (t :<: Nothing)]
@@ -742,30 +745,37 @@ To ease the writing of error terms, we have a bunch of combinators:
 > errRef :: REF -> ErrorItem t
 > errRef r = [ErrorREF r]
 
-> pushError :: MonadError (StackError t) m => m a -> StackError t -> m a
-> pushError c e = catchError c (\x -> throwError (e <> x))
+> pushError :: (Monad m, ErrorStack m t)
+>           => m a
+>           -> StackError t
+>           -> m a
+> pushError c e = c `catchStack` (\x -> throwStack (e <> x))
 
-> throwErrorS :: MonadError (StackError t) m => [ErrorItem t] -> m a
-> throwErrorS = throwError . StackError
+> throwErrorS :: ErrorStack m t => [ErrorItem t] -> m a
+> throwErrorS = throwStack . StackError
 
-> catchMaybe :: MonadError (StackError t) m => Maybe a -> StackError t -> m a
+> catchMaybe :: (ErrorStack m t, Monad m)
+>            => Maybe a
+>            -> StackError t
+>            -> m a
 > catchMaybe (Just x) _ = return x
-> catchMaybe Nothing  e = throwError e
+> catchMaybe Nothing  e = throwStack e
 
-> catchEither :: MonadError (StackError t) m
+> catchEither :: (Monad m, ErrorStack m t)
 >             => Either (StackError t) a
 >             -> StackError t
 >             -> m a
 > catchEither (Right x) _ = return x
-> catchEither (Left s) e = throwError (e <> s)
+> catchEither (Left s) e = throwStack (e <> s)
 
-> throwErrorStr :: MonadError (StackError t) m => String -> m a
-> throwErrorStr = throwError . StackError . pure . err
+> throwErrMsg :: ErrorStack m VAL => String -> m a
+> throwErrMsg str =
+>     let stack :: StackError VAL
+>         stack = errMsgStack str
+>     in throwStack stack
 
-TODO(joel) rename to throwErrorTm
-
-> throwError' :: MonadError (StackError t) m => t -> m a
-> throwError' = throwError . StackError . pure . errTm
+throwErrTm :: Monad m => t -> StackErrorT t m a
+throwErrTm = throwStack . StackError . pure . errTm
 
 > convertErrorVALs :: ErrorTok VAL -> ErrorTok t
 > convertErrorVALs (StrMsg s)             = StrMsg s

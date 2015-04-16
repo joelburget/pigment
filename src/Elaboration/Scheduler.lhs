@@ -73,7 +73,7 @@ search its children from the top.
 >     cs <- getBelowCursor
 >     case cs of
 >         F0                        -> schedulerDone n
->         EPARAM _ _ _ _ _ _ :> _   -> cursorDown >> schedulerContinue n
+>         EPARAM _ _ _ _ _ _ :> _ -> cursorDown >> schedulerContinue n
 >         _ :> _                    -> do
 >             cursorDown
 >             goIn
@@ -168,9 +168,9 @@ otherwise we hope for a proof of their equality.
 >         else  runElabHope WorkElsewhere (PRF (EQBLUE (ty :>: tmv') (ty :>: stv))) >>
 >               schedTrace "resume: WaitSolve failed!" >> resume tt prob
 
-<         else  throwError' $ err "resume: hole" ++ errRef ref ++
-<                    err "has been solved with" ++ errTyVal (tmv' :<: ty) ++
-<                    err "but I wanted to solve it with" ++
+<         else  throwErrTm $ errMsg "resume: hole" ++ errRef ref ++
+<                    errMsg "has been solved with" ++ errTyVal (tmv' :<: ty) ++
+<                    errMsg "but I wanted to solve it with" ++
 <                            errTyVal (valueOf stt' :<: ty)
 
 > resume tt (ElabSchedule prob) = resume tt prob

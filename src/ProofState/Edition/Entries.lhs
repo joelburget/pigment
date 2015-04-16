@@ -27,8 +27,10 @@ There is an obvious (forgetful) map from entry (Definition or Module) to
 a current entry:
 
 > mkCurrentEntry :: Traversable f => Entry f -> CurrentEntry
-> mkCurrentEntry (EDEF ref xn dkind _ ty a e) = CDefinition dkind ref xn ty a e
-> mkCurrentEntry (EModule n _ e p)            = CModule n e p
+> mkCurrentEntry (EDEF ref xn dkind _ ty a meta)
+>     = CDefinition dkind ref xn ty a meta
+> mkCurrentEntry (EModule n _ p meta)
+>     = CModule n p meta
 
 From Above to Below, and back
 
@@ -42,12 +44,12 @@ and `Dev f`:
 
 > rearrangeEntry ::  (Traversable f, Traversable g) =>
 >                    (forall a. f a -> g a) -> Entry f -> Entry g
-> rearrangeEntry h (EPARAM ref xn k ty a e)    =
->     EPARAM ref xn k ty a e
-> rearrangeEntry h (EDEF ref xn k dev ty a e)  =
->     EDEF ref xn k (rearrangeDev h dev) ty a e
-> rearrangeEntry h (EModule n d e p)           =
->     EModule n (rearrangeDev h d) e p
+> rearrangeEntry h (EPARAM ref xn k ty a meta)
+>     = EPARAM ref xn k ty a meta
+> rearrangeEntry h (EDEF ref xn k dev ty a meta)
+>     = EDEF ref xn k (rearrangeDev h dev) ty a meta
+> rearrangeEntry h (EModule n d p meta)
+>     = EModule n (rearrangeDev h d) p meta
 
 > rearrangeDev :: (Traversable f, Traversable g) =>
 >     (forall a. f a -> g a) -> Dev f -> Dev g

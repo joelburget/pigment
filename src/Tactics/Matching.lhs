@@ -1,16 +1,22 @@
 <a name="Tactics.Matching">Matching</a>
 ========
 
-> {-# LANGUAGE GADTs, TypeOperators, PatternSynonyms #-}
+> {-# LANGUAGE GADTs, TypeOperators, PatternSynonyms, FlexibleInstances, MultiParamTypeClasses #-}
 
 > module Tactics.Matching where
 
 > import Prelude hiding (any, elem)
 > import Control.Applicative
 > import Control.Monad
-> import Control.Monad.Except
 > import Control.Monad.State
+> import Control.Monad.Trans.Class
 > import Data.Foldable
+> import Data.String (fromString)
+
+> import Control.Error
+> import React
+
+> import DisplayLang.Name
 > import NameSupply.NameSupplier
 > import Evidences.Tm
 > import Evidences.Eval
@@ -22,8 +28,6 @@
 > import ProofState.Interface.ProofKit
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
-> import Data.String (fromString)
-> import React
 
 A *matching substitution* is a list of references with their values, if
 any.
@@ -40,15 +44,19 @@ When inserting a new reference-value pair into the substitution, we
 ensure that it is consistent with any value already given to the
 reference.
 
-> insertSubst :: REF -> VAL -> StateT MatchSubst ProofState ()
-> insertSubst x t = get >>= flip help F0
+> insertSubst :: REF
+>             -> VAL
+>             -> StateT MatchSubst ProofState ()
+> insertSubst x t = get >>= (`help` F0)
 >   where
->     help :: MatchSubst -> Fwd (REF, Maybe VAL) -> StateT MatchSubst ProofState ()
->     help B0 fs = error "insertSubst: reference not found!"
+>     help :: MatchSubst
+>          -> Fwd (REF, Maybe VAL)
+>          -> StateT MatchSubst ProofState ()
+>     help B0 fs = lift $ throwDTmStr "insertSubst: reference not found!"
 >     help (rs :< (y, m)) fs | x == y = case m of
 >         Nothing  -> put (rs :< (x, Just t) <>< fs)
 >         Just u   -> do
->             guard =<< (lift $ withNSupply (equal (pty x :>: (t, u))))
+>             guard =<< lift (withNSupply (equal (pty x :>: (t, u))))
 >             put (rs :< (y, m) <>< fs)
 >     help (rs :< (y, m)) fs = help rs ((y, m) :> fs)
 
@@ -71,7 +79,9 @@ solutions). The fresh references are therefore collected in a list and
 `checkSafe` (defined below) is called to ensure none of the unsafe
 references occur.
 
-> matchValue :: Bwd REF -> TY :>: (VAL, VAL) -> StateT MatchSubst ProofState ()
+> matchValue :: Bwd REF
+>            -> TY :>: (VAL, VAL)
+>            -> StateT MatchSubst ProofState ()
 > matchValue zs (ty :>: (NP x, t)) = do
 >     rs <- get
 >     if x `elemSubst` rs
@@ -79,7 +89,9 @@ references occur.
 >         else  matchValue' zs (ty :>: (NP x, t))
 > matchValue zs tvv = matchValue' zs tvv
 
-> matchValue' :: Bwd REF -> TY :>: (VAL, VAL) -> StateT MatchSubst ProofState ()
+> matchValue' :: Bwd REF
+>             -> TY :>: (VAL, VAL)
+>             -> StateT MatchSubst ProofState ()
 > matchValue' zs (PI s t :>: (v, w)) = do
 >     rs <- get
 >     rs' <- lift $ freshRef ("expand" :<: s) $ \ sRef -> do
@@ -87,26 +99,31 @@ references occur.
 >         execStateT (matchValue (zs :< sRef) (t $$ A sv :>: (v $$ A sv, w $$ A sv))) rs
 >     put rs'
 > matchValue' zs (C cty :>: (C cs, C ct)) = case halfZip cs ct of
->     Nothing   -> throwError $ sErr "matchValue: unmatched constructors!"
+>     Nothing   -> lift $ throwDTmStr "matchValue: unmatched constructors!"
 >     Just cst  -> do
 >         (mapStateT $ mapStateT $ liftError'
 >             (\ v -> convertErrorVALs (fmap fst v)))
 >             (canTy (chevMatchValue zs) (cty :>: cst))
 >         return ()
+
 > matchValue' zs (_ :>: (N s, N t)) = matchNeutral zs s t >> return ()
 > matchValue' zs tvv = guard =<< (lift $ withNSupply $ equal tvv)
 
-> chevMatchValue :: Bwd REF -> TY :>: (VAL, VAL) ->
->     StateT MatchSubst (ProofStateT (VAL, VAL)) (() :=>: VAL)
+> chevMatchValue :: Bwd REF
+>                -> TY :>: (VAL, VAL)
+>                -> StateT MatchSubst (ProofStateT (VAL, VAL)) (() :=>: VAL)
 > chevMatchValue zs tvv@(_ :>: (v, _)) = do
->     (mapStateT $ mapStateT $ liftError' (error "matchValue: unconvertable error!"))
+>     (mapStateT $ liftErrorState (error "matchValue: unconvertable error!"))
 >         $ matchValue zs tvv
 >     return (() :=>: v)
 
 The `matchNeutral` command matches two neutrals, and returns their type
 along with the matching substitution.
 
-> matchNeutral :: Bwd REF -> NEU -> NEU -> StateT MatchSubst ProofState TY
+> matchNeutral :: Bwd REF
+>              -> NEU
+>              -> NEU
+>              -> StateT MatchSubst ProofState TY
 > matchNeutral zs (P x) t = do
 >     rs <- get
 >     if x `elemSubst` rs
@@ -117,24 +134,50 @@ along with the matching substitution.
 >         else matchNeutral' zs (P x) t
 > matchNeutral zs a b = matchNeutral' zs a b
 
-> matchNeutral' :: Bwd REF -> NEU -> NEU -> StateT MatchSubst ProofState TY
-> matchNeutral' zs (P x)  (P y)  | x == y            = return (pty x)
-> matchNeutral' zs (f :$ e) (g :$ d)                 = do
->     C ty <- matchNeutral zs f g
->     case halfZip e d of
->         Nothing  -> throwError $ sErr "matchNeutral: unmatched eliminators!"
->         Just ed  -> do
->             (_, ty') <- (mapStateT $ mapStateT $ liftError' unconvertable) $ elimTy (chevMatchValue zs) (N f :<: ty) ed
->             return ty'
-> matchNeutral' zs (fOp :@ as) (gOp :@ bs) | fOp == gOp = do
->     (_, ty) <- (mapStateT $ mapStateT $ liftError' unconvertable) $ opTy fOp (chevMatchValue zs) (zip as bs)
->     return ty
-> matchNeutral' zs a b = throwError $ StackError
->     [ err "matchNeutral: unmatched "
+> matchNeutral' :: Bwd REF
+>               -> NEU
+>               -> NEU
+>               -> StateT MatchSubst ProofState TY
+> matchNeutral' zs (P x)  (P y)
+>     | x == y
+>     = return (pty x)
+> matchNeutral' zs (f :$ e) (g :$ d)
+>     = do
+>         C ty <- matchNeutral zs f g
+>         case halfZip e d of
+>             Nothing -> lift $
+>                 throwDTmStr "matchNeutral: unmatched eliminators!"
+>             Just ed -> do
+>                 (_, ty') <- unconvertable' $
+>                     elimTy (chevMatchValue zs) (N f :<: ty) ed
+>                 return ty'
+> matchNeutral' zs (fOp :@ as) (gOp :@ bs)
+>     | fOp == gOp
+>     = do
+>         (_, ty) <- unconvertable' $ opTy fOp (chevMatchValue zs) (zip as bs)
+>         return ty
+> matchNeutral' zs a b = lift $ throwDInTmRN $ stackItem
+>     [ errMsg "matchNeutral: unmatched "
 >     , errVal (N a)
->     , err "and"
+>     , errMsg "and"
 >     , errVal (N b)
 >     ]
+
+> unconvertable' :: StateT MatchSubst (ProofStateT (VAL, VAL)) a
+>                -> StateT MatchSubst (ProofStateT DInTmRN) a
+> -- XXX(joel)
+> unconvertable' st = StateT $ \s ->
+>     let pfSt = runStateT st s
+>     in liftErrorState unconvertable pfSt
+
+opTy :: forall m t s. (Monad m, ErrorStack m t)
+     => Op
+     -> (TY :>: t -> m (s :=>: VAL))
+     -> [t]
+     -> m ([s :=>: VAL], TY)
+chevMatchValue :: Bwd REF
+               -> TY :>: (VAL, VAL)
+               -> StateT MatchSubst (ProofStateT (VAL, VAL)) (() :=>: VAL)
 
 > unconvertable = error "matchNeutral: unconvertable error!"
 
@@ -143,5 +186,5 @@ must not occur as solutions to matching problems. The `checkSafe`
 function throws an error if any of the references occur in the value.
 
 > checkSafe :: Bwd REF -> VAL -> ProofState ()
-> checkSafe zs t  | any (`elem` t) zs  = throwError $ sErr "checkSafe: unsafe!"
+> checkSafe zs t  | any (`elem` t) zs  = throwDTmStr "checkSafe: unsafe!"
 >                 | otherwise          = return ()

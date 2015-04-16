@@ -6,7 +6,7 @@
 module Tactics.Data where
 
 import Control.Applicative
-import Control.Monad.Except
+import Control.Error
 import Control.Monad.Identity
 import Data.Functor.Constant
 import Data.Monoid hiding (All)
@@ -68,7 +68,7 @@ ty2desc r ps (PI a b) = do
         (a'', i) <- ty2h r ps a
         (b', j, k, c) <- freshRef (fortran b :<: a) $ \s -> do
             ret@(b', _, _, _) <- ty2desc r ps (b $$ A (N (P s)))
-            when (occurs s b') $ throwError (sErr "Bad dependency")
+            when (occurs s b') $ throwDTmStr "Bad dependency"
             return ret
         case i of
           0 -> return (
@@ -94,14 +94,14 @@ ty2desc r ps (PI a b) = do
             ty2desc r ps (b $$ A (NP s)) >>= helper s
 ty2desc r ps x = do
     b <- withNSupply (equal (SET :>: (x, NP r $$$ ps)))
-    unless b $ throwError (sErr "C doesn't target T")
+    unless b $ throwDTmStr "C doesn't target T"
     return (CONSTD UNIT, [], [], \[] -> VOID)
 
 ty2h :: REF -> [Elim VAL] -> VAL -> ProofState (INTM, Int)
 ty2h r ps (PI a b) = do
     a' <- bquoteHere a
     if occurs r a'
-      then throwError (sErr "Not strictly positive")
+      then throwDTmStr "Not strictly positive"
       else do
         (b',i) <- freshRef (fortran b :<: a)
                    (\s -> ty2h r ps (b $$ A (NP s)) >>= \(x,y) ->
@@ -111,7 +111,7 @@ ty2h r ps (PI a b) = do
           _ -> (SIGMA a' b', i + 1)
 ty2h r ps x = do
     b <- withNSupply $ equal (SET :>: (x, NP r $$$ ps))
-    unless b $ throwError (sErr "Not SP")
+    unless b $ throwDTmStr "Not SP"
     return (UNIT, 0)
 
 occursM :: REF -> Mangle (Constant Any) REF REF

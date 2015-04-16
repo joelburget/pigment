@@ -7,7 +7,9 @@
 > module Elaboration.MakeElab where
 
 > import Control.Applicative
-> import Control.Monad.Except
+
+> import Control.Error hiding ((??))
+
 > import NameSupply.NameSupplier
 > import Evidences.Tm
 > import Evidences.TypeChecker
@@ -41,8 +43,8 @@ We can type-check a term using the `eCheck` instruction.
 > eCheck tytm = do
 >     nsupply <- eAskNSupply
 >     case liftError DTIN (typeCheck (check tytm) nsupply) of
->         Left e    -> throwError e
->         Right tt  -> return tt
+>         Left e   -> throwStack (e :: StackError DInTmRN)
+>         Right tt -> return tt
 
 The `eCoerce` instruction attempts to coerce a value from the first type
 to the second type, either trivially (if the types are definitionally
@@ -82,8 +84,8 @@ The `eInfer` instruction infers the type of an evidence term.
 > eInfer tm = do
 >     nsupply <- eAskNSupply
 >     case liftError DTIN (typeCheck (infer tm) nsupply) of
->         Left e    -> throwError e
->         Right (tv :<: ty)  -> do
+>         Left e -> throwStack (e :: StackError DInTmRN)
+>         Right (tv :<: ty) -> do
 >             ty' :=>: _ <- eQuote ty
 >             return $ PAIR ty' (N tm) :=>: PAIR ty tv
 
@@ -137,6 +139,8 @@ elaboration.
 
 > makeElab :: Loc -> DInTmRN -> Elab (INTM :=>: VAL)
 > makeElab loc tm = makeElab' loc . (:>: tm) =<< eGoal
+
+
 > makeElab' :: Loc -> (TY :>: DInTmRN) -> Elab (INTM :=>: VAL)
 
 We elaborate list-like syntax for enumerations into the corresponding
@@ -197,9 +201,11 @@ tag in the enumeration to determine the appropriate index.
 >     findTag a (CONSE (TAG b) t) n
 >       | a == b        = return (toNum n :=>: toNum n)
 >       | otherwise     = findTag a t (succ n)
->     findTag a _ n  = throwError . sErr $ "elaborate: tag `"
->                                           ++ a
->                                           ++ " not found in enumeration."
+>     findTag a _ n  =
+>         let stack :: StackError DInTmRN
+>             stack = errMsgStack $
+>                 "elaborate: tag `" ++ a ++ " not found in enumeration."
+>         in throwStack $ stack
 >     toNum :: Int -> Tm In p x
 >     toNum 0  = ZE
 >     toNum n  = SU (toNum (n-1))
@@ -311,9 +317,9 @@ nothing we can do but wait for the type to become canonical.
 If nothing else matches, give up and report an error.
 
 > makeElab' loc (ty :>: tm) = throwErrorS $
->     [ err "makeElab: can't push"
+>     [ errMsg "makeElab: can't push"
 >     , errTyVal (ty :<: SET)
->     , err "into"
+>     , errMsg "into"
 >     , errTm tm
 >     ]
 
@@ -437,14 +443,17 @@ then have to reconstruct the overall type-term pair from the result.
 Otherwise, we probably have a scheme with an explicit $\Pi$-binding but
 an eliminator other than application, so we give up and throw an error.
 
->     handleSchemeArgs es sch (_ :=>: v :<: ty) as = throwErrorS
->         [ err "handleSchemeArgs: cannot handle scheme"
->         , errScheme sch
->         , err "with neutral term"
->         , errTyVal (v :<: ty)
->         , err "and eliminators"
->         , map ErrorElim as
->         ]
+>     handleSchemeArgs es sch (_ :=>: v :<: ty) as =
+>         let stack :: StackError DInTmRN
+>             stack = stackItem
+>                 [ errMsg "handleSchemeArgs: cannot handle scheme"
+>                 , errScheme sch
+>                 , errMsg "with neutral term"
+>                 , errTyVal (v :<: ty)
+>                 , errMsg "and eliminators"
+>                 , map ErrorElim as
+>                 ]
+>         in throwStack stack
 
 The `handleArgs` function is a simplified version of `handleSchemeArgs`,
 for neutral terms without schemes. It takes a typed neutral term and a
@@ -482,3 +491,7 @@ problem.
 >     handleArgs (tm :=>: tv :<: ty) as = do
 >         tt <- eQuote ty
 >         eCan tt (ElabInferProb (DTEX tm ::$ as))
+
+> eitherToElab :: Either (StackError DInTmRN) a -> Elab a
+> eitherToElab (Left err) = ECry err
+> eitherToElab (Right a) = return a

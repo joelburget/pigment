@@ -105,8 +105,8 @@ parameters can be provided explicitly.
 >     let (x', b) = shouldDiscardScheme x
 >     uess <- gets inBScope
 >     (r, s, ms) <- resolve x' uess
->        `catchEither` (sErr $ "resolveHere: cannot resolve name: "
->                             ++ showRelName x')
+>        `catchEither` (errMsgStack $ "resolveHere: cannot resolve name: "
+>                             ++ showRelName x' :: StackError DInTmRN)
 >     return (r, s, if b then Nothing else ms)
 >   where
 >     shouldDiscardScheme :: RelName -> (RelName, Bool)
@@ -138,23 +138,40 @@ as appropriate then continues with `lookFor`.
 > resolve :: RelName -> BScopeContext -> Either (StackError t) ResolveResult
 > resolve [(y, Rel 0)] _
 >   | Just ref <- lookup y primitives  = Right (ref, [], Nothing)
-> resolve ((x, Rel i) : us)  bsc = lookUp (x, i) bsc (bToF bsc)   >>= lookFor us
-> resolve ((x, Abs i) : us)  bsc = lookDown (x, i) (bToF bsc) []  >>= lookFor us
-> resolve []                 bsc = Left (sErr "Oh no, the empty name")
+> resolve ((x, Rel i) : us)  bsc = lookUp (x, i) bsc (bToF bsc)  >>= lookFor us
+> resolve ((x, Abs i) : us)  bsc = lookDown (x, i) (bToF bsc) [] >>= lookFor us
+> resolve []                 bsc = Left (errMsgStack "Oh no, the empty name")
+
+type FScopeContext =  ( Fwd (Entry Bwd)
+                      , Fwd ((String, Int), Fwd (Entry Bwd)))
+
+type ResolveState =  (  Either FScopeContext Entries
+                     ,  [REF]
+                     ,  Maybe REF
+                     ,  Maybe (Scheme INTM)
+                     )
+type ResolveResult = (REF, [REF], Maybe (Scheme INTM))
 
 > lookFor :: RelName -> ResolveState -> Either (StackError t) ResolveResult
-> lookFor [] (_,         sp, Just r,   ms)  = Right (r, sp, ms)
-> lookFor [] (Left fsc,  sp, Nothing,  _)   = Left (sErr "Direct ancestors are not in scope!")
+> -- Excellent, we're at the name. Give back:
+> -- * r : REF - the thing we found
+> -- * sp : [REF] - shared parameters it's applied to
+> -- * ms : Maybe (Scheme INTM) - its scheme
+> lookFor [] (_,         sp, Just r,   ms)  =
+>     Right (r, sp, ms)
+> lookFor [] (Left fsc,  sp, Nothing,  _)   =
+>     Left (errMsgStack "Direct ancestors are not in scope!")
 > lookFor us (Left fsc,  sp, _,        _)   = do
 >     (x, _, z) <- lookFor' us fsc
 >     return (x, sp, z)
-> lookFor us (Right es, sp, mr, ms)         = lookLocal us es sp mr ms
+> lookFor us (Right es, sp, mr, ms)         =
+>     lookLocal us es sp mr ms
 
 > lookFor' :: RelName -> FScopeContext -> Either (StackError t) ResolveResult
 > lookFor' ((x, Abs i) : us)  fsc = lookDown (x, i) fsc []  >>= lookFor us
 > lookFor' ((x, Rel 0) : us)  fsc = lookDown (x, 0) fsc []  >>= lookFor us
-> lookFor' ((x, Rel i) : us)  fsc = Left (sErr "Yeah, good luck with that")
-> lookFor' []                 fsc = Left (sErr "Oh no, the empty name")
+> lookFor' ((x, Rel i) : us)  fsc = Left (errMsgStack "Yeah, good luck with that")
+> lookFor' []                 fsc = Left (errMsgStack "Oh no, the empty name")
 
 TODO(joel) what a cluster
 
@@ -163,7 +180,7 @@ TODO(joel) what a cluster
 >        -> FScopeContext
 >        -> Either (StackError t) ResolveState
 
-> lookUp (x,i) (B0, B0) fs = Left (sErr $ "Not in scope " ++ x)
+> lookUp (x,i) (B0, B0) fs = Left (errMsgStack $ "Not in scope " ++ x)
 
 > lookUp (x,i) ((esus :< (es,(y,j))),B0) (fs,vfss)
 >   | x == y = if i == 0
@@ -223,14 +240,14 @@ TODO(joel) what a cluster
 >          then Right (Left (es, uess), sp, Nothing, Nothing)
 >          else lookDown (x, i-1) (es, uess) sp
 >     else lookDown (x, i) (es, uess) sp
-> lookDown (x, i) (F0, F0) fs = Left (sErr $ "Not in scope " ++ x)
+> lookDown (x, i) (F0, F0) fs = Left (errMsgStack $ "Not in scope " ++ x)
 
 > lookLocal :: RelName -> Entries -> [REF] -> Maybe REF -> Maybe (Scheme INTM) ->
 >                  Either (StackError t) ResolveResult
 > lookLocal ((x, Rel i) : ys) es sp _ _  = huntLocal (x, i) ys (reverse $ trail es) sp
 > lookLocal ((x, Abs i) : ys) es sp _ _  = huntLocal (x, i) ys (trail es) sp
 > lookLocal [] _ sp  (Just r)  ms        = Right (r, sp, ms)
-> lookLocal [] _ _   Nothing   _         = Left (sErr "Modules have no term representation")
+> lookLocal [] _ _   Nothing   _         = Left (errMsgStack "Modules have no term representation")
 
 > huntLocal :: (String, Int) -> RelName -> [Entry Bwd] -> [REF] ->
 >                      Either (StackError t) ResolveResult
@@ -239,10 +256,10 @@ TODO(joel) what a cluster
 >     then if i == 0
 >          then case devEntries <$> entryDev e of
 >              Just zs  -> lookLocal ys zs as (entryRef e) (entryScheme e)
->              Nothing  -> Left (sErr "Params in other Devs are not in scope")
+>              Nothing  -> Left (errMsgStack "Params in other Devs are not in scope")
 >          else huntLocal (x, i-1) ys es as
 >     else huntLocal (x, i) ys es as
-> huntLocal (x, i) ys [] as = Left (sErr $ "Had to give up looking for " ++ x)
+> huntLocal (x, i) ys [] as = Left (errMsgStack $ "Had to give up looking for " ++ x)
 
 <a name="ProofState.Interface.NameResolution.christening">Unresolving absolute names to relative names</a>
 --------------------------------------------
