@@ -69,8 +69,6 @@ import Tactics.Unification
 
 import Lens.Family2
 
--- import Haste hiding (fromString, prompt, focus)
--- import Haste.Prim
 import GHCJS.Foreign
 import React hiding (key)
 import qualified React
