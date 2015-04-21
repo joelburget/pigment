@@ -272,8 +272,8 @@ letTac = simpleCT
     ((:<) <$> ((B0 :<) <$> tokenString) <*> tokenScheme)
     (\ [StrArg x, SchemeArg s] -> do
         elabLet (x :<: s)
-        optional' problemSimplify
-        optional' seekGoal
+        optional problemSimplify
+        optional seekGoal
         return (fromString $ "Let there be " ++ x ++ "."))
     (Right (TacticHelp
         "let <label> <scheme> : <type>"
@@ -399,11 +399,11 @@ downTac = nullaryCT "down" (goDown >> return "Going down...")
     "moves to the development below the current one."
 
 
-topTac = nullaryCT "top" (many' goUp >> return "Going to top...")
+topTac = nullaryCT "top" (many goUp >> return "Going to top...")
     "moves to the top-most development at the current level."
 
 
-bottomTac = nullaryCT "bottom" (many' goDown >> return "Going to bottom...")
+bottomTac = nullaryCT "bottom" (many goDown >> return "Going to bottom...")
     "moves to the bottom-most development at the current level."
 
 
@@ -411,7 +411,7 @@ previousTac = nullaryCT "previous" (prevGoal >> return "Going to previous goal..
     "searches for the previous goal in the proof state."
 
 
-rootTac = nullaryCT "root" (many' goOut >> return "Going to root...")
+rootTac = nullaryCT "root" (many goOut >> return "Going to root...")
     "moves to the root of the proof state."
 
 
@@ -419,11 +419,11 @@ nextTac = nullaryCT "next" (nextGoal >> return "Going to next goal...")
     "searches for the next goal in the proof state."
 
 
-firstTac = nullaryCT "first"  (some' prevGoal >> return "Going to first goal...")
+firstTac = nullaryCT "first"  (some prevGoal >> return "Going to first goal...")
     "searches for the first goal in the proof state."
 
 
-lastTac = nullaryCT "last"   (some' nextGoal >> return "Going to last goal...")
+lastTac = nullaryCT "last"   (some nextGoal >> return "Going to last goal...")
     "searches for the last goal in the proof state."
 
 
@@ -824,7 +824,7 @@ matchTac = simpleCT
 
 simplifyTac = nullaryCT
     "simplify"
-    (problemSimplify >> optional' seekGoal >> return "Simplified.")
+    (problemSimplify >> optional seekGoal >> return "Simplified.")
     "simplifies the current problem."
 
 {-
@@ -934,10 +934,10 @@ infoWhatIs tmd = draftModule "__infoWhatIs" $ do
 byCTactic :: Maybe RelName -> DExTmRN -> ProofState InteractionReact
 byCTactic n e = do
     elimCTactic n e
-    optional' problemSimplify           -- simplify first method
-    many' (goDown >> problemSimplify)   -- simplify other methods
-    many' goUp                          -- go back up to motive
-    optional' seekGoal                  -- jump to goal
+    optional problemSimplify           -- simplify first method
+    many (goDown >> problemSimplify)   -- simplify other methods
+    many goUp                          -- go back up to motive
+    optional seekGoal                  -- jump to goal
     return "Eliminated and simplified."
 
 defineCTactic :: DExTmRN -> DInTmRN -> ProofState InteractionReact

@@ -31,18 +31,6 @@ type synonym:
 Error management toolkit
 ------------------------
 
-Work around an overlapping instance error by restricting the type of
-optional.
-
-> optional' :: ProofState a -> ProofState (Maybe a)
-> optional' = optional
-
-> some' :: ProofState a -> ProofState [a]
-> some' = some
-
-> many' :: ProofState a -> ProofState [a]
-> many' = many
-
 Some functions, such as `distill`, are defined in the `ProofStateT INTM`
 monad. However, Cochon lives in a `ProofStateT DInTmRN` monad.
 Therefore, in order to use it, we will need to lift from the former to

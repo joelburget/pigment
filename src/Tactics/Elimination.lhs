@@ -723,7 +723,7 @@ the types of the methods, quoting them (to expand the definition of the
 motive) and lifting them over $\Delta_0$:
 
 >     toMotive
->     methodTypes <- many' $ do
+>     methodTypes <- many $ do
 >         goDown
 >         _ :=>: ty <- getHoleGoal
 >         ty' <- bquoteHere ty

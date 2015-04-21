@@ -215,7 +215,7 @@ workingOn :: ProofContext -> InteractionReact
 workingOn loc =
     let runner :: ProofState InteractionReact
         runner = do
-            mty <- optional' getHoleGoal
+            mty <- optional getHoleGoal
             case mty of
                 Just (_ :=>: ty) -> workingOn' ty
                 Nothing          -> return ""

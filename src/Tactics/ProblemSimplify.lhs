@@ -304,7 +304,7 @@ the methods, then returns to the original goal.
 >     methods <- elim Nothing tt
 >     simpTrace "Eliminated!"
 >     toFirstMethod
->     replicateM_ (length methods) (optional' problemSimplify >> goDown)
+>     replicateM_ (length methods) (optional problemSimplify >> goDown)
 >     goOut
 
 > cursorAboveLambdas :: ProofState ()
