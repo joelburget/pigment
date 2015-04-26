@@ -127,6 +127,7 @@ builds a tactic that works in the proof state, and there are various
 specialised versions of it for nullary and unary tactics.
 -}
 simpleCT :: String
+         -> Historic
          -> T.Text -- XXX remove
          -> TacticFormat
          -> Parsley Token (Bwd CochonArg)
@@ -134,18 +135,23 @@ simpleCT :: String
          -> ([CochonArg] -> ProofState InteractionReact)
          -> Either (Pure React') TacticHelp
          -> CochonTactic
-simpleCT name desc fmt parser eval help = CochonTactic
+simpleCT name hist desc fmt parser eval help = CochonTactic
     {  ctName = name
     ,  ctDesc = fmt
     ,  ctParse = parser
-    ,  ctxTrans = simpleOutput . eval
+    ,  ctxTrans = simpleOutput hist . eval
     ,  ctHelp = help
     }
 
 
-nullaryCT :: String -> ProofState InteractionReact -> String -> CochonTactic
-nullaryCT name eval desc = simpleCT
+nullaryCT :: String
+          -> Historic
+          -> ProofState InteractionReact
+          -> String
+          -> CochonTactic
+nullaryCT name hist eval desc = simpleCT
     name
+    hist
     (fromString desc)
     (TfPseudoKeyword (fromString name))
     (pure B0)
@@ -159,6 +165,7 @@ unaryExCT :: String
           -> CochonTactic
 unaryExCT name eval help = simpleCT
     name
+    Historic
     (fromString help)
     (TfSequence
         [ TfPseudoKeyword (fromString name)
@@ -176,6 +183,7 @@ unaryInCT :: String
           -> CochonTactic
 unaryInCT name eval desc = simpleCT
     name
+    Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfInArg "term" Nothing ])
     ((B0 :<) <$> tokenInTm)
@@ -193,6 +201,7 @@ unaryNameCT :: String
             -> CochonTactic
 unaryNameCT name eval desc = simpleCT
     name
+    Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "name" ])
     ((B0 :<) <$> tokenName)
@@ -206,6 +215,7 @@ unaryStringCT :: String
               -> CochonTactic
 unaryStringCT name eval desc = simpleCT
     name
+    Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "x" ])
     ((B0 :<) <$> tokenString)
@@ -214,11 +224,11 @@ unaryStringCT name eval desc = simpleCT
 
 
 -- Construction Tactics
-applyTac = nullaryCT "apply" (apply >> return "Applied.")
+applyTac = nullaryCT "apply" Historic (apply >> return "Applied.")
   "applies the last entry in the development to a new subgoal."
 
 
-doneTac = nullaryCT "done" (done >> return "Done.")
+doneTac = nullaryCT "done" Historic (done >> return "Done.")
   "solves the goal with the last entry in the development."
 
 
@@ -230,6 +240,7 @@ giveTac = unaryInCT "give" (\tm -> elabGiveNext tm >> return "Thank you.")
 -- TODO(joel) - rename lambda, understand difference between let and lambda
 lambdaTac = simpleCT
     "lambda"
+    Historic
     "introduce new module parameters or hypotheses"
      (TfSequence
          [ "lambda"
@@ -266,6 +277,7 @@ lambdaTac = simpleCT
 
 letTac = simpleCT
     "let"
+    Historic
     "introduce new module parameters or hypotheses"
     (TfSequence
         [ "let"
@@ -292,6 +304,7 @@ letTac = simpleCT
 
 makeTac = simpleCT
     "make"
+    Historic
     "the first form creates a new goal of the given type; the second adds a definition to the context"
     (TfSequence
         [ "make"
@@ -341,6 +354,7 @@ moduleTac = unaryStringCT "module"
 
 piTac = simpleCT
     "pi"
+    Historic
     "introduce a pi"
     (TfSequence
         [ "pi"
@@ -364,6 +378,7 @@ piTac = simpleCT
 
 programTac = simpleCT
     "program"
+    Historic
     "set up a programming problem"
     (TfSequence
         [ "program"
@@ -384,6 +399,7 @@ programTac = simpleCT
 
 doitTac = simpleCT
     "demoMagic"
+    Historic
     "pigment tries to implement it for you"
     "demoMagic"
     (pure B0)
@@ -396,52 +412,70 @@ doitTac = simpleCT
     ))
 
 
-ungawaTac = nullaryCT "ungawa" (ungawa >> return "Ungawa!")
+ungawaTac = nullaryCT "ungawa" Historic (ungawa >> return "Ungawa!")
     "tries to solve the current goal in a stupid way."
 
 
 -- Navigation Tactics
-inTac = nullaryCT "in" (goIn >> return "Going in...")
+inTac = nullaryCT "in" Forgotten (goIn >> return "Going in...")
     "moves to the bottom-most development within the current one."
 
 
-outTac = nullaryCT "out" (goOutBelow >> return "Going out...")
+outTac = nullaryCT "out" Forgotten (goOutBelow >> return "Going out...")
     "moves to the development containing the current one."
 
 
-upTac = nullaryCT "up" (goUp >> return "Going up...")
+upTac = nullaryCT "up" Forgotten (goUp >> return "Going up...")
     "moves to the development above the current one."
 
 
-downTac = nullaryCT "down" (goDown >> return "Going down...")
+downTac = nullaryCT "down" Forgotten (goDown >> return "Going down...")
     "moves to the development below the current one."
 
 
-topTac = nullaryCT "top" (many goUp >> return "Going to top...")
+topTac = nullaryCT "top" Forgotten (many goUp >> return "Going to top...")
     "moves to the top-most development at the current level."
 
 
-bottomTac = nullaryCT "bottom" (many goDown >> return "Going to bottom...")
+bottomTac = nullaryCT
+    "bottom"
+    Forgotten
+    (many goDown >> return "Going to bottom...")
     "moves to the bottom-most development at the current level."
 
 
-previousTac = nullaryCT "previous" (prevGoal >> return "Going to previous goal...")
+previousTac = nullaryCT
+    "previous"
+    Forgotten
+    (prevGoal >> return "Going to previous goal...")
     "searches for the previous goal in the proof state."
 
 
-rootTac = nullaryCT "root" (many goOut >> return "Going to root...")
+rootTac = nullaryCT
+    "root"
+    Forgotten
+    (many goOut >> return "Going to root...")
     "moves to the root of the proof state."
 
 
-nextTac = nullaryCT "next" (nextGoal >> return "Going to next goal...")
+nextTac = nullaryCT
+    "next"
+    Forgotten
+    (nextGoal >> return "Going to next goal...")
     "searches for the next goal in the proof state."
 
 
-firstTac = nullaryCT "first"  (some prevGoal >> return "Going to first goal...")
+firstTac = nullaryCT
+    "first"
+    Forgotten
+    (some prevGoal >> return "Going to first goal...")
     "searches for the first goal in the proof state."
 
 
-lastTac = nullaryCT "last"   (some nextGoal >> return "Going to last goal...")
+lastTac = nullaryCT
+    "last"
+    Forgotten
+    (some nextGoal >> return "Going to last goal...")
     "searches for the last goal in the proof state."
 
 
@@ -473,7 +507,7 @@ undoTac = CochonTactic
     }
 
 
-validateTac = nullaryCT "validate" (validateHere >> return "Validated.")
+validateTac = nullaryCT "validate" Forgotten (validateHere >> return "Validated.")
     "re-checks the definition at the current location."
 
 
@@ -515,7 +549,7 @@ dataTac = CochonTactic
              )
              (keyword KwSemi)
          return $ B0 :< nom :< pars :< scs
-    , ctxTrans = \[StrArg nom, pars, cons] -> simpleOutput $ do
+    , ctxTrans = \[StrArg nom, pars, cons] -> simpleOutput Historic $ do
           elabData nom (argList (argPair argToStr argToIn) pars)
                        (argList (argPair argToStr argToIn) cons)
           return "Data'd."
@@ -533,6 +567,7 @@ dataTac = CochonTactic
 
 eliminateTac = simpleCT
     "eliminate"
+    Historic
     "eliminate with a motive (same as <=)"
     (TfSequence
         [ "eliminate"
@@ -560,6 +595,7 @@ retTac = unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Solved.")
 
 defineTac = simpleCT
      "define"
+    Historic
      "relabel and solve <prob> with <term>"
      (TfSequence
         [ "define"
@@ -585,6 +621,7 @@ defineTac = simpleCT
 -- simplifies the methods and moves to the first subgoal remaining.
 byTac = simpleCT
     "<="
+    Historic
     "eliminate with a motive (same as eliminate)"
     (TfSequence
         [ "<="
@@ -610,6 +647,7 @@ byTac = simpleCT
 -- it or eliminates with a motive.
 refineTac = simpleCT
     "refine"
+    Historic
     "relabel and solve or eliminate with a motive"
     (TfSequence
         [ "refine"
@@ -646,6 +684,7 @@ refineTac = simpleCT
 
 solveTac = simpleCT
     "solve"
+    Historic
     "solve a hole"
     (TfSequence
         [ "solve"
@@ -726,7 +765,7 @@ idataTac = CochonTactic
            tokenInTm)
           (keyword KwSemi)
          return $ B0 :< nom :< pars :< indty :< scs
-    , ctxTrans = \ [StrArg nom, pars, indty, cons] -> simpleOutput $
+    , ctxTrans = \ [StrArg nom, pars, indty, cons] -> simpleOutput Historic $
                 ielabData nom (argList (argPair argToStr argToIn) pars)
                  (argToIn indty) (argList (argPair argToStr argToIn) cons)
                   >> return "Data'd."
@@ -780,6 +819,7 @@ schemeTac = unaryNameCT "scheme" infoScheme
 
 
 dumpTac = nullaryCT "dump"
+    Forgotten
     (do x <- prettyProofState
         return $ pre_ (fromString x)
     )
@@ -881,6 +921,7 @@ resulting substitution.
 -}
 matchTac = simpleCT
     "match"
+    Historic
     "match parameters in first term against second."
     (TfSequence
         [ "match"
@@ -927,6 +968,7 @@ matchTac = simpleCT
 
 simplifyTac = nullaryCT
     "simplify"
+    Historic
     (problemSimplify >> optional seekGoal >> return "Simplified.")
     "simplifies the current problem."
 
@@ -1075,8 +1117,15 @@ elimCTactic c r = do
     toFirstMethod
     return "Eliminated. Subgoals awaiting work..."
 
-simpleOutput :: ProofState InteractionReact -> Cmd ()
-simpleOutput eval = do
+
+-- | Some commands (state modifications) should be added to the undo stack.
+--   Some should be forgotten.
+data Historic
+    = Historic
+    | Forgotten
+
+simpleOutput :: Historic -> ProofState InteractionReact -> Cmd ()
+simpleOutput hist eval = do
     locs :< loc <- getCtx
     case runProofState (eval <* startScheduler) loc of
         Left err -> do
@@ -1084,7 +1133,9 @@ simpleOutput eval = do
             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
             displayUser $ locally err
         Right (msg, loc') -> do
-            setCtx (locs :< loc :< loc')
+            setCtx $ case hist of
+                Historic -> locs :< loc :< loc'
+                Forgotten -> locs :< loc'
             -- XXX(joel) - line up (Pure React') / InteractionReact here
             displayUser $ locally msg
 
