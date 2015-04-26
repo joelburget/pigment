@@ -3,7 +3,7 @@ Observational Equality
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
->     PatternSynonyms, MultiParamTypeClasses #-}
+>     PatternSynonyms, MultiParamTypeClasses, CPP #-}
 
 > module Evidences.PropositionalEquality where
 
@@ -24,6 +24,7 @@ The `eqGreen` operator, defined in section [Features.Equality](#Features.Equali
 computes the proposition that two values are equal if their containing
 sets are equal. We write `<->` for application of this operator.
 
+#ifdef __FEATURES__
 > (<->) :: (TY :>: VAL) -> (TY :>: VAL) -> VAL
 > (y0 :>: t0) <-> (y1 :>: t1) = eqGreen @@ [y0,t0,y1,t1]
 
@@ -108,17 +109,19 @@ ignoring contravariance. Therefore, this requires a special case for
 The `coeh` function takes two types, a proof that they are equal and a
 value in the first type; it produces a value in the second type and a
 proof that it is equal to the original value. If the sets are
-definitinoally equal then this is easy, otherwise it applies `coe` to
+definitially equal then this is easy, otherwise it applies `coe` to
 the value and uses the coherence axiom `coh` to produce the proof.
 
 > coeh :: TY -> TY -> VAL -> VAL -> (VAL, VAL)
 > coeh s t q v | partialEq s t q  = (v, pval refl $$ A s $$ A v)
 > coeh s t q v = (  coe @@ [s , t , q , v]
 >                ,  coh @@ [s , t , q , v])
+
 > coehin :: TY -> TY -> VAL -> INTM -> (INTM, INTM)
 > coehin s t q v | partialEq s t q  = (v, pval refl -$ [ s -$ [] , v ])
 > coehin s t q v = (  N $ coe :@ [s -$ [], t -$ [], q -$ [], v]
 >                  ,  N $ coh :@ [s -$ [], t -$ [], q -$ [], v])
+#endif
 
 The `coerce` function transports values between equal canonical sets.
 Given two sets built from the same canonical constructor (represented as
@@ -134,6 +137,7 @@ inhabitants. To ensure we can add arbitrary consistent axioms to the
 system, they should not inspect the proof, but may eliminate it with
 `naughtE` if asked to coerce between incompatible sets.
 
+#ifdef __FEATURES__
 > coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > coerce Set q x = Right x
 > coerce (Pi (sS1, sS2) (tT1, tT2)) q f1 =
@@ -180,7 +184,6 @@ system, they should not inspect the proof, but may eliminate it with
 >       error "FreeMonad.coerce: missing equality proof",
 >       y
 >     ]
-> -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > coerce (IMu (Just (l0,l1) :?=:
 >             (Identity (iI0,iI1) :& Identity (d0,d1))) (i0,i1)) q (CON x) =
 >   let ql  = CON $ q $$ Fst
@@ -297,9 +300,10 @@ the types of references.
 > partialEq _ _ (N (P r :$ _ :$ _))    | r == refl                = True
 > partialEq (C (Mu t1)) (C (Mu t2)) _  | eqLabelIncomplete t1 t2  = True
 > partialEq _ _ _ = False
+#endif
 
 Sadly we cannot do the following, because it is not safe to invent a
 name supply.
 
-\< partialEq s t \_ = bquote B0 s ns == bquote B0 t ns \< where ns = (B0
-:\< ("\_\_partialEq", 0), 0) :: NameSupply
+    partialEq s t \_ = bquote B0 s ns == bquote B0 t ns
+        where ns = (B0:("__partialEq", 0), 0) :: NameSupply

@@ -2,7 +2,7 @@ Solving goals
 =============
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, TypeSynonymInstances,
->              GADTs, RankNTypes, PatternSynonyms, NamedFieldPuns #-}
+>              GADTs, RankNTypes, PatternSynonyms, NamedFieldPuns, CPP #-}
 
 > module ProofState.Interface.Solving where
 
@@ -143,7 +143,8 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 >                 justTm = NP ref
 >             -- I'm not actually sure of the meaning of the first alternative
 >             -- here. TODO(joel)
->             in give justTm <|> give (LRET justTm)
+>             -- in give justTm <|> give (LRET justTm)
+>             in give justTm <|> give (C (Con justTm))
 >         f e@EModule{} = return ()
 >     -- ... for each entry
 >     foldl (<|>) (void done) (map f (Foldable.toList entries))

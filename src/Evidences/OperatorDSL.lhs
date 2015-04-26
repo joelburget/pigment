@@ -3,7 +3,7 @@ Operator DSL
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
->     PatternSynonyms #-}
+>     PatternSynonyms, CPP #-}
 >
 > module Evidences.OperatorDSL where
 >
@@ -54,11 +54,15 @@ try this.
 > runOpTree :: OpTree -> [VAL] -> Either NEU VAL
 > runOpTree (OLam f)  (x : xs)  = runOpTree (f x) xs
 > runOpTree (OPr f)   (v : xs)  = runOpTree f (v $$ Fst : v $$ Snd : xs)
-> runOpTree (OCase bs) (i : xs)   = ((bs !!) <$> (num i)) >>= \ b -> runOpTree b xs where
->   num :: VAL -> Either NEU Int
->   num ZE      = Right 0
->   num (SU n)  = (1+) <$> (num n)
->   num (N e)   = Left e
+> runOpTree (OCase bs) (i : xs) = do
+>     let num :: VAL -> Either NEU Int
+#ifdef __FEATURES__
+>         num ZE      = Right 0
+>         num (SU n)  = (1+) <$> (num n)
+#endif
+>         num (N e)   = Left e
+>     b <- ((bs !!) <$> (num i))
+>     runOpTree b xs
 > runOpTree (OCon f) (CON t : xs)  = runOpTree f (t : xs)
 > runOpTree (OSet f) (C c :  xs)   = runOpTree (f c) xs
 > runOpTree (ORet v)          xs   = Right (v $$$ map A xs)

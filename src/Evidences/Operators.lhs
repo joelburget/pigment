@@ -2,7 +2,8 @@
 ========================
 
 > {-# LANGUAGE TypeOperators, GADTs, PatternSynonyms,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, DataKinds #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, DataKinds,
+>     CPP #-}
 
 > module Evidences.Operators where
 
@@ -24,6 +25,7 @@ any auxiliary code.
 
 > operators :: [Op]
 > operators = [
+#ifdef __FEATURES__
 >   descOp,
 >   boxOp,
 >   mapBoxOp,
@@ -54,6 +56,7 @@ any auxiliary code.
 >   fstsOp,
 >   atOp,
 >   splitOp
+#endif
 >   ]
 
 > type DescDispatchTable = (VAL,
@@ -64,6 +67,7 @@ any auxiliary code.
 
 > type EnumDispatchTable = (VAL, VAL -> VAL -> VAL)
 
+#ifdef __FEATURES__
 > mkLazyEnumDef :: VAL -> EnumDispatchTable -> Either NEU VAL
 > mkLazyEnumDef arg (nilECase, consECase) = let args = arg $$ Snd in
 >     case arg $$ Fst of
@@ -1038,6 +1042,7 @@ any auxiliary code.
 >       )
 >   where
 >     x =~ y = r -$ [ NV x , NV y ]
+#endif
 
 The list of `primitives` includes axioms and fundamental definitions
 provided by the `Primitives` aspect, plus a reference corresponding to
@@ -1045,6 +1050,7 @@ each operator.
 
 > primitives :: [(String, REF)]
 > primitives = map (\op -> (opName op, mkRef op)) operators ++ [
+#ifdef __FEATURES__
 >     ("Desc", descREF),
 >     ("DescD", descDREF),
 >     ("DescConstructors", descConstructorsREF),
@@ -1061,6 +1067,7 @@ each operator.
 >     ("IDescD", idescDREF),
 >     ("IDescConstructors", idescConstREF),
 >     ("IDescBranches", idescBranchesREF)
+#endif
 >     ]
 >   where
 >     mkRef :: Op -> REF

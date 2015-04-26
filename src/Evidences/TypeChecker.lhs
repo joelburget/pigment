@@ -3,7 +3,7 @@
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, FlexibleInstances,
 >     TypeSynonymInstances, FlexibleContexts, PatternGuards,
->     MultiParamTypeClasses, ScopedTypeVariables, PatternSynonyms #-}
+>     MultiParamTypeClasses, ScopedTypeVariables, PatternSynonyms, CPP #-}
 
 > module Evidences.TypeChecker where
 
@@ -61,6 +61,7 @@ function traversing the types derivation tree can be expressed using
 >     ssv@(s :=>: sv) <- chev (SET :>: s)
 >     ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
 >     return $ Pi ssv ttv
+#ifdef __FEATURES__
 > canTy chev (Set :>: Anchors) = return Anchors
 > canTy chev (Anchors :>: Anchor u t ts) = do
 >     uuv <- chev (UID :>: u)
@@ -222,6 +223,7 @@ function traversing the types derivation tree can be expressed using
 >     return $ Pair xxv yyv
 > canTy _  (Set :>: UId)    = return UId
 > canTy _  (UId :>: Tag s)  = return (Tag s)
+#endif
 > canTy chev (ty :>: x) = throwStack $ stackItem
 >     [ errMsg "canTy: the proposed value "
 >     , errCan x
@@ -260,6 +262,7 @@ want.
 > elimTy chev (f :<: Pi s t) (A e) = do
 >     eev@(e :=>: ev) <- chev (s :>: e)
 >     return $ (A eev, t $$ A ev)
+#ifdef __FEATURES__
 > elimTy chev (_ :<: t@(Mu (_ :?=: Identity d))) Out = return (Out, descOp @@ [d , C t])
 > elimTy chev (_ :<: Prf (EQBLUE (t0 :>: x0) (t1 :>: x1))) Out =
 >     return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
@@ -278,6 +281,7 @@ want.
 > elimTy chev (_ :<: Prf (AND p q))      Snd    = return (Snd, PRF q)
 > elimTy chev (_ :<: Sigma s t) Fst = return (Fst, s)
 > elimTy chev (p :<: Sigma s t) Snd = return (Snd, t $$ A (p $$ Fst))
+#endif
 > elimTy _  (v :<: t) e = throwStack $ stackItem
 >     [ errMsg "elimTy: failed to eliminate"
 >     , errTyVal (v :<: (C t))
@@ -416,11 +420,13 @@ This translates naturally into the following code:
 Finally, we can extend the checker with the `Check` aspect. If no rule
 has matched, then we have to give up.
 
+#ifdef __FEATURES__
 > check (PRF (ALL p q) :>: L sc)  = do
 >     freshRef  ("" :<: p)
 >               (\ref -> check (  PRF (q $$ A (pval ref)) :>:
 >                                 underScope sc ref))
 >     return $ L sc :=>: (evTm $ L sc)
+#endif
 > check (ty :>: tm) = throwStack $ stackItem
 >     [ errMsg "check: type mismatch: type"
 >     , errTyVal (ty :<: SET)

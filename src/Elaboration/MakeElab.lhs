@@ -2,7 +2,7 @@
 =========================
 
 > {-# LANGUAGE GADTs, TypeOperators, TupleSections, PatternSynonyms,
->     DataKinds #-}
+>     DataKinds, CPP #-}
 
 > module Elaboration.MakeElab where
 
@@ -51,7 +51,11 @@ to the second type, either trivially (if the types are definitionally
 equal) or by hoping for a proof of the appropriate equation and
 inserting a coercion.
 
-> eCoerce :: INTM :=>: VAL -> INTM :=>: VAL -> INTM :=>: VAL -> Elab (INTM :=>: VAL)
+#ifdef __FEATURES__
+> eCoerce :: INTM :=>: VAL
+>         -> INTM :=>: VAL
+>         -> INTM :=>: VAL
+>         -> Elab (INTM :=>: VAL)
 > eCoerce (_S :=>: _Sv) (_T :=>: _Tv) (s :=>: sv) = do
 >     eq <- eEqual $ SET :>: (_Sv, _Tv)
 >     if eq
@@ -59,6 +63,7 @@ inserting a coercion.
 >         else do
 >             q :=>: qv <- eHopeFor $ PRF (EQBLUE (SET :>: _Sv) (SET :>: _Tv))
 >             return $ N (coe :@ [_S, _T, q, s]) :=>: coe @@ [_Sv, _Tv, qv, sv]
+#endif
 
 The `eEqual` instruction determines if two types are definitionally
 equal.
@@ -80,6 +85,7 @@ The `eHopeFor` instruction hopes for an element of a type.
 
 The `eInfer` instruction infers the type of an evidence term.
 
+#ifdef __FEATURES__
 > eInfer :: EXTM -> Elab (INTM :=>: VAL)
 > eInfer tm = do
 >     nsupply <- eAskNSupply
@@ -88,6 +94,7 @@ The `eInfer` instruction infers the type of an evidence term.
 >         Right (tv :<: ty) -> do
 >             ty' :=>: _ <- eQuote ty
 >             return $ PAIR ty' (N tm) :=>: PAIR ty tv
+#endif
 
 The `eQuote` instruction $\beta$-quotes a value to produce a term
 representation.
@@ -125,6 +132,7 @@ with the `eElab` instruction, providing a syntactic representation.
 > subElabInfer :: Loc -> DExTmRN -> Elab (INTM :=>: VAL)
 > subElabInfer loc tm = eCompute (sigSetVAL :>: makeElabInfer loc tm)
 
+#ifdef __FEATURES__
 > inductionOpLabMethodType = L $ "l" :. (let { l = 0 :: Int } in
 >                    L $ "d" :. (let { d = 0; l = 1 } in
 >                    L $ "P" :. (let { _P = 0; d = 1; l = 2 } in
@@ -132,6 +140,7 @@ with the `eElab` instruction, providing a syntactic representation.
 >                       (L $ "x" :. (let { x = 0; _P = 1; d = 2; l = 3 } in
 >                        ARR (N $ boxOp :@ [NV d, MU (pure (NV l)) (NV d), NV _P, NV x])
 >                            (N (V _P :$ A (CON (NV x)))) )) ) ) )
+#endif
 
 Since we frequently pattern-match on the goal type when elaborating `In`
 terms, we abstract it out. Thus `makeElab'` actually implements
@@ -148,10 +157,13 @@ inductive data. This cannot apply in general because it leads to
 infinite loops when elaborating illegal values for some descriptions.
 Perhaps we should remove it for enumerations as well.
 
-> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" =
->     makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
-> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t) | r == "EnumU" =
->     makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
+#ifdef __FEATURES__
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID)
+>     | r == "EnumU"
+>     = makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t)
+>     | r == "EnumU"
+>     = makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
 
 More usefully, we elaborate a tag with a bunch of arguments by
 converting it into the corresponding inductive data structure. This
@@ -260,6 +272,7 @@ a function from a pair.
 >     return $ N ((tm :? mt') :$ A (N (P x :$ Fst)) :$ A (N (P x :$ Snd)))
 >                     :=>: tmv $$ A (NP x $$ Fst) $$ A (NP x $$ Snd)
 > makeElab' loc (UID :>: DTAG s) = return $ TAG s :=>: TAG s
+#endif
 
 We use underscores `DU` in elaboration to mean "figure this out
 yourself", while question marks `DQ` require us to wait for a
@@ -295,11 +308,13 @@ then coercing the result to the required type. (Note that `eCoerce` will
 check if the types are equal, and if so it will not insert a redundant
 coercion.)
 
+#ifdef __FEATURES__
 > makeElab' loc (w :>: DN n) = do
 >     w' :=>: _ <- eQuote w
 >     tt <- subElabInfer loc n
 >     let (yt :=>: yn :<: ty :=>: tyv) = extractNeutral tt
 >     eCoerce (ty :=>: tyv) (w' :=>: w) (yt :=>: yn)
+#endif
 
 If we already have an evidence term, we just type-check it. This allows
 elaboration code to partially elaborate a display term then embed the
@@ -335,6 +350,7 @@ The result of `makeElabInfer` is of type $\SIGMA{\V{X}}{\Set}{X}$, which
 we can represent as an evidence term or value (`sigSetTM` or
 `sigSetVAL`, respectively).
 
+#ifdef __FEATURES__
 > sigSetVAL :: Tm In p x
 > sigSetVAL = SIGMA SET (idVAL "ssv")
 
@@ -351,6 +367,7 @@ eliminators if not.
 > extractNeutral (PAIR ty tm :=>: tv) = tm :=>: tv $$ Snd :<: ty :=>: tv $$ Fst
 > extractNeutral (tm :=>: tv) = N (tm' :$ Snd) :=>: tv $$ Snd :<: N (tm' :$ Fst) :=>: tv $$ Fst
 >   where tm' = tm ?? sigSetTM
+#endif
 
 Since we use a head-spine representation for display terms, we need to
 elaborate the head of an application. The `makeElabInferHead` function

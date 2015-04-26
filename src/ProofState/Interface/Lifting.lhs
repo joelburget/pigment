@@ -1,7 +1,8 @@
 <a name="ProofState.Interface.Lifting">Lambda-lifting and discharging</a>
 ==============================
 
-> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs, PatternSynonyms #-}
+> {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs, PatternSynonyms,
+>     CPP #-}
 
 > module ProofState.Interface.Lifting where
 
@@ -87,8 +88,10 @@ a $\Pi$.
 > inferGoalType B0 t = t
 > inferGoalType (es :< EPARAM _ (x,_)  ParamLam s _ _)  t        =
 >     inferGoalType es (PI (es -| s) (L (x :. t)))
+#ifdef __FEATURES__
 > inferGoalType (es :< EPARAM _ (x,_)  ParamAll s _ _)  (PRF t)  =
 >     inferGoalType es (PRF (ALL (es -| s) (L (x :. t))))
+#endif
 > inferGoalType (es :< EPARAM _ (x,_)  ParamPi  s _ _)  SET      =
 >     inferGoalType es SET
 > inferGoalType (es :< _)                        t        =

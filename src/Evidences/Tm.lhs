@@ -4,7 +4,8 @@ Tm
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
 >     FlexibleContexts, ScopedTypeVariables, ConstraintKinds,
->     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds, TupleSections #-}
+>     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds, TupleSections,
+>     CPP #-}
 
 > module Evidences.Tm where
 
@@ -155,6 +156,7 @@ binding complicates the definition.
 >     Set            :: Can t                                   -- set of sets
 >     Pi             :: t -> t -> Can t                         -- functions
 >     Con            :: t -> Can t                              -- packing
+#ifdef __FEATURES__
 >     Anchors        :: Can t
 >     Anchor         :: t -> t -> t -> Can t
 >     AllowedBy      :: t -> Can t
@@ -200,6 +202,7 @@ binding complicates the definition.
 >     Pair           :: t -> t -> Can t
 >     UId            :: Can t
 >     Tag            :: String -> Can t
+#endif
 >   deriving (Show, Eq)
 
 The `Con` object is used and abused in many circumstances. However, all
@@ -302,6 +305,7 @@ We have some pattern synonyms for common, er, patterns.
 > pattern LAV x t   = L (x :. t)           -- Lambda (with variable)
 > pattern LK t      = L (K t)              -- Lambda (with constant)
 > pattern PIV x s t = PI s (LAV x t)       -- Pi (with variable)
+#ifdef __FEATURES__
 > pattern ANCHORS        = C Anchors
 > pattern ANCHOR u t ts  = C (Anchor u t ts)
 > pattern ALLOWEDBY t    = C (AllowedBy t)
@@ -382,6 +386,7 @@ We have some pattern synonyms for common, er, patterns.
 > pattern TIMES x y = C (Times x y)
 > pattern UID    = C UId
 > pattern TAG s  = C (Tag s)
+#endif
 
 We have some type synonyms for commonly occurring instances of `Tm`.
 
@@ -789,6 +794,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >     traverse f Set       = pure Set
 >     traverse f (Pi s t)  = Pi <$> f s <*> f t
 >     traverse f (Con t)   = Con <$> f t
+#ifdef __FEATURES__
 >     traverse _ Anchors = pure Anchors
 >     traverse f (Anchor u t ts) = Anchor <$> f u <*> f t <*> f ts
 >     traverse f (AllowedBy t) = AllowedBy <$> f t
@@ -837,6 +843,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >     traverse f (Pair x y)   = Pair <$> f x <*> f y
 >     traverse f UId          = pure UId
 >     traverse f (Tag s)      = pure (Tag s)
+#endif
 
 > instance Functor Can where
 >     fmap = fmapDefault
@@ -851,6 +858,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >         Just $ Pi (s1,s2) (t1,t2)
 >     halfZip (Con t1) (Con t2) =
 >         Just $ Con (t1,t2)
+#ifdef __FEATURES__
 >     halfZip Anchors Anchors =
 >         Just Anchors
 >     halfZip (Anchor u1 t1 ts1) (Anchor u2 t2 ts2) =
@@ -926,6 +934,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >         Just (Tag s)
 >     halfZip _ _ =
 >         Nothing
+#endif
 
 > instance Traversable Elim where
 >   traverse f (A s)  = A <$> f s

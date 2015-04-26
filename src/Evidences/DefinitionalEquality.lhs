@@ -3,7 +3,7 @@
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
->     PatternSynonyms #-}
+>     PatternSynonyms, CPP #-}
 
 > module Evidences.DefinitionalEquality where
 
@@ -109,6 +109,7 @@ term. The result is a binding of `v` in the quoted term.
 >   L ("__etaExpandA" :.
 >      fresh ("__etaExpandB" :<: s)
 >      (\v  -> inQuote (t $$ A v :>: (f $$ A v))) r)
+#ifdef __FEATURES__
 > etaExpand (Prf p :>: x) r = Just (BOX (Irr (inQuote (PRF p :>: x) r)))
 > etaExpand (Record (_ :?=: Identity REMPTY) :>: v) r = Just $ CON UNIT
 > etaExpand (Record (_ :?=: Identity (RCONS sig i ty)) :>: p) r =
@@ -117,6 +118,7 @@ term. The result is a binding of `v` in the quoted term.
 > etaExpand (Unit :>: v) r = Just VOID
 > etaExpand (Sigma s t :>: p) r = let x = p $$ Fst in
 >   Just (PAIR (inQuote (s :>: x) r) (inQuote (t $$ (A x) :>: (p $$ Snd)) r))
+#endif
 > etaExpand _                  _ = Nothing
 
 exQuote

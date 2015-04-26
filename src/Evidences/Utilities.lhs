@@ -3,7 +3,7 @@ Utilities
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
->     ScopedTypeVariables, PatternSynonyms #-}
+>     ScopedTypeVariables, PatternSynonyms, CPP #-}
 
 > module Evidences.Utilities where
 
@@ -70,6 +70,7 @@ and $\Pi$-bind. Note that when the bound variable is not used, a `K`
 binder is used. For `dischargeAll`, the initial term must be in the form
 `PRF q` for some proposition `q`.
 
+#ifdef __FEATURES__
 > dischargeAll :: Bwd (REF :<: INTM) -> INTM -> INTM
 > dischargeAll = dischargeF f
 >   where
@@ -93,6 +94,7 @@ name but different types.
 > dischargeAllREF bs ((n := DECL :<: _) :<: ty) =
 >     (n := DECL :<: evTm ty') :<: ty'
 >   where ty' = dischargeAll bs ty
+#endif
 
 The `mkFun` function turns a Haskell function into a term by applying it
 to a fresh reference and discharging over that reference.

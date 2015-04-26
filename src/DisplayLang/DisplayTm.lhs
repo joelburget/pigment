@@ -4,7 +4,7 @@ Display Terms
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
 >     ScopedTypeVariables, PatternSynonyms,
->     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+>     DeriveFunctor, DeriveFoldable, DeriveTraversable, CPP #-}
 
 > module DisplayLang.DisplayTm where
 
@@ -54,12 +54,14 @@ Thanks to this hack, we can use `deriving Traversable`.
 >     DQ     :: String           ->  DInTm p x -- hole
 >     DU     ::                      DInTm p x -- underscore
 >     DT     :: InTmWrap p x     ->  DInTm p x -- embedding
+#ifdef __FEATURES__
 >     DAnchor :: String -> DInTm p x -> DInTm p x
 >     DEqBlue :: DExTm p x -> DExTm p x -> DInTm p x
 >     DIMu :: Labelled (Identity :*: Identity) (DInTm p x)
 >          -> DInTm p x
 >          -> DInTm p x
 >     DTag :: String -> [DInTm p x] -> DInTm p x
+#endif
 >  deriving (Functor, Foldable, Traversable, Show)
 
 > data DExTm p x = DHead p x ::$ DSpine p x
@@ -151,6 +153,7 @@ first argument, as well as its second.
 > traverseDTIN f (DQ s) = pure (DQ s)
 > traverseDTIN f DU     = pure DU
 > traverseDTIN f (DTIN tm) = DTIN <$> traverse f tm
+#ifdef __FEATURES__
 > traverseDTIN f (DAnchor s args) = DAnchor s <$> traverseDTIN f args
 > traverseDTIN f (DEqBlue t u) =
 >     DEqBlue <$> traverseDTEX f t <*> traverseDTEX f u
@@ -158,6 +161,7 @@ first argument, as well as its second.
 >     <$> traverse (traverseDTIN f) s
 >     <*> traverseDTIN f i
 > traverseDTIN f (DTag s xs) = DTag s <$> traverse (traverseDTIN f) xs
+#endif
 
 > traverseDTEX :: Applicative f => (p -> f q) -> DExTm p x -> f (DExTm q x)
 > traverseDTEX f (h ::$ as) =
@@ -193,6 +197,7 @@ appropriate places.
 > pattern DPIV x s t  = DPI s (DLAV x t)
 > pattern DLK t       = DL (DK t)
 > pattern DTY ty tm   = DType ty ::$ [A tm]
+#ifdef __FEATURES__
 > pattern DANCHOR s args = DAnchor s args
 > pattern DMU l x        = DC (Mu (l :?=: Identity x))
 > pattern DIDD           = DCON (DPAIR  DZE
@@ -259,6 +264,7 @@ appropriate places.
 > pattern DTIMES x y = DC (DTimes x y)
 > pattern DUID    = DC UId
 > pattern DTAG s  = DTag s []
+#endif
 
 Sizes
 -----

@@ -3,7 +3,7 @@ Evaluation
 
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
->     PatternSynonyms, PatternGuards, DataKinds #-}
+>     PatternSynonyms, PatternGuards, DataKinds, CPP #-}
 
 > module Evidences.Eval where
 
@@ -57,6 +57,7 @@ This translates into the following code:
 > L (x :. t)   $$ A v
 >   = eval t (B0 :< v, naming x v [])    -- elim-bind
 > C (Con t)    $$ Out  = t               -- elim-con
+#ifdef __FEATURES__
 > LRET t $$ Call l = t
 > COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
 >     L $ "s" :. (let s = 0 in COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)),
@@ -66,6 +67,7 @@ This translates into the following code:
 > N n          $$ e    = N (n :$ e)      -- elim-stuck
 > f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
 >                                  "\nwith eliminator\n" ++ show e
+#endif
 
 The `naming` operation amends the current naming scheme, taking account
 the instantiation of x: see below.
@@ -212,7 +214,9 @@ description is a sum or a sigma from an enumerate. If so, it returns
 `Just` the enumeration and a function from the enumeration to
 descriptions.
 
+#ifdef __FEATURES__
 > sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
 > sumlike (SUMD e b)            = Just (e, (b $$) . A)
 > sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
 > sumlike _                     = Nothing
+#endif

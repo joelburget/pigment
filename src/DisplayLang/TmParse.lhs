@@ -1,7 +1,7 @@
 <a name="DisplayLang.TmParse">Parsing Terms</a>
 =============
 
-> {-# LANGUAGE TypeOperators, GADTs #-}
+> {-# LANGUAGE TypeOperators, GADTs, CPP #-}
 
 > module DisplayLang.TmParse where
 
@@ -154,6 +154,7 @@ features can extend the parser.
 
 > inDTmParsersSpecial :: SizedParserList DInTmRN
 > inDTmParsersSpecial = arrange [
+#ifdef __FEATURES__
 >     (AndSize, DMU Nothing <$ keyword KwMu <*> sizedDInTm ArgSize),
 >     (ArgSize, mkNum <$> (read <$> digits)
 >                     <*> optional (keyword KwPlus *> sizedDInTm ArgSize)),
@@ -207,6 +208,7 @@ features can extend the parser.
 >     (AppSize, DTag <$ keyword KwTag
 >                    <*> ident
 >                    <*> many (sizedDInTm ArgSize)),
+#endif
 >     (ArgSize, DSET <$ keyword KwSet),
 >     (ArgSize, DQ <$> pFilter questionFilter ident),
 >     (ArgSize, DU <$ keyword KwUnderscore),

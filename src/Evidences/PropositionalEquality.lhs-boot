@@ -1,8 +1,11 @@
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards,
+>     CPP #-}
 > module Evidences.PropositionalEquality where
 > import Evidences.Tm
 
+#ifdef __FEATURES__
 > opRunEqGreen :: [VAL] -> Either NEU VAL
 > coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
 > partialEq :: VAL -> VAL -> VAL -> Bool
+#endif

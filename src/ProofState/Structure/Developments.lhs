@@ -2,7 +2,7 @@
 ============
 
 > {-# LANGUAGE FlexibleInstances, TypeOperators, GADTs , StandaloneDeriving,
->     PatternSynonyms, TemplateHaskell, OverloadedStrings #-}
+>     PatternSynonyms, TemplateHaskell, OverloadedStrings, CPP #-}
 
 > module ProofState.Structure.Developments where
 
@@ -266,7 +266,9 @@ The link between a type and the kind of parameter allowed is defined by
 
 > lambdable :: TY -> Maybe (ParamKind, TY, VAL -> TY)
 > lambdable (PI s t)         = Just (ParamLam, s, (t $$) . A)
+#ifdef __FEATURES__
 > lambdable (PRF (ALL s p))  = Just (ParamAll, s, \v -> PRF (p $$ A v))
+#endif
 > lambdable _                = Nothing
 
 > instance Show (Entity Bwd) where

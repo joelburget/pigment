@@ -2,7 +2,7 @@
 ===============
 
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
->     TypeSynonymInstances, PatternSynonyms #-}
+>     TypeSynonymInstances, PatternSynonyms, CPP #-}
 
 > module DisplayLang.PrettyPrint where
 
@@ -54,6 +54,7 @@ being with Pi types.
 >     pretty Set       = const (kword KwSet)
 >     pretty (Pi s t)  = prettyPi empty (DPI s t)
 >     pretty (Con x)   = wrapDoc (kword KwCon <> pretty x ArgSize) AppSize
+#ifdef __FEATURES__
 >     pretty (Anchor (DTAG u) t ts) = wrapDoc (text u <> pretty ts ArgSize) ArgSize
 >     pretty AllowedEpsilon = const empty
 >     pretty (AllowedCons _ _ _ s ts) = wrapDoc (pretty s ArgSize <> pretty ts ArgSize) ArgSize
@@ -124,6 +125,7 @@ being with Pi types.
 >     pretty UId      = const (kword KwUId)
 >     pretty (Tag s)  = const (kword KwTag <> text s)
 >     pretty can       = const (quotes . text . show $ can)
+#endif
 
 The `prettyPi` function takes a document representing the domains so
 far, a term and the current size. It accumulates domains until a
