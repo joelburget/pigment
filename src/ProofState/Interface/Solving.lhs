@@ -138,15 +138,16 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 > demoMagic = do
 >     entries <- getInScope
 >     -- Try just returning the entry
->     let f e@EEntity{term, ref} = void $
+>     let notFound = throwDTmStr "no valid parameter found"
+>         f (EPARAM ref _ _ term _ _) = void $
 >             let justTm :: INTM
 >                 justTm = NP ref
 >             -- I'm not actually sure of the meaning of the first alternative
 >             -- here. TODO(joel)
 >             in give justTm <|> give (LRET justTm)
->         f e@EModule{} = return ()
+>         f _ = notFound
 >     -- ... for each entry
->     foldl (<|>) (void done) (map f (Foldable.toList entries))
+>     foldl (<|>) notFound (map f (Foldable.toList entries))
 
 
 Refining the proof state
