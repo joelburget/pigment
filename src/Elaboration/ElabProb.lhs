@@ -68,6 +68,7 @@ some handy functions for producing and manipulating these.
 
 > justEval :: INTM :=>: VAL -> INTM :=>: Maybe VAL
 > justEval (tm :=>: v) = tm :=>: Just v
+
 > maybeEval :: INTM :=>: Maybe VAL -> INTM :=>: VAL
 > maybeEval (tm :=>: Just v)   =  tm :=>:  v
 > maybeEval (tm :=>: Nothing)  =  tm :=>:  evTm tm

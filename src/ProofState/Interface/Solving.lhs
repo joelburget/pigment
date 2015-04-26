@@ -30,8 +30,6 @@ Solving goals
 > import Evidences.Eval
 > import Elaboration.Wire
 
-> import Kit.Trace
-> import Debug.Trace
 > import ProofState.Structure.Entries
 
 Giving a solution
@@ -42,30 +40,23 @@ it type-checks. At the end of the operation, the cursor has not moved:
 we are still under the goal, which has now been `Defined`. Note that
 entries below the cursor are (lazily) notified of the good news.
 
-> traceGive :: Show a => a -> a
-> traceGive a = trace ("give: " ++ show a) a
-
 > give :: INTM -> ProofState (EXTM :=>: VAL)
 > give tm = do
->     elabTrace "hello0"
 >     tip <- getDevTip
->     elabTrace "hello1"
 >     case tip of
 >         Unknown (tipTyTm :=>: tipTy) -> do
 >             -- Working on a goal
 >             -- The `tm` is of the expected type
->             elabTrace "hello2"
 >             checkHere (tipTy :>: tm)
 >                 `pushError`
->                 (traceGive (stackItem
+>                 (stackItem
 >                      [ errMsg "give: typechecking failed:"
 >                      , errTm (DTIN tm)
 >                      , errTm (DTIN tipTyTm)
 >                      , errMsg "is not of type"
 >                      , errTyVal (tipTy :<: SET)
->                      ]
->                 ) :: StackError DInTmRN)
->             elabTrace "hello3"
+>                      ] :: StackError DInTmRN
+>                 )
 >
 >             -- Lambda lift the given solution
 >             globalScope <- getGlobalScope
@@ -81,9 +72,8 @@ entries below the cursor are (lazily) notified of the good news.
 >             -- Propagate the good news
 >             updateRef ref
 >             -- Return the reference
->             elabTrace "hello4"
->             return $ traceGive $ applySpine ref globalScope
->         _  -> elabTrace "hello5" >> (throwDTmStr "give: only possible for incomplete goals.")
+>             return $ applySpine ref globalScope
+>         _  -> throwDTmStr "give: only possible for incomplete goals."
 
 For convenience, we combine giving a solution and moving. Indeed, after
 `give`, the cursor stands in a rather boring position: under a `Defined`
@@ -94,14 +84,6 @@ one is available.
 
 > giveOutBelow :: INTM -> ProofState (EXTM :=>: VAL)
 > giveOutBelow tm = give tm <* goOutBelow
-
-type InTm   = Tm In TT
-type INTM   = InTm REF
-type InTmRN = InTm RelName
-type DInTmRN = DInTm REF RelName
-
-elabGiveNext :: DInTmRN -> ProofState (EXTM :=>: VAL)
-elabGiveNext tm = elabGive' tm <* startScheduler <* (nextGoal <|> goOut)
 
 > giveNext :: INTM -> ProofState (EXTM :=>: VAL)
 > giveNext tm = give tm <* (nextGoal <|> goOut)
@@ -154,13 +136,15 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 
 > demoMagic :: ProofState ()
 > demoMagic = do
->     -- entries <- getEntriesAbove
->     -- elabTrace $ show $ length $ Foldable.toList entries
 >     entries <- getInScope
->     forM_ (Foldable.toList entries) (elabTrace . show)
 >     -- Try just returning the entry
->     let f e@EEntity{term, ref} = traceShow "here1" $ void (elabTrace "giving" >> give (NP ref))
->         f e@EModule{} = traceShow "here2" $ return ()
+>     let f e@EEntity{term, ref} = void $
+>             let justTm :: INTM
+>                 justTm = NP ref
+>             -- I'm not actually sure of the meaning of the first alternative
+>             -- here. TODO(joel)
+>             in give justTm <|> give (LRET justTm)
+>         f e@EModule{} = return ()
 >     -- ... for each entry
 >     foldl (<|>) (void done) (map f (Foldable.toList entries))
 

@@ -76,6 +76,7 @@ binder is used. For `dischargeAll`, the initial term must be in the form
 >     f :: Bool -> String -> INTM -> INTM -> INTM
 >     f False  x (PRF p)  (PRF q) = PRF (IMP p q)
 >     f _      x s        (PRF q) = PRF (ALLV x s q)
+
 > dischargePi :: Bwd (REF :<: INTM) -> INTM -> INTM
 > dischargePi = dischargeF f
 >   where
