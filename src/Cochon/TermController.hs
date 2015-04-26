@@ -27,7 +27,7 @@ execProofState state = right snd . runProofState state
 
 
 handleEntryToggle :: Name -> MouseEvent -> Maybe TermAction
-handleEntryToggle = constTransition . ExpandTerm
+handleEntryToggle = constTransition . ToggleTerm
 
 
 handleEntryGoTo :: Name -> MouseEvent -> Maybe TermAction
@@ -51,7 +51,7 @@ toggleAnnotate name state@InteractionState{_proofCtx=ctxs :< ctx} =
 
 
 termDispatch :: TermAction -> InteractionState -> InteractionState
-termDispatch (ExpandTerm name) state = state
+termDispatch (ToggleTerm name) state = state
 termDispatch (GoToTerm name) state = state
 termDispatch (BeginDrag name) state = state
 termDispatch (ToggleAnnotate name) state = toggleAnnotate name state

@@ -137,7 +137,7 @@ dispatch (ToggleEntry name) state = toggleTerm name state
 dispatch (GoTo name) state = goToTerm name state
 
 dispatch (TermTransition (GoToTerm name)) state = goToTerm name state
-dispatch (TermTransition (ExpandTerm name)) state = toggleTerm name state
+dispatch (TermTransition (ToggleTerm name)) state = toggleTerm name state
 
 dispatch (TermTransition act) state = termDispatch act state
 

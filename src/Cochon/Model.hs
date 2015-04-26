@@ -40,7 +40,7 @@ data Transition
     | TermTransition TermAction
 
 data TermAction
-    = ExpandTerm Name
+    = ToggleTerm Name
     | GoToTerm Name
     | BeginDrag Name
     | ToggleAnnotate Name
