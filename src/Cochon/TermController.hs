@@ -22,7 +22,7 @@ constTransition = const . Just
 
 execProofState :: ProofState a
                -> ProofContext
-               -> Either String ProofContext
+               -> Either TermReact ProofContext
 execProofState state = right snd . runProofState state
 
 

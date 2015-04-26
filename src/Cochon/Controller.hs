@@ -147,14 +147,24 @@ dispatch _ state = state
 toggleTerm :: Name -> InteractionState -> InteractionState
 toggleTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
     case execProofState (toggleEntryVisibility name) ctx of
-        Left err -> trace err state
+        Left err ->
+            let cmd = displayUser $ locally err
+                (output, newCtx) = runCmd cmd (state^.proofCtx)
+                cmd' = Command "(toggle term)" (ctxs :< ctx) (Left "(no parse)") output
+            in state & proofCtx .~ newCtx
+                     & interactions %~ (cmd' :>)
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
 
 
 goToTerm :: Name -> InteractionState -> InteractionState
 goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
     case execProofState (goTo name) ctx of
-        Left err -> trace err state
+        Left err ->
+            let cmd = displayUser $ locally err
+                (output, newCtx) = runCmd cmd (state^.proofCtx)
+                cmd' = Command "(go to term)" (ctxs :< ctx) (Left "(no parse)") output
+            in state & proofCtx .~ newCtx
+                     & interactions %~ (cmd' :>)
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
 
 autocompleteUpArrow :: InteractionState -> InteractionState

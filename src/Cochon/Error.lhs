@@ -1,16 +1,22 @@
 Cochon error prettier
 =====================
 
-> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternSynonyms #-}
+> {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, PatternSynonyms, LiberalTypeSynonyms, OverloadedStrings  #-}
 
 > module Cochon.Error where
 
 > import Control.Arrow
 > import Control.Monad.State
+> import Data.String
 > import Text.PrettyPrint.HughesPJ
 
+> import React
+
+> import Cochon.Model
+> import Cochon.Reactify
 > import Evidences.Tm
 > import DisplayLang.DisplayTm
+> import DisplayLang.Lexer
 > import DisplayLang.Name
 > import DisplayLang.PrettyPrint
 > import ProofState.Edition.ProofContext
@@ -25,10 +31,10 @@ Cochon error prettier
 > runProofState
 >     :: ProofState a
 >     -> ProofContext
->     -> Either String (a, ProofContext)
+>     -> Either TermReact (a, ProofContext)
 > runProofState m loc =
 >     let result = runStateT (m `catchStack` catchUnprettyErrors) loc
->     in left (renderHouseStyle . prettyStackError) result
+>     in left reactStackError result
 
 Catching the gremlins before they leave `ProofState`
 ----------------------------------------------------
@@ -56,6 +62,25 @@ Catching the gremlins before they leave `ProofState`
 
 Pretty-printing the stack trace
 -------------------------------
+
+> reactStackError :: StackError DInTmRN -> TermReact
+> reactStackError (StackError errors) = div_ [ class_ "stack-error" ] $ do
+>     div_ "Error:"
+>     ul_ [ class_ "stack-error-list" ] $
+>         forM_ errors $ \error ->
+>             li_ [ class_ "stack-error-item" ] $
+>                 mapM_ reactErrorTok error
+
+> reactErrorTok :: ErrorTok DInTmRN -> TermReact
+> reactErrorTok (StrMsg s)           = fromString s
+> reactErrorTok (ErrorTm (v :<: _))  = reactify v
+> reactErrorTok (ErrorCan   v)       = reactify v
+> reactErrorTok (ErrorElim  e)       = reactify e
+> reactErrorTok (ErrorREF ref)       = fromString $ show ref
+> reactErrorTok (ErrorVAL (v :<: _)) = do
+>     "ErrorVAL"
+>     -- reactBrackets Round (reactify v)
+>     reactBrackets Round $ fromString $ show v
 
 > prettyStackError :: StackError DInTmRN -> Doc
 > prettyStackError (StackError e) = vcat $

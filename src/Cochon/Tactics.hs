@@ -996,7 +996,7 @@ simpleOutput eval = do
         Left err -> do
             setCtx (locs :< loc)
             displayUser "I'm sorry, Dave. I'm afraid I can't do that."
-            displayUser $ fromString err
+            displayUser $ locally err
         Right (msg, loc') -> do
             setCtx (locs :< loc :< loc')
             -- XXX(joel) - line up (Pure React') / InteractionReact here
@@ -1005,4 +1005,6 @@ simpleOutput eval = do
 
 -- XXX
 instance GeneralizeSignal Transition Void where
+    generalizeSignal = undefined
+instance GeneralizeSignal TermAction Void where
     generalizeSignal = undefined
