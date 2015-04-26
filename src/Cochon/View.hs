@@ -240,15 +240,15 @@ workingOn' ty@(LABEL _ _) = do
     goal <- reactHere . (SET :>:) =<< bquoteHere ty
 
     return $ div_ [ class_ "working-on" ] $ do
-        div_ [ class_ "goal-inscope" ] $ do
-            div_ "in scope: "
-            ul_ [ class_ "goal-inscope-list" ] inScope
+        -- div_ [ class_ "goal-inscope" ] $ do
+        --     div_ "in scope: "
+        --     ul_ [ class_ "goal-inscope-list" ] inScope
         div_ [ class_ "goal-hypotheses" ] $ do
             div_ "hypotheses: "
             div_ hypotheses
-        div_ [ class_ "goal-context" ] $ do
-            div_ "context: "
-            div_ context
+        -- div_ [ class_ "goal-context" ] $ do
+        --     div_ "context: "
+        --     div_ context
         div_ [ class_ "goal-body" ] $ do
             div_ "programming: "
             locally $ div_ goal
