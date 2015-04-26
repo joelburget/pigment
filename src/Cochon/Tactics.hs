@@ -4,7 +4,7 @@
 
 module Cochon.Tactics (cochonTactics) where
 
-import Control.Applicative
+import Control.Applicative hiding (empty)
 import Control.Monad
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
@@ -12,6 +12,7 @@ import Data.List
 import Data.String
 import Data.Traversable
 import qualified Data.Text as T
+import Text.PrettyPrint.HughesPJ
 
 import Control.Error
 
@@ -779,8 +780,93 @@ schemeTac = unaryNameCT "scheme" infoScheme
 
 
 dumpTac = nullaryCT "dump"
-    (gets (fromString . show))
+    (do x <- prettyProofState
+        return $ pre_ (fromString x)
+    )
     "displays useless information."
+
+
+prettyProofState :: ProofState String
+prettyProofState = do
+    inScope <- getInScope
+    me <- getCurrentName
+    d <- prettyPS inScope me
+    return (renderHouseStyle d)
+
+prettyPS :: Entries -> Name -> ProofState Doc
+prettyPS aus me = do
+        es <- replaceEntriesAbove B0
+        cs <- putBelowCursor F0
+        case (es, cs) of
+            (B0, F0)  -> prettyEmptyTip
+            _   -> do
+                d <- prettyEs empty (es <>> F0)
+                d' <- case cs of
+                    F0  -> return d
+                    _   -> do
+                        d'' <- prettyEs empty cs
+                        return (d $$ text "---" $$ d'')
+                tip <- prettyTip
+                putEntriesAbove es
+                putBelowCursor cs
+                return (lbrack <+> d' $$ rbrack <+> tip)
+ where
+    prettyEs :: Doc -> Fwd (Entry Bwd) -> ProofState Doc
+    prettyEs d F0         = return d
+    prettyEs d (e :> es) = do
+        putEntryAbove e
+        ed <- prettyE e
+        prettyEs (d $$ ed) es
+
+    prettyE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
+        ty' <- bquoteHere ty
+        tyd <- prettyHereAt (pred ArrSize) (SET :>: ty')
+        return (prettyBKind k
+                 (text x  <+> (brackets $ brackets $ text $ show anchor)
+                          <+> kword KwAsc
+                          <+> tyd))
+
+    prettyE e = do
+        goIn
+        d <- prettyPS aus me
+        goOut
+        return (sep  [  text (fst (entryLastName e))
+                        <+> (brackets $ brackets $ text $ show $ entryAnchor e)
+                     ,  nest 2 d <+> kword KwSemi
+                     ])
+
+    prettyEmptyTip :: ProofState Doc
+    prettyEmptyTip = do
+        tip <- getDevTip
+        case tip of
+            Module -> return (brackets empty)
+            _ -> do
+                tip <- prettyTip
+                return (kword KwDefn <+> tip)
+
+    prettyTip :: ProofState Doc
+    prettyTip = do
+        tip <- getDevTip
+        case tip of
+            Module -> return empty
+            Unknown (ty :=>: _) -> do
+                hk <- getHoleKind
+                tyd <- prettyHere (SET :>: ty)
+                return (prettyHKind hk <+> kword KwAsc <+> tyd)
+            Suspended (ty :=>: _) prob -> do
+                hk <- getHoleKind
+                tyd <- prettyHere (SET :>: ty)
+                return (text ("(SUSPENDED: " ++ show prob ++ ")")
+                            <+> prettyHKind hk <+> kword KwAsc <+> tyd)
+            Defined tm (ty :=>: tyv) -> do
+                tyd <- prettyHere (SET :>: ty)
+                tmd <- prettyHereAt (pred ArrSize) (tyv :>: tm)
+                return (tmd <+> kword KwAsc <+> tyd)
+
+    prettyHKind :: HKind -> Doc
+    prettyHKind Waiting     = text "?"
+    prettyHKind Hoping      = text "HOPE?"
+    prettyHKind (Crying s)  = text ("CRY <<" ++ s ++ ">>")
 
 
 whatisTac = unaryExCT "whatis" infoWhatIs
@@ -943,9 +1029,9 @@ infoWhatIs tmd = draftModule "__infoWhatIs" $ do
         ,  "Distilled term:", fromString (show tms)
         ,  "Pretty-printed term:", reactify tms
         ,  "Inferred type:", fromString (show tyv)
-        ,   "Quoted type:", fromString (show ty)
-        ,   "Distilled type:", fromString (show tys)
-        ,   "Pretty-printed type:", reactify tys
+        ,  "Quoted type:", fromString (show ty)
+        ,  "Distilled type:", fromString (show tys)
+        ,  "Pretty-printed type:", reactify tys
         ]
 
 byCTactic :: Maybe RelName -> DExTmRN -> ProofState InteractionReact
