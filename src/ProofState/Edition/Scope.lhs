@@ -36,7 +36,7 @@ The `definitionsToImpl` function lists the entries above the cursor that
 have been issued during elaboration of a programming problem
 (Section [Elaborator.Elaborator.elab-prog-problem](#Elaborator.Elaborator.elab-prog-problem)).
 
-> magicImplName = "impl"
+> magicImplName = "implementation"
 
 
 > definitionsToImpl :: ProofContext -> [REF :<: INTM]

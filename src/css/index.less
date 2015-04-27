@@ -307,7 +307,18 @@ li {
 
 .layer {
     border-bottom: 1px solid @rightPaneColor;
-    display: flex;
+
+    // HACK / DEMO
+    // display: flex;
+    position: relative;
+}
+
+.layer-info {
+    position: absolute;
+
+    // HACK / DEMO
+    right: 10px;
+    top: 0;
 }
 
 .first-layer {
@@ -441,4 +452,9 @@ div.data-header {
     > div {
         margin: 0 5px;
     }
+}
+
+// HACK / DEMO
+.suspend-state {
+    margin-top: 5px;
 }

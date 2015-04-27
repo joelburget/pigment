@@ -413,9 +413,8 @@ layerView layer@(Layer aboveEntries currentEntry belowEntries tip _ suspend) =
             , onClick (handleGoTo (currentEntryName currentEntry)) ] $
                 return ()
         locally $ div_ [ class_ "layer-info" ] $ do
-            -- XXX(joel) this size no longer (did it ever) reflects the
-            -- number of entries shown
-            fromString $ "size: " ++ show (numEntries layer)
+            -- XXX(joel) this size is about the layer outside this one?
+            -- fromString $ "size: " ++ show (numEntries layer)
             suspendView suspend
 
 
