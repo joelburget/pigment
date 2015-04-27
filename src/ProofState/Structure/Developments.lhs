@@ -139,6 +139,7 @@ either be:
 >     show AnchTau = "tau"
 >     show AnchDataDef = "data definition"
 >     -- show (AnchStr str) = "(AnchStr " ++ str ++ ")"
+>     show AnchImpl = "implementation"
 >     show (AnchStr str) = str
 >     show AnchNo = "(no anchor)"
 

@@ -133,13 +133,13 @@ dispatch (CommandKeypress DownArrow)
     autocompleteDownArrow state
 dispatch (CommandKeypress DownArrow) state = historyDownArrow state
 
-dispatch (ToggleEntry name) state = toggleTerm name state
+dispatch (ToggleEntry name) state = trace "here1" $ toggleTerm name state
 dispatch (GoTo name) state = goToTerm name state
 
 dispatch (TermTransition (GoToTerm name)) state = goToTerm name state
-dispatch (TermTransition (ToggleTerm name)) state = toggleTerm name state
+dispatch (TermTransition (ToggleTerm name)) state = trace "here2" $ toggleTerm name state
 
-dispatch (TermTransition act) state = termDispatch act state
+dispatch (TermTransition act) state = trace "here3" $ termDispatch act state
 
 dispatch _ state = state
 
@@ -150,7 +150,8 @@ toggleTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
         Left err ->
             let cmd = displayUser $ locally err
                 (output, newCtx) = runCmd cmd (state^.proofCtx)
-                cmd' = Command "(toggle term)" (ctxs :< ctx) (Left "(no parse)") output
+                cmd' = Command "(toggle term)" (ctxs :< ctx)
+                               (Left "(no parse)") output
             in state & proofCtx .~ newCtx
                      & interactions %~ (cmd' :>)
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
@@ -162,7 +163,8 @@ goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
         Left err ->
             let cmd = displayUser $ locally err
                 (output, newCtx) = runCmd cmd (state^.proofCtx)
-                cmd' = Command "(go to term)" (ctxs :< ctx) (Left "(no parse)") output
+                cmd' = Command "(go to term)" (ctxs :< ctx)
+                               (Left "(no parse)") output
             in state & proofCtx .~ newCtx
                      & interactions %~ (cmd' :>)
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}

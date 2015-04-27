@@ -6,12 +6,13 @@ Solving goals
 
 > module ProofState.Interface.Solving where
 
-> import Control.Applicative
+> import Control.Applicative hiding (empty)
 > import Control.Monad
 > import qualified Data.Foldable as Foldable
 
 > import Control.Error
 
+> import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import ProofState.Structure.Developments
 > import ProofState.Edition.ProofContext
@@ -31,6 +32,13 @@ Solving goals
 > import Elaboration.Wire
 
 > import ProofState.Structure.Entries
+
+> import Kit.Trace
+> import DisplayLang.Lexer
+> import DisplayLang.PrettyPrint
+> import Text.PrettyPrint.HughesPJ as Pretty
+> import Distillation.Distiller
+> import NameSupply.NameSupply
 
 Giving a solution
 -----------------
@@ -105,27 +113,111 @@ are therefore left to `give` this definition. This is the role of the
 >     -- The entry was not a definition
 >     _ -> throwDTmStr "done: entry above cursor must be a definition."
 
+
 Slightly more sophisticated is the well-known `apply` tactic in Coq: we
 are trying to solve a goal of type `T` while we have a definition of
 type `Pi S T`. We can therefore solve the goal `T` provided we can solve
 the goal `S`. We have this tactic too and, guess what, it is `apply`.
 
 > apply :: ProofState (EXTM :=>: VAL)
-> apply = do
->   devEntry <- getEntryAbove
->   case devEntry of
->     EDEF f@(_ := _ :<: (PI _S _T)) _ _ _ _ _ _ -> do
->         -- The entry above is a proof of `Pi S T`
->         -- Ask for a proof of `S`
->         _STm <- bquoteHere _S
->         sTm :=>: s <- make $ AnchStr "s" :<: _STm
->         -- Make a proof of `T`
->         _TTm <- bquoteHere $ _T $$ A s
->         make $ AnchStr "t" :<: _TTm
->         goIn
->         giveOutBelow $ N $ P f :$ A (N sTm)
->     _ -> throwDTmStr $ "apply: last entry in the development" ++
->                        " must be a definition with a pi-type."
+> apply = getEntryAbove >>= apply'
+
+
+> apply' :: Entry Bwd -> ProofState (EXTM :=>: VAL)
+> apply' (EDEF f@(_ := _ :<: pi@(PI _ _)) _ _ _ _ _ _) = apply'' f pi
+> apply' (EPARAM f@(_ := _ :<: pi@(PI _ _)) _ _ _ _ _) = apply'' f pi
+> apply' _ = do
+>     elabTrace "elab' fail :("
+>     throwDTmStr $ "apply: last entry in the development" ++
+>                   " must be a definition with a pi-type."
+
+ apply'' :: REF -> TY -> ProofState (EXTM :=>: VAL)
+ apply'' ref pi@(PI from to) = do
+     from' <- bquoteHere from
+     pi' <- bquoteHere pi
+     (holeTm :=>: _) <- make (AnchNo :<: from')
+     give $ N $ (LRET (NP ref) :? pi') :$ A (N holeTm)
+
+> apply'' :: REF -> TY -> ProofState (EXTM :=>: VAL)
+> apply'' f (PI _S _T) = do
+>     elabTrace $ "apply' success!"
+>     -- The entry above is a proof of `Pi S T`
+>     -- Ask for a proof of `S`
+>     _STm <- bquoteHere _S
+>     sTm :=>: s <- make $ AnchStr "s" :<: _STm
+>     -- Make a proof of `T`
+>     _TTm <- bquoteHere $ _T Evidences.Eval.$$ A s
+>     make $ AnchStr "t" :<: _TTm
+>     goIn
+>     -- give $ N $ (LRET (NP f) :? (C (Pi _STm _TTm))) :$ A (N sTm)
+>     giveOutBelow $ N $ P f :$ A (N sTm)
+
+
+The tactic auto works as follows. It first tries to call reflexivity and
+assumption. If one of these calls solves the goal, the job is done. Otherwise
+auto tries to apply the most recently introduced assumption that can be applied
+to the goal without producing and error. This application produces subgoals.
+There are two possible cases. If the sugboals produced can be solved by a
+recursive call to auto, then the job is done. Otherwise, if this application
+produces at least one subgoal that auto cannot solve, then auto starts over by
+trying to apply the second most recently introduced assumption. It continues in
+a similar fashion until it finds a proof or until no assumption remains to be
+tried.
+
+
+> focuses :: [a] -> [([a], a, [a])]
+> focuses []     = []
+> focuses (a:as) = ([], a, as):(map helper (focuses as))
+>     where helper (pres, focus, post) = ((a:pres), focus, post)
+
+
+> focuses' :: [a] -> [(a, [a])]
+> focuses' = map helper . focuses
+>     where helper (pres, focus, post) = (focus, pres ++ post)
+
+> notFound = throwDTmStr "no valid parameter found"
+
+> auto :: ProofState ()
+> auto = do
+>     entries <- getInScope
+>     let entryList = filter isParam $ Foldable.toList entries
+>     autoSpreader 5 entryList
+
+> autoSpreader :: Int -> [Entry Bwd] -> ProofState ()
+> autoSpreader n entries = do
+>     let autoWith (x, xs) = auto' n (x:xs)
+>         subattempts = map autoWith (focuses' entries)
+>     elabTrace $ show (length entries) ++ " entries in scope"
+>     elabTrace $ show (length subattempts) ++ " subattempts"
+>     void done <|>
+>         (do str <- prettyProofState
+>             elabTrace $ "autospreader proof state:"
+>             elabTrace $ str
+>             assumption <|> foldl (<|>) notFound subattempts
+>         )
+
+> typeof :: Entry Bwd -> Maybe TY
+> typeof (EDEF (_ := _ :<: ty) _ _ _ _ _ _) = Just ty
+> typeof (EPARAM (_ := _ :<: ty) _ _ _ _ _) = Just ty
+> typeof _ = Nothing
+
+> auto' :: Int -> [Entry Bwd] -> ProofState ()
+> -- TODO(joel) figure out how to ensure this is shown if it happens! Don't
+> -- want it to be overwritten by an uninteresting shallower error.
+> auto' 0 _ = throwDTmStr "auto bottomed out!"
+> auto' _ [] = throwDTmStr "no valid parameter found"
+> auto' n (entry:entries) = do
+>     elabTrace $ "auto' " ++ (fst (last (entryName entry)))
+>     elabTrace $ "type: " ++ show (typeof entry)
+>     apply' entry
+>     autoSpreader (n-1) entries
+
+matchesGoal :: NameSupply -> INTM -> Maybe (INTM :=>: TY) -> Bool
+matchesGoal _ _ Nothing = False
+matchesGoal ns tm (Just (_ :=>: ty)) =
+    let ch = check (ty :>: tm)
+        result = typeCheck ch ns
+    in isRight result
 
 The `ungawa` command looks for a truly obvious thing to do, and does it.
 
@@ -134,17 +226,19 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 >           `pushError` (errMsgStack "ungawa: no can do." :: StackError DInTmRN)
 
 
-> demoMagic :: ProofState ()
-> demoMagic = do
+> isParam :: Entry Bwd -> Bool
+> isParam (EPARAM _ _ _ _ _ _) = True
+> isParam _ = False
+
+
+> assumption :: ProofState ()
+> assumption = do
 >     entries <- getInScope
 >     -- Try just returning the entry
->     let notFound = throwDTmStr "no valid parameter found"
->         f (EPARAM ref _ _ term _ _) = void $
+>     let f (EPARAM ref _ _ term _ _) = void $
 >             let justTm :: INTM
 >                 justTm = NP ref
->             -- I'm not actually sure of the meaning of the first alternative
->             -- here. TODO(joel)
->             in give justTm <|> give (LRET justTm)
+>             in elabTrace ("giving " ++ show justTm) >> give (LRET justTm)
 >         f _ = notFound
 >     -- ... for each entry
 >     foldl (<|>) notFound (map f (Foldable.toList entries))
@@ -168,3 +262,86 @@ scope.
 >     cursorTop
 >     cursorDown
 >     goIn
+
+> prettyProofState :: ProofState String
+> prettyProofState = do
+>     inScope <- getInScope
+>     me <- getCurrentName
+>     d <- prettyPS inScope me
+>     return (renderHouseStyle d)
+>
+> prettyPS :: Entries -> Name -> ProofState Doc
+> prettyPS aus me = do
+>         es <- replaceEntriesAbove B0
+>         cs <- putBelowCursor F0
+>         case (es, cs) of
+>             (B0, F0)  -> prettyEmptyTip
+>             _   -> do
+>                 d <- prettyEs empty (es <>> F0)
+>                 d' <- case cs of
+>                     F0  -> return d
+>                     _   -> do
+>                         d'' <- prettyEs empty cs
+>                         return (d Pretty.$$ text "---" Pretty.$$ d'')
+>                 tip <- prettyTip
+>                 putEntriesAbove es
+>                 putBelowCursor cs
+>                 return (lbrack <+> d' Pretty.$$ rbrack <+> tip)
+>  where
+>     prettyEs :: Doc -> Fwd (Entry Bwd) -> ProofState Doc
+>     prettyEs d F0         = return d
+>     prettyEs d (e :> es) = do
+>         putEntryAbove e
+>         ed <- prettyE e
+>         prettyEs (d Pretty.$$ ed) es
+>
+>     prettyE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
+>         ty' <- bquoteHere ty
+>         tyd <- prettyHereAt (pred ArrSize) (SET :>: ty')
+>         return (prettyBKind k
+>                  (text x  <+> (brackets $ brackets $ text $ show anchor)
+>                           <+> kword KwAsc
+>                           <+> tyd))
+>
+>     prettyE e = do
+>         goIn
+>         d <- prettyPS aus me
+>         goOut
+>         return (sep  [  text (fst (entryLastName e))
+>                         <+> (brackets $ brackets $ text $ show $ entryAnchor e)
+>                      ,  nest 2 d <+> kword KwSemi
+>                      ])
+>
+>     prettyEmptyTip :: ProofState Doc
+>     prettyEmptyTip = do
+>         tip <- getDevTip
+>         case tip of
+>             Module -> return (brackets empty)
+>             _ -> do
+>                 tip <- prettyTip
+>                 return (kword KwDefn <+> tip)
+>
+>     prettyTip :: ProofState Doc
+>     prettyTip = do
+>         tip <- getDevTip
+>         case tip of
+>             Module -> return empty
+>             Unknown (ty :=>: _) -> do
+>                 hk <- getHoleKind
+>                 tyd <- prettyHere (SET :>: ty)
+>                 return (prettyHKind hk <+> kword KwAsc <+> tyd)
+>             Suspended (ty :=>: _) prob -> do
+>                 hk <- getHoleKind
+>                 tyd <- prettyHere (SET :>: ty)
+>                 return (text ("(SUSPENDED: " ++ show prob ++ ")")
+>                             <+> prettyHKind hk <+> kword KwAsc <+> tyd)
+>             Defined tm (ty :=>: tyv) -> do
+>                 tyd <- prettyHere (SET :>: ty)
+>                 tmd <- prettyHereAt (pred ArrSize) (tyv :>: tm)
+>                 return (tmd <+> kword KwAsc <+> tyd)
+>
+>     prettyHKind :: HKind -> Doc
+>     prettyHKind Waiting     = text "?"
+>     prettyHKind Hoping      = text "HOPE?"
+>     prettyHKind (Crying s)  = text ("CRY <<" ++ s ++ ">>")
+>

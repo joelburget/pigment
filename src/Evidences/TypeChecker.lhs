@@ -260,7 +260,8 @@ want.
 > elimTy chev (f :<: Pi s t) (A e) = do
 >     eev@(e :=>: ev) <- chev (s :>: e)
 >     return $ (A eev, t $$ A ev)
-> elimTy chev (_ :<: t@(Mu (_ :?=: Identity d))) Out = return (Out, descOp @@ [d , C t])
+> elimTy chev (_ :<: t@(Mu (_ :?=: Identity d))) Out =
+>     return (Out, descOp @@ [d , C t])
 > elimTy chev (_ :<: Prf (EQBLUE (t0 :>: x0) (t1 :>: x1))) Out =
 >     return (Out, PRF (eqGreen @@ [t0 , x0 , t1 , x1]))
 > elimTy chev (_ :<: (IMu tt@(_ :?=: (Identity ii :& Identity x)) i)) Out =
@@ -270,7 +271,8 @@ want.
 > elimTy chev (_ :<: Label _ t) (Call l) = do
 >     llv@(l :=>: lv) <- chev (t :>: l)
 >     return (Call llv, t)
-> elimTy chev (_ :<: t@(Nu (_ :?=: Identity d))) Out = return (Out, descOp @@ [d , C t])
+> elimTy chev (_ :<: t@(Nu (_ :?=: Identity d))) Out =
+>     return (Out, descOp @@ [d , C t])
 > elimTy chev (f :<: Prf (ALL p q))      (A e)  = do
 >     eev@(e :=>: ev) <- chev (p :>: e)
 >     return $ (A eev, PRF (q $$ A ev))

@@ -21,7 +21,6 @@ Cochon error prettier
 > import ProofState.Edition.ProofContext
 > import ProofState.Edition.ProofState
 > import ProofState.Interface.ProofKit
-> import Distillation.Distiller
 > import Distillation.Moonshine
 
 > -- Given a proof state command and a context, we can run the command with
@@ -34,14 +33,6 @@ Cochon error prettier
 > runProofState m loc =
 >     let result = runStateT (m `catchStack` catchUnprettyErrors) loc
 >     in left reactStackError result
-
-Catching the gremlins before they leave `ProofState`
-----------------------------------------------------
-
-> catchUnprettyErrors :: StackError DInTmRN -> ProofState a
-> catchUnprettyErrors e = do
->     e' <- distillErrors e
->     throwStack e'
 
 Pretty-printing the stack trace
 -------------------------------

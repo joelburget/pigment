@@ -46,3 +46,11 @@ prettyErrorTok (ErrorElim  e)  = pretty e maxBound
 prettyErrorTok (ErrorREF ref) = text $ show ref
 prettyErrorTok (ErrorVAL (v :<: _)) =
     text "ErrorVAL" <> brackets (text (show v))
+
+
+-- Catching the gremlins before they leave `ProofState`
+
+catchUnprettyErrors :: StackError DInTmRN -> ProofState a
+catchUnprettyErrors e = do
+    e' <- distillErrors e
+    throwStack e'

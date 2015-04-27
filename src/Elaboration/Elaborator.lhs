@@ -80,7 +80,9 @@ elaborates it and runs the scheduler.
 > elabInferFully tm = do
 >     make (AnchElabInferFully :<: sigSetTM)
 >     goIn
->     (tm :=>: _, status) <- runElab WorkCurrentGoal (sigSetVAL :>: makeElabInfer (Loc 0) tm)
+>     (tm :=>: _, status) <- runElab
+>         WorkCurrentGoal
+>         (sigSetVAL :>: makeElabInfer (Loc 0) tm)
 >     when (status == ElabSuccess) (void (give tm))
 >     startScheduler
 >     (tm :=>: v) <- getCurrentDefinition
@@ -182,6 +184,7 @@ the following proof state:
 First we need to elaborate the scheme so it contains evidence terms,
 then convert the module into a goal with the scheme assigned.
 
+>     -- TODO(joel) - AnchType?
 >     make (AnchStr (x ++ "-type") :<: SET)
 >     goIn
 >     (sch', ty :=>: _) <- elabLiftedScheme sch
@@ -272,7 +275,9 @@ Elaborating schemes
 >     liftScheme es (SchExplicitPi (x :<: SchType (es -| s)) sch)
 > liftScheme (es :< _) sch                      = liftScheme es sch
 
-> elabScheme :: Entries -> Scheme DInTmRN -> ProofState (Scheme INTM, EXTM :=>: VAL)
+> elabScheme :: Entries
+>            -> Scheme DInTmRN
+>            -> ProofState (Scheme INTM, EXTM :=>: VAL)
 > elabScheme es (SchType ty) = do
 >     ty' :=>: _ <- elaborate' (SET :>: ty)
 >     tt <- giveOutBelow ty'

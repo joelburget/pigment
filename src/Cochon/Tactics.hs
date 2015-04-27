@@ -118,6 +118,7 @@ cochonTactics = sort
     , simplifyTac
     , relabelTac
     , doitTac
+    , autoTac
     ]
 
 
@@ -403,11 +404,26 @@ doitTac = simpleCT
     "pigment tries to implement it for you"
     "demoMagic"
     (pure B0)
-    (\_ -> demoMagic >> return "Did it!")
+    (\_ -> assumption >> return "Did it!")
     (Right (TacticHelp
         "demoMagic"
         "demoMagic"
         "pigment tries to implement it for you"
+        []
+    ))
+
+
+autoTac = simpleCT
+    "auto"
+    Historic
+    "coq's auto"
+    "auto"
+    (pure B0)
+    (\_ -> auto >> return "Auto... magic!")
+    (Right (TacticHelp
+        "auto"
+        "auto"
+        "coq's auto"
         []
     ))
 
@@ -824,89 +840,6 @@ dumpTac = nullaryCT "dump"
         return $ pre_ (fromString x)
     )
     "displays useless information."
-
-
-prettyProofState :: ProofState String
-prettyProofState = do
-    inScope <- getInScope
-    me <- getCurrentName
-    d <- prettyPS inScope me
-    return (renderHouseStyle d)
-
-prettyPS :: Entries -> Name -> ProofState Doc
-prettyPS aus me = do
-        es <- replaceEntriesAbove B0
-        cs <- putBelowCursor F0
-        case (es, cs) of
-            (B0, F0)  -> prettyEmptyTip
-            _   -> do
-                d <- prettyEs empty (es <>> F0)
-                d' <- case cs of
-                    F0  -> return d
-                    _   -> do
-                        d'' <- prettyEs empty cs
-                        return (d $$ text "---" $$ d'')
-                tip <- prettyTip
-                putEntriesAbove es
-                putBelowCursor cs
-                return (lbrack <+> d' $$ rbrack <+> tip)
- where
-    prettyEs :: Doc -> Fwd (Entry Bwd) -> ProofState Doc
-    prettyEs d F0         = return d
-    prettyEs d (e :> es) = do
-        putEntryAbove e
-        ed <- prettyE e
-        prettyEs (d $$ ed) es
-
-    prettyE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
-        ty' <- bquoteHere ty
-        tyd <- prettyHereAt (pred ArrSize) (SET :>: ty')
-        return (prettyBKind k
-                 (text x  -- <+> (brackets $ brackets $ text $ show anchor)
-                          <+> kword KwAsc
-                          <+> tyd))
-
-    prettyE e = do
-        goIn
-        d <- prettyPS aus me
-        goOut
-        return (sep  [  text (fst (entryLastName e))
-                        -- <+> (brackets $ brackets $ text $ show $ entryAnchor e)
-                     ,  nest 2 d <+> kword KwSemi
-                     ])
-
-    prettyEmptyTip :: ProofState Doc
-    prettyEmptyTip = do
-        tip <- getDevTip
-        case tip of
-            Module -> return (brackets empty)
-            _ -> do
-                tip <- prettyTip
-                return (kword KwDefn <+> tip)
-
-    prettyTip :: ProofState Doc
-    prettyTip = do
-        tip <- getDevTip
-        case tip of
-            Module -> return empty
-            Unknown (ty :=>: _) -> do
-                hk <- getHoleKind
-                tyd <- prettyHere (SET :>: ty)
-                return (prettyHKind hk <+> kword KwAsc <+> tyd)
-            Suspended (ty :=>: _) prob -> do
-                hk <- getHoleKind
-                tyd <- prettyHere (SET :>: ty)
-                return (text ("(SUSPENDED: " ++ show prob ++ ")")
-                            <+> prettyHKind hk <+> kword KwAsc <+> tyd)
-            Defined tm (ty :=>: tyv) -> do
-                tyd <- prettyHere (SET :>: ty)
-                tmd <- prettyHereAt (pred ArrSize) (tyv :>: tm)
-                return (tmd <+> kword KwAsc <+> tyd)
-
-    prettyHKind :: HKind -> Doc
-    prettyHKind Waiting     = text "?"
-    prettyHKind Hoping      = text "HOPE?"
-    prettyHKind (Crying s)  = text ("CRY <<" ++ s ++ ">>")
 
 
 whatisTac = unaryExCT "whatis" infoWhatIs

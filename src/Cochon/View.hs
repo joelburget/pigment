@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
   MultiParamTypeClasses, LambdaCase, LiberalTypeSynonyms, DataKinds,
-  NamedFieldPuns #-}
+  NamedFieldPuns, TypeOperators #-}
 
 module Cochon.View where
 
@@ -91,7 +91,9 @@ page state = div_ [ class_ "page" ] $ do
             --     proofCtxLayers (pcLayers (_proofCtx state))
             -- elabTrace (show (_proofCtx state))
             -- elabTrace (renderHouseStyle (pretty (_proofCtx state) maxBound))
+
             proofCtxDisplay $ _proofCtx state
+
         div_ [ class_ "bottom-pane" ] $ do
             locally $ autocompleteView (_autocomplete state)
             prompt state
@@ -305,6 +307,7 @@ infoContextual :: ContextualInfo -> ProofState InteractionReact
 infoContextual gals = do
     inScope <- getInScope
     bsc <- gets inBScope
+    -- holeTy <- optional getHoleGoal
     entries <- Traversable.mapM (entryHelp gals bsc) inScope
     return $ ul_ [ class_ "info-contextual" ] $ Foldable.sequence_ entries
   where
@@ -438,15 +441,19 @@ entryReasonableName = fromString . fst . last . entryName
 
 paramEntryView :: Traversable f => Entry f -> TermReact
 paramEntryView entry@(EEntity _ _ entity term _ _) =
-    div_ [ class_ "entry"
-         , onClick (handleEntryGoTo (entryName entry))
-         -- ] $ fromString $ showRelName $ christenREF bsc ref
-         ] $
-        div_ [ class_ "entity" ] $
-            flatButton
-                [ label_ (entryReasonableName entry)
-                , onClick (handleEntryGoTo (entryName entry))
-                ] $ return ()
+    -- let cls = if term `matchesGoal` goal
+    --           then "matches-goal"
+    --           else ""
+    div_ $ text_ $ entryReasonableName entry
+    -- div_ [ class_ "entry"
+    --      , onClick (handleEntryGoTo (entryName entry))
+    --      -- ] $ fromString $ showRelName $ christenREF bsc ref
+    --      ] $
+    --     div_ [ class_ "entity" ] $
+    --         flatButton
+    --             [ label_ (entryReasonableName entry)
+    --             , onClick (handleEntryGoTo (entryName entry))
+    --             ] $ return ()
 paramEntryView mod = div_ $ do
     text_ $ fromString $ showName $ entryName mod
     " (module)" -- TODO(joel) I don't know what to show

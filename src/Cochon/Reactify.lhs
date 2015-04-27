@@ -102,7 +102,9 @@ elements.
       reactify f
       reactify s
   canReactify Prop           = reactKword KwProp
-  canReactify (Prf p)        = reactKword KwPrf >> reactify p
+
+> canReactify (Prf p)        = reactKword KwPrf >> reactify p
+
   canReactify (All p q)      = reactifyAll "" (DALL p q)
   canReactify (And p q)      = reactify p >> reactKword KwAnd >> reactify q
   canReactify Trivial        = reactKword KwTrivial
@@ -226,7 +228,9 @@ a lambda term is reached.
           reactify ii
           reactify d
           reactify i
-      reactify (DAnchor name _)  = fromString name
+
+>     reactify (DAnchor name _)  = fromString name
+
       reactify (DTAG name)        = reactKword KwTag >> fromString name
       reactify (DTag name tms) = do
           reactKword KwTag

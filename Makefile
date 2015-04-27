@@ -20,7 +20,7 @@ web:
 	cp dist/build/pigment/pigment.jsexe/all.js web/js/
 
 $(SANDBOX)/bin/pigment.jsexe/all.js: $(SANDBOX) $(SOURCE_FILES)
-	cabal install --ghcjs
+	cabal install --ghcjs --disable-documentation --disable-library-profiling --disable-benchmarks
 
 $(SANDBOX):
 	cabal sandbox init --sandbox $(SANDBOX)
