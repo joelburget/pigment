@@ -1,4 +1,4 @@
-.PHONY: build clean docs web install_less_deps dash
+.PHONY: build clean docs web install_less_deps dash lint
 
 SOURCE_FILES = $(wildcard src/**/*hs)
 LHS_FILES = $(wildcard src/**/*.lhs)
@@ -46,6 +46,9 @@ dist/doc/html/pigment/index.html: $(SANDBOX) $(SOURCE_FILES)
 # this has a hidden dependency on sandbox-installed dash-haskell
 dash: dist/doc/html/pigment/index.html
 	../sandbox/.cabal-sandbox/bin/dash-haskell -c pigment.cabal -o docsets
+
+lint:
+	../sandbox/.cabal-sandbox/bin/hlint src
 
 # *caution*
 docs:
