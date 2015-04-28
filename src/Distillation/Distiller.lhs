@@ -10,7 +10,6 @@
 > import Data.Functor.Identity
 
 > import Text.PrettyPrint.HughesPJ (Doc)
-> import React
 
 > import Kit.BwdFwd
 > import Kit.MissingLibrary

@@ -14,7 +14,6 @@
 > import Data.String (fromString)
 
 > import Control.Error
-> import React
 
 > import DisplayLang.Name
 > import NameSupply.NameSupplier

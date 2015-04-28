@@ -6,6 +6,7 @@
 > module Distillation.Scheme where
 
 > import Text.PrettyPrint.HughesPJ (Doc)
+
 > import Kit.BwdFwd
 > import ProofState.Structure.Developments
 > import ProofState.Edition.ProofState
@@ -18,7 +19,6 @@
 > import Evidences.Tm
 > import Evidences.Mangler
 > import Evidences.Eval
-> import React
 
 Distilling schemes
 ------------------
@@ -106,6 +106,7 @@ ProofState usage.
 > distillSchemeHere :: Scheme INTM -> ProofState (Scheme DInTmRN)
 > distillSchemeHere sch =
 >     return . fst =<< liftErrorState DTIN (distillScheme B0 B0 sch)
+
 > prettySchemeHere :: Scheme INTM -> ProofState Doc
 > prettySchemeHere sch = do
 >     sch' <- distillSchemeHere sch
