@@ -29,8 +29,8 @@ and render the (updated) Proof State back into the high-level presentation.
 
 https://lists.cis.strath.ac.uk/pipermail/epigram-discuss/2010-August/000030.html
 
-... With that in mind, I think I've somewhat misunderstood / corrupted anchors.
-Will correct course.
+... With that in mind, I (Joel) think I've somewhat misunderstood / corrupted
+anchors. Will correct course.
 
 > isAnchor :: Traversable f => Entry f -> Bool
 > isAnchor (EEntity _ _ _ _ AnchNo _) = False

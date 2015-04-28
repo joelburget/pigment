@@ -36,8 +36,6 @@ The `definitionsToImpl` function lists the entries above the cursor that
 have been issued during elaboration of a programming problem
 (Section [Elaborator.Elaborator.elab-prog-problem](#Elaborator.Elaborator.elab-prog-problem)).
 
-> magicImplName = "implementation"
-
 
 > definitionsToImpl :: ProofContext -> [REF :<: INTM]
 > definitionsToImpl pc@PC{pcAboveCursor=Dev{devEntries=es}} =
@@ -45,8 +43,7 @@ have been issued during elaboration of a programming problem
 >   where
 >     help :: Bwd Layer -> [REF :<: INTM] -> [REF :<: INTM]
 >     help B0 xs = xs
->     help (ls :< Layer{currentEntry=CDefinition _ _ (n, _) _ _ _}) xs
->         | n == magicImplName = xs
+>     help (ls :< Layer{currentEntry=CDefinition _ _ _ _ AnchImpl _}) xs = xs
 >     help (ls :< l) xs = help ls (params (aboveEntries l) ++ xs)
 >     params = foldMap param
 >     param (EPARAM r _ _ t _ _) = [r :<: t]

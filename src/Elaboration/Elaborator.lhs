@@ -239,7 +239,7 @@ will give a proof state of:
 >     (gUnlifted :=>: _) <- getHoleGoal
 >     newty <- withNSupply $ pity (mkTel (unN $ valueOf pn) (evTm gUnlifted) [] args)
 >     newty'       <- bquoteHere newty
->     impl :=>: _  <- make (AnchStr magicImplName :<: newty')
+>     impl :=>: _  <- make (AnchImpl :<: newty')
 >     argrefs      <- traverse lambdaParam args
 >     let  fcall  = termOf pn $## (map NP argrefs)
 >          call   = impl $## (map NP argrefs) :$ Call (N fcall)

@@ -533,8 +533,8 @@ when simplifying the motive (e.g. splitting sigmas).
 > introMotive :: TY -> TY -> [INTM] -> Bwd Constraint -> Int
 >     -> ProofState (Bwd Constraint, Int)
 
-\< introMotive (PI (PRF p) t) (x : xs) xs = introMotive (t $$ A (evTm
-x)) xs cs
+< introMotive (PI (PRF p) t) (x : xs) xs =
+<     introMotive (t $$ A (evTm x)) xs cs
 
 If the index and target are both pairs, and the target is not a
 variable, then we simplify the introduced constraints by splitting the
@@ -765,7 +765,7 @@ will typically want to move to the first (lifted) method:
 The `getLocalContext` command takes a comma and returns the local
 context, by looking up the parameters above and dropping those before
 the comma, if one is supplied. Regardless of the comma, we only go back
-as far as a `CurrentEntry` with name `magicImplName` if one exists, so
+as far as a `CurrentEntry` with anchor `AnchImpl` if one exists, so
 shared parameters for programming problems will always be excluded.
 
 > getLocalContext :: Maybe REF -> ProofState (Bwd (REF :<: INTM))

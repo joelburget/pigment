@@ -19,6 +19,7 @@
 > import Elaboration.ElabProb
 > import DisplayLang.Scheme
 
+> -- TODO(joel) - create an `Expanded` data type
 > data Metadata = Metadata
 >     { _expanded :: Bool
 >     , _annotation :: T.Text
@@ -107,6 +108,7 @@ either be:
 >     | AnchElabInferFully
 >     | AnchTau
 >     | AnchDataDef
+>     | AnchImpl
 >     -- Anchors with cryptic names I don't understand
 >     | AnchStr String
 >     -- "Nothing"
