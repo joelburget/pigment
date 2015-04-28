@@ -87,7 +87,7 @@ a new goal.
 >     g'  <- bquoteHere g
 >     es  <- getEntriesAbove
 >     cursorAboveLambdas
->     make (AnchStr "tsg" :<: liftType es g')
+>     _ <- make (AnchStr "tsg" :<: liftType es g')
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -228,7 +228,7 @@ subgoal.
 >     g' <- bquoteHere g
 >     es <- getEntriesAbove
 >     cursorAboveLambdas
->     make (AnchStr "pig" :<: liftType es g')
+>     _ <- make (AnchStr "pig" :<: liftType es g')
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -252,7 +252,7 @@ we can just invoke propositional simplification...
 > simplifyGoal False g@(PRF _) = do
 >     simpTrace "PRF not"
 >     g' <- bquoteHere g
->     make (AnchStr "prg" :<: g')
+>     _ <- make (AnchStr "prg" :<: g')
 >     goIn
 >     x :=>: xv <- simplifyGoal True g
 >     goOut

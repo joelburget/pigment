@@ -115,7 +115,6 @@ old dependency holes with the new ones.
 >     stripShared' n (es :< EDEF _ _ _ _ _ _ _)  = stripShared' n es
 >     stripShared' n (es :< EModule _ _ _ _)     = stripShared' n es
 >     stripShared' n es =
->       -- |proofTrace $ "stripShared: fail on " ++ show n|
 >       throwDInTmRN $ stackItem
 >           [ errMsg "stripShared: fail on"
 >           , errVal (N n)

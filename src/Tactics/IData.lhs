@@ -7,10 +7,8 @@ Datatype declaration
 
 > import Control.Applicative
 > import Control.Monad.Identity
-> import Control.Error
 > import Data.Traversable
 
-> import Kit.MissingLibrary
 > import Evidences.Tm
 > import Evidences.Mangler
 > import Evidences.Eval
@@ -21,7 +19,6 @@ Datatype declaration
 > import ProofState.Edition.ProofState
 > import ProofState.Edition.GetSet
 > import ProofState.Edition.Navigation
-> import ProofState.Edition.FakeRef
 > import ProofState.Interface.ProofKit
 > import ProofState.Interface.Module
 > import ProofState.Interface.Definition
@@ -31,7 +28,6 @@ Datatype declaration
 > import ProofState.Structure.Developments
 > import Elaboration.Elaborator
 > import DisplayLang.Name
-> import DisplayLang.DisplayTm
 > import Tactics.Data
 
 > ielabCons :: String -> INTM -> (EXTM :=>: VAL) ->
@@ -42,7 +38,7 @@ Datatype declaration
 >                           , [String]
 >                           )
 > ielabCons nom ty (indty :=>: indtyv) ps (s , t) = do
->   make (AnchTy s :<: ARR ty SET)
+>   _ <- make (AnchTy s :<: ARR ty SET)
 >   goIn
 >   r <- lambdaParam nom
 >   tyi :=>: v <- elabGive' t
@@ -94,7 +90,7 @@ Datatype declaration
 >           x <- ity2h indty r ps (b $$ A (NP s))
 >           pure (L $ fortran b :. (capM s 0 %% x) )
 >       return (IPI a' b')
-> ity2h indty r ps (N (x :$ A i')) = do
+> ity2h _ r ps (N (x :$ A i')) = do
 >     b <- withNSupply (equal (SET :>: (N x, NP r $$$ ps)))
 >     unless b $ throwDTmStr "Not SP"
 >     IVAR <$> bquoteHere i'
@@ -102,7 +98,7 @@ Datatype declaration
 >     "This doesn't work, Dr Morris something something."
 
 > imkAllowed :: (String, EXTM, INTM) -> [(String, EXTM, REF)] -> (INTM, INTM)
-> imkAllowed (s, ty, i) = foldr mkAllowedHelp (ARR (N ty) SET,
+> imkAllowed (_, ty, i) = foldr mkAllowedHelp (ARR (N ty) SET,
 >                                              ALLOWEDCONS  (N ty)
 >                                                           (LK SET)
 >                                                           (N (P refl :$ A SET :$ A (ARR (N ty) SET)))
@@ -116,28 +112,29 @@ Datatype declaration
 > ielabData :: String -> [ (String , DInTmRN) ] -> DInTmRN ->
 >                        [ (String , DInTmRN) ] -> ProofState (EXTM :=>: VAL)
 > ielabData nom pars indty scs = do
->   oldaus <- paramSpine <$> getInScope
->   makeModule DevelopData nom
+>   -- XXX(joel)
+>   _ <- paramSpine <$> getInScope
+>   _ <- makeModule DevelopData nom
 >   goIn
 >   pars' <- traverse (\(x,y) -> do
->     make (AnchParTy x :<: SET)
+>     _ <- make (AnchParTy x :<: SET)
 >     goIn
 >     (yt :=>: yv) <- elabGive y
 >     r <- assumeParam (x :<: (N yt :=>: yv))
 >     return (x,yt,r)) pars
->   make (AnchIndTy :<: SET)
+>   _ <- make (AnchIndTy :<: SET)
 >   goIn
 >   indty'@(indtye :=>: indtyv) <- elabGive indty
->   moduleToGoal (ARR (N indtye) SET)
+>   _ <- moduleToGoal (ARR (N indtye) SET)
 >   cs <- traverse (ielabCons nom
 >                   (foldr (\(x,s,r) t ->
 >                             PI (N s) (L $ x :.
 >                               (capM r 0 %% t))) (ARR (N indtye) SET) pars')
 >                   indty' (map (\(_,_,r) -> A (NP r)) pars')) scs
->   make (AnchConNames :<: NP enumREF)
+>   _ <- make (AnchConNames :<: NP enumREF)
 >   goIn
->   (e :=>: ev) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE scs)
->   make (AnchConDescs :<:
+>   (e :=>: _) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE scs)
+>   _ <- make (AnchConDescs :<:
 >           ARR (N indtye) (N (branchesOp
 >                               :@ [ N e
 >                                  , L $ K (N (P idescREF :$ A (N indtye)))
@@ -145,7 +142,7 @@ Datatype declaration
 >   goIn
 >   i <- lambdaParam "i"
 >   (cs' :=>: _) <- giveOutBelow (foldr PAIR VOID (map (\(_,_,c,_) -> N (c :$ A (NP i))) cs))
->   make ((AnchDataTy nom) :<: ARR (N indtye) SET)
+>   _ <- make ((AnchDataTy nom) :<: ARR (N indtye) SET)
 >   goIn
 >   i <- lambdaParam "i"
 >   let d = L $ "i" :.IFSIGMA (N e) (N (cs' :$ A (NV 0)))
@@ -169,7 +166,7 @@ principles (:
 
 >   let mystery1 = do
 >           (icase,_,_) <- resolveHere [("TData",Rel 0),("tcase",Rel 0)]
->           makeModule DevelopOther "Case"
+>           _ <- makeModule DevelopOther "Case"
 >           goIn
 >           i <- assumeParam ("i" :<: (N indtye :=>: indtyv))
 >           v <- assumeParam (comprefold (concatMap (\(_,_,_,c) -> c) cs)
@@ -179,8 +176,8 @@ principles (:
 >                                :$ A (NP i) :$ A (NP v)
 >           caseV :<: caseTy <- inferHere caseTm
 >           caseTy' <- bquoteHere caseTy
->           moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) caseTy')
->           giveOutBelow (N caseTm)
+>           _ <- moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) caseTy')
+>           _ <- giveOutBelow (N caseTm)
 >           return ()
 >       mystery1handler :: StackError DInTmRN -> ProofState ()
 >       mystery1handler = const (return ())
@@ -188,7 +185,7 @@ principles (:
 
 >   let mystery2 = do
 >           (dind,_,_) <- resolveHere [("TData",Rel 0),("tind",Rel 0)]
->           makeModule DevelopOther "Ind"
+>           _ <- makeModule DevelopOther "Ind"
 >           goIn
 >           i <- assumeParam ("i" :<: (N indtye :=>: indtyv))
 >           v <- assumeParam (comprefold (concatMap (\(_,_,_,c) -> c) cs)
@@ -199,8 +196,8 @@ principles (:
 >           dindV :<: dindTy <- inferHere dindT
 >           dindTy' <- bquoteHere dindTy
 >           -- XXX(joel) why is i unused?
->           moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) dindTy')
->           giveOutBelow (N dindT)
+>           _ <- moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) dindTy')
+>           _ <- giveOutBelow (N dindT)
 >           return ()
 >       mystery2handler :: StackError DInTmRN -> ProofState ()
 >       mystery2handler _ = do
@@ -208,9 +205,9 @@ principles (:
 >           indV :<: indTy <- inferHere indTm
 >           indTy' <- bquoteHere indTy
 >           -- XXX(joel) why is i unused?
->           make (AnchInd :<: isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) indTy')
+>           _ <- make (AnchInd :<: isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) indTy')
 >           goIn
->           giveOutBelow (N indTm)
+>           _ <- giveOutBelow (N indTm)
 >           return ()
 
 >   mystery2 `catchStack` mystery2handler
@@ -230,8 +227,8 @@ tests for equality, so it doesn't catch the wrong `MU`s.
 > isetLabel l (N n) = N (isetLabelN l n)
 
 > isetLabelN :: INTM -> EXTM -> EXTM
-> isetLabelN l (P x) = P x
-> isetLabelN l (V n) = V n
+> isetLabelN _ (P x) = P x
+> isetLabelN _ (V n) = V n
 > isetLabelN l (op :@ as) = op :@ map (isetLabel l) as
 > isetLabelN l (f :$ a) = isetLabelN l f :$ fmap (isetLabel l) a
 > isetLabelN l (t :? ty) = isetLabel l t :? isetLabel l ty

@@ -786,7 +786,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 > convertErrorVALs (ErrorVAL tt)          = ErrorVAL tt
 
 > instance Traversable Can where
->     traverse f Set       = pure Set
+>     traverse _ Set       = pure Set
 >     traverse f (Pi s t)  = Pi <$> f s <*> f t
 >     traverse f (Con t)   = Con <$> f t
 >     traverse _ Anchors = pure Anchors
@@ -797,7 +797,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >         AllowedCons <$> f _S <*> f _T <*> f q <*> f s <*> f ts
 >     traverse f (Mu l) = Mu <$> traverse f l
 >     traverse f (EnumT e)    = EnumT <$> f e
->     traverse f Ze           = pure Ze
+>     traverse _ Ze           = pure Ze
 >     traverse f (Su n)       = Su <$> f n
 >     traverse f (EqBlue (pty :>: p) (qty :>: q)) =
 >       let trav1 = (:>:) <$> f pty <*> f p
@@ -828,15 +828,15 @@ throwErrTm = throwStack . StackError . pure . errTm
 >     traverse f (Inh ty)  = Inh <$> f ty
 >     traverse f (Wit t)   = Wit <$> f t
 >     traverse f (Quotient x r p) = Quotient <$> f x <*> f r <*> f p
->     traverse f RSig           = pure RSig
->     traverse f REmpty         = pure REmpty
+>     traverse _ RSig           = pure RSig
+>     traverse _ REmpty         = pure REmpty
 >     traverse f (RCons s i t)  = RCons <$> f s <*> f i <*> f t
->     traverse f Unit         = pure Unit
->     traverse f Void         = pure Void
+>     traverse _ Unit         = pure Unit
+>     traverse _ Void         = pure Void
 >     traverse f (Sigma s t)  = Sigma <$> f s <*> f t
 >     traverse f (Pair x y)   = Pair <$> f x <*> f y
->     traverse f UId          = pure UId
->     traverse f (Tag s)      = pure (Tag s)
+>     traverse _ UId          = pure UId
+>     traverse _ (Tag s)      = pure (Tag s)
 
 > instance Functor Can where
 >     fmap = fmapDefault
