@@ -1,4 +1,4 @@
-.PHONY: build clean docs web install_less_deps
+.PHONY: build clean docs web install_less_deps dash
 
 SOURCE_FILES = $(wildcard src/**/*hs)
 LHS_FILES = $(wildcard src/**/*.lhs)
@@ -38,6 +38,14 @@ build/index.html: src/index.html
 
 build/all.js: $(SANDBOX)/bin/pigment.jsexe/all.js
 	cp $(SANDBOX)/bin/pigment.jsexe/all.js build/
+
+# This has a hidden dependency on global `hscolour`.
+dist/doc/html/pigment/index.html: $(SANDBOX) $(SOURCE_FILES)
+	cabal haddock --hyperlink-source
+
+# this has a hidden dependency on sandbox-installed dash-haskell
+dash: dist/doc/html/pigment/index.html
+	../sandbox/.cabal-sandbox/bin/dash-haskell -c pigment.cabal -o docsets
 
 # *caution*
 docs:
