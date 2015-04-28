@@ -4,7 +4,8 @@ Tm
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
 >     FlexibleContexts, ScopedTypeVariables, ConstraintKinds,
->     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds, TupleSections #-}
+>     GeneralizedNewtypeDeriving, PatternSynonyms, DataKinds, TupleSections,
+>     DeriveDataTypeable, StandaloneDeriving #-}
 
 > module Evidences.Tm where
 
@@ -13,6 +14,7 @@ Tm
 > import Control.Monad.State
 > import Control.Monad.Trans.Class
 > import Control.Monad.Trans.Error
+> import Data.Data
 > import qualified Data.Monoid as M
 > import Data.Monoid (mappend, mconcat, mempty, (<>))
 > import Data.Foldable
@@ -74,6 +76,13 @@ And we can infer types from:
 >   (:$)  :: Tm Ex p x -> Elim (Tm In p x)  -> Tm Ex p   x -- elim
 >   (:?)  :: Tm In TT x -> Tm In TT x       -> Tm Ex TT  x -- typing
 >   Yuk   :: Tm In VV x                     -> Tm Ex TT  x -- dirty
+>   deriving (Typeable)
+
+try to fix after this lands (7.10?)
+https://ghc.haskell.org/trac/ghc/ticket/7947
+
+> deriving instance Data INTM
+> deriving instance Data EXTM
 
 To put some flesh on these bones, we define and use the `Scope`, `Can`,
 `Op`, and `Elim` data-types. Their role is described below. Before that,
@@ -200,7 +209,7 @@ binding complicates the definition.
 >     Pair           :: t -> t -> Can t
 >     UId            :: Can t
 >     Tag            :: String -> Can t
->   deriving (Show, Eq)
+>   deriving (Show, Eq, Data, Typeable)
 
 The `Con` object is used and abused in many circumstances. However, all
 its usages share the same pattern: `Con` is used whenever we need to
@@ -222,7 +231,7 @@ eliminators for types with $\eta$-laws go here.
 >   Call  :: t -> Elim t
 >   Fst   :: Elim t
 >   Snd   :: Elim t
->   deriving (Show, Eq)
+>   deriving (Show, Eq, Data, Typeable)
 
 Just as `Con` was packing things up, we define here `Out` to unpack
 them.
@@ -403,10 +412,10 @@ i.e. we can push the `typ` in the `thing`. Conversely, we write `thing
 the type `typ` out of the `thing`. Therefore, we can read `:>:` as
 "accepts" and `:<:` as "has inferred type".
 
-> data ty :>: tm = ty :>: tm  deriving (Show,Eq)
+> data ty :>: tm = ty :>: tm  deriving (Show, Eq, Data, Typeable)
 > infix 4 :>:
 
-> data tm :<: ty = tm :<: ty  deriving (Show,Eq)
+> data tm :<: ty = tm :<: ty  deriving (Show, Eq)
 > infix 4 :<:
 
 > fstIn :: (a :>: b) -> a
@@ -490,7 +499,7 @@ We provide a smashing operator, for things whose precise values are
 irrelevant. We intend this for proofs, but there may be other things
 (like name advice) for which we should use it.
 
-> data Irr x = Irr x deriving Show
+> data Irr x = Irr x deriving (Show, Data, Typeable)
 > instance Eq (Irr x) where
 >   _ == _ = True
 
@@ -585,7 +594,7 @@ it computing.
 
 > data Labelled f t
 >   = Maybe t :?=: f t
->   deriving (Show)
+>   deriving (Show, Data, Typeable)
 
 For example, labels are used in the presentation of the `Enum`
 (Section [Features.Enum]) and `Desc` (Section [sec:Features.Desc](#Features.Enum]) and `Desc` (Section [sec:Features.Desc))

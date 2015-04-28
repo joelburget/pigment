@@ -1,13 +1,16 @@
 Missing Library
 ===============
 
-> {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, TypeFamilies, TypeOperators, UndecidableInstances, TypeSynonymInstances #-}
+> {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses,
+>     TypeFamilies, TypeOperators, UndecidableInstances, TypeSynonymInstances,
+>     StandaloneDeriving, DeriveDataTypeable #-}
 
 > module Kit.MissingLibrary where
 
 > import Control.Applicative
 > import Control.Newtype
 > import Control.Monad.Writer
+> import Data.Data
 > import Data.Foldable
 > import Data.Functor.Constant
 > import Data.Functor.Foldable hiding (Foldable)
@@ -53,7 +56,7 @@ HalfZip
 Functor Kit
 -----------
 
-> data (p :*: q)  x = p x :& q x             deriving Show
+> data (p :*: q)  x = p x :& q x deriving (Show, Data, Typeable)
 
 > instance (Functor p, Functor q) => Functor (p :*: q) where
 >   fmap f (px :& qx)  = fmap f px :& fmap f qx
@@ -90,6 +93,9 @@ Newtype Unwrapping
 > instance Newtype (Identity a) a where
 >   pack = Identity
 >   unpack = runIdentity
+
+> deriving instance Typeable Identity
+> deriving instance Data a => Data (Identity a)
 
 Applicative Kit
 ---------------

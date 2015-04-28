@@ -4,11 +4,12 @@ Display Terms
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures, RankNTypes,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts,
 >     ScopedTypeVariables, PatternSynonyms,
->     DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+>     DeriveFunctor, DeriveFoldable, DeriveTraversable, DeriveDataTypeable #-}
 
 > module DisplayLang.DisplayTm where
 
 > import Control.Applicative
+> import Data.Data
 > import Data.Foldable hiding (foldl)
 > import Data.Functor.Identity
 > import Data.Traversable
@@ -60,16 +61,16 @@ Thanks to this hack, we can use `deriving Traversable`.
 >          -> DInTm p x
 >          -> DInTm p x
 >     DTag :: String -> [DInTm p x] -> DInTm p x
->  deriving (Functor, Foldable, Traversable, Show)
+>  deriving (Functor, Foldable, Traversable, Show, Data, Typeable)
 
 > data DExTm p x = DHead p x ::$ DSpine p x
->   deriving (Functor, Foldable, Traversable, Show)
+>   deriving (Functor, Foldable, Traversable, Show, Data, Typeable)
 
 > data DHead :: * -> * -> * where
 >     DP     :: x                -> DHead  p x -- parameter
 >     DType  :: DInTm p x        -> DHead  p x -- type annotation
 >     DTEx   :: ExTmWrap p x     -> DHead  p x -- embedding
->  deriving (Functor, Foldable, Traversable, Show)
+>  deriving (Functor, Foldable, Traversable, Show, Data, Typeable)
 
 Note that, again, we are polymorphic in the representation of free
 variables. The variables in Display terms are denoted here by `x`. The
@@ -97,7 +98,7 @@ representation of scopes:
 > data DScope :: * -> * -> * where
 >     (::.)  :: String -> DInTm p x  -> DScope p x  -- binding
 >     DK     :: DInTm p x            -> DScope p x  -- constant
->   deriving (Functor, Foldable, Traversable, Show)
+>   deriving (Functor, Foldable, Traversable, Show, Data, Typeable)
 
 We provide handy projection functions to get the name and body of a
 scope:
@@ -128,8 +129,10 @@ To make `deriving Traversable` work properly, we have to `newtype`-wrap
 them and manually give trivial `Traversable` instances for the wrappers.
 The instantiation code is hidden in the literate document.
 
-> newtype InTmWrap p x = InTmWrap (InTm p) deriving (Show, Functor, Foldable)
-> newtype ExTmWrap p x = ExTmWrap (ExTm p) deriving (Show, Functor, Foldable)
+> newtype InTmWrap p x = InTmWrap (InTm p)
+>     deriving (Show, Functor, Foldable, Data, Typeable)
+> newtype ExTmWrap p x = ExTmWrap (ExTm p)
+>     deriving (Show, Functor, Foldable, Data, Typeable)
 
 > pattern DTIN x = DT (InTmWrap x)
 > pattern DTEX x = DTEx (ExTmWrap x)

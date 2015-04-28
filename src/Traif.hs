@@ -1,4 +1,4 @@
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE PatternSynonyms, QuasiQuotes #-}
 module Traif (traif) where
 
 import Control.Applicative (many)
@@ -26,6 +26,8 @@ import ProofState.Structure.Developments
 import ProofState.Structure.Entries
 import Tactics.Data
 
+import DisplayLang.QQ
+
 -- elabLet :: (String :<: Scheme DInTmRN) -> ProofState (EXTM :=>: VAL)
 -- elabProgram :: [String] -> ProofState (EXTM :=>: VAL)
 -- elabData :: String
@@ -35,17 +37,16 @@ import Tactics.Data
 
 script :: ProofState ()
 script = do
-        -- result of `parse pDInTm [Identifier "Nat"]`
-    let nat = DN (DP [("Nat", Rel 0)] ::$ [])
-        -- result of `parse pDInTm [Identifier "Nat", Keyword KwArr, Identifier "Nat" ]`
-        natToNat = DC (Pi nat (DL (DK nat)))
+    let Right nat = parse pDInTm [Identifier "Nat"]
+        -- Right natToNat = parse pDInTm [Identifier "Nat", Keyword KwArr, Identifier "Nat" ]
 
     -- data Nat := ('z : Nat) ; ('s : Nat -> Nat) ;
-    _ <- elabData "Nat"
-             -- parameters
-             []
-             -- schemes
-             [ ("z", nat), ("s", natToNat) ]
+    _ <- elabData' [qqDInTmRN| Nat := ('z : Nat) ; ('s : Nat -> Nat) ; |]
+    -- _ <- elabData "Nat"
+    --          -- parameters
+    --          []
+    --          -- schemes
+    --          [ ("z", nat), ("s", natToNat) ]
 
     -- let plus (m : Nat)(n : Nat) : Nat ;
     let plusScheme = SchExplicitPi
