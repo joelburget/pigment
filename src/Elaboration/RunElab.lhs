@@ -39,10 +39,10 @@
 > import Tactics.Unification
 > import Elaboration.ElabProb
 > import Elaboration.ElabMonad
+> import Elaboration.Error
 > import Elaboration.MakeElab
 > import Elaboration.Wire
 > import Distillation.Distiller
-> import Cochon.Error
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Kit.Trace
