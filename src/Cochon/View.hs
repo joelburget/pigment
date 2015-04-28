@@ -195,21 +195,22 @@ prettyDevView :: Traversable f => ProofContext -> Dev f -> InteractionReact
 prettyDevView loc (Dev entries tip _ suspended) =
     let runner :: ProofState TermReact
         runner = tipView tip
-        val :: TermReact
-        val = case runProofState runner loc of
+        runner' :: TermReact
+        runner' = case runProofState runner loc of
             Left err -> err
             Right (view, _) -> view
 
         -- XXX(joel) we're no longer showing the implementation entry
-        entriesWeCareAbout = filter showEntry $ Foldable.toList entries
+        -- entriesWeCareAbout = filter showEntry $ Foldable.toList entries
+        entriesWeCareAbout = Foldable.toList entries
 
     in div_ [ class_ "dev" ] $ do
            div_ [ class_ "dev-header" ] $ do
                -- locally $ div_ [ class_ "dev-header-suspended" ] $
                --     suspendView suspended
-               locally $ div_ [ class_ "dev-header-tip" ] val
-           ol_ [ class_ "dev-entries" ] $
-               Foldable.forM_ entriesWeCareAbout (locally . entryView loc)
+               locally $ div_ [ class_ "dev-header-tip" ] runner'
+           -- ol_ [ class_ "dev-entries" ] $
+           --     Foldable.forM_ entriesWeCareAbout (locally . entryView loc)
 
 
 workingOn :: ProofContext -> InteractionReact
@@ -244,14 +245,14 @@ workingOn' ty@(LABEL _ _) = do
         --     div_ "in scope: "
         --     ul_ [ class_ "goal-inscope-list" ] inScope
         div_ [ class_ "goal-hypotheses" ] $ do
-            div_ "hypotheses: "
+            div_ [ class_ "goal-hypotheses-header" ] "in scope: "
             div_ hypotheses
         -- div_ [ class_ "goal-context" ] $ do
         --     div_ "context: "
         --     div_ context
-        div_ [ class_ "goal-body" ] $ do
-            div_ "programming: "
-            locally $ div_ goal
+        -- div_ [ class_ "goal-body" ] $ do
+        --     div_ [ class_ "goal-body-header" ] "working on"
+        --     locally $ div_ goal
 
 workingOn' ty = do
     goal <- reactHere . (SET :>:) =<< bquoteHere ty
@@ -305,7 +306,7 @@ infoContextual gals = do
     inScope <- getInScope
     bsc <- gets inBScope
     entries <- Traversable.mapM (entryHelp gals bsc) inScope
-    return $ div_ $ Foldable.sequence_ entries
+    return $ ul_ [ class_ "info-contextual" ] $ Foldable.sequence_ entries
   where
     entryHelp :: Traversable f
               => ContextualInfo
@@ -315,7 +316,7 @@ infoContextual gals = do
     entryHelp InfoHypotheses bsc p@(EPARAM ref _ k _ _ _) = do
         ty       <- bquoteHere (pty ref)
         reactTy  <- reactHere (SET :>: ty)
-        return $ locally $ div_ [ class_ "param-entry" ] $ do
+        return $ locally $ li_ [ class_ "param-entry" ] $ do
             paramEntryView p
             div_ [ class_ "param-entry-asc" ] $ do
                 reactKword KwAsc
@@ -324,7 +325,7 @@ infoContextual gals = do
         -- ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
         ty       <- bquoteHere $ pty ref
         reactTy  <- reactHere (SET :>: ty)
-        return $ locally $ div_ [ class_ "def-entry" ] $ do
+        return $ locally $ li_ [ class_ "def-entry" ] $ do
             fromString $ showRelName $ christenREF bsc ref
             reactKword KwAsc
             reactTy
@@ -447,8 +448,11 @@ paramEntryView entry@(EEntity _ _ entity term _ _) =
                 , onClick (handleEntryGoTo (entryName entry))
                 ] $ return ()
 paramEntryView mod = div_ $ do
-    text_ $ entryReasonableName mod
+    text_ $ fromString $ showName $ entryName mod
     " (module)" -- TODO(joel) I don't know what to show
+    let entries = Foldable.toList (devEntries (dev mod))
+    ol_ [ class_ "dev-entries" ] $
+        Foldable.forM_ entries collapsedEntry
 
 
 -- TODO(joel) think about how to guarantee an ol_'s children are li_'s
@@ -570,7 +574,9 @@ suspendView state =
 
 
 tipView :: Tip -> ProofState TermReact
-tipView Module = return $ div_ [ class_ "tip" ] $ "(module)"
+tipView Module = do
+    name <- getCurrentName
+    return $ div_ [ class_ "tip" ] $ fromString $ showName name
 tipView (Unknown (ty :=>: _)) = do
     hk <- getHoleKind
     tyd <- reactHere (SET :>: ty)
@@ -621,10 +627,14 @@ proofContextView pc@(PC layers aboveCursor belowCursor) =
                             return ()
                 Foldable.forM_ layers layerView
         workingOn pc
+        -- if foldableSize layers == 0
+        --     then "(root module)"
+        --     else "(non-root module)"
         prettyDevView pc aboveCursor
         -- XXX(joel) bring this back
+        -- div_ "below cursor:"
         -- locally $ div_ [ class_ "proof-context-below-cursor" ] $
-        --     ol_ $ Foldable.forM_ belowCursor entryView
+        --     ol_ $ Foldable.forM_ belowCursor (entryView pc)
 
 
 -- The `reactProofState` command generates a reactified representation of

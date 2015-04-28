@@ -862,7 +862,7 @@ prettyPS aus me = do
         ty' <- bquoteHere ty
         tyd <- prettyHereAt (pred ArrSize) (SET :>: ty')
         return (prettyBKind k
-                 (text x  <+> (brackets $ brackets $ text $ show anchor)
+                 (text x  -- <+> (brackets $ brackets $ text $ show anchor)
                           <+> kword KwAsc
                           <+> tyd))
 
@@ -871,7 +871,7 @@ prettyPS aus me = do
         d <- prettyPS aus me
         goOut
         return (sep  [  text (fst (entryLastName e))
-                        <+> (brackets $ brackets $ text $ show $ entryAnchor e)
+                        -- <+> (brackets $ brackets $ text $ show $ entryAnchor e)
                      ,  nest 2 d <+> kword KwSemi
                      ])
 
