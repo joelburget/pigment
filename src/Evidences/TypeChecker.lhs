@@ -32,6 +32,11 @@ Canonical objects
 Historically, canonical terms were type-checked by the following
 function:
 
+    canTy :: (t -> VAL) -> (Can VAL :>: Can t) -> Maybe (Can (TY :>: t))
+    canTy ev (Set :>: Set)    = Just Set
+    canTy ev (Set :>: Pi s t) = Just (Pi (SET :>: s) ((ARR (ev s) SET) :>: t)
+    canTy _  _            = Nothing
+
 If we temporally forget Features, we have here a type-checker that takes
 an evaluation function `ev`, a type, and a term to be checked against
 this type. When successful, the result of typing is a canonical term
@@ -43,8 +48,8 @@ had to generalize this function. The generalization consists in
 parameterizing `canTy` with a type-directed function `TY :>: t -> s`,
 which is equivalent to `TY -> t -> s`. Because we still need an
 evaluation function, both functions are fused into a single one, of
-type: `TY :>: t -> (s,VAL)`. To support failures, we extend this type
-to `TY :>: t -> m (s,VAL)` where `m` is a `MonadError`.
+type: `TY :>: t -> (s, VAL)`. To support failures, we extend this type
+to `TY :>: t -> m (s, VAL)` where `m` is a `MonadError`.
 
 Hence, by defining an appropriate function `chev`, we can recover the
 previous definition of `canTy`. We can also do much more: intuitively,
@@ -52,15 +57,27 @@ we can write any type-directed function in term of `canTy`. That is, any
 function traversing the types derivation tree can be expressed using
 `canTy`.
 
+> -- | Type-check canonical terms
 > canTy :: (Monad m, Functor m, Applicative m, ErrorStack m t)
 >       => (TY :>: t -> m (s :=>: VAL))
+>       -- ^ An evaluator function.
+>       --
+>       --   "chev" = check / eval
+>       --
+>       --   Start with a standard evaluator @t -> VAL@ and fuse it with the
+>       --   type-directed function @TY :>: t -> s@, then generalize to support
+>       --   failures.
 >       -> (Can VAL :>: Can t)
+>       -- ^ The typechecking problem
 >       -> m (Can (s :=>: VAL))
 > canTy chev (Set :>: Set)     = return Set
 > canTy chev (Set :>: Pi s t)  = do
 >     ssv@(s :=>: sv) <- chev (SET :>: s)
 >     ttv@(t :=>: tv) <- chev (ARR sv SET :>: t)
 >     return $ Pi ssv ttv
+
+Extensions:
+
 > canTy chev (Set :>: Anchors) = return Anchors
 > canTy chev (Anchors :>: Anchor u t ts) = do
 >     uuv <- chev (UID :>: u)
@@ -222,6 +239,7 @@ function traversing the types derivation tree can be expressed using
 >     return $ Pair xxv yyv
 > canTy _  (Set :>: UId)    = return UId
 > canTy _  (UId :>: Tag s)  = return (Tag s)
+
 > canTy chev (ty :>: x) = throwStack $ stackItem
 >     [ errMsg "canTy: the proposed value "
 >     , errCan x
@@ -303,6 +321,9 @@ to evaluate arguments. It is vital to type-check the sub-terms (left to
 right) before trusting the type at the end. This corresponds to the
 following type:
 
+    opTy :: forall t. (t -> VAL) -> [t] -> Maybe ([TY :>: t] , TY)
+    opTy ev args = (...)
+
 Where we are provided an evaluator `ev` and the list of arguments, which
 length should be the arity of the operator. If the type of the arguments
 is correct, we return them labelled with their type and the type of the
@@ -363,7 +384,8 @@ $$\Gamma \vdash \mbox{TY} \ni \mbox{Tm \{In,.\} p}$$
 
 Technically, we also need a name supply and handle failure with a
 convenient monad. Therefore, we jump in the `Check` monad defined in
-Section [NameSupply.NameSupplier.check-monad](#NameSupply.NameSupplier.check-monad).
+Section 
+[NameSupply.NameSupplier.check-monad](#NameSupply.NameSupplier.check-monad).
 
 > check :: (TY :>: INTM) -> Check INTM (INTM :=>: VAL)
 

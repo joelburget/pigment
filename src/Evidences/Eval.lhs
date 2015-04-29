@@ -113,9 +113,9 @@ with the awaited argument, and evaluate the whole term down to a value.
 This naturally leads to the following code:
 
 > body :: Scope TT REF -> ENV -> Scope VV REF
-> body (K v)     g            = K (eval v g)
-> body (x :. t)  (B0, rho)    = txtSub rho x :. t  -- closed lambdas stay syntax
-> body (x :. t)  g@(_, rho)   = H g (txtSub rho x) t
+> body (K v)     g          = K (eval v g)
+> body (x :. t)  (B0, rho)  = txtSub rho x :. t  -- closed lambdas stay syntax
+> body (x :. t)  g@(_, rho) = H g (txtSub rho x) t
 
 Now, as well as making closures, the current renaming scheme is applied
 to the bound variable name, for cosmetic purposes.
@@ -125,10 +125,9 @@ Evaluator
 
 Putting the above pieces together, plus some machinery, we are finally
 able to implement an evaluator. On a technical note, we are working in
-the Applicative `-> ENV` and use She's notation for writing
-applicatives.
+the Applicative `-> ENV`.
 
-The evaluator is typed as follow: provided with a term and a variable
+The evaluator is typed as follows: provided with a term and a variable
 binding environment, it reduces the term to a value. The implementation
 is simply a matter of pattern-matching and doing the right thing. Hence,
 we evaluate under lambdas by calling `body` (a). We reduce canonical
@@ -186,7 +185,7 @@ variable name advice string that we encounter as we go: the deed is done
 in `body`, above.
 
 The renaming scheme is amended every time we instantiate a bound
-variable with a free variable. Starting from the right, each characte of
+variable with a free variable. Starting from the right, each character of
 the bound name is mapped to the corresponding character of the free
 name. The first character of the bound name is mapped to the whole
 remaining prefix. So instantiating `"xys"` with `"monks"` maps `'y'` to

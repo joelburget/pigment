@@ -148,8 +148,8 @@ first argument, as well as its second.
 > traverseDTIN f (DL (DK tm)) = DL <$> (DK <$> traverseDTIN f tm)
 > traverseDTIN f (DC c) = DC <$> traverse (traverseDTIN f) c
 > traverseDTIN f (DN n) = DN <$> traverseDTEX f n
-> traverseDTIN f (DQ s) = pure (DQ s)
-> traverseDTIN f DU     = pure DU
+> traverseDTIN _ (DQ s) = pure (DQ s)
+> traverseDTIN _ DU     = pure DU
 > traverseDTIN f (DTIN tm) = DTIN <$> traverse f tm
 > traverseDTIN f (DAnchor s args) = DAnchor s <$> traverseDTIN f args
 > traverseDTIN f (DEqBlue t u) =
@@ -164,7 +164,7 @@ first argument, as well as its second.
 >     (::$) <$> traverseDHead f h <*> traverse (traverse (traverseDTIN f)) as
 
 > traverseDHead :: Applicative f => (p -> f q) -> DHead p x -> f (DHead q x)
-> traverseDHead f (DP x) = pure (DP x)
+> traverseDHead _ (DP x) = pure (DP x)
 > traverseDHead f (DType tm) = DType <$> traverseDTIN f tm
 > traverseDHead f (DTEX tm) = DTEX <$> traverse f tm
 

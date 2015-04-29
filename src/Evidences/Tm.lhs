@@ -931,8 +931,8 @@ throwErrTm = throwStack . StackError . pure . errTm
 >   traverse f (A s)  = A <$> f s
 >   traverse _ Out    = pure Out
 >   traverse f (Call l) = Call <$> f l
->   traverse f Fst  = pure Fst
->   traverse f Snd  = pure Snd
+>   traverse _ Fst  = pure Fst
+>   traverse _ Snd  = pure Snd
 
 > instance Functor Elim where
 >     fmap = fmapDefault

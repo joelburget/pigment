@@ -31,11 +31,11 @@
 > import Evidences.Operators
 > import Evidences.DefinitionalEquality
 
-The distiller, like the elaborator, is organized on a `check` / `infer`
-basis, following the type-checker implementation in
-Section [Evidences.TypeChecker.type-checking](#Evidences.TypeChecker.type-checking). `distill` mirrors
-`check` — distilling `INTM`s, while `distillInfer` mirrors `infer` —
-distilling `EXTM`s.
+The distiller, like the elaborator, is organized on a `check` / `infer` basis,
+following the type-checker implementation in Section 
+[Evidences.TypeChecker.type-checking](#Evidences.TypeChecker.type-checking).
+`distill` mirrors `check` — distilling `INTM`s, while `distillInfer` mirrors
+`infer` — distilling `EXTM`s.
 
 <a name="Distillation.Distiller.intm">Distilling `INTM`s</a>
 ------------------
@@ -52,8 +52,8 @@ rules in `distillBase`.
 
 When going under a binder, we have to introduce fresh names to distill
 further. When christening, these fresh names have to be dealt with
-separately (see `unresolve` in
-Section [ProofState.Interface.NameResolution.christening](#ProofState.Interface.NameResolution.christening)):
+separately (see `unresolve` in Section 
+[ProofState.Interface.NameResolution.christening](#ProofState.Interface.NameResolution.christening)):
 indeed, they are actually bound variables. Hence, we collect this *local
 scope* as a list of `Entries`.
 
