@@ -56,9 +56,9 @@ We can push types into:
 * canonical terms; and
 * inferred terms.
 
->   L     :: Scope p x          -> Tm In p   x -- lambda
->   C     :: Can (Tm In p x)    -> Tm In p   x -- canonical
->   N     :: Tm Ex p x          -> Tm In p   x -- `Ex` to `In`
+>   L     :: Scope p x          -> Tm In p   x -- ^ lambda
+>   C     :: Can (Tm In p x)    -> Tm In p   x -- ^ canonical
+>   N     :: Tm Ex p x          -> Tm In p   x -- ^ `Ex` to `In`
 
 And we can infer types from:
 
@@ -68,12 +68,12 @@ And we can infer types from:
 * elimination, by the type of the eliminator; and
 * type ascription on a checkable term, by the ascripted type.
 
->   P     :: x                              -> Tm Ex p   x -- parameter
->   V     :: Int                            -> Tm Ex TT  x -- variable
->   (:@)  :: Op -> [Tm In p x]              -> Tm Ex p   x -- fully applied op
->   (:$)  :: Tm Ex p x -> Elim (Tm In p x)  -> Tm Ex p   x -- elim
->   (:?)  :: Tm In TT x -> Tm In TT x       -> Tm Ex TT  x -- typing
->   Yuk   :: Tm In VV x                     -> Tm Ex TT  x -- dirty
+>   P     :: x                              -> Tm Ex p   x -- ^ parameter
+>   V     :: Int                            -> Tm Ex TT  x -- ^ variable
+>   (:@)  :: Op -> [Tm In p x]              -> Tm Ex p   x -- ^ fully applied op
+>   (:$)  :: Tm Ex p x -> Elim (Tm In p x)  -> Tm Ex p   x -- ^ elim
+>   (:?)  :: Tm In TT x -> Tm In TT x       -> Tm Ex TT  x -- ^ typing
+>   Yuk   :: Tm In VV x                     -> Tm Ex TT  x -- ^ dirty
 
 To put some flesh on these bones, we define and use the `Scope`, `Can`,
 `Op`, and `Elim` data-types. Their role is described below. Before that,

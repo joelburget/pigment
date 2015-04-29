@@ -199,10 +199,8 @@ Extensions:
 > canTy chev (Prf (AND p q) :>: Pair x y) =
 >     Pair <$> chev (PRF p :>: x) <*> chev (PRF q :>: y)
 > canTy _   (Prf TRIVIAL :>: Void) = return Void
-> canTy chev (Prop :>: Inh ty) =
->     Inh <$> chev (SET :>: ty)
-> canTy chev (Prf (INH ty) :>: Wit t) =
->     Wit <$> chev (ty :>: t)
+> canTy chev (Prop :>: Inh ty) = Inh <$> chev (SET :>: ty)
+> canTy chev (Prf (INH ty) :>: Wit t) = Wit <$> chev (ty :>: t)
 > canTy chev (Set :>: Quotient x r p) = do
 >     x@(_ :=>: xv) <- chev (SET :>: x)
 >     r@(_ :=>: rv) <- chev (ARR xv (ARR xv PROP) :>: r)
@@ -211,10 +209,8 @@ Extensions:
 > canTy chev (Quotient a r p :>: Con x) = do
 >     x <- chev (a :>: x)
 >     return $ Con x
-> canTy chev (Set :>: RSig)  = do
->   return $ RSig
-> canTy chev (RSig :>: REmpty) = do
->   return $ REmpty
+> canTy chev (Set :>: RSig)  = return $ RSig
+> canTy chev (RSig :>: REmpty) = return $ REmpty
 > canTy chev (RSig :>: RCons sig id ty) = do
 >     ssv@(s :=>: sv) <- chev (RSIG :>: sig)
 >     iiv@(i :=>: iv) <- chev (UID :>: id)
@@ -404,8 +400,8 @@ $$\Rule{x : S \vdash T x \ni t}
      {\Pi S\ T \ni \lambda x . t}$$
 
 As for the implementation, we apply the by-now standard trick of making
-a fresh variable $x \in S$ and computing the type |T x|. Then, we simply
-have to check that $T\ x \ni t$.
+a fresh variable `x :<: S` and computing the type `T x`. Then, we simply
+have to check that `T x :>: t`.
 
 > check (PI s t :>: L sc) = do
 >   freshRef  ("__check" :<: s)

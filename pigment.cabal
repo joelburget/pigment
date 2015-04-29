@@ -153,29 +153,18 @@ library
   hs-source-dirs: src
 
 
--- quickcheck
-test-suite properties
+test-suite tests
   type: exitcode-stdio-1.0
-  main-is: properties.hs
-  ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
-  hs-source-dirs: tests
-  build-depends:
-    base,
-    pigment,
-    QuickCheck           >= 2.4,
-    test-framework       >= 0.6,
-    test-framework-hunit >= 0.2,
-    test-framework-th    >= 0.2
-
-test-suite unittests
-  type: exitcode-stdio-1.0
-  main-is: unittests.hs
+  main-is: Main.hs
   ghc-options: -Wall -threaded
   hs-source-dirs: tests
   build-depends:
     base,
     pigment,
-    hunit >= 1.2.5
+    -- QuickCheck           >= 2.4,
+    HUnit                >= 1.2.5,
+    tasty       >= 0.7,
+    tasty-hunit >= 0.9
 
 test-suite hlint
   type: exitcode-stdio-1.0

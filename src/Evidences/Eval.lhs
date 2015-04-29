@@ -64,8 +64,8 @@ This translates into the following code:
 > PAIR x y $$ Fst = x
 > PAIR x y $$ Snd = y
 > N n          $$ e    = N (n :$ e)      -- elim-stuck
-> f            $$ e    =  error $  "Can't eliminate\n" ++ show f ++
->                                  "\nwith eliminator\n" ++ show e
+> f            $$ e    =  error $
+>     "Can't eliminate `" ++ show f ++ "` with eliminator `" ++ show e ++ "`"
 
 The `naming` operation amends the current naming scheme, taking account
 the instantiation of x: see below.
