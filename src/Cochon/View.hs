@@ -14,7 +14,11 @@ import Data.String
 import Data.Traversable as Traversable
 import Data.Void
 
+import GHCJS.Foreign
+import GHCJS.Types
 import Lens.Family2
+import React hiding (label_)
+import React.MaterialUI
 
 import Cochon.CommandLexer
 import Cochon.Controller
@@ -69,12 +73,6 @@ import Tactics.PropositionSimplify
 import Tactics.Record
 import Tactics.Relabel
 import Tactics.Unification
-
-import GHCJS.Foreign
-import GHCJS.Types
-import Lens.Family2
-import React hiding (label_)
-import React.MaterialUI
 
 import Kit.Trace
 
@@ -626,7 +624,7 @@ proofContextView pc@(PC layers aboveCursor belowCursor) =
             ol_ $ do
                 -- TODO(joel) - this is hacky - remove duplication in
                 -- layerView
-                div_ [ class_ "layer first-layer" ] $ do
+                div_ [ class_ "layer first-layer" ] $
                     flatButton
                         [ class_ "layer-button"
                         , label_ "root"
@@ -644,52 +642,6 @@ proofContextView pc@(PC layers aboveCursor belowCursor) =
         --     ol_ $ Foldable.forM_ belowCursor (entryView pc)
 
 
--- The `reactProofState` command generates a reactified representation of
--- the proof state at the current location.
-reactProofState :: ProofState InteractionReact
-reactProofState = renderReact
-
-
--- Render a bunch of entries!
-renderReact :: ProofState InteractionReact
-renderReact = do
-    me <- getCurrentName
-    entry <- getCurrentEntry
-
-    -- TODO(joel) - we temporarily replace entries above the cursor and
-    -- contexts below the cursor with nothing, then put them back later
-    -- (below). Why?
-    es <- replaceEntriesAbove B0
-    cs <- putBelowCursor F0
-
-    case (entry, es, cs) of
-        (CModule _ DevelopData _, _, _) -> viewDataDevelopment entry es
-        (CDefinition _ _ _ _ AnchDataDef _, _, _) ->
-            viewDataDevelopment entry es
-        (_, B0, F0) -> reactEmptyTip
-        _ -> do
-            d <- reactEntries (es <>> F0)
-
-            d' <- case cs of
-                F0 -> return d
-                _ -> do
-                    d'' <- reactEntries cs
-                    return (d >> "---" >> d'')
-
-            tip <- reactTip
-            putEntriesAbove es
-            putBelowCursor cs
-
-            return $ div_ [ class_ "proof-state" ] $ do
-                -- div_ [ class_ "entries-name" ] $ do
-                --     "Entries name: "
-                --     fromString $
-                --         case me of
-                --             [] -> "(no name)"
-                --             _ -> fst $ last me
-                div_ [ class_ "proof-state-inner" ] d'
-                tip
-
 
 dataConDecl :: Entry a -> Bool
 dataConDecl (EEntity _ _ _ _ (AnchConName _) _) = True
@@ -702,95 +654,7 @@ paramDecl (EEntity _ _ _ _ (AnchParTy name) _) = True
 paramDecl _ = False
 
 
-viewDataDevelopment :: CurrentEntry -> Entries -> ProofState InteractionReact
-viewDataDevelopment (CDefinition _ (name := _) _ _ _ _) entries = do
-    let weCareAbout = filterBwd dataConDecl entries
-    entries <- reactEntries (weCareAbout <>> F0)
-
-    return $ div_ [ class_ "data-develop" ] entries
-
-
-reactEmptyTip :: ProofState InteractionReact
-reactEmptyTip = do
-    tip <- getDevTip
-    case tip of
-        Module -> return $ div_ [ class_ "empty-empty-tip" ]
-                                "[empty]"
-        _ -> do
-            tip' <- reactTip
-            return $ div_ [ class_ "empty-tip" ] $
-                reactKword KwDefn >> " " >> tip'
-
-
-reactEntries :: Fwd (Entry Bwd) -> ProofState InteractionReact
-reactEntries F0 = return ""
-reactEntries (e :> es) = do
-    putEntryAbove e
-    reactEntry e
-    reactEntries es
-
-
--- reactEntry' :: Traversable f => Entry f -> TermReact
--- reactEntry' (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
-
-
-reactEntry :: Entry Bwd -> ProofState InteractionReact
-reactEntry (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
-    ty' <- bquoteHere ty
-    tyd <- reactHere (SET :>: ty')
-
-    return $ reactBKind k $ div_ [ class_ "entry entry-param" ] $ do
-        div_ [ class_ "tm-name" ] $ fromString x
-        -- TODO(joel) - show anchor in almost same way as below?
-        reactKword KwAsc
-        div_ [ class_ "ty" ] (locally tyd)
-
-reactEntry e = do
-    description <- if entryExpanded e
-         then do
-            goIn
-            r <- renderReact
-            goOut
-            return r
-         else return ""
-
-    let anchor = case entryAnchor e of
-         AnchNo -> ""
-         otherAnchor -> div_ [ class_ "anchor" ] $ do
-             "[["
-             reactify $ entryAnchor e
-             "]]"
-
-    -- TODO entry-module vs entry-entity
-    return $ div_ [ class_ "entry entry-entity" ] $ do
-        locally anchor
-        entryHeader e
-        description
-
-
-entryHeader :: Traversable f => Entry f -> InteractionReact
-entryHeader e = entryHeader' (entryName e)
-
-
-entryHeader' :: Name -> InteractionReact
-entryHeader' name = do
-    let displayName = fromString $ fst $ last name
-
-    div_ [ class_ "entry-header" ] $ do
-        button_
-            [ onClick (handleToggleEntry name)
-            , class_ "toggle-entry"
-            ] "toggle"
-        div_ [ class_ "tm-name" ] displayName
-
-
 -- "Developments can be of different nature: this is indicated by the Tip"
-
-reactTip :: ProofState InteractionReact
-reactTip = do
-    tip <- getDevTip
-    view <- tipView tip
-    return $ locally view
 
 
 reactHKind :: HKind -> React a b c ()

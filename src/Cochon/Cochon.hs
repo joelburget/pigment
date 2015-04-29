@@ -18,6 +18,8 @@ import DisplayLang.DisplayTm
 import DisplayLang.PrettyPrint
 import DisplayLang.Scheme
 
+import Elaboration.Error
+
 import Evidences.Tm
 
 import ProofState.Edition.ProofContext

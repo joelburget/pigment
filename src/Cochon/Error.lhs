@@ -13,6 +13,7 @@ Cochon error prettier
 
 > import Cochon.Model
 > import Cochon.Reactify
+> import Elaboration.Error
 > import Evidences.Tm
 > import DisplayLang.DisplayTm
 > import DisplayLang.Lexer

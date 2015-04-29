@@ -43,7 +43,7 @@ The `reactKword` function gives a react element representing a `Keyword`.
 > reactBrackets :: Bracket -> React a b c d -> React a b c ()
 > reactBrackets br r = do
 >     fromString (showOpenB br)
->     r
+>     _ <- r
 >     fromString (showCloseB br)
 
 The `Reactive` class describes things that can be made into React
@@ -186,6 +186,7 @@ a lambda term is reached.
 >     reactKword KwArr
 >     reactify tm
 
+> handleLambdaContext, handleCanonicalContext, handleNeutralContext, handleQuestionContext, handleUnderscoreContext :: MouseEvent -> Maybe TermAction
 > handleLambdaContext = undefined
 > handleCanonicalContext = undefined
 > handleNeutralContext = undefined
