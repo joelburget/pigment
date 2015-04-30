@@ -110,7 +110,7 @@ Getting in the `CurrentEntry`
 > getCurrentName = do
 >     cEntry <-  getCurrentEntry
 >     case cEntry of
->       CModule [] _ _ -> return []
+>       CModule [] _ _ -> return [("root module", 0)] -- HACK(joel)
 >       _              -> return $ currentEntryName cEntry
 
 > getCurrentDefinition :: ProofStateT e (EXTM :=>: VAL)

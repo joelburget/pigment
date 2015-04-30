@@ -202,6 +202,10 @@ prettyDevView loc (Dev entries tip _ suspended) =
                 entriesViewed = Foldable.forM_
                     entriesWeCareAbout
                     (entryView loc)
+                -- -- Only show entries in a module. They're shown already
+                -- entriesViewed' = case tip of
+                --     Module -> ""
+                --     _ -> entriesViewed
             return (tipViewed, entriesViewed)
         inner :: TermReact
         inner = case runProofState runner loc of
@@ -209,7 +213,9 @@ prettyDevView loc (Dev entries tip _ suspended) =
             Right ((tipViewed, entriesViewed), _) -> do
                 div_ [ class_ "dev-header" ] $
                     locally $ div_ [ class_ "dev-header-tip" ] tipViewed
-                ol_ [ class_ "dev-entries" ] entriesViewed
+                div_ [ class_ "dev-entries-container" ] $ do
+                    div_ [ class_ "dev-entries-header" ] "in scope:"
+                    ol_ [ class_ "dev-entries" ] entriesViewed
 
     in div_ [ class_ "dev" ] (locally inner)
 
@@ -577,23 +583,26 @@ suspendView state =
 tipView :: Tip -> ProofState TermReact
 tipView Module = do
     name <- getCurrentName
-    return $ div_ [ class_ "tip" ] $ fromString $ showName name
+    return $ div_ [ class_ "tip" ] $ fromString $ fst $ last name -- HACK(joel)
 tipView (Unknown (ty :=>: _)) = do
     hk <- getHoleKind
     tyd <- reactHere (SET :>: ty)
     x <- prettyHere (SET :>: ty)
     elabTrace $ renderHouseStyle x
-    return $ div_ [ class_ "tip" ] $ do
-        reactHKind hk
-        reactKword KwAsc
-        tyd
+    return $ do
+        div_ [ class_ "tip-programming" ] "make this:"
+        div_ [ class_ "tip" ] $ do
+            reactHKind hk
+            reactKword KwAsc
+            tyd
 tipView (Suspended (ty :=>: _) prob) = do
     hk <- getHoleKind
     tyd <- reactHere (SET :>: ty)
     x <- prettyHere (SET :>: ty)
     elabTrace $ renderHouseStyle x
     return $ div_ [ class_ "tip" ] $ do
-        fromString $ "(SUSPENDED: " ++ show prob ++ ")"
+        div_ [ class_ "tip-suspended" ] $ fromString $
+            "(SUSPENDED: " ++ show prob ++ ")"
         reactHKind hk
         reactKword KwAsc
         tyd
@@ -627,15 +636,11 @@ proofContextView pc@(PC layers aboveCursor belowCursor) =
                         , onClick (handleGoTo []) ] $
                             return ()
                 Foldable.forM_ layers layerView
-        workingOn pc
+        -- workingOn pc
         -- if foldableSize layers == 0
         --     then "(root module)"
         --     else "(non-root module)"
         prettyDevView pc aboveCursor
-        -- XXX(joel) bring this back
-        -- div_ "below cursor:"
-        -- locally $ div_ [ class_ "proof-context-below-cursor" ] $
-        --     ol_ $ Foldable.forM_ belowCursor (entryView pc)
 
 
 
