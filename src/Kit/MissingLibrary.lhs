@@ -8,10 +8,12 @@ Missing Library
 > import Control.Applicative
 > import Control.Newtype
 > import Control.Monad.Writer
+
 > import Data.Foldable
 > import Data.Functor.Constant
 > import Data.Functor.Foldable hiding (Foldable)
 > import Data.Functor.Identity
+> import Data.Monoid
 > import Data.Traversable
 
 Renaming
@@ -118,5 +120,6 @@ Foldable
 --------
 
 -- TODO(joel) use Lens lengthOf
-foldableSize :: Foldable t => t a -> Int
-foldableSize = getSum . Foldable.foldMap (const $ Sum 1)
+
+> foldableSize :: Foldable t => t a -> Int
+> foldableSize = getSum . foldMap (const $ Sum 1)

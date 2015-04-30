@@ -194,24 +194,24 @@ showEntry _ = True
 
 prettyDevView :: Traversable f => ProofContext -> Dev f -> InteractionReact
 prettyDevView loc (Dev entries tip _ suspended) =
-    let runner :: ProofState TermReact
-        runner = tipView tip
-        runner' :: TermReact
-        runner' = case runProofState runner loc of
+    let runner :: ProofState (TermReact, TermReact)
+        runner = do
+            tipViewed <- tipView tip
+            entries <- getEntriesAbove
+            let entriesWeCareAbout = Foldable.toList entries
+                entriesViewed = Foldable.forM_
+                    entriesWeCareAbout
+                    (entryView loc)
+            return (tipViewed, entriesViewed)
+        inner :: TermReact
+        inner = case runProofState runner loc of
             Left err -> err
-            Right (view, _) -> view
+            Right ((tipViewed, entriesViewed), _) -> do
+                div_ [ class_ "dev-header" ] $
+                    locally $ div_ [ class_ "dev-header-tip" ] tipViewed
+                ol_ [ class_ "dev-entries" ] entriesViewed
 
-        -- XXX(joel) we're no longer showing the implementation entry
-        -- entriesWeCareAbout = filter showEntry $ Foldable.toList entries
-        entriesWeCareAbout = Foldable.toList entries
-
-    in div_ [ class_ "dev" ] $ do
-           div_ [ class_ "dev-header" ] $ do
-               -- locally $ div_ [ class_ "dev-header-suspended" ] $
-               --     suspendView suspended
-               locally $ div_ [ class_ "dev-header-tip" ] runner'
-           -- ol_ [ class_ "dev-entries" ] $
-           --     Foldable.forM_ entriesWeCareAbout (locally . entryView loc)
+    in div_ [ class_ "dev" ] (locally inner)
 
 
 workingOn :: ProofContext -> InteractionReact

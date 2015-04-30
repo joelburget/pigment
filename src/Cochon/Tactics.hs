@@ -116,8 +116,6 @@ cochonTactics = sort
     , matchTac
     , simplifyTac
     , relabelTac
-    , doitTac
-    , autoTac
     ]
 
 
@@ -396,35 +394,6 @@ programTac = simpleCT
         ]
     ))
 
-
-doitTac = simpleCT
-    "demoMagic"
-    Historic
-    "pigment tries to implement it for you"
-    "demoMagic"
-    (pure B0)
-    (\_ -> assumption >> return "Did it!")
-    (Right (TacticHelp
-        "demoMagic"
-        "demoMagic"
-        "pigment tries to implement it for you"
-        []
-    ))
-
-
-autoTac = simpleCT
-    "auto"
-    Historic
-    "coq's auto"
-    "auto"
-    (pure B0)
-    (\_ -> auto >> return "Auto... magic!")
-    (Right (TacticHelp
-        "auto"
-        "auto"
-        "coq's auto"
-        []
-    ))
 
 
 ungawaTac = nullaryCT "ungawa" Historic (ungawa >> return "Ungawa!")
