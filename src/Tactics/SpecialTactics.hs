@@ -24,24 +24,20 @@ import ProofState.Structure.Entries
 --
 -- Sounds like a Foldable to me... Possibly a Traversable.
 
-type SpecialTactic = ProofState [EXTM :=>: VAL]
-
-oneTargetTac :: ProofState (EXTM :=>: VAL) -> SpecialTactic
-oneTargetTac = (pure <$>)
+type SpecialTactic = ProofState (EXTM :=>: VAL)
 
 done :: SpecialTactic
-done = oneTargetTac Solving.done
+done = Solving.done
 
 give :: INTM -> SpecialTactic
-give = oneTargetTac . Solving.give
+give = Solving.give
 
 apply :: REF -> SpecialTactic
-apply ref@(_ := _ :<: pi@(PI _ _)) =
-    (pure <$> Solving.apply'' ref pi) <|> return []
-apply _ = return []
+apply ref@(_ := _ :<: pi@(PI _ _)) = Solving.apply'' ref pi
+apply _ = notFound
 
 assumption :: SpecialTactic
-assumption = oneTargetTac $ do
+assumption = do
     entries <- getInScope
     -- Try just returning the entry
     let f (EPARAM ref _ _ term _ _) =
@@ -70,12 +66,6 @@ auto = do
     entries <- getInScope
     let entryList = filter Solving.isParam $ Foldable.toList entries
     autoSpreader 5 entryList
-    -- let traversal :: Bwd (Maybe (Entry Bwd))
-    --     traversal = do
-    --         entries <- getInScope
-    --         return $ traverse getParam entries
-
-        -- estSize' :: Maybe (Entry Bwd) -> ProofState (
 
 autoSpreader :: Int
              -> [Entry Bwd]
@@ -85,11 +75,11 @@ autoSpreader n entries = do
         subattempts = map autoWith (focuses' entries)
     elabTrace $ show (length entries) ++ " entries in scope"
     elabTrace $ show (length subattempts) ++ " subattempts"
-    (pure <$> done) <|>
+    done <|>
         (do str <- Solving.prettyProofState
             elabTrace $ "autospreader proof state:"
             elabTrace $ str
-            assumption <|> Foldable.foldlM (<|>) notFound subattempts
+            assumption <|> foldl (<|>) notFound subattempts
         )
 
 auto' :: Int -> [Entry Bwd] -> SpecialTactic
