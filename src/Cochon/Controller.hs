@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, LiberalTypeSynonyms #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, LiberalTypeSynonyms,
+    TypeOperators #-}
 
 module Cochon.Controller where
 
@@ -64,6 +65,7 @@ import Tactics.ProblemSimplify
 import Tactics.PropositionSimplify
 import Tactics.Record
 import Tactics.Relabel
+import Tactics.SpecialTactics
 import Tactics.Unification
 
 import Lens.Family2
@@ -98,6 +100,9 @@ handleKey _ = Nothing
 handleCmdChange :: ChangeEvent -> Maybe Transition
 handleCmdChange = Just . CommandTyping . fromJSString . value . target
 
+handleRunTactic :: ProofState (EXTM :=>: VAL) -> Maybe Transition
+handleRunTactic = Just . RunTactic
+
 animDispatch :: Transition
              -> InteractionState
              -> (InteractionState, [AnimConfig Transition ()])
@@ -107,6 +112,7 @@ dispatch :: Transition -> InteractionState -> InteractionState
 dispatch (SelectPane pane) state = state & currentPane .~ pane
 dispatch ToggleRightPane state = state & rightPaneVisible %~ toggleVisibility
 dispatch (CommandTyping str) state = doCmdChange state str
+dispatch (RunTactic cmd) state = runTactic cmd state
 
 -- Enter can mean:
 -- * complete the currently autocompleted tactic
@@ -225,6 +231,18 @@ runAndLogCmd state =
              & commandFocus .~ InPresent ""
              & interactions %~ (cmd' :>)
              & autocomplete .~ Stowed
+
+runTactic :: ProofState (EXTM :=>: VAL) -> InteractionState -> InteractionState
+runTactic action state@InteractionState{_proofCtx=ctxs :< ctx} =
+    case execProofState (action >> return ()) ctx of
+        Left err ->
+            let cmd = displayUser $ locally err
+                (output, newCtx) = runCmd cmd (state^.proofCtx)
+                cmd' = Command "(tactic)" (ctxs :< ctx)
+                               (Left "failed") output
+            in state & proofCtx .~ newCtx
+                     & interactions %~ (cmd' :>)
+        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
 
 doCmdChange :: InteractionState -> String -> InteractionState
 doCmdChange state str= state & commandFocus .~ InPresent str

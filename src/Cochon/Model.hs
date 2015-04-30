@@ -1,5 +1,5 @@
 {-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric, TemplateHaskell,
-  MultiParamTypeClasses #-}
+  MultiParamTypeClasses, TypeOperators #-}
 
 module Cochon.Model where
 
@@ -13,11 +13,13 @@ import GHC.Generics
 
 import Cochon.CommandLexer
 import DisplayLang.Lexer
+import Evidences.Tm
 import Kit.BwdFwd
 import Kit.ListZip
 import Kit.Parsley
 import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
+import ProofState.Edition.ProofState
 
 import Lens.Family2
 import Lens.Family2.TH
@@ -38,6 +40,7 @@ data Transition
     | ToggleEntry Name
     | GoTo Name
     | TermTransition TermAction
+    | RunTactic (ProofState (EXTM :=>: VAL))
 
 data TermAction
     = ToggleTerm Name

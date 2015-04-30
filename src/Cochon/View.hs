@@ -73,6 +73,7 @@ import Tactics.ProblemSimplify
 import Tactics.PropositionSimplify
 import Tactics.Record
 import Tactics.Relabel
+import Tactics.SpecialTactics
 import Tactics.Unification
 
 import Kit.Trace
@@ -192,13 +193,35 @@ showEntry (EEntity _ _ _ _ AnchNo _) = True
 showEntry _ = True
 
 
+getUsefulTactics :: ProofState [SpecialTactic]
+getUsefulTactics = do
+    (assumption >> return [assumptionTac]) <|> return []
+
+
+showTactics :: [SpecialTactic] -> InteractionReact
+showTactics tacs = ul_ [ class_ "useful-tactics" ] $ case tacs of
+    [] -> li_ "none found :("
+    _  -> Foldable.mapM_ showTactic tacs
+
+
+showTactic :: SpecialTactic -> InteractionReact
+showTactic (SpecialTactic action name description) = li_ [ class_ "special-tactic" ] $ do
+    flatButton
+        [ class_ "special-tactic-button"
+        , label_ (fromString name)
+        , onClick (\_ -> handleRunTactic action)
+        ] $ return ()
+    fromString description
+
+
 prettyDevView :: Traversable f => ProofContext -> Dev f -> InteractionReact
 prettyDevView loc (Dev entries tip _ suspended) =
-    let runner :: ProofState (TermReact, TermReact)
+    let runner :: ProofState (TermReact, TermReact, InteractionReact)
         runner = do
             tipViewed <- tipView tip
             entries <- getEntriesAbove
-            let entriesWeCareAbout = Foldable.toList entries
+            usefulTactics <- getUsefulTactics
+            let entriesWeCareAbout = filter showEntry $ Foldable.toList entries
                 entriesViewed = Foldable.forM_
                     entriesWeCareAbout
                     (entryView loc)
@@ -206,18 +229,21 @@ prettyDevView loc (Dev entries tip _ suspended) =
                 -- entriesViewed' = case tip of
                 --     Module -> ""
                 --     _ -> entriesViewed
-            return (tipViewed, entriesViewed)
-        inner :: TermReact
+            return (tipViewed, entriesViewed, showTactics usefulTactics)
+        inner :: InteractionReact
         inner = case runProofState runner loc of
-            Left err -> err
-            Right ((tipViewed, entriesViewed), _) -> do
+            Left err -> locally err
+            Right ((tipViewed, entriesViewed, usefulTactics), _) -> do
                 div_ [ class_ "dev-header" ] $
-                    locally $ div_ [ class_ "dev-header-tip" ] tipViewed
+                    div_ [ class_ "dev-header-tip" ] (locally tipViewed)
+                div_ [ class_ "dev-tactics" ] $ do
+                    div_ [ class_ "dev-tactics-header" ] "applicable tactics:"
+                    usefulTactics
                 div_ [ class_ "dev-entries-container" ] $ do
                     div_ [ class_ "dev-entries-header" ] "in scope:"
-                    ol_ [ class_ "dev-entries" ] entriesViewed
+                    ol_ [ class_ "dev-entries" ] (locally entriesViewed)
 
-    in div_ [ class_ "dev" ] (locally inner)
+    in div_ [ class_ "dev" ] inner
 
 
 workingOn :: ProofContext -> InteractionReact

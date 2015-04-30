@@ -328,6 +328,8 @@ li {
 
 .dev {
     margin: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .proof-context-layers {
@@ -350,7 +352,7 @@ li {
 .dev-header {
     display: flex;
     flex-direction: column;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
 }
 
 .dev-header-tip {
@@ -358,17 +360,29 @@ li {
     flex-direction: column;
 }
 
-.dev-entries-container {
+.dev-entries-container, .dev-tactics {
     display: flex;
     flex-direction: column;
+    margin-bottom: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #dadada;
 }
 
 .dev-entries-header {
     margin-bottom: 20px
 }
 
+.dev-tactics-header, .useful-tactics {
+    display: block !important;
+}
+
+.useful-tactics {
+    span {
+        font-size: 16px;
+    }
+}
+
 .dev-entries {
-    border-top: 1px solid #dadada;
     list-style-type: none;
 }
 

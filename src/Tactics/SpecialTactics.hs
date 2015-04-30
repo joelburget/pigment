@@ -6,6 +6,7 @@ module Tactics.SpecialTactics where
 import Control.Applicative hiding (empty)
 import qualified Data.Foldable as Foldable
 import Data.Traversable
+-- import Data.Text as T
 
 import Kit.BwdFwd
 import Kit.Trace
@@ -24,19 +25,37 @@ import ProofState.Structure.Entries
 --
 -- Sounds like a Foldable to me... Possibly a Traversable.
 
-type SpecialTactic = ProofState (EXTM :=>: VAL)
+data SpecialTactic = SpecialTactic
+    { action :: ProofState (EXTM :=>: VAL)
+    , name :: String
+    , description :: String -- T.Text
+    }
 
-done :: SpecialTactic
-done = Solving.done
 
-give :: INTM -> SpecialTactic
+-- giveTac :: SpecialTactic
+-- giveTac = SpecialTactic
+--     give
+--     "give some term as the solution"
+
+-- applyTac :: SpecialTactic
+-- applyTac = SpecialTactic
+--     apply
+--     "apply a function (using its result)"
+
+assumptionTac :: SpecialTactic
+assumptionTac = SpecialTactic
+    assumption
+    "return"
+    "return some applicable value in scope"
+
+give :: INTM -> ProofState (EXTM :=>: VAL)
 give = Solving.give
 
-apply :: REF -> SpecialTactic
+apply :: REF -> ProofState (EXTM :=>: VAL)
 apply ref@(_ := _ :<: pi@(PI _ _)) = Solving.apply'' ref pi
 apply _ = notFound
 
-assumption :: SpecialTactic
+assumption :: ProofState (EXTM :=>: VAL)
 assumption = do
     entries <- getInScope
     -- Try just returning the entry
@@ -61,7 +80,7 @@ assumption = do
 -- until no assumption remains to be tried.
 
 
-auto :: SpecialTactic
+auto :: ProofState (EXTM :=>: VAL)
 auto = do
     entries <- getInScope
     let entryList = filter Solving.isParam $ Foldable.toList entries
@@ -69,20 +88,20 @@ auto = do
 
 autoSpreader :: Int
              -> [Entry Bwd]
-             -> SpecialTactic
+             -> ProofState (EXTM :=>: VAL)
 autoSpreader n entries = do
     let autoWith (x, xs) = auto' n (x:xs)
         subattempts = map autoWith (focuses' entries)
     elabTrace $ show (length entries) ++ " entries in scope"
     elabTrace $ show (length subattempts) ++ " subattempts"
-    done <|>
+    Solving.done <|>
         (do str <- Solving.prettyProofState
             elabTrace $ "autospreader proof state:"
             elabTrace $ str
             assumption <|> foldl (<|>) notFound subattempts
         )
 
-auto' :: Int -> [Entry Bwd] -> SpecialTactic
+auto' :: Int -> [Entry Bwd] -> ProofState (EXTM :=>: VAL)
 -- TODO(joel) figure out how to ensure this is shown if it happens! Don't
 -- want it to be overwritten by an uninteresting shallower error.
 auto' 0 _ = throwDTmStr "auto bottomed out!"
