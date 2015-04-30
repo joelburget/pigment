@@ -4,12 +4,17 @@
 module Tactics.SpecialTactics where
 
 import Control.Applicative hiding (empty)
-import Data.Foldable
+import qualified Data.Foldable as Foldable
 import Data.Traversable
 
+import Kit.BwdFwd
+import Kit.Trace
 import Evidences.Tm
+import ProofState.Edition.GetSet
 import ProofState.Edition.ProofState
 import qualified ProofState.Interface.Solving as Solving
+import ProofState.Structure.Developments
+import ProofState.Structure.Entries
 
 
 -- we need to know:
@@ -28,10 +33,10 @@ done :: SpecialTactic
 done = oneTargetTac Solving.done
 
 give :: INTM -> SpecialTactic
-give tm = oneTargetTac Solving.give
+give = oneTargetTac . Solving.give
 
 apply :: REF -> SpecialTactic
-apply (_ := _ :<: pi@(PI _ _)) =
+apply ref@(_ := _ :<: pi@(PI _ _)) =
     (pure <$> Solving.apply'' ref pi) <|> return []
 apply _ = return []
 
@@ -63,7 +68,7 @@ assumption = oneTargetTac $ do
 auto :: SpecialTactic
 auto = do
     entries <- getInScope
-    let entryList = filter isParam $ Foldable.toList entries
+    let entryList = filter Solving.isParam $ Foldable.toList entries
     autoSpreader 5 entryList
     -- let traversal :: Bwd (Maybe (Entry Bwd))
     --     traversal = do
@@ -81,10 +86,10 @@ autoSpreader n entries = do
     elabTrace $ show (length entries) ++ " entries in scope"
     elabTrace $ show (length subattempts) ++ " subattempts"
     (pure <$> done) <|>
-        (do str <- prettyProofState
+        (do str <- Solving.prettyProofState
             elabTrace $ "autospreader proof state:"
             elabTrace $ str
-            assumption <|> foldlM (<|>) notFound subattempts
+            assumption <|> Foldable.foldlM (<|>) notFound subattempts
         )
 
 auto' :: Int -> [Entry Bwd] -> SpecialTactic
@@ -95,7 +100,7 @@ auto' _ [] = throwDTmStr "no valid parameter found"
 auto' n (entry:entries) = do
     elabTrace $ "auto' " ++ (fst (last (entryName entry)))
     elabTrace $ "type: " ++ show (typeof entry)
-    apply' entry
+    Solving.apply' entry
     autoSpreader (n-1) entries
 
 
