@@ -113,3 +113,10 @@ throws away the results.
 
 > much :: Alternative f => f () -> f ()
 > much f = (f *> much f) <|> pure ()
+
+Foldable
+--------
+
+-- TODO(joel) use Lens lengthOf
+foldableSize :: Foldable t => t a -> Int
+foldableSize = getSum . Foldable.foldMap (const $ Sum 1)

@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds,
-  LambdaCase, LiberalTypeSynonyms #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+  LambdaCase, LiberalTypeSynonyms, MultiParamTypeClasses #-}
 
 module Cochon.Tactics (cochonTactics) where
 

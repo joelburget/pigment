@@ -135,6 +135,7 @@ library
     Tactics.Record
     Tactics.Relabel
     Tactics.Unification
+    Tactics.SpecialTactics
   if flag(ghcjs)
     exposed-modules:
       Cochon.Cochon

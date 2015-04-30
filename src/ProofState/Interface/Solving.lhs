@@ -153,65 +153,6 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 >     giveOutBelow $ N $ P f :$ A (N sTm)
 
 
-The tactic auto works as follows. It first tries to call reflexivity and
-assumption. If one of these calls solves the goal, the job is done. Otherwise
-auto tries to apply the most recently introduced assumption that can be applied
-to the goal without producing and error. This application produces subgoals.
-There are two possible cases. If the sugboals produced can be solved by a
-recursive call to auto, then the job is done. Otherwise, if this application
-produces at least one subgoal that auto cannot solve, then auto starts over by
-trying to apply the second most recently introduced assumption. It continues in
-a similar fashion until it finds a proof or until no assumption remains to be
-tried.
-
-
-> focuses :: [a] -> [([a], a, [a])]
-> focuses []     = []
-> focuses (a:as) = ([], a, as):(map helper (focuses as))
->     where helper (pres, focus, post) = ((a:pres), focus, post)
-
-
-> focuses' :: [a] -> [(a, [a])]
-> focuses' = map helper . focuses
->     where helper (pres, focus, post) = (focus, pres ++ post)
-
-> notFound = throwDTmStr "no valid parameter found"
-
-> auto :: ProofState ()
-> auto = do
->     entries <- getInScope
->     let entryList = filter isParam $ Foldable.toList entries
->     autoSpreader 5 entryList
-
-> autoSpreader :: Int -> [Entry Bwd] -> ProofState ()
-> autoSpreader n entries = do
->     let autoWith (x, xs) = auto' n (x:xs)
->         subattempts = map autoWith (focuses' entries)
->     elabTrace $ show (length entries) ++ " entries in scope"
->     elabTrace $ show (length subattempts) ++ " subattempts"
->     void done <|>
->         (do str <- prettyProofState
->             elabTrace $ "autospreader proof state:"
->             elabTrace $ str
->             assumption <|> foldl (<|>) notFound subattempts
->         )
-
-> typeof :: Entry Bwd -> Maybe TY
-> typeof (EDEF (_ := _ :<: ty) _ _ _ _ _ _) = Just ty
-> typeof (EPARAM (_ := _ :<: ty) _ _ _ _ _) = Just ty
-> typeof _ = Nothing
-
-> auto' :: Int -> [Entry Bwd] -> ProofState ()
-> -- TODO(joel) figure out how to ensure this is shown if it happens! Don't
-> -- want it to be overwritten by an uninteresting shallower error.
-> auto' 0 _ = throwDTmStr "auto bottomed out!"
-> auto' _ [] = throwDTmStr "no valid parameter found"
-> auto' n (entry:entries) = do
->     elabTrace $ "auto' " ++ (fst (last (entryName entry)))
->     elabTrace $ "type: " ++ show (typeof entry)
->     apply' entry
->     autoSpreader (n-1) entries
-
 matchesGoal :: NameSupply -> INTM -> Maybe (INTM :=>: TY) -> Bool
 matchesGoal _ _ Nothing = False
 matchesGoal ns tm (Just (_ :=>: ty)) =
@@ -229,19 +170,6 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 > isParam :: Entry Bwd -> Bool
 > isParam (EPARAM _ _ _ _ _ _) = True
 > isParam _ = False
-
-
-> assumption :: ProofState ()
-> assumption = do
->     entries <- getInScope
->     -- Try just returning the entry
->     let f (EPARAM ref _ _ term _ _) = void $
->             let justTm :: INTM
->                 justTm = NP ref
->             in elabTrace ("giving " ++ show justTm) >> give (LRET justTm)
->         f _ = notFound
->     -- ... for each entry
->     foldl (<|>) notFound (map f (Foldable.toList entries))
 
 
 Refining the proof state

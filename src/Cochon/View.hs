@@ -47,6 +47,7 @@ import Evidences.Tm
 import Kit.BwdFwd
 import Kit.ListZip
 import Kit.Parsley
+import Kit.MissingLibrary
 import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
 import ProofState.Edition.ProofState
@@ -399,11 +400,6 @@ tacticList = div_ [ class_ "tactic-list" ] $
 numEntries :: Layer -> Int
 numEntries (Layer aboveEntries _ belowEntries _ _ _) =
     foldableSize aboveEntries + 1 + foldableSize belowEntries
-
-
--- TODO(joel) use Lens lengthOf
-foldableSize :: Foldable t => t a -> Int
-foldableSize = getSum . Foldable.foldMap (const $ Sum 1)
 
 
 layerView :: Layer -> InteractionReact
