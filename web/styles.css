@@ -1,0 +1,66 @@
+body {
+    background-color: rgb(246, 248, 250);
+    border-top: 4px solid rgb(31, 50, 84);
+    color: rgb(31, 50, 84);
+    font-family: karla, monospace;
+    font-size: 20px;
+    margin: 0;
+}
+
+main {
+    margin: auto;
+    width: 960px;
+}
+
+h1, h2 {
+    font-family: karla, sans-serif;
+    line-height: 1.2;
+    /* margin-bottom: 0.25em; */
+    font-weight: 400;
+}
+
+h1 {
+    font-size: 4em;
+    margin-bottom: -8px;
+}
+
+h2 {
+    font-size: 1em;
+}
+
+iframe {
+    position: relative;
+    top: 4px;
+}
+
+p {
+    font-size: 1em;
+    line-height: 1.6;
+    margin-bottom: 1em;
+}
+
+img {
+    padding: 43px;
+}
+
+a {
+    color: rgb(31, 50, 84);
+    border-bottom: 1px solid rgba(31, 50, 84, 0.35);
+    text-decoration: none;
+}
+
+a:hover {
+    border-bottom: 2px solid rgb(31, 50, 84);
+}
+
+.flex {
+    display: flex;
+}
+
+.col {
+    flex-direction: column;
+}
+
+.row {
+    flex-direction: row;
+}

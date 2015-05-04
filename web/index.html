@@ -1,66 +1,47 @@
-<!DOCTYPE html>
 <html>
-    <head>
-        <meta charset='utf-8'>
-        <title>Pigment</title>
-        <link rel="icon" type="image/x-icon" href="favicon.ico">
-        <link href='http://fonts.googleapis.com/css?family=Cutive+Mono' rel='stylesheet' type='text/css'>
-        <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-        <link rel="stylesheet" href="css/fixedsticky.css">
-        <meta name="author" content="Joel Burget (joelburget@gmail.com)">
-        <meta name="copyright" content="Copyright &copy; Joel Burget">
-        <meta name="keywords" content="keywords">
-        <style>
-body {
-    color: rgb(113, 143, 199);
-    font-family: 'Open Sans', monospace;
-    font-size: 20px;
-}
-main {
-    width: 1000px;
-}
-h2 {
-    font-family: "Open Sans",sans-serif;
-    font-size: 18px;
-    letter-spacing: 2px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-iframe {
-    position: relative;
-    top: 4px;
-}
-.divider {
-    background-image: url(divider.png);
-    width: 300px;
-    height: 300px;
-    margin-top: -116px;
-    margin-left: auto;
-    margin-right: auto;
-}
-.sticky {
-    position: fixed;
-    top: 0;
-}
-        </style>
-    </head>
-    <body>
-        <main>
-            <img alt="pigment" src="full-logo-2.png" />
-            <div class="divider"></div>
-            <h2>Programming Language, Designed</h2>
-            <div class="fold">
-                <div id="stickyheader"></div>
-            <p>Pigment is an experiment in programming language design. We're taking modern programming language research and putting it in a helpful, interactive environment in the browser.</p>
-            <div>
-                Come chat about the project
-                <script async defer src="http://pigment.herokuapp.com/slackin.js"></script>
-                or check out the code
-                <iframe src="https://ghbtns.com/github-btn.html?user=joelburget&repo=pigment&type=star&count=true" frameborder="0" scrolling="0" width="80px" height="20px"></iframe>
-                <iframe src="https://ghbtns.com/github-btn.html?user=joelburget&repo=pigment&type=fork&count=true" frameborder="0" scrolling="0" width="80px" height="20px"></iframe>
+  <head>
+    <title>Sample App</title>
+    <link rel="stylesheet" href="960.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link href="http://fonts.googleapis.com/css?family=Karla:400,400italic,700,700italic" rel="stylesheet" type="text/css">
+    <link rel="shortcut icon" href="favicon.ico" />
+  </head>
+  <body>
+    <main class="flex col">
+        <h1 class="grid_10 push_1">Pigment</h1>
+        <h2 style="margin-left: 207px;" class="push_2">Programming Language, Designed</h2>
+        <div class="flex col" style="margin-top: 4em;">
+
+            <img class="grid_8 push_1" src="ss@2x.png" alt="screen shot" />
+
+            <div class="grid_12 flex row">
+                <h3 class="grid_2">goals</h3>
+                <p class="grid_10">Pigment is an experiment in programming language design. We're taking modern programming language research and putting it in a thoroughly designed, interactive environment in the browser.</p>
             </div>
+
+            <div class="grid_12 flex row">
+                <h3 class="grid_2">follow</h3>
+                <div class="flex col">
+                    <div><p>Participate in development on Github or follow <a href="https://twitter.com/dino_joel">@dino_joel</a> for updates.</p></div>
+                    <div class="flex row">
+                        <div><iframe src="https://ghbtns.com/github-btn.html?user=joelburget&repo=pigment&type=star&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe></div>
+                        <div><iframe src="https://ghbtns.com/github-btn.html?user=joelburget&repo=pigment&type=fork&count=true&size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe></div>
+                        <div style="margin-top: 5px;"><a href="https://twitter.com/dino_joel" class="twitter-follow-button" data-show-count="false" data-size="large">Follow @dino_joel</a></div>
+                    </div>
+                    <p></p><!-- spacer -->
+                </div>
             </div>
-        </main>
-        <script src="js/bundle.js"></script>
-    </body>
+
+            <div class="grid_12 flex row">
+                <h3 class="grid_2">research</h3>
+                <p class="grid_10">Pigment is built on the work of many mathematicians and computer scientists. Notably - the <a href="http://en.wikipedia.org/wiki/Epigram_%28programming_language%29">Epigram</a> team, who built the original implementation; the dependent types community, who continue to hammer out the theory; and the larger functional programming community.
+                </p>
+            </div>
+
+            <div style="height: 200px;"></div>
+
+        </div>
+    </main>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+  </body>
 </html>
