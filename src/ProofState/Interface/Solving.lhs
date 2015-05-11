@@ -33,7 +33,6 @@ Solving goals
 
 > import ProofState.Structure.Entries
 
-> import Kit.Trace
 > import DisplayLang.Lexer
 > import DisplayLang.PrettyPrint
 > import Text.PrettyPrint.HughesPJ as Pretty
@@ -55,16 +54,16 @@ entries below the cursor are (lazily) notified of the good news.
 >         Unknown (tipTyTm :=>: tipTy) -> do
 >             -- Working on a goal
 >             -- The `tm` is of the expected type
->             checkHere (tipTy :>: tm)
->                 `pushError`
->                 (stackItem
+>
+>             let err = stackItem
 >                      [ errMsg "give: typechecking failed:"
 >                      , errTm (DTIN tm)
 >                      , errTm (DTIN tipTyTm)
 >                      , errMsg "is not of type"
 >                      , errTyVal (tipTy :<: SET)
 >                      ] :: StackError DInTmRN
->                 )
+>
+>             checkHere (tipTy :>: tm) `pushError` err
 >
 >             -- Lambda lift the given solution
 >             globalScope <- getGlobalScope
@@ -126,8 +125,7 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 > apply' :: Entry Bwd -> ProofState (EXTM :=>: VAL)
 > apply' (EDEF f@(_ := _ :<: pi@(PI _ _)) _ _ _ _ _ _) = apply'' f pi
 > apply' (EPARAM f@(_ := _ :<: pi@(PI _ _)) _ _ _ _ _) = apply'' f pi
-> apply' _ = do
->     elabTrace "elab' fail :("
+> apply' _ =
 >     throwDTmStr $ "apply: last entry in the development" ++
 >                   " must be a definition with a pi-type."
 
@@ -140,7 +138,6 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 
 > apply'' :: REF -> TY -> ProofState (EXTM :=>: VAL)
 > apply'' f (PI _S _T) = do
->     elabTrace $ "apply' success!"
 >     -- The entry above is a proof of `Pi S T`
 >     -- Ask for a proof of `S`
 >     _STm <- bquoteHere _S

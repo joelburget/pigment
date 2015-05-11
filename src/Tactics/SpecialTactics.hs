@@ -8,6 +8,8 @@ import qualified Data.Foldable as Foldable
 import Data.Traversable
 -- import Data.Text as T
 
+import DisplayLang.DisplayTm
+import DisplayLang.Name
 import Kit.BwdFwd
 import Kit.Trace
 import Evidences.Tm
@@ -17,6 +19,7 @@ import qualified ProofState.Interface.Solving as Solving
 import ProofState.Structure.Developments
 import ProofState.Structure.Entries
 
+import Tactics.ProblemSimplify
 
 -- we need to know:
 -- * how big the proof search space is!
@@ -55,6 +58,26 @@ apply :: REF -> ProofState (EXTM :=>: VAL)
 apply ref@(_ := _ :<: pi@(PI _ _)) = Solving.apply'' ref pi
 apply _ = notFound
 
+-- matchCTactic :: [(String, DInTmRN)]
+--              -> DExTmRN
+--              -> DInTmRN
+--              -> ProofState (Bwd REF)
+
+
+-- XXX(joel) - why EXTM?
+-- Example:
+--
+--     matchGoal "f x" (\tm
+matchGoal :: String -> EXTM -> ProofState ()
+matchGoal tmPattern tm =
+    case parse tokenize tmPattern of
+        Left _ -> throwErrMsg "matchgoal: failed tokenize"
+        Right tokens -> case parse pDInTm tokens of
+            Left _ -> throwErrMsg "matchgoal: failed parse"
+            Right intm -> matchCTactic
+
+-- DEFN L ("A" :. L ("B" :. L ("a" :. L ("b" :. C (LRet N ((V 0 :$ A N (V 1))))))))
+
 assumption :: ProofState (EXTM :=>: VAL)
 assumption = do
     entries <- getInScope
@@ -63,7 +86,7 @@ assumption = do
             let justTm :: INTM
                 justTm = NP ref
             in do elabTrace ("giving " ++ show justTm)
-                  Solving.give (LRET justTm)
+                  Solving.give (LRET justTm) -- <|> Solving.give (
         f _ = notFound
     -- ... for each entry
     foldl (<|>) notFound (map f (Foldable.toList entries))
@@ -86,6 +109,7 @@ auto = do
     let entryList = filter Solving.isParam $ Foldable.toList entries
     autoSpreader 5 entryList
 
+
 autoSpreader :: Int
              -> [Entry Bwd]
              -> ProofState (EXTM :=>: VAL)
@@ -94,12 +118,11 @@ autoSpreader n entries = do
         subattempts = map autoWith (focuses' entries)
     elabTrace $ show (length entries) ++ " entries in scope"
     elabTrace $ show (length subattempts) ++ " subattempts"
-    Solving.done <|>
-        (do str <- Solving.prettyProofState
-            elabTrace $ "autospreader proof state:"
-            elabTrace $ str
-            assumption <|> foldl (<|>) notFound subattempts
-        )
+    -- optional problemSimplify
+    str <- Solving.prettyProofState
+    elabTrace $ "autospreader proof state:"
+    elabTrace $ str
+    assumption <|> foldl (<|>) notFound subattempts
 
 auto' :: Int -> [Entry Bwd] -> ProofState (EXTM :=>: VAL)
 -- TODO(joel) figure out how to ensure this is shown if it happens! Don't

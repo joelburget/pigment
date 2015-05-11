@@ -236,12 +236,12 @@ prettyDevView loc (Dev entries tip _ suspended) =
             Right ((tipViewed, entriesViewed, usefulTactics), _) -> do
                 div_ [ class_ "dev-header" ] $
                     div_ [ class_ "dev-header-tip" ] (locally tipViewed)
-                div_ [ class_ "dev-tactics" ] $ do
-                    div_ [ class_ "dev-tactics-header" ] "applicable tactics:"
-                    usefulTactics
                 div_ [ class_ "dev-entries-container" ] $ do
                     div_ [ class_ "dev-entries-header" ] "in scope:"
                     ol_ [ class_ "dev-entries" ] (locally entriesViewed)
+                div_ [ class_ "dev-tactics" ] $ do
+                    div_ [ class_ "dev-tactics-header" ] "applicable tactics:"
+                    usefulTactics
 
     in div_ [ class_ "dev" ] inner
 

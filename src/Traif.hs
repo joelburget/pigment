@@ -1,7 +1,7 @@
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE PatternSynonyms, TypeOperators #-}
 module Traif (traif) where
 
-import Control.Applicative (many)
+import Control.Applicative (many, optional, (<|>))
 import Control.Arrow (left)
 import Control.Monad.State
 import Text.PrettyPrint.HughesPJ
@@ -25,6 +25,17 @@ import ProofState.Interface.ProofKit
 import ProofState.Structure.Developments
 import ProofState.Structure.Entries
 import Tactics.Data
+
+import Tactics.SpecialTactics
+import Tactics.ProblemSimplify
+import ProofState.Interface.Search
+import Kit.Trace
+import Debug.Trace
+import Kit.Parsley
+import DisplayLang.TmParse
+import Elaboration.Scheduler
+import Elaboration.ElabProb
+import qualified ProofState.Interface.Solving as Solving
 
 -- elabLet :: (String :<: Scheme DInTmRN) -> ProofState (EXTM :=>: VAL)
 -- elabProgram :: [String] -> ProofState (EXTM :=>: VAL)
@@ -60,10 +71,63 @@ script = do
     _ <- many goOut
     return ()
 
+parseLet :: String -> ProofState (EXTM :=>: VAL)
+parseLet decl =
+    let Right (_:(Identifier name):declTokens) = parse tokenize decl
+        Right scheme = parse pScheme declTokens
+    in elabLet (name :<: scheme)
+
+parseRet :: String -> ProofState (EXTM :=>: VAL)
+parseRet impl =
+    let Right (_:implTokens) = parse tokenize impl
+        Right intm = parse pDInTm implTokens
+          -- elabGiveNext (traceShowId $ DLRET intm)
+    in do
+          tm' <- elabGive' (DLRET intm)
+          elabTrace (show tm')
+          startScheduler
+          nextGoal <|> goOut
+          return tm'
+
+
+traceState :: ProofState ()
+traceState = do
+    str <- prettyProofState
+    elabTrace $ "proof state:\n" ++ str ++ "\n"
+
+newScript :: ProofState ()
+newScript = do
+    parseLet "let f {A : Set}{B : Set}(a : A)(b : A -> B) : B"
+
+    traceState
+
+    optional problemSimplify
+    -- optional seekGoal
+
+    traceState
+
+    -- parseRet "= b a"
+    -- auto
+
+    parseRet "= b ?"
+    optional problemSimplify
+
+    traceState
+
+    parseRet "= a"
+    optional problemSimplify
+
+    -- Solving.done
+
+    traceState
+
+    return ()
+
+
 traif :: IO ()
 traif = do
     let runner :: ProofState String
-        runner = script >> prettyProofState
+        runner = newScript >> prettyProofState
         val :: String
         val = case runTraifProofState runner emptyContext of
             Left err -> err
@@ -152,8 +216,8 @@ prettyPS aus me = do
             Suspended (ty :=>: _) prob -> do
                 hk <- getHoleKind
                 tyd <- prettyHere (SET :>: ty)
-                return (text ("(SUSPENDED: " ++ show prob ++ ")")
-                            <+> prettyHKind hk <+> kword KwAsc <+> tyd)
+                probd <- prettyProb prob
+                return (probd <+> prettyHKind hk <+> kword KwAsc <+> tyd)
             Defined tm (ty :=>: tyv) -> do
                 tyd <- prettyHere (SET :>: ty)
                 tmd <- prettyHereAt (pred ArrSize) (tyv :>: tm)
@@ -163,3 +227,12 @@ prettyPS aus me = do
     prettyHKind Waiting     = text "?"
     prettyHKind Hoping      = text "HOPE?"
     prettyHKind (Crying s)  = text ("CRY <<" ++ s ++ ">>")
+
+    prettyProb :: ElabProb x -> ProofState Doc
+    prettyProb (ElabDone (intm :=>: val)) = return (text "DONE")
+    prettyProb ElabHope = return (text "HOPE")
+    prettyProb (ElabProb dintm) = return (text "ELABPROB")
+    prettyProb (ElabInferProb extm) = return (text "ELABINFERPROB")
+    prettyProb (WaitCan (intm :=>: mayVal) prob) = return (text "WAITCAN")
+    prettyProb (WaitSolve x (intm :=>: mayVal) prob) = return (text "WAITSOLVE")
+    prettyProb (ElabSchedule prob) = return (text "SCHEDULE")

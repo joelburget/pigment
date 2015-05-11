@@ -117,9 +117,14 @@ components.
 
 > simplifyGoal b (PI (SIGMA d r) t) = do
 >     simpTrace "PI SIGMA"
->     let mt =  PI d . L $ (fortran r) :. (let { a = 0 :: Int } in
->               PI (r -$ [NV a]) . L $ (fortran t) :. (let { b = 0; a = 1 } in
->               t -$ [PAIR (NV a) (NV b)] ) )
+>         -- t (a, b)
+>     let tab = t -$ [PAIR (NV 1) (NV 0)]
+>         -- r a
+>         ra = r -$ [NV 0]
+>         -- pi r \r' -> tab
+>         pi1 = PI ra (L (fortran t :. tab))
+>         -- pi d \d' -> ...
+>         mt = PI d (L (fortran r :. pi1))
 >     x :=>: xv <- simplifyGoal False mt
 >     ex <- annotate x mt
 >     let body = N (ex :$ A (N (V 0 :$ Fst)) :$ A (N (V 0 :$ Snd)))
@@ -282,8 +287,8 @@ components.
 
 If we are really lucky, the goal is trivial and we win.
 
-> simplifyGoal b UNIT                     = topWrap b $ VOID :=>: VOID
-> simplifyGoal b (LABEL _ UNIT)           = topWrap b $ LRET VOID :=>: LRET VOID
+> simplifyGoal b UNIT           = topWrap b $ VOID :=>: VOID
+> simplifyGoal b (LABEL _ UNIT) = topWrap b $ LRET VOID :=>: LRET VOID
 
 Otherwise, we cannot simplify the problem.
 

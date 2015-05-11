@@ -854,15 +854,18 @@ matchTac = simpleCT
         tm2 <- tokenInTm
         return (B0 :< pars :< tm1 :< tm2)
      )
-     (\ [pars, ExArg a, InArg b] ->
-         matchCTactic (argList (argPair argToStr argToIn) pars) a b)
+     (\ [pars, ExArg a, InArg b] -> do
+         subs <- matchCTactic (argList (argPair argToStr argToIn) pars) a b
+         return (fromString (show subs))
+     )
     (Right (TacticHelp
-        "match [<para>]* ; <term> ; <term>"
-        "TODO(joel)"
+        "match [<para>]* ; <match> ; <term>"
+        "match (o : Set) ; m o ; m n"
         -- TODO(joel) - better description
         "match parameters in first term against second."
-        [ ("<para>", "TODO(joel)")
-        , ("<term>", "TODO(joel)")
+        [ ("<para>", "A list of parameters to unify")
+        , ("<match>", "Parameter-holed term")
+        , ("<term>", "... to match")
         ]
     ))
 
@@ -992,17 +995,26 @@ defineCTactic rl tm = do
     elabGiveNext (DLRET tm)
     return "Hurrah!"
 
+-- Example
+--
+-- Make sure m and n are in scope, then...
+--
+--     match (o : Set) ; m o ; m n
+--
+-- leads to
+--
+--     o := n : Set
+
 matchCTactic :: [(String, DInTmRN)]
              -> DExTmRN
              -> DInTmRN
-             -> ProofState InteractionReact
+             -> ProofState (Bwd REF)
 matchCTactic xs a b = draftModule "__match" $ do
     rs <- traverse matchHyp xs
     (_ :=>: av :<: ty) <- elabInfer' a
     cursorTop
     (_ :=>: bv) <- elaborate' (ty :>: b)
-    rs' <- runStateT (matchValue B0 (ty :>: (av, bv))) (bwdList rs)
-    return (fromString (show rs'))
+    execStateT (matchValue B0 (ty :>: (av, bv))) (bwdList rs)
   where
     matchHyp :: (String, DInTmRN) -> ProofState (REF, Maybe VAL)
     matchHyp (s, t) = do
