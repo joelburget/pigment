@@ -48,6 +48,22 @@ executable pigment
       src/js/mui.js
       src/js/react-stubs.js
 
+executable Pig
+  build-depends:
+      base >= 4.6,
+      lens-family == 1.2.0,
+      lens-family-th == 0.4.1.0,
+      mtl >= 2.2,
+      transformers == 0.4.2.0,
+      errors == 1.4.7,
+      text >= 1.2,
+      void >= 0.7,
+      newtype == 0.2,
+      pretty >= 1.1,
+      recursion-schemes == 4.1
+  main-is: Pig.hs
+  hs-source-dirs: src
+
 library
   build-depends:
       base >= 4.6,
