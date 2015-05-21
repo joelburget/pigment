@@ -34,7 +34,7 @@ to `0`:
 > freshNSpace :: NameSupply -> String -> NameSupply
 > freshNSpace (sis, i) s = (sis :< (s,i), 0)
 
-Intuitively, the function `name` computes a fresh name out of a given
+Intuitively, the function `mkName` computes a fresh name out of a given
 name generator, decorating it with the human-readable label `s`.
 Technically, `Name` is defined as a list of `(String, Int)`. Hence, on
 that structure, the effect of `trail` is to flatten the backward
