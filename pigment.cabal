@@ -27,13 +27,13 @@ executable pigment
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
       mtl >= 2.2,
-      transformers == 0.4.2.0,
+      transformers == 0.4.3.0,
       errors == 1.4.7,
       text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1
+      recursion-schemes == 4.1.1
 
   if flag(ghcjs)
       build-depends:
@@ -54,13 +54,13 @@ executable Pig
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
       mtl >= 2.2,
-      transformers == 0.4.2.0,
+      transformers == 0.4.3.0,
       errors == 1.4.7,
       text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1
+      recursion-schemes == 4.1.1
   main-is: Pig.hs
   hs-source-dirs: src
 
@@ -70,13 +70,13 @@ library
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
       mtl >= 2.2,
-      transformers == 0.4.2.0,
+      transformers == 0.4.3.0,
       errors == 1.4.7,
       text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1
+      recursion-schemes == 4.1.1
   if flag(ghcjs)
       build-depends:
           ghcjs-base >= 0.1,
@@ -138,10 +138,6 @@ library
     ProofState.Interface.Solving
     ProofState.Structure.Developments
     ProofState.Structure.Entries
-    SourceLang.Elaborator
-    SourceLang.Example
-    SourceLang.Parser
-    SourceLang.Structure
     Tactics.Data
     Tactics.Elimination
     Tactics.IData
