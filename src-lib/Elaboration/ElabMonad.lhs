@@ -37,7 +37,7 @@ language, then write an interpreter to run the syntax in the
 >              --   result
 > eCompute     :: (TY :>: Elab (INTM :=>: VAL)) -> Elab (INTM :=>: VAL)
 >              -- ^ execute commands to produce an element of a given type
-> eFake        :: Elab (REF, Spine TT REF)
+> eFake        :: Elab (REF, Spine REF)
 >              -- ^ return a fake reference to the current goal and the current
 >              --   spine
 > eResolve     :: RelName -> Elab (INTM :=>: VAL, Maybe (Scheme INTM))
@@ -56,7 +56,7 @@ monad.
 >     |  ECry (StackError DInTmRN)
 >     |  EElab Loc EProb
 >     |  ECompute (TY :>: Elab (INTM :=>: VAL)) (INTM :=>: VAL -> Elab x)
->     |  EFake ((REF, Spine TT REF) -> Elab x)
+>     |  EFake ((REF, Spine REF) -> Elab x)
 >     |  EAnchor (String -> Elab x)
 >     |  EResolve RelName ((INTM :=>: VAL, Maybe (Scheme INTM)) -> Elab x)
 >     |  EAskNSupply (NameSupply -> Elab x)

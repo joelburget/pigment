@@ -67,8 +67,7 @@ old dependency holes with the new ones.
 >           goIn
 >           putNewsBelow news
 >           let (tm', _) = tellNews news tm
->           tm'' <- bquoteHere (evTm tm')
->           giveOutBelow tm''
+>           giveOutBelow (evTm tm')
 >       | occurs def = do
 >           goIn
 >           ty :=>: _ <- getGoal "solveHole"

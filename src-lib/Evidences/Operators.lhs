@@ -14,7 +14,6 @@
 > import Evidences.OperatorDSL
 > import {-# SOURCE #-} Evidences.DefinitionalEquality
 > import {-# SOURCE #-} Evidences.PropositionalEquality
-> import {-# SOURCE #-} Evidences.BetaQuotation
 > import NameSupply.NameSupply
 > import NameSupply.NameSupplier
 
@@ -814,7 +813,7 @@ any auxiliary code.
 >   , opSimp = \_ _ -> empty
 >   }
 
-> descConstructors :: Tm In p x
+> descConstructors :: Tm In x
 > descConstructors =  CONSE (TAG "idD")
 >                          (CONSE (TAG "constD")
 >                          (CONSE (TAG "sumD")
@@ -823,7 +822,7 @@ any auxiliary code.
 >                          (CONSE (TAG "piD")
 >                           NILE)))))
 
-> descBranches :: Tm In p x
+> descBranches :: Tm In x
 > descBranches = (PAIR (CONSTD UNIT)
 >                   (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
 >                   (PAIR (SIGMAD enumU (L $ "E" :. (let _E = 0 :: Int in
@@ -838,12 +837,12 @@ any auxiliary code.
 >                                            (CONSTD UNIT)))))
 >                    VOID))))))
 
-> descD :: Tm In p x
+> descD :: Tm In x
 > descD = SUMD descConstructors
 >              (L $ "c" :. (let c = 0 :: Int in N $
 >                  switchDOp :@ [ descConstructors , descBranches , NV c] ))
 
-> desc :: Tm In p x
+> desc :: Tm In x
 > desc = MU (Just (ANCHOR (TAG "Desc") SET ALLOWEDEPSILON)) descD
 
 > descREF :: REF
@@ -860,21 +859,21 @@ any auxiliary code.
 > descBranchesREF = [("Primitive", 0), ("DescBranches", 0)] :=
 >     DEFN descBranches :<: branchesOp @@ [descConstructors, LK desc]
 
-> enumConstructors :: Tm In p x
+> enumConstructors :: Tm In x
 > enumConstructors = CONSE (TAG "nil") (CONSE (TAG "cons") NILE)
 
-> enumBranches :: Tm In p x
+> enumBranches :: Tm In x
 > enumBranches =
 >     PAIR (CONSTD UNIT)
 >         (PAIR (SIGMAD UID (L $ "t" :. (PRODD (TAG "E") IDD (CONSTD UNIT))))
 >             VOID)
 
-> enumD :: Tm In p x
+> enumD :: Tm In x
 > enumD = SIGMAD  (ENUMT enumConstructors)
 >                   (L $ "c" :. (let c = 0 :: Int in N $
 >                       switchDOp :@ [ enumConstructors , enumBranches , NV c] ))
 
-> enumU :: Tm In p x
+> enumU :: Tm In x
 > enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
 
 > enumREF :: REF
@@ -1086,8 +1085,9 @@ references.
 > pity :: NameSupplier m => TEL TY -> m TY
 > pity (Target t)       = return t
 > pity (x :<: s :-: t)  = do
->   freshRef  (x :<: error "pity': type undefined")
+>   let pityTy = error "pity: type undefined"
+>   freshRef  (x :<: pityTy)
 >             (\xref -> do
->                t <- pity $ t (pval xref)
->                t <- bquote (B0 :< xref) t
->                return $ PI s (L $ x :. t))
+>                t' <- pity $ t (pval xref)
+>                t'' <- quote' (pityTy :>: t')
+>                return $ PI s (L $ x :. t''))

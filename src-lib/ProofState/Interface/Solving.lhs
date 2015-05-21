@@ -133,23 +133,20 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 
  apply'' :: REF -> TY -> ProofState (EXTM :=>: VAL)
  apply'' ref pi@(PI from to) = do
-     from' <- bquoteHere from
-     pi' <- bquoteHere pi
-     (holeTm :=>: _) <- make (AnchNo :<: from')
-     give $ N $ (LRET (NP ref) :? pi') :$ A (N holeTm)
+     (holeTm :=>: _) <- make (AnchNo :<: from)
+     give $ N $ (LRET (NP ref) :? pi) :$ A (N holeTm)
 
 > apply'' :: REF -> TY -> ProofState (EXTM :=>: VAL)
 > apply'' f (PI _S _T) = do
 >     elabTrace $ "apply' success!"
 >     -- The entry above is a proof of `Pi S T`
 >     -- Ask for a proof of `S`
->     _STm <- bquoteHere _S
->     sTm :=>: s <- make $ AnchStr "s" :<: _STm
+>     sTm :=>: s <- make $ AnchStr "s" :<: _S
 >     -- Make a proof of `T`
->     _TTm <- bquoteHere $ _T Evidences.Eval.$$ A s
+>     let _TTm = _T Evidences.Eval.$$ A s
 >     make $ AnchStr "t" :<: _TTm
 >     goIn
->     -- give $ N $ (LRET (NP f) :? (C (Pi _STm _TTm))) :$ A (N sTm)
+>     -- give $ N $ (LRET (NP f) :? (C (Pi _S _TTm))) :$ A (N sTm)
 >     giveOutBelow $ N $ P f :$ A (N sTm)
 
 
@@ -296,8 +293,7 @@ scope.
 >         prettyEs (d Pretty.$$ ed) es
 >
 >     prettyE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
->         ty' <- bquoteHere ty
->         tyd <- prettyHereAt (pred ArrSize) (SET :>: ty')
+>         tyd <- prettyHereAt (pred ArrSize) (SET :>: ty)
 >         return (prettyBKind k
 >                  (text x  <+> (brackets $ brackets $ text $ show anchor)
 >                           <+> kword KwAsc

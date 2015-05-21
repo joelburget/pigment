@@ -60,7 +60,7 @@
 >         , "( x : Set ) ( y : Set) => Prop"   -- Forall
 >         , "Set && Prop"                    -- And
 >         , "((x : Set) => Set) && Set"       -- And
->         , "TT && FF"                  -- And
+>         , "&& FF"                  -- And
 >         , "FF && FF"                  -- And
 >         , "TT"                        -- Trivial
 >         , "FF"                        -- Absurd

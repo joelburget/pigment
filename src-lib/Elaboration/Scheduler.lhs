@@ -147,7 +147,7 @@ anywhere earlier in the proof state.
 > resume _ (WaitSolve ref@(_ := HOLE _ :<: _) stt prob) = do
 >     suspendMe prob
 >     mn <- getCurrentName
->     tm <- bquoteHere (valueOf . maybeEval $ stt) -- force definitional expansion
+>     let tm = valueOf $ maybeEval stt -- force definitional expansion
 >     solveHole' ref [] tm -- takes us to who knows where
 >     return Nothing
 

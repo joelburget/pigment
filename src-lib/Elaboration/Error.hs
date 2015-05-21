@@ -20,10 +20,9 @@ distillErrors (StackError e) =
 
 distillError :: ErrorTok DInTmRN -> ProofState (ErrorTok DInTmRN)
 distillError (ErrorVAL (v :<: mt)) = do
-    vTm   <- bquoteHere v
     vDTm  <- case mt of
-        Just t   -> return . termOf =<< distillHere (t :>: vTm)
-        Nothing  -> liftErrorState DTIN (moonshine vTm)
+        Just t   -> return . termOf =<< distillHere (t :>: v)
+        Nothing  -> liftErrorState DTIN (moonshine v)
     return $ ErrorTm (vDTm :<: Nothing)
 distillError (ErrorTm (DTIN t :<: mt)) = do
     d <- liftErrorState DTIN (moonshine t)

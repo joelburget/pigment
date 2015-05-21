@@ -15,7 +15,6 @@
 > import Evidences.TypeChecker
 > import Evidences.Eval
 > import Evidences.Operators
-> import Evidences.BetaQuotation
 > import Evidences.DefinitionalEquality
 > import Evidences.Utilities
 > import ProofState.Edition.ProofState
@@ -89,13 +88,10 @@ The `eInfer` instruction infers the type of an evidence term.
 >             ty' :=>: _ <- eQuote ty
 >             return $ PAIR ty' (N tm) :=>: PAIR ty tv
 
-The `eQuote` instruction $\beta$-quotes a value to produce a term
-representation.
+The `eQuote` instruction beta-quotes a value to produce a term representation.
 
 > eQuote :: VAL -> Elab (INTM :=>: VAL)
-> eQuote v = do
->     nsupply <- eAskNSupply
->     return (bquote B0 v nsupply :=>: v)
+> eQuote v = return $ v :=>: v
 
 The `eSchedule` instruction asks for the scheduler to deal with other
 problems before returning its result.
@@ -206,7 +202,7 @@ tag in the enumeration to determine the appropriate index.
 >             stack = errMsgStack $
 >                 "elaborate: tag `" ++ a ++ " not found in enumeration."
 >         in throwStack $ stack
->     toNum :: Int -> Tm In p x
+>     toNum :: Int -> Tm In x
 >     toNum 0  = ZE
 >     toNum n  = SU (toNum (n-1))
 > makeElab' loc (PROP :>: DEqBlue t u) = do
@@ -335,7 +331,7 @@ The result of `makeElabInfer` is of type $\SIGMA{\V{X}}{\Set}{X}$, which
 we can represent as an evidence term or value (`sigSetTM` or
 `sigSetVAL`, respectively).
 
-> sigSetVAL :: Tm In p x
+> sigSetVAL :: Tm In x
 > sigSetVAL = SIGMA SET (idVAL "ssv")
 
 > sigSetTM :: INTM

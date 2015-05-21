@@ -32,8 +32,8 @@ spine as before, and must produce a term.
 name.
 
 > data Mangle f x y = Mang
->   {  mangP :: x -> f (Spine TT y) -> f (ExTm y)
->   ,  mangV :: Int -> f (Spine TT y) -> f (ExTm y)
+>   {  mangP :: x -> f (Spine y) -> f (ExTm y)
+>   ,  mangV :: Int -> f (Spine y) -> f (ExTm y)
 >   ,  mangB :: String -> Mangle f x y
 >   }
 
@@ -42,7 +42,7 @@ term, produing a term with the appropriate parameter type in the relevant
 idiom. This is basically a traversal, but calling the appropriate fields of
 `Mangle` for each parameter, variable or binder encountered.
 
-> (%) :: Applicative f => Mangle f x y -> Tm In TT x -> f (Tm In TT y)
+> (%) :: Applicative f => Mangle f x y -> Tm In x -> f (Tm In y)
 > m % L (K t)      = (L . K <$> m % t)
 > m % L (x :. t)   = L . (x :.) <$> mangB m x % t
 > m % C c          = C <$> (m %) ^$ c
@@ -51,7 +51,7 @@ idiom. This is basically a traversal, but calling the appropriate fields of
 The corresponding behaviour for `ExTm`s is implemented by `exMang`.
 
 > exMang ::  Applicative f => Mangle f x y ->
->            Tm Ex TT x -> f [Elim (Tm In TT y)] -> f (Tm Ex TT y)
+>            Tm Ex x -> f [Elim (Tm In y)] -> f (Tm Ex y)
 > exMang m (P x)     es = mangP m x es
 > exMang m (V i)     es = mangV m i es
 > exMang m (o :@ a)  es = ($:$) <$> ((o :@) <$> (m %) ^$ a) <*> es
@@ -60,10 +60,10 @@ The corresponding behaviour for `ExTm`s is implemented by `exMang`.
 
 The `%%` and `%%#` operators apply mangles that use the identity functor.
 
-> (%%) :: Mangle Identity x y -> Tm In TT x -> Tm In TT y
+> (%%) :: Mangle Identity x y -> Tm In x -> Tm In y
 > m %% t = runIdentity $ m % t
 
-> (%%#) :: Mangle Identity x y -> Tm Ex TT x -> Tm Ex TT y
+> (%%#) :: Mangle Identity x y -> Tm Ex x -> Tm Ex y
 > m %%# t = runIdentity $ exMang m t (pure [])
 
 The `under` mangle
@@ -82,7 +82,7 @@ the parameter `y` and leaves the term otherwise unchanged.
 The `underScope` function goes under a binding, instantiating the bound
 variable to the given reference.
 
-> underScope :: Scope TT x -> x -> InTm x
+> underScope :: Scope x -> x -> InTm x
 > underScope (K t)     _ = t
 > underScope (_ :. t)  x = under 0 x %% t
 

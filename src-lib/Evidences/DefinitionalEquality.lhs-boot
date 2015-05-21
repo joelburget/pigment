@@ -1,6 +1,8 @@
 > {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
 >     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, PatternGuards #-}
 > module Evidences.DefinitionalEquality where
+> import NameSupply.NameSupplier
 > import NameSupply.NameSupply
 > import Evidences.Tm
 > equal :: (TY :>: (VAL,VAL)) -> NameSupply -> Bool
+> quote' :: NameSupplier m => (TY :>: VAL) -> m INTM

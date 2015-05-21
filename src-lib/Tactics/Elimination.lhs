@@ -135,9 +135,8 @@ later:
 
 Make a goal for the motive:
 
->     motiveTypeTm           <- bquoteHere motiveType
 >     -- telTypeTm              <- bquoteHere telType
->     motive :=>: motiveVal  <- make $ AnchMotive :<: motiveTypeTm
+>     motive :=>: motiveVal  <- make $ AnchMotive :<: motiveType
 
 Make goals for the methods and find the return type:
 
@@ -172,12 +171,9 @@ consummed.
 
 > makeMethods :: Bwd INTM -> TY -> ProofState (Bwd INTM, INTM)
 > makeMethods ms (PI s t) = do
->     sTm        <- bquoteHere s
->     m :=>: mv  <- make $ AnchMethod :<: sTm
+>     m :=>: mv  <- make $ AnchMethod :<: s
 >     makeMethods (ms :< N m) (t $$ A mv)
-> makeMethods ms target = do
->     targetTm <- bquoteHere target
->     return (ms, targetTm)
+> makeMethods ms target = return (ms, target)
 
 Checking the motive and targets
 
@@ -347,10 +343,9 @@ pollution, and we get what we asked for.
 
 > unfoldTelescope :: TY -> ProofState [INTM]
 > unfoldTelescope (PI _S _T) = do
->   _Stm <- bquoteHere _S
 >   freshRef ("unfoldTelescope" :<: _S) $ \s -> do
 >       t <- unfoldTelescope (_T $$ (A $ pval s))
->       return $ _Stm : t
+>       return $ _S : t
 > unfoldTelescope _ = return []
 
 The dependencies can be extracted from terms in `INTM` form using the
@@ -395,7 +390,7 @@ traversal for this to make sense.
 >     help (delta :< (r :<: ty)) xs = help delta
 >         (if (r `elem` deps) || shouldKeep ty
 >             then (r :<: ty) : xs else xs)
->     shouldKeep :: Tm d TT REF -> Bool
+>     shouldKeep :: Tm d REF -> Bool
 >     shouldKeep (LABEL _ _) = True
 >     shouldKeep (C c) = Data.Foldable.any shouldKeep c
 >     shouldKeep (L (_ :. t)) = shouldKeep t
@@ -547,12 +542,11 @@ variable, because if so we might be able to simplify its constraint.
 >   | not . isVar $ evTm x = do
 >     let mtFresh  = currySigma dFresh rFresh tFresh
 >     let mtTarg   = currySigma dTarg rTarg tTarg
->     mtFresh' <- bquoteHere mtFresh
->     b :=>: _  <- make (AnchSig :<: mtFresh')
+>     b :=>: _  <- make (AnchSig :<: mtFresh)
 >     ref       <- lambdaParam (fortran tFresh)
 >     give (N (b :$ A (N (P ref :$ Fst)) :$ A (N (P ref :$ Snd))))
 >     goIn
->     sTarg' <- bquoteHere (SIGMA dTarg rTarg)
+>     let sTarg' = SIGMA dTarg rTarg
 >     introMotive mtFresh mtTarg ((N (x ?? sTarg' :$ Fst)) : (N (x ?? sTarg' :$ Snd)) : xs) cs (n + 1)
 >   where
 >     isVar :: VAL -> Bool
@@ -560,9 +554,7 @@ variable, because if so we might be able to simplify its constraint.
 >     isVar _       = False
 > introMotive (PI sFresh tFresh) (PI sTarg tTarg) (x:xs) cs n = do
 >     ref      <- lambdaParam (fortran tFresh)
->     sFresh'  <- bquoteHere sFresh
->     sTarg'   <- bquoteHere sTarg
->     let c = (ref :<: sFresh', (x :~>: x) :<: (sTarg' :~>: sTarg'))
+>     let c = (ref :<: sFresh, (x :~>: x) :<: (sTarg :~>: sTarg))
 >     elimTrace $ "CONSTRAINT: " ++ show c
 >     introMotive (tFresh $$ A (NP ref)) (tTarg $$ A (evTm x)) xs (cs :< c) n
 > introMotive SET SET [] cs n = return (cs, n)
@@ -727,8 +719,7 @@ motive) and lifting them over $\Delta_0$:
 >     methodTypes <- many $ do
 >         goDown
 >         _ :=>: ty <- getHoleGoal
->         ty' <- bquoteHere ty
->         return (liftType' delta0 ty')
+>         return (liftType' delta0 ty)
 
 Next we move to the top of the original development, and make the lifted
 methods:

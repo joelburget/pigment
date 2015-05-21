@@ -116,8 +116,7 @@ task.
 task.
 
 > runElab wrk (ty :>: EWait s tyWait f) = do
->     tyWait' <- bquoteHere tyWait
->     tt <- make (AnchStr s :<: tyWait')
+>     tt <- make (AnchStr s :<: tyWait)
 >     runElab wrk (ty :>: f tt)
 
 `EElab` contains a syntactic representation of an elaboration problem.
@@ -167,7 +166,7 @@ refers to. This is passed onto the next elaboration task.
 >     let  tm   = P ref $:$ toSpine as
 >          ms'  = applyScheme <$> ms <*> pure as
 >     (tmv :<: tyv) <- inferHere tm
->     tyv'  <- bquoteHere tyv
+>     tyv'  <- quote' (tyv :>: tmv)
 >     runElab wrk (ty :>: f (PAIR tyv' (N tm) :=>: PAIR tyv tmv, ms'))
 
 `EAskNSupply` gives access to the name supply to the next elaboration
@@ -191,9 +190,8 @@ elaboration task to `runElab`.
 > runElabNewGoal :: (TY :>: Elab (INTM :=>: VAL)) -> ProofState (INTM :=>: VAL, ElabStatus)
 > runElabNewGoal (ty :>: elab) = do
 >     -- Make a dummy definition
->     ty' <- bquoteHere ty
 >     x <- pickName' "h"
->     make (AnchStr x :<: ty')
+>     make (AnchStr x :<: ty)
 >     -- Enter its development
 >     goIn
 >     (tm :=>: tmv, status) <- runElab WorkCurrentGoal (ty :>: elab)
@@ -272,8 +270,7 @@ The following problems are suspended, for different reasons:
     elaboration and call the scheduler.
 
 > runElabProb top loc (ty :>: prob) = do
->     ty' <- bquoteHere ty
->     suspendThis top (name prob :<: ty' :=>: ty) prob
+>     suspendThis top (name prob :<: ty :=>: ty) prob
 >   where
 >     name :: EProb -> String
 >     name (WaitCan _ _)      = "can"
@@ -321,8 +318,7 @@ The traversal of the hypotheses is carried by `seekOn`. It searches
 parameters and hands them to `seekIn`.
 
 >       seekOn B0                                    = do
->           label' <- bquoteHere label
->           s <- prettyHere (ty :>: N label')
+>           s <- prettyHere (ty :>: N label)
 >           proofTrace $ "Failed to resolve recursive call to "
 >                            ++ renderHouseStyle s
 >           empty
@@ -346,9 +342,7 @@ We might have to go inside branches (essentially finite $\Pi$-types).
 
 >       seekIn rs tm (N (op :@ [e, p])) | op == branchesOp =
 >           freshRef (fortran p :<: e) $ \ eRef -> do
->               e' <- bquoteHere e
->               p' <- bquoteHere p
->               seekIn (rs :< eRef) (switchOp :@ [e', NP eRef, p', N tm])
+>               seekIn (rs :< eRef) (switchOp :@ [e, NP eRef, p, N tm])
 >                   (p $$ A (pval eRef))
 
 We have reached a label! The question is then "is this the one we are
@@ -376,13 +370,10 @@ solution.
 >       processSubst B0            = return (B0, B0)
 >       processSubst (rs :< (r, Just t))  = do
 >           (xs, vs)  <- processSubst rs
->           ty        <- bquoteHere (pty r)
->           tm        <- bquoteHere t
->           return (xs :< (r :<: substitute xs vs ty), vs :< substitute xs vs tm)
+>           return (xs :< (r :<: substitute xs vs (pty r)), vs :< substitute xs vs t)
 >       processSubst (rs :< (r, Nothing))  = do
 >           (xs, vs)  <- processSubst rs
->           ty        <- bquoteHere (pty r)
->           let ty' = substitute xs vs ty
+>           let ty' = substitute xs vs (pty r)
 >           (tm :=>: _, _)  <- runElabHope WorkElsewhere (evTm ty')
 >           return (xs :< (r :<: ty'), vs :< tm)
 
@@ -440,8 +431,7 @@ equality to make recursive calls.
 >     prfs <- proveBits ty ps B0
 >     let  q  = NP refl $$ A ty $$ A (NP ref) $$ Out
 >          r  = CON (smash q (trail prfs))
->     r' <- bquoteHere r
->     return (r' :=>: r, ElabSuccess)
+>     return (r :=>: r, ElabSuccess)
 >   where
 >     pairSpines :: NEU -> NEU -> [(VAL, VAL)] -> Maybe (REF, [(VAL, VAL)])
 >     pairSpines (P ref@(sn := _ :<: _)) (P (tn := _ :<: _)) ps
@@ -469,20 +459,19 @@ of the equation.
 > flexiProofLeft wrk (_T :>: N t) (_S :>: s) = do
 >     guard =<< withNSupply (equal (SET :>: (_S, _T)))
 
-\< (q' :=\>: q, ~)~ \<- simplifyProof False (EQBLUE (SET :\>: ~S~) (SET
-:\>: ~T~))
+(q' :=>: q, _) <- simplifyProof False (EQBLUE (SET :>: _S) (SET :>: _T))
 
 >     ref  <- stripShared t
->     s'   <- bquoteHere s
->     _S'  <- bquoteHere _S
->     t'   <- bquoteHere t
->     _T'  <- bquoteHere _T
+>     -- s'   <- bquoteHere s
+>     -- _S'  <- bquoteHere _S
+>     -- t'   <- bquoteHere t
+>     -- _T'  <- bquoteHere _T
 >     let  p      = EQBLUE (_T   :>: N t   ) (_S   :>: s   )
->          p'     = EQBLUE (_T'  :>: N t'  ) (_S'  :>: s'  )
+>          p'     = p -- EQBLUE (_T'  :>: N t'  ) (_S'  :>: s'  )
 
-\< N (coe :@ [~S~', ~T~', q', s']) :=\>: Just (coe @@ [~S~, ~T~, q, s])
+N (coe :@ [_S', _T', q', s']) :=>: Just (coe @@ [_S, _T, q, s])
 
->          eprob  = WaitSolve ref (s' :=>: Just s) ElabHope
+>          eprob  = WaitSolve ref (s :=>: Just s) ElabHope
 >     suspendThis wrk ("eq" :<: PRF p' :=>: PRF p) eprob
 > flexiProofLeft _ _ _ = empty
 
@@ -491,13 +480,13 @@ of the equation.
 > flexiProofRight wrk (_S :>: s) (_T :>: N t) = do
 >     guard =<< withNSupply (equal (SET :>: (_S, _T)))
 >     ref  <- stripShared t
->     s'   <- bquoteHere s
->     _S'  <- bquoteHere _S
->     t'   <- bquoteHere t
->     _T'  <- bquoteHere _T
+>     -- s'   <- bquoteHere s
+>     -- _S'  <- bquoteHere _S
+>     -- t'   <- bquoteHere t
+>     -- _T'  <- bquoteHere _T
 >     let  p      = EQBLUE (_S   :>: s   ) (_T   :>: N t   )
->          p'     = EQBLUE (_S'  :>: s'  ) (_T'  :>: N t'  )
->          eprob  = WaitSolve ref (s' :=>: Just s) ElabHope
+>          p'     = p -- EQBLUE (_S'  :>: s'  ) (_T'  :>: N t'  )
+>          eprob  = WaitSolve ref (s :=>: Just s) ElabHope
 >     suspendThis wrk ("eq" :<: PRF p' :=>: PRF p) eprob
 > flexiProofRight _ _ _ = empty
 
@@ -512,8 +501,7 @@ but do not always spot them.
 >     putHoleKind Hoping
 >     return . (, ElabSuspended) =<< neutralise =<< getCurrentDefinition
 > lastHope WorkElsewhere ty = do
->     ty' <- bquoteHere ty
->     return . (, ElabSuccess) =<< neutralise =<< makeKinded Hoping (AnchHope :<: ty')
+>     return . (, ElabSuccess) =<< neutralise =<< makeKinded Hoping (AnchHope :<: ty)
 
 <a name="Elaboration.RunElab.suspending">Suspending computation</a>
 ----------------------

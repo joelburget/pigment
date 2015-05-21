@@ -52,7 +52,6 @@ library
     Elaboration.RunElab
     Elaboration.Scheduler
     Elaboration.Wire
-    Evidences.BetaQuotation
     Evidences.DefinitionalEquality
     Evidences.Eval
     Evidences.Mangler

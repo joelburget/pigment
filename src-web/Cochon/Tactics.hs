@@ -193,7 +193,7 @@ unaryInCT name eval desc = simpleCT
     (Left (fromString (name ++ " - " ++ desc)))
 
 
-unDP :: DExTm p x -> x
+unDP :: DExTm x -> x
 unDP (DP ref ::$ []) = ref
 
 

@@ -36,14 +36,12 @@ working on a goal.
 >         Just (paramKind, s, t) ->
 >             -- Where can rightfully introduce a lambda
 >             freshRef (x :<: s) $ \ref -> do
->               sTm <- bquoteHere s
 >               -- Insert the parameter above the cursor
->               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind sTm
+>               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind s
 >                                      AnchNo emptyMetadata
 >               -- Update the Tip
 >               let tipTy = t $ pval ref
->               tipTyTm <- bquoteHere tipTy
->               putDevTip (Unknown (tipTyTm :=>: tipTy))
+>               putDevTip (Unknown (tipTy :=>: tipTy))
 >               -- Return the reference to the parameter
 >               return ref
 >         _  -> throwDTmStr "lambdaParam: goal is not a pi-type or all-proof."

@@ -21,7 +21,6 @@
 > import DisplayLang.Name
 > import Evidences.Tm
 > import Evidences.TypeChecker
-> import Evidences.BetaQuotation
 
 The proof state lives on a rich substrate of operations, inherited from
 the `ProofContext` as well as the `ProofState` monad. In this module, we
@@ -63,12 +62,6 @@ has finished.
 Accessing the type-checker
 --------------------------
 
-First off, we can access the $\beta$-normalizer: the `bquoteHere`
-command $\beta$-quotes a term using the local name supply.
-
-> bquoteHere :: Tm d VV REF -> ProofStateT e (Tm d TT REF)
-> bquoteHere tm = withNSupply $ bquote B0 tm
-
 Secondly, any type-checking problem (defined in the `Check` monad) can
 be executed in the `ProofState`.
 
@@ -99,14 +92,12 @@ location, which may be useful for paranoia purposes.
 >     m <- getCurrentEntry
 >     case m of
 >         CDefinition _ (_ := DEFN tm :<: ty) _ _ _ _ -> do
->             ty' <- bquoteHere ty
->             checkHere (SET :>: ty')
+>             checkHere (SET :>: ty)
 >                 `pushError` (stackItem
 >                     [ errMsg "validateHere: definition type failed to type-check: SET does not admit"
 >                     , errTyVal (ty :<: SET)
 >                     ] :: StackError DInTmRN)
->             tm' <- bquoteHere tm
->             checkHere (ty :>: tm')
+>             checkHere (ty :>: tm)
 >                 `pushError` (stackItem
 >                     [ errMsg "validateHere: definition failed to type-check:"
 >                     , errTyVal (ty :<: SET)
@@ -115,8 +106,7 @@ location, which may be useful for paranoia purposes.
 >                     ] :: StackError DInTmRN)
 >             return ()
 >         CDefinition _ (_ := HOLE _ :<: ty) _ _ _ _ -> do
->             ty' <- bquoteHere ty
->             checkHere (SET :>: ty')
+>             checkHere (SET :>: ty)
 >                 `pushError` (stackItem
 >                     [ errMsg "validateHere: hole type failed to type-check: SET does not admit"
 >                     , errTyVal (ty :<: SET)

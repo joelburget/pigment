@@ -19,7 +19,7 @@ Display Terms
 Structure of Display Terms
 --------------------------
 
-Display terms mirror and extend the `Tm d TT` terms of the
+Display terms mirror and extend the `Tm d` terms of the
 Evidence language. While the Evidence language is the language of the
 type-checker, the Display language is the one of humans in an
 interactive development. Hence, in addition to the terms from the

@@ -125,7 +125,7 @@ reference used in the term). Using the `Writer` monad allows the term to
 be updated and the news about it calculated in a single traversal. Note
 that we ensure `FAKE` references remain as they are, as in `getLatest`.
 
-> tellNews :: NewsBulletin -> Tm d TT REF -> (Tm d TT REF, News)
+> tellNews :: NewsBulletin -> Tm d REF -> (Tm d REF, News)
 > tellNews []    tm = (tm, NoNews)
 > tellNews news  tm = runWriter $ traverse teller tm
 >   where

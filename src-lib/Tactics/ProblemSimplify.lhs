@@ -84,10 +84,9 @@ a new goal.
 > trySimplifyGoal True   g = simplifyGoal True g <|>
 >                                 (neutralise =<< getCurrentDefinition)
 > trySimplifyGoal False  g = simplifyGoal False g <|> (do
->     g'  <- bquoteHere g
 >     es  <- getEntriesAbove
 >     cursorAboveLambdas
->     _ <- make (AnchStr "tsg" :<: liftType es g')
+>     _ <- make (AnchStr "tsg" :<: liftType es g)
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -131,9 +130,7 @@ into its branches.
 > simplifyGoal b (PI (ENUMT e) t) | checkTags e = do
 >     simpTrace "PI ENUMT"
 >     x :=>: xv <- trySimplifyGoal False (branchesOp @@ [e, t])
->     e' <- bquoteHere e
->     t' <- bquoteHere t
->     let body = N (switchOp :@ [e', NV 0, t', x])
+>     let body = N (switchOp :@ [e, NV 0, t, x])
 >     topWrap b $ L ("pe" :. body) :=>: L ("pe" :. body)
 >   where
 >     checkTags :: VAL -> Bool
@@ -157,31 +154,25 @@ Note that this assumes we are at the top level.
 >     elimEquation :: VAL -> VAL -> ProofState (INTM :=>: VAL)
 >     elimEquation (EQBLUE (_X :>: x) (_Y :>: NP y@(yn := DECL :<: _))) t = do
 >         guard =<< (withNSupply $ equal (SET :>: (_X, _Y)))
->         t' <- bquoteHere t
->         guard $ y `elem` t'
+>         guard $ y `elem` t
 >         simpTrace $ "elimSimp: " ++ show yn
 >         q    <- lambdaParam "qe"
->         _X'  <- bquoteHere _X
->         x'   <- bquoteHere x
 >         let  ety  =  PI (ARR _X SET) $ L $ "P" :. (let { _P = 0 :: Int } in
->                          ARR (N (V _P :$ A x')) (N (V _P :$ A (NP y)))
+>                          ARR (N (V _P :$ A x)) (N (V _P :$ A (NP y)))
 >                      )
->              ex   =  P substEq :$ A _X' :$ A x' :$ A (NP y) :$ A (NP q)
+>              ex   =  P substEq :$ A _X :$ A x :$ A (NP y) :$ A (NP q)
 >         elimSimplify (ety :>: ex)
 >         neutralise =<< getCurrentDefinition
 >     elimEquation (EQBLUE (_Y :>: NP y@(yn := DECL :<: _)) (_X :>: x)) t = do
 >         guard =<< (withNSupply $ equal (SET :>: (_X, _Y)))
->         t' <- bquoteHere t
->         guard $ y `elem` t'
+>         guard $ y `elem` t
 >         simpTrace $ "elimSimp: " ++ show yn
 >         q    <- lambdaParam "qe"
->         _X'  <- bquoteHere _X
->         x'   <- bquoteHere x
 >         let  ety  =  PI (ARR _X SET) $ L $ "P" :. (let { _P = 0 :: Int } in
->                          ARR (N (V _P :$ A x')) (N (V _P :$ A (NP y)))
+>                          ARR (N (V _P :$ A x)) (N (V _P :$ A (NP y)))
 >                      )
->              ex   =  P substEq :$ A _X' :$ A x' :$ A (NP y) :$ A
->                          (N (P symEq :$ A _X' :$ A (NP y) :$ A x' :$ A (NP q)))
+>              ex   =  P substEq :$ A _X :$ A x :$ A (NP y) :$ A
+>                          (N (P symEq :$ A _X :$ A (NP y) :$ A x :$ A (NP q)))
 >         elimSimplify (ety :>: ex)
 >         neutralise =<< getCurrentDefinition
 >     elimEquation _ _ = empty
@@ -189,24 +180,21 @@ Note that this assumes we are at the top level.
 >     simplifyProp :: VAL -> VAL -> Simplify -> ProofState (INTM :=>: VAL)
 >     simplifyProp p t (SimplyAbsurd prf) = do
 >         r    <- lambdaParam (fortran t)
->         t'   <- bquoteHere t
->         t''  <- annotate t' (ARR (PRF p) SET)
->         neutralise =<< give (N (nEOp :@ [prf (P r), N (t'' :$ A (NP r))]))
+>         t'  <- annotate t (ARR (PRF p) SET)
+>         neutralise =<< give (N (nEOp :@ [prf (P r), N (t' :$ A (NP r))]))
 >     simplifyProp p t (SimplyTrivial prf) = do
 >         x :=>: xv <- trySimplifyGoal False (t $$ A (evTm prf))
 >         neutralise =<< give (LK x)
 >     simplifyProp p t (SimplyOne (qr :<: qst) g h) = do
->         t'   <- bquoteHere t
->         t''  <- annotate t' (ARR (PRF p) SET)
->         let q = PIV (fortran t) qst (N (t'' :$ A ((B0 :< qr) -|| h)))
+>         t'  <- annotate t (ARR (PRF p) SET)
+>         let q = PIV (fortran t) qst (N (t' :$ A ((B0 :< qr) -|| h)))
 >         x :=>: xv <- trySimplifyGoal False (evTm q)
 >         let y = x ?? q
 >         r <- lambdaParam (fortran t)
 >         neutralise =<< give (N (y :$ A (g (P r))))
 >     simplifyProp p t (Simply qs gs h) = do
->         t'   <- bquoteHere t
->         t''  <- annotate t' (ARR (PRF p) SET)
->         let q = dischargePi qs (N (t'' :$ A h))
+>         t'  <- annotate t (ARR (PRF p) SET)
+>         let q = dischargePi qs (N (t' :$ A h))
 >         x :=>: xv <- trySimplifyGoal False (evTm q)
 >         let y = x ?? q
 >         r <- lambdaParam (fortran t)
@@ -225,10 +213,9 @@ subgoal.
 
 > simplifyGoal False g@(PI _ _) = do
 >     simpTrace "PI not"
->     g' <- bquoteHere g
 >     es <- getEntriesAbove
 >     cursorAboveLambdas
->     _ <- make (AnchStr "pig" :<: liftType es g')
+>     _ <- make (AnchStr "pig" :<: liftType es g)
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -251,8 +238,7 @@ we can just invoke propositional simplification...
 
 > simplifyGoal False g@(PRF _) = do
 >     simpTrace "PRF not"
->     g' <- bquoteHere g
->     _ <- make (AnchStr "prg" :<: g')
+>     _ <- make (AnchStr "prg" :<: g)
 >     goIn
 >     x :=>: xv <- simplifyGoal True g
 >     goOut

@@ -58,42 +58,38 @@ Datatype declaration
 >          -> ProofState (INTM, [String])
 > ity2desc indty r ps ind (PI a b) = do
 >     let anom = fortran b
->     a' <- bquoteHere a
->     if occurs r a'
+>     if occurs r a
 >       then do
->         a'' <- ity2h indty r ps a
+>         a' <- ity2h indty r ps a
 >         (b',us) <- freshRef (fortran b:<:a) $ \s -> do
 >             (b', us) <- ity2desc indty r ps ind (b $$ A (NP s))
 >             when (occurs s b') $ throwDTmStr "Bad dependency"
 >             return (b',us)
->         return (IPROD (TAG anom) a'' b', anom:us)
+>         return (IPROD (TAG anom) a' b', anom:us)
 >       else
 >         freshRef (anom :<: a) $ \s -> do
 >             (x, y) <- ity2desc indty r ps ind (b $$ A (NP s))
->             return (ISIGMA a' (L $ fortran b :. (capM s 0 %% x)), y)
+>             return (ISIGMA a (L $ fortran b :. (capM s 0 %% x)), y)
 > ity2desc indty r ps i (N (x :$ A j)) = do
 >     b <- withNSupply (equal (SET :>: (N x, NP r $$$ ps)))
 >     unless b $ throwDTmStr "C doesn't target T"
->     i' <- bquoteHere i
->     j' <- bquoteHere j
->     return (ICONST (PRF (EQBLUE (N indty :>: i') (N indty :>: j'))),[])
+>     return (ICONST (PRF (EQBLUE (N indty :>: i) (N indty :>: j))),[])
 > ity2desc _ _ _ _ _ = throwDTmStr
 >     "This doesn't work, Dr Morris something something."
 
 > ity2h :: EXTM -> REF -> [Elim VAL] -> VAL -> ProofState INTM
 > ity2h indty r ps (PI a b) = do
->   a' <- bquoteHere a
->   if occurs r a'
+>   if occurs r a
 >     then throwDTmStr "Not strictly positive"
 >     else do
 >       b' <- freshRef (fortran b :<: a) $ \s -> do
 >           x <- ity2h indty r ps (b $$ A (NP s))
 >           pure (L $ fortran b :. (capM s 0 %% x) )
->       return (IPI a' b')
+>       return (IPI a b')
 > ity2h _ r ps (N (x :$ A i')) = do
 >     b <- withNSupply (equal (SET :>: (N x, NP r $$$ ps)))
 >     unless b $ throwDTmStr "Not SP"
->     IVAR <$> bquoteHere i'
+>     return $ IVAR i'
 > ity2h _ _ _ _ = throwDTmStr
 >     "This doesn't work, Dr Morris something something."
 
@@ -175,8 +171,7 @@ principles (:
 >                                :$ A (PAIR (N e) (PAIR (N cs') VOID))
 >                                :$ A (NP i) :$ A (NP v)
 >           caseV :<: caseTy <- inferHere caseTm
->           caseTy' <- bquoteHere caseTy
->           _ <- moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) caseTy')
+>           _ <- moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) caseTy)
 >           _ <- giveOutBelow (N caseTm)
 >           return ()
 >       mystery1handler :: StackError DInTmRN -> ProofState ()
@@ -194,18 +189,16 @@ principles (:
 >                              :$ A (PAIR (N e) (PAIR (N cs') VOID))
 >                              :$ A (NP i) :$ A (NP v)
 >           dindV :<: dindTy <- inferHere dindT
->           dindTy' <- bquoteHere dindTy
 >           -- XXX(joel) why is i unused?
->           _ <- moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) dindTy')
+>           _ <- moduleToGoal (isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) dindTy)
 >           _ <- giveOutBelow (N dindT)
 >           return ()
 >       mystery2handler :: StackError DInTmRN -> ProofState ()
 >       mystery2handler _ = do
 >           let indTm = P (lookupOpRef iinductionOp) :$ A (N indtye) :$ A d
 >           indV :<: indTy <- inferHere indTm
->           indTy' <- bquoteHere indTy
 >           -- XXX(joel) why is i unused?
->           _ <- make (AnchInd :<: isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) indTy')
+>           _ <- make (AnchInd :<: isetLabel (L $ "i" :. (let { i = 0 :: Int } in label)) indTy)
 >           goIn
 >           _ <- giveOutBelow (N indTm)
 >           return ()

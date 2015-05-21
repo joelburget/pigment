@@ -381,7 +381,7 @@ infoContextual gals = do
     --     reactKword KwAsc
     --     reactTy
 
-    removeShared :: Spine TT REF -> TY -> TY
+    removeShared :: Spine REF -> TY -> TY
     removeShared []       ty        = ty
     removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
 

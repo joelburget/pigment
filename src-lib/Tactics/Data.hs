@@ -62,8 +62,7 @@ ty2desc :: REF -> [Elim VAL] -> VAL ->
            ProofState (INTM, [String], [String], [REF] -> INTM)
 ty2desc r ps (PI a b) = do
     let anom = fortran b
-    a' <- bquoteHere a
-    if occurs r a'
+    if occurs r a
       then do
         (a'', i) <- ty2h r ps a
         (b', j, k, c) <- freshRef (fortran b :<: a) $ \s -> do
@@ -85,7 +84,7 @@ ty2desc r ps (PI a b) = do
               )
       else do
         let helper s (x, j, k, y) = return (
-                SIGMAD a' (L $ "a" :. (capM s 0 %% x)),
+                SIGMAD a (L $ "a" :. (capM s 0 %% x)),
                 anom : j,
                 k,
                 \(v:vs) -> PAIR (NP v) (swapM s v %% (y vs))
@@ -99,16 +98,15 @@ ty2desc r ps x = do
 
 ty2h :: REF -> [Elim VAL] -> VAL -> ProofState (INTM, Int)
 ty2h r ps (PI a b) = do
-    a' <- bquoteHere a
-    if occurs r a'
+    if occurs r a
       then throwDTmStr "Not strictly positive"
       else do
         (b',i) <- freshRef (fortran b :<: a)
                    (\s -> ty2h r ps (b $$ A (NP s)) >>= \(x,y) ->
                                  pure (L $ "a" :. (capM s 0 %% x),y))
         return $ case i of
-          0 -> (a' , 1)
-          _ -> (SIGMA a' b', i + 1)
+          0 -> (a , 1)
+          _ -> (SIGMA a b', i + 1)
 ty2h r ps x = do
     b <- withNSupply $ equal (SET :>: (x, NP r $$$ ps))
     unless b $ throwDTmStr "Not SP"
@@ -244,8 +242,7 @@ elabData nom pars scs = do
         (comprefold (concatMap recArgNames cs) :<: (N dty :=>: dtyv))
       let indTm = P (lookupOpRef inductionOp) :$ A (N d) :$ A (NP v)
       indV :<: indTy <- inferHere indTm
-      indTy' <- bquoteHere indTy
-      moduleToGoal (setLabel anchor indTy')
+      moduleToGoal (setLabel anchor indTy)
       giveOutBelow (N indTm)
 
       giveOutBelow $ N dty

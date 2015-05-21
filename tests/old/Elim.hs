@@ -77,7 +77,7 @@ testCheckElim2 =
     map (\(tm,ctxt) ->
         let Just op = find (\o -> opName o == tm) operators
             ty = opType (B0 :< ("a",0),0) op
-            ty' = bquote B0 ty ((B0 :< ("a",0),0) :: Root)
+            ty' = quote' ty ((B0 :< ("a",0),0) :: Root)
             r = evalStateT (checkElim ctxt ty') emptyContext
         in do
           putStrLn $ "\n" ++ show tm
@@ -122,7 +122,7 @@ testCheckMotive2 =
     map (\(tm,ctxt) ->
         let Just op = find (\o -> opName o == tm) operators
             ty = opType (B0 :< ("a",0),0) op
-            ty' = bquote B0 ty ((B0 :< ("a",0),0) :: Root)
+            ty' = quote' ty ((B0 :< ("a",0),0) :: Root)
             r = evalStateT (checkMotiveWrap ctxt ty') emptyContext
         in do
           putStrLn $ "\n" ++ show tm
@@ -180,7 +180,7 @@ testMkMotive2 =
         let Just op = find (\o -> opName o == tm) operators
             Right goal = parse (termParse B0) $ fromRight $ parse tokenize g
             ty = opType (B0 :< ("a",0),0) op
-            ty' = bquote B0 ty ((B0 :< ("a",0),0) :: Root)
+            ty' = quote' ty ((B0 :< ("a",0),0) :: Root)
             r = evalStateT (checkMotiveWrap goal ctxt ty') emptyContext
         in do
           putStrLn $ "\n" ++ show tm

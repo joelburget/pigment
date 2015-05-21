@@ -24,7 +24,6 @@
 > import Evidences.Mangler
 > import Evidences.Eval
 > import Evidences.Operators
-> import Evidences.BetaQuotation
 > import Evidences.DefinitionalEquality
 > import Evidences.Utilities
 > import ProofState.Edition.ProofState
@@ -183,10 +182,9 @@ If $P$ is absurd then the implication is trivial, which we can prove by
 absurdity elimination whenever someone gives us a proof of $P$:
 
 >     antecedent (SimplyAbsurd px, _) = do
->       l'   <- bquote B0 l
->       l''  <- annotate l' (ARR (PRF p) PROP)
+>       l'  <- annotate l (ARR (PRF p) PROP)
 >       return . SimplyTrivial . L $ "absurd" :.
->           (N (nEOp :@ [px (V 0), PRF (N (l'' :$ A (NV 0)))]))
+>           (N (nEOp :@ [px (V 0), PRF (N (l' :$ A (NV 0)))]))
 
 If $P$ is trivial, then we go under $L$ by applying the proof and
 simplify the resulting proposition $Q$. The implication simplifies to
@@ -220,13 +218,12 @@ proposition to these.
 >     consequent (Simply pis pgs ph, _) (SimplyAbsurd qx, _) = do
 >             let pisImplyFF = dischargeAll pis (PRF ABSURD)
 >             freshRef ("ri" :<: evTm pisImplyFF) $ \ riRef -> do
->                 l'   <- bquote B0 l
->                 l''  <- annotate l' (ARR (PRF p) PROP)
+>                 l'  <- annotate l (ARR (PRF p) PROP)
 >                 rh   <- mkFun $ \ pref ->
 >                             let  piPrfs = fmap ($ (P pref)) pgs
 >                             in   N (nEOp :@ [
 >                                      N (P riRef $## piPrfs),
->                                      PRF (N (l'' :$ A (NP pref)))
+>                                      PRF (N (l' :$ A (NP pref)))
 >                                  ])
 >                 return $ SimplyOne (riRef :<: pisImplyFF)
 >                     (\ rt -> dischargeLam (fmap fstEx pis) (qx (rt :$ A ph)))
@@ -285,12 +282,10 @@ value.
 >             -> Bwd VAL
 >             -> Simplifier Simplify
 >     process qs gs hs (n :=>: nv) B0 = do
->         e' <- bquote B0 e
->         b' <- bquote B0 b
->         let b'' = b' ?? ARR (ENUMT e') PROP
+>         let b' = b ?? ARR (ENUMT e) PROP
 >         return $ Simply qs gs $
->             L $ "xe" :. N (switchOp :@ [e', NV 0,
->                                         L $ "yb" :. PRF (N (b'' :$ A (NV 0))),
+>             L $ "xe" :. N (switchOp :@ [e, NV 0,
+>                                         L $ "yb" :. PRF (N (b' :$ A (NV 0))),
 >                                         Foldable.foldr PAIR VOID hs])
 >     process qs1 gs1 hs1 (n :=>: nv) (ts :< t) =
 >         forkSimplify delta (b $$ A nv) $ \ (btSimp, _) -> case btSimp of
@@ -317,14 +312,12 @@ direction.
 
 >     consequent refS (SimplyAbsurd qx) = do
 >       freshRef ("psA" :<: PRF (ALLV (fortran l) s ABSURD)) $ \ refA -> do
->         l' <- bquote B0 l
->         s' <- bquote B0 s
->         let l'' = l' ?? ARR s' PROP
+>         let l' = l ?? ARR s PROP
 >         return $
->           SimplyOne  (refA :<: PRF (ALLV (fortran l) s' ABSURD))
+>           SimplyOne  (refA :<: PRF (ALLV (fortran l) s ABSURD))
 >                      (\ pv -> L $ "cab" :. qx ((inc 0 %%# pv) :$ A (NV 0)))
 >                      (L $ "cabs2" :. N (nEOp :@ [N (P refA :$ A (NV 0)),
->                                                  PRF (N (l'' :$ A (NV 0)))]))
+>                                                  PRF (N (l' :$ A (NV 0)))]))
 
 If $Q$ is trivial, then the proposition is also trivial, just by
 $\lambda$-binding the variable in the proof.
@@ -336,8 +329,7 @@ Otherwise, $Q$ simplifies to a conjunction of propositions
 $\ALL{x}{S} Q_i$ for each $Q_i$ in the simplification of $Q$.
 
 >     consequent refS (Simply qis qgs qh) = do
->         s' <- bquote B0 s
->         let  pis     = fmap (dischargeAllREF (B0 :< (refS :<: s'))) qis
+>         let  pis     = fmap (dischargeAllREF (B0 :< (refS :<: s))) qis
 >              pgs     = fmap (\ qg pv -> L $ "s" :. qg ((inc 0 %%# pv) :$ A (NV 0))) qgs
 >              qiPrfs  = fmap (\ (pi :<: _) -> N (P pi :$ A (NP refS))) pis
 >              ph      = dischargeLam (B0 :< refS) (substitute qis qiPrfs qh)
@@ -357,12 +349,11 @@ than a green equation for the user.
 > propSimplify delta p@(N (op :@ [sty, s, tty, t])) | op == eqGreen = do
 >     m   <- optional $ simplifyBlue False delta (sty :>: s) (tty :>: t)
 >     let q = PRF (EQBLUE (sty :>: s) (tty :>: t))
->     q'  <- bquote B0 q
 >     case m of
 >         Just (SimplyTrivial prf) ->
->             return . SimplyTrivial $ N (prf ?? q' :$ Out)
+>             return . SimplyTrivial $ N (prf ?? q :$ Out)
 >         _ -> freshRef ("q" :<: q) $ \ qRef ->
->             return $ SimplyOne (qRef :<: q') (CON . N) (N (P qRef :$ Out))
+>             return $ SimplyOne (qRef :<: q) (CON . N) (N (P qRef :$ Out))
 
 If nothing else matches, we can always try searching the context.
 
@@ -385,9 +376,7 @@ equation and return `SimplyTrivial`, or it will fail.
 >    useRefl = do
 >        guard =<< (asks . equal $ SET :>: (sty, tty))
 >        guard =<< (asks . equal $ sty :>: (s, t))
->        sty'  <- bquote B0 sty
->        s'    <- bquote B0 s
->        return . SimplyTrivial $ N (P refl :$ A sty' :$ A s')
+>        return . SimplyTrivial $ N (P refl :$ A sty :$ A s)
 >    unroll :: Bool -> Simplifier Simplify
 >    unroll False  = empty
 >    unroll True   = case opRun eqGreen [sty, s, tty, t] of
@@ -406,8 +395,7 @@ hypotheses, in the context with the backchained proposition removed.
 > propSearch :: Bwd REF -> VAL -> Simplifier Simplify
 > propSearch delta p = do
 >     prf <- seekProof delta F0 p
->     prf' <- bquote B0 prf
->     return $ SimplyTrivial prf'
+>     return $ SimplyTrivial prf
 >   where
 >     seekProof :: Bwd REF -> Fwd REF -> VAL -> Simplifier VAL
 >     seekProof B0 _ _ = empty
@@ -439,9 +427,8 @@ for the name of the reference.
 >   where
 >       simplifyNone :: (NameSupplier m) => TY -> m (Simplify, Bool)
 >       simplifyNone ty = do
->           ty' <- bquote B0 ty
 >           freshRef (nameHint ty :<: ty) $ \ ref ->
->               return (SimplyOne (ref :<: ty') N (NP ref), False)
+>               return (SimplyOne (ref :<: ty) N (NP ref), False)
 >       nameHint :: VAL -> String
 >       nameHint _ | not (null hint)  = hint
 >       nameHint (NP (n := _))        = fst (last n)

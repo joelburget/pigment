@@ -40,15 +40,11 @@ terms that are checked against given types, and there are *inferable*
 terms whose types are inferred relative to a typing context. We push
 types in to checkable terms, and pull types from inferable terms.
 
-We also distinguish the representations of `TT` terms and `VV` values.
-
-> data Phase  = TT | VV
-
 And, of course, we're polymorphic in the representation of free
 variables, like your mother always told you. This gives the following
 signature for a term:
 
-> data Tm :: Dir -> Phase -> * -> * where
+> data Tm :: Dir -> * -> * where
 
 We can push types into:
 
@@ -56,9 +52,9 @@ We can push types into:
 * canonical terms; and
 * inferred terms.
 
->   L     :: Scope p x          -> Tm In p   x -- ^ lambda
->   C     :: Can (Tm In p x)    -> Tm In p   x -- ^ canonical
->   N     :: Tm Ex p x          -> Tm In p   x -- ^ `Ex` to `In`
+>   L     :: Scope x          -> Tm In x -- ^ lambda
+>   C     :: Can (Tm In x)    -> Tm In x -- ^ canonical
+>   N     :: Tm Ex x          -> Tm In x -- ^ `Ex` to `In`
 
 And we can infer types from:
 
@@ -68,12 +64,12 @@ And we can infer types from:
 * elimination, by the type of the eliminator; and
 * type ascription on a checkable term, by the ascripted type.
 
->   P     :: x                              -> Tm Ex p   x -- ^ parameter
->   V     :: Int                            -> Tm Ex TT  x -- ^ variable
->   (:@)  :: Op -> [Tm In p x]              -> Tm Ex p   x -- ^ fully applied op
->   (:$)  :: Tm Ex p x -> Elim (Tm In p x)  -> Tm Ex p   x -- ^ elim
->   (:?)  :: Tm In TT x -> Tm In TT x       -> Tm Ex TT  x -- ^ typing
->   Yuk   :: Tm In VV x                     -> Tm Ex TT  x -- ^ dirty
+>   P     :: x                         -> Tm Ex x -- ^ parameter
+>   V     :: Int                       -> Tm Ex x -- ^ variable
+>   (:@)  :: Op -> [Tm In x]           -> Tm Ex x -- ^ fully applied op
+>   (:$)  :: Tm Ex x -> Elim (Tm In x) -> Tm Ex x -- ^ elim
+>   (:?)  :: Tm In x -> Tm In x        -> Tm Ex x -- ^ typing
+>   Yuk   :: Tm In x                   -> Tm Ex x -- ^ dirty
 
 To put some flesh on these bones, we define and use the `Scope`, `Can`,
 `Op`, and `Elim` data-types. Their role is described below. Before that,
@@ -82,17 +78,17 @@ skip the following.
 
 [Neutral terms and Operators]
 
-In the world of values, i.e. `Tm In VV p`, the neutral
+In the world of values, i.e. `Tm In`, the neutral
 terms are exactly the `N t` terms. Enforcing this invariant requires
 some caution in the way we deal with operators and how we turn them into
 values, so this statement relies on the hypothesis that the evaluation
 of operators is correct: it is not enforced by Haskell type-system.
 
-To prove that statement, we first show that any `Tm In VV
-p` which is not a `N t` is not a neutral term. This is obvious as we are
-left with lambda and canonicals, which cannot be stuck. Then, we have to
-prove that a `N t` in `Tm In VV p` form is a stuck term.
-We do so by case analysis on the term `t` inside the `N`:
+To prove that statement, we first show that any `Tm In` which is not a `N t`
+is not a neutral term. This is obvious as we are left with lambda and
+canonicals, which cannot be stuck. Then, we have to prove that a `N t` in `Tm
+In p` form is a stuck term.  We do so by case analysis on the term `t` inside
+the `N`:
 
 -   Typing and variables will not let you get values, so a neutral value
     is not one of those.
@@ -128,6 +124,7 @@ for no good reason.
 
 Scopes
 
+TODO(joel) update outdated note
 A `Scope` represents the body of a binder, but the representation
 differs with phase. In *terms*, `x :. t` is a *binder*: the `t` is a de
 Bruijn term with a new bound variable 0, and the old ones incremented.
@@ -139,10 +136,10 @@ value, otherwise say "good bye" to strong normalisation.
 In both cases, we represent constant functions with `K t`, equivalent of
 `\_ -> t`.
 
-> data Scope :: Phase -> * -> * where
->   (:.)  :: String -> Tm In TT x           -> Scope p x  -- binding
->   H     :: Env x -> String -> Tm In TT x  -> Scope p x
->   K     :: Tm In p x                      -> Scope p x     -- constant
+> data Scope :: * -> * where
+>   (:.)  :: String -> Tm In x           -> Scope x  -- binding
+>   H     :: Env x -> String -> Tm In x  -> Scope x
+>   K     :: Tm In x                     -> Scope x     -- constant
 
 Canonical objects
 
@@ -231,9 +228,9 @@ Eliminators can be chained up in a *spine*. A `Spine` is a list of
 eliminators for terms, typically representing a list of arguments that
 can be applied to a term with the `$:$` operator.
 
-> type Spine p x = [Elim (Tm In p x)]
+> type Spine x = [Elim (Tm In x)]
 
-> ($:$) :: Tm Ex p x -> Spine p x -> Tm Ex p x
+> ($:$) :: Tm Ex x -> Spine x -> Tm Ex x
 > ($:$) = foldl (:$)
 
 Operators
@@ -385,14 +382,14 @@ We have some pattern synonyms for common, er, patterns.
 
 We have some type synonyms for commonly occurring instances of `Tm`.
 
-> type InTm   = Tm In TT
-> type ExTm   = Tm Ex TT
+> type InTm   = Tm In
+> type ExTm   = Tm Ex
 > type INTM   = InTm REF
 > type EXTM   = ExTm REF
-> type VAL    = Tm In VV REF
+> type VAL    = Tm In REF
 > type TY     = VAL
-> type NEU    = Tm Ex VV REF
-> type Env x  = (Bwd (Tm In VV x), TXTSUB)  -- values for deBruijn indices
+> type NEU    = Tm Ex REF
+> type Env x  = (Bwd (Tm In x), TXTSUB)  -- values for deBruijn indices
 > type ENV    = Env REF
 > type TXTSUB = [(Char, String)]        -- renaming plan
 
@@ -450,7 +447,7 @@ them when the term is in fact neutral.
 In the following, we implement definitional equality on terms. In this
 case, it's mainly structural.
 
-> instance Eq x => Eq (Tm d p x) where
+> instance Eq x => Eq (Tm d x) where
 
 First, a bunch of straightforward structural inductions:
 
@@ -476,7 +473,7 @@ should only ever see full binders thanks to $\eta$-expansion; the
 remaining cases are for sound but not complete approximation of the
 definitional equality.
 
-> instance Eq x => Eq (Scope p x) where
+> instance Eq x => Eq (Scope x) where
 >   (_ :. t0)  == (_ :. t1)  = t0 == t1
 >   K t0       == K t1       = t0 == t1
 >   _          == _          = False
@@ -627,7 +624,7 @@ Term Construction
 
 It is sometimes useful to construct the identity function:
 
-> idVAL :: String -> Tm In p x
+> idVAL :: String -> Tm In x
 > idVAL x   = L (x :. (N (V 0)))
 
 > idTM :: String -> INTM
@@ -644,7 +641,7 @@ The aptly named `$##` operator applies an `ExTm` to a list of `InTm`s.
 Sensible name advice is a hard problem. The `fortran` function tries to
 extract a useful name from a binder.
 
-> fortran :: Tm In p x -> String
+> fortran :: Tm In x -> String
 > fortran (L (x :. _))  | not (null x) = x
 > fortran (L (H _ x _)) | not (null x) = x
 > fortran _ = "xf" -- XXX(joel) this is unacceptable
@@ -656,7 +653,7 @@ Similarly, it is useful to extract name advice from a `REF`.
 
 If we have a bunch of references we can make them into a spine:
 
-> toSpine :: Foldable f => f REF -> Spine TT REF
+> toSpine :: Foldable f => f REF -> Spine REF
 > toSpine = foldMap (\ r -> [A (NP r)])
 
 Error Stack
@@ -956,7 +953,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 > instance Foldable Irr where
 >     foldMap = foldMapDefault
 
-> instance Show x => Show (Tm dir phase x) where
+> instance Show x => Show (Tm dir x) where
 >   show (L s)       = "L (" ++ show s ++ ")"
 >   show (C c)       = "C (" ++ show c ++ ")"
 >   show (N n)       = "N (" ++ show n ++ ")"
@@ -967,7 +964,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >   show (t :? y)    = "(" ++ show t ++ " :? " ++ show y ++ ")"
 >   show (Yuk v)     = "((" ++ show v ++ "))"
 
-> instance Show x => Show (Scope p x) where
+> instance Show x => Show (Scope x) where
 >   show (x :. t)   = show x ++ " :. " ++ show t
 >   show (H g x t) = "H (" ++ show g ++ ") " ++ x ++ "(" ++ show t ++ ")"
 >   show (K t) = "K (" ++ show t ++")"
@@ -975,17 +972,17 @@ throwErrTm = throwStack . StackError . pure . errTm
 > instance Show Op where
 >   show = opName
 
-> instance Traversable (Scope p) where
+> instance Traversable Scope where
 >   traverse f (x :. t)   = (x :.) <$> traverse f t
 >   traverse f (K t)      = K <$> traverse f t
 >   traverse f (H (e, s) x t)  =
 >     let foo = (,s) <$> traverse (traverse f) e
 >     in H <$> foo <*> pure x <*> traverse f t
 
-> instance Functor (Scope p) where
+> instance Functor Scope where
 >     fmap = fmapDefault
 
-> instance Foldable (Scope p) where
+> instance Foldable Scope where
 >     foldMap = foldMapDefault
 
 > instance Traversable f => Traversable (Labelled f) where
@@ -1003,7 +1000,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >   halfZip (_       :?=: fs)  (_      :?=: ft)  =
 >     (Nothing  :?=:) <$> halfZip fs ft
 
-> instance Traversable (Tm d p) where
+> instance Traversable (Tm d) where
 >   traverse f (L sc)     = L <$> traverse f sc
 >   traverse f (C c)      = C <$> traverse (traverse f) c
 >   traverse f (N n)      = N <$> traverse f n
@@ -1013,8 +1010,8 @@ throwErrTm = throwStack . StackError . pure . errTm
 >   traverse f (op :@ ts) = (op :@) <$> traverse (traverse f) ts
 >   traverse f (tm :? ty) = (:?) <$> traverse f tm <*> traverse f ty
 
-> instance Functor (Tm d p) where
+> instance Functor (Tm d) where
 >     fmap = fmapDefault
 
-> instance Foldable (Tm d p) where
+> instance Foldable (Tm d) where
 >     foldMap = foldMapDefault

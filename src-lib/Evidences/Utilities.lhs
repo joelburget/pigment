@@ -11,9 +11,9 @@ Utilities
 > import Data.Foldable
 
 > import NameSupply.NameSupplier
+> import Evidences.DefinitionalEquality
 > import Evidences.Tm
 > import Evidences.Mangler
-> import Evidences.BetaQuotation
 > import Evidences.Eval
 > import Kit.BwdFwd
 
@@ -31,7 +31,7 @@ its type, but need an `EXTM`. We avoid `bquote` if possible.
 
 > annotate :: NameSupplier m => INTM -> TY -> m EXTM
 > annotate (N n)  _   = return n
-> annotate t      ty  = bquote B0 ty >>= return . (t :?)
+> annotate t      ty  = quote' (ty :>: t) >>= return . (t :?)
 
 Discharging a list of hypotheses over a term
 --------------------------------------------

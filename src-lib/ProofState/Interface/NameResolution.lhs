@@ -393,7 +393,7 @@ it and a list of entries in local scope. We obtain a relative name, the
 number of shared parameters to drop, and the scheme of the name (if
 there is one).
 
-> unresolve :: Name -> RKind -> Spine TT REF -> BScopeContext
+> unresolve :: Name -> RKind -> Spine REF -> BScopeContext
 >                   -> Entries -> (RelName, Int, Maybe (Scheme INTM))
 > unresolve tar rk tas msc@(mesus, mes) les =
 
@@ -444,9 +444,9 @@ If nothing else matches, we had better give up and go home.
 Parting the noms
 
 > partNoms :: Name -> BScopeContext -> Name
->                  -> Bwd (Name, Name, Spine TT REF, FScopeContext)
->                  -> Maybe ( Bwd (Name, Name, Spine TT REF, FScopeContext)
->                     , Maybe (Name,Name, Spine TT REF, Entries) )
+>                  -> Bwd (Name, Name, Spine REF, FScopeContext)
+>                  -> Maybe ( Bwd (Name, Name, Spine REF, FScopeContext)
+>                     , Maybe (Name,Name, Spine REF, Entries) )
 > partNoms [] bsc _ xs = Just (xs, Nothing)
 > partNoms nom@(top:rest) bsc n xs = case partNom n top bsc (F0,F0) of
 >  Just (sp, Left es) -> Just (xs, Just (n ++ [top], rest, sp, es))
@@ -455,7 +455,7 @@ Parting the noms
 >  Nothing -> Nothing
 
 > partNom :: Name -> (String, Int) -> BScopeContext -> FScopeContext
->                 -> Maybe (Spine TT REF, Either Entries FScopeContext)
+>                 -> Maybe (Spine REF, Either Entries FScopeContext)
 > partNom hd top ((esus :< (es,top')), B0) fsc | hd ++ [top] == (flatNom esus []) ++ [top'] =
 >   Just (paramSpine (flat esus es),Right fsc)
 > partNom hd top ((esus :< (es,not)), B0) (js,vjss) =
@@ -474,8 +474,8 @@ If we have a backward list of gibberish and a spine, it is not hard to
 go back until the spine from the gibberish is a prefix of the given
 spine, then return the gibberish.
 
-> matchUp :: Bwd (Name, Name, Spine TT REF, FScopeContext)
->              -> Spine TT REF ->  (Name, Name, Int, FScopeContext)
+> matchUp :: Bwd (Name, Name, Spine REF, FScopeContext)
+>              -> Spine REF ->  (Name, Name, Int, FScopeContext)
 > matchUp (xs :< (x, nom, sp, fsc)) tas
 >     | sp `isPrefixOf` tas  = (x, nom, length sp, fsc)
 > matchUp (xs :< _) tas      = matchUp xs tas

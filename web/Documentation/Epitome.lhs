@@ -119,7 +119,7 @@ $$\begin{array}{rll}
                 & \mbox{propositional \(\forall\)} \\
             | & {\textsc}{InTm} \verb! && ! {\textsc}{InTm}
                 & \mbox{propositional And} \\
-            | & \verb!TT ! | \verb| FF|
+            | & \verb!! | \verb| FF|
                 & \mbox{propositional Trivial and Absurd} \\
             | & \verb!1  ! | \verb| 0|
                 & \mbox{proofs of Trivial and Absurd} \\

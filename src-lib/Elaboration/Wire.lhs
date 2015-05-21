@@ -21,6 +21,7 @@
 > import ProofState.Edition.Scope
 > import ProofState.Interface.Lifting
 > import ProofState.Interface.ProofKit
+> import Evidences.DefinitionalEquality
 > import Evidences.Tm
 > import Evidences.Eval
 > import Elaboration.ElabProb
@@ -184,10 +185,10 @@ restart elaboration to see if it can make any progress.
 > tellEntry news (EDEF  ref@(name := HOLE h :<: tyv) sn
 >                       dkind dev@(Dev {devTip=Unknown tt}) ty anchor
 >                       meta)
->   | Just (ref'@(_ := DEFN tm :<: _), GoodNews) <- getNews news ref = do
+>   | Just (ref'@(_ := DEFN tm :<: tmTy), GoodNews) <- getNews news ref = do
 >     -- We have a Definition for it
 >     es   <- getInScope
->     tm'  <- bquoteHere (tm $$$ paramSpine es)
+>     tm'  <- quote' (tmTy :>: tm $$$ paramSpine es)
 >     let  (tt', _) = tellNewsEval news tt
 >          (ty', _) = tellNews news ty
 >     -- Define the hole

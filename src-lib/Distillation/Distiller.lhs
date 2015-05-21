@@ -26,7 +26,6 @@
 > import Evidences.Tm
 > import Evidences.Mangler
 > import Evidences.TypeChecker
-> import Evidences.BetaQuotation
 > import Evidences.Eval
 > import Evidences.Operators
 > import Evidences.DefinitionalEquality
@@ -143,8 +142,7 @@ return refl instead.
 >     unfold t            = [t]
 > distill es (SET :>: tm@(C (IMu ltm@(Just l :?=: (Identity _I :& Identity s)) i))) = do
 >     let lab = evTm ((l :? ARR _I ANCHORS) :$ A i)
->     labTm                <- bquoteHere lab
->     (labDisplay :=>: _)  <- distill es (ANCHORS :>: labTm)
+>     (labDisplay :=>: _)  <- distill es (ANCHORS :>: lab)
 >     _It :=>: _Iv         <- distill es (SET :>: _I)
 >     st :=>: sv           <- distill es (ARR _Iv (idesc $$ A _Iv) :>: s)
 >     it :=>: iv           <- distill es (_Iv :>: i)
@@ -206,7 +204,7 @@ not be necessary.)
 >         in distill (entries :< param) (cod (pval ref) :>: underScope sc ref)
 >     return $ DL (convScope sc x tm') :=>: evTm (L sc)
 >   where
->     convScope :: Scope TT REF -> String -> DInTmRN -> DSCOPE
+>     convScope :: Scope REF -> String -> DInTmRN -> DSCOPE
 >     convScope (_ :. _)  x  tm = x ::. tm
 >     convScope (K _)     _  tm = DK tm
 
@@ -239,7 +237,7 @@ translation, we accumulate a `spine` and distill it when we reach the
 head. Doing so, shared parameters can be removed (see
 subsection [ProofState.Interface.NameResolution.christening](#ProofState.Interface.NameResolution.christening)).
 
-> distillInfer ::  Entries -> EXTM -> Spine TT REF ->
+> distillInfer ::  Entries -> EXTM -> Spine REF ->
 >                  ProofStateT INTM (DExTmRN :<: TY)
 
 If we spot a neutral term being called when distilling, we distill the
@@ -340,7 +338,7 @@ using `elimTy` to determine the appropriate type to push in at each
 step, and returns the distilled spine and the overall type of the
 application.
 
-> distillSpine ::  Entries -> (VAL :<: TY) -> Spine TT REF ->
+> distillSpine ::  Entries -> (VAL :<: TY) -> Spine REF ->
 >                  ProofStateT INTM (DSPINE, TY)
 > distillSpine _        (_ :<: ty)    []         = return ([], ty)
 > distillSpine entries  (v :<: C ty)  (a:spine)  = do

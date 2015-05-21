@@ -179,6 +179,9 @@ constructor which can always compute.
 >               let tx = inQuote (t :>: x) r
 >               return $ tx :=>: x
 
+> quote' :: NameSupplier m => (TY :>: VAL) -> m INTM
+> quote' vty = quote vty <$> askNSupply
+
 Simplification of stuck terms
 -----------------------------
 

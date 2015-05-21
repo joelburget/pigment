@@ -112,7 +112,7 @@ with the awaited argument, and evaluate the whole term down to a value.
 
 This naturally leads to the following code:
 
-> body :: Scope TT REF -> ENV -> Scope VV REF
+> body :: Scope REF -> ENV -> Scope REF
 > body (K v)     g          = K (eval v g)
 > body (x :. t)  (B0, rho)  = txtSub rho x :. t  -- closed lambdas stay syntax
 > body (x :. t)  g@(_, rho) = H g (txtSub rho x) t
@@ -145,7 +145,7 @@ A bound variable simply requires to extract the corresponding value from
 the environment (f). Elimination is handled by `$$` defined above (g).
 And similarly for operators with `@@` (h).
 
-> eval :: Tm d TT REF -> ENV -> VAL
+> eval :: Tm d REF -> ENV -> VAL
 > eval (L b)       = L <$> (body b)                -- By (a)
 > eval (C c)       = C <$> eval ^$ c               -- By (b)
 > eval (N n)       = eval n                        -- By (c)
@@ -162,7 +162,7 @@ And similarly for operators with `@@` (h).
 Finally, the evaluation of a closed term simply consists in calling the
 interpreter defined above with the empty environment.
 
-> evTm :: Tm d TT REF -> VAL
+> evTm :: Tm d REF -> VAL
 > evTm t = eval t (B0, [])
 
 Alpha-conversion on the fly
