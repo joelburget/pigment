@@ -277,8 +277,12 @@ value.
 >     getTags ts NILE         = pure ts
 >     getTags ts (CONSE t e)  = getTags (ts :< t) e
 >     getTags ts _            = empty
->     process :: Bwd (REF :<: INTM) -> Bwd (EXTM -> INTM) -> Bwd INTM ->
->         INTM :=>: VAL -> Bwd VAL -> Simplifier Simplify
+>     process :: Bwd (REF :<: INTM)
+>             -> Bwd (EXTM -> INTM)
+>             -> Bwd INTM
+>             -> INTM :=>: VAL
+>             -> Bwd VAL
+>             -> Simplifier Simplify
 >     process qs gs hs (n :=>: nv) B0 = do
 >         e' <- bquote B0 e
 >         b' <- bquote B0 b
@@ -286,7 +290,7 @@ value.
 >         return $ Simply qs gs $
 >             L $ "xe" :. N (switchOp :@ [e', NV 0,
 >                                         L $ "yb" :. PRF (N (b'' :$ A (NV 0))),
->                                         Prelude.foldr PAIR VOID (trail hs)])
+>                                         Prelude.foldr PAIR VOID hs])
 >     process qs1 gs1 hs1 (n :=>: nv) (ts :< t) =
 >         forkSimplify delta (b $$ A nv) $ \ (btSimp, _) -> case btSimp of
 >             SimplyAbsurd prf  -> return $ SimplyAbsurd (prf . (:$ A n))
