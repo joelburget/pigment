@@ -12,8 +12,6 @@ import Kit.BwdFwd
 
 import ProofState.Edition.ProofContext
 
-import Tactics.Information
-
 import Cochon.DevLoad
 import Cochon.Cochon
 

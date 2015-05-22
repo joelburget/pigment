@@ -144,7 +144,8 @@ executable Pig
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1.1
+      recursion-schemes == 4.1.1,
+      pigment
 
 executable Traif
   main-is: Pig.hs
