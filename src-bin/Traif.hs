@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
-module Traif (traif) where
+module Traif (main) where
 
 import Control.Applicative (many)
 import Control.Arrow (left)
@@ -60,8 +60,8 @@ script = do
     _ <- many goOut
     return ()
 
-traif :: IO ()
-traif = do
+main :: IO ()
+main = do
     let runner :: ProofState String
         runner = script >> prettyProofState
         val :: String

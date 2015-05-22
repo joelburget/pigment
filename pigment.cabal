@@ -22,6 +22,7 @@ flag ghcjs
     default: False
 
 library
+  hs-source-dirs: src-lib
   build-depends:
       base >= 4.6,
       lens-family == 1.2.0,
@@ -34,13 +35,6 @@ library
       newtype == 0.2,
       pretty >= 1.1,
       recursion-schemes == 4.1.1
-  if flag(ghcjs)
-      build-depends:
-          ghcjs-base >= 0.1,
-          ghcjs-dom >=0.1.1.1,
-          ghcjs-prim >= 0.1.0.0,
-          react-haskell == 1.3.0.0,
-          material-ui == 0.1.0.0
   exposed-modules:
     DisplayLang.DisplayTm
     DisplayLang.Lexer
@@ -105,9 +99,15 @@ library
     Tactics.Relabel
     Tactics.Unification
   ghc-options: -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields -fmax-simplifier-iterations=10
-  hs-source-dirs: src-lib
 
 executable pigment
+  main-is:        Main.hs
+  if !flag(ghcjs)
+    buildable: False
+  hs-source-dirs: src-web, src-lib
+  js-sources:
+      src-web/js/mui.js
+      src-web/js/react-stubs.js
   build-depends:
       base >= 4.6,
       lens-family == 1.2.0,
@@ -122,19 +122,17 @@ executable pigment
       recursion-schemes == 4.1.1
 
   if flag(ghcjs)
-      build-depends:
-          ghcjs-base >= 0.1,
-          ghcjs-dom >=0.1.1.1,
-          ghcjs-prim >= 0.1.0.0,
-          react-haskell == 1.3.0.0,
-          material-ui == 0.1.0.0
-  main-is:        Main.hs
-  hs-source-dirs: src-web
-  js-sources:
-      src-web/js/mui.js
-      src-web/js/react-stubs.js
+    build-depends:
+      -- ghcjs-specific
+      ghcjs-base >= 0.1,
+      ghcjs-dom >=0.1.1.1,
+      ghcjs-prim >= 0.1.0.0,
+      react-haskell == 1.3.0.0,
+      material-ui == 0.1.0.0
 
 executable Pig
+  main-is: Pig.hs
+  hs-source-dirs: src-bin
   build-depends:
       base >= 4.6,
       lens-family == 1.2.0,
@@ -147,8 +145,22 @@ executable Pig
       newtype == 0.2,
       pretty >= 1.1,
       recursion-schemes == 4.1.1
+
+executable Traif
   main-is: Pig.hs
   hs-source-dirs: src-bin
+  build-depends:
+      base >= 4.6,
+      lens-family == 1.2.0,
+      lens-family-th == 0.4.1.0,
+      mtl >= 2.2,
+      transformers == 0.4.3.0,
+      errors == 1.4.7,
+      text >= 1.2,
+      void >= 0.7,
+      newtype == 0.2,
+      pretty >= 1.1,
+      recursion-schemes == 4.1.1
 
 test-suite tests
   type: exitcode-stdio-1.0
