@@ -2,7 +2,7 @@ Cochon Command Lexer
 ====================
 
 > {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs, DeriveGeneric,
-> OverloadedStrings, FlexibleInstances #-}
+> OverloadedStrings, FlexibleInstances, CPP #-}
 
 > module Cochon.CommandLexer where
 
@@ -12,9 +12,6 @@ Cochon Command Lexer
 > import Data.Monoid
 > import Data.String
 > import qualified Data.Text as T
-> import GHCJS.Foreign
-> import GHCJS.Marshal
-> import GHCJS.Types
 > import GHC.Generics
 
 > import Kit.BwdFwd
@@ -25,6 +22,33 @@ Cochon Command Lexer
 > import DisplayLang.Name
 > import DisplayLang.Scheme
 
+
+#ifdef __GHCJS__
+
+> import GHCJS.Foreign
+> import GHCJS.Marshal
+> import GHCJS.Types
+
+> instance ToJSRef TacticDescription where
+
+> instance (ToJSRef a, ToJSRef b) => ToJSRef (Either a b) where
+>     toJSRef (Left a) = do
+>         obj <- newObj
+>         a' <- toJSRef a
+>         let propName :: JSString
+>             propName = "left"
+>         setProp propName a' obj
+>         return obj
+>
+>     toJSRef (Right b) = do
+>         obj <- newObj
+>         b' <- toJSRef b
+>         let propName :: JSString
+>             propName = "right"
+>         setProp propName b' obj
+>         return obj
+
+#endif
 
 Tokens
 ------
@@ -103,25 +127,6 @@ pAscriptionTC = typeAnnot <$> pDInTm <* keyword KwAsc <*> pDInTm
 >     , TfKeyword KwAsc
 >     , TfInArg "type" Nothing
 >     ]
-
-> instance ToJSRef TacticDescription where
-
-> instance (ToJSRef a, ToJSRef b) => ToJSRef (Either a b) where
->     toJSRef (Left a) = do
->         obj <- newObj
->         a' <- toJSRef a
->         let propName :: JSString
->             propName = "left"
->         setProp propName a' obj
->         return obj
->
->     toJSRef (Right b) = do
->         obj <- newObj
->         b' <- toJSRef b
->         let propName :: JSString
->             propName = "right"
->         setProp propName b' obj
->         return obj
 
 > instance IsString TacticDescription where
 >     fromString = TfPseudoKeyword . fromString

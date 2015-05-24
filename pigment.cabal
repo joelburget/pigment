@@ -48,6 +48,7 @@ library
     Elaboration.ElabMonad
     Elaboration.ElabProb
     Elaboration.Elaborator
+    Elaboration.Error
     Elaboration.MakeElab
     Elaboration.RunElab
     Elaboration.Scheduler
@@ -97,13 +98,18 @@ library
     Tactics.Record
     Tactics.Relabel
     Tactics.Unification
+    Cochon.CommandLexer
+    Cochon.Controller
+    Cochon.Model
+    Cochon.Tactics
+    Cochon.TermController
   ghc-options: -Wall -fwarn-tabs -fdicts-cheap -funbox-strict-fields -fmax-simplifier-iterations=10
 
 executable pigment
   main-is:        Main.hs
   if !flag(ghcjs)
     buildable: False
-  hs-source-dirs: src-web, src-lib
+  hs-source-dirs: src-web/hs, src-lib
   js-sources:
       src-web/js/mui.js
       src-web/js/react-stubs.js
@@ -141,7 +147,7 @@ executable Pig
       pigment
 
 executable Traif
-  main-is: Pig.hs
+  main-is: Traif.hs
   hs-source-dirs: src-bin
   build-depends:
       base >= 4.6 && < 5,

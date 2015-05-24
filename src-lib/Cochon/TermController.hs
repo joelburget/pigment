@@ -1,46 +1,26 @@
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module Cochon.TermController where
 
 import Control.Arrow
-
-import React
+import qualified Data.Text as T
 
 import Kit.BwdFwd
-import Cochon.Error
 import Cochon.Model
 import Cochon.Tactics
+import DisplayLang.Name
 import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
 import ProofState.Edition.ProofState
 import ProofState.Interface.Search
 
+import Evidences.Tm
 
 -- util
 
-constTransition :: trans -> MouseEvent -> Maybe trans
-constTransition = const . Just
-
-
-execProofState :: ProofState a
+execProofState :: forall a. ProofState a
                -> ProofContext
-               -> Either TermReact ProofContext
-execProofState state = right snd . runProofState state
-
-
-handleEntryToggle :: Name -> MouseEvent -> Maybe TermAction
-handleEntryToggle = constTransition . ToggleTerm
-
-
-handleEntryGoTo :: Name -> MouseEvent -> Maybe TermAction
-handleEntryGoTo = constTransition . GoToTerm
-
-
-handleToggleAnnotate :: Name -> MouseEvent -> Maybe TermAction
-handleToggleAnnotate = constTransition . ToggleAnnotate
-
-
--- TODO(joel) - stop faking this
-handleAddConstructor :: Name -> MouseEvent -> Maybe TermAction
-handleAddConstructor _ _ = Nothing
+               -> Either UserMessage ProofContext
+execProofState state = left (stackMessage "stack!") . right snd . runProofState state
 
 
 toggleAnnotate :: Name -> InteractionState -> InteractionState

@@ -326,8 +326,3 @@ The `Elim` functor is straightforward.
 >         reactify' Out    = reactKword KwOut
 >         reactify' (Call _) = reactKword KwCall
 >         reactify' elim   = fromString $ show elim
-
-> reactHere :: (TY :>: INTM) -> ProofState TermReact
-> reactHere tt = do
->     dtm :=>: _ <- distillHere tt
->     return $ reactify dtm

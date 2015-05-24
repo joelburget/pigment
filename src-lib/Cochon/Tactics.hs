@@ -16,11 +16,10 @@ import qualified Data.Text as T
 import Text.PrettyPrint.HughesPJ
 
 import Control.Error
+import Data.Void
 
 import Cochon.CommandLexer
-import Cochon.Error
 import Cochon.Model
-import Cochon.Reactify
 import DisplayLang.Lexer
 import DisplayLang.Name
 import DisplayLang.TmParse
@@ -66,11 +65,6 @@ import Tactics.Record
 import Tactics.Relabel
 import Tactics.Unification
 
-import React
-
-
-import Data.Void
-
 cochonTactics :: [CochonTactic]
 cochonTactics = sort
     [ applyTac
@@ -111,7 +105,7 @@ cochonTactics = sort
     , elabTac
     , inferTac
     , parseTac
-    , schemeTac
+    -- , schemeTac
     , dumpTac
     , whatisTac
     , matchTac
@@ -131,8 +125,8 @@ simpleCT :: String
          -> Historic
          -> T.Text -- XXX remove
          -> TacticDescription
-         -> (TacticResult -> ProofState (Pure React'))
-         -> Either (Pure React') TacticHelp
+         -> (TacticResult -> ProofState UserMessage)
+         -> TacticHelp
          -> CochonTactic
 simpleCT name hist desc fmt eval help = CochonTactic
     {  ctName = name
@@ -144,7 +138,7 @@ simpleCT name hist desc fmt eval help = CochonTactic
 
 nullaryCT :: String
           -> Historic
-          -> ProofState InteractionReact
+          -> ProofState UserMessage
           -> String
           -> CochonTactic
 nullaryCT name hist eval desc = simpleCT
@@ -153,11 +147,14 @@ nullaryCT name hist eval desc = simpleCT
     (fromString desc)
     (TfPseudoKeyword (fromString name))
     (const eval)
-    (Left (fromString (name ++ " - " ++ desc)))
+    (TacticHelp
+        (name ++ " - " ++ desc)
+        "" "" []
+    )
 
 
 unaryExCT :: String
-          -> (DExTmRN -> ProofState TermReact)
+          -> (DExTmRN -> ProofState UserMessage)
           -> String
           -> CochonTactic
 unaryExCT name eval help = simpleCT
@@ -177,12 +174,12 @@ unaryExCT name eval help = simpleCT
             )
         ]
     )
-    ((locally <$>) . (eval . argToEx . head))
-    (Left (fromString help))
+    (eval . argToEx)
+    (TacticHelp help "" "" [])
 
 
 unaryInCT :: String
-          -> (DInTmRN -> ProofState InteractionReact)
+          -> (DInTmRN -> ProofState UserMessage)
           -> String
           -> CochonTactic
 unaryInCT name eval desc = simpleCT
@@ -191,7 +188,7 @@ unaryInCT name eval desc = simpleCT
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfInArg "term" Nothing ])
     (eval . argToIn)
-    (Left (fromString (name ++ " - " ++ desc)))
+    (TacticHelp (name ++ " - " ++ desc) "" "" [])
 
 
 unDP :: DExTm x -> x
@@ -199,7 +196,7 @@ unDP (DP ref ::$ []) = ref
 
 
 unaryNameCT :: String
-            -> (RelName -> ProofState TermReact)
+            -> (RelName -> ProofState UserMessage)
             -> String
             -> CochonTactic
 unaryNameCT name eval desc = simpleCT
@@ -207,12 +204,12 @@ unaryNameCT name eval desc = simpleCT
     Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "name" ])
-    ((locally <$>) . eval . unDP . argToEx . head)
-    (Left (fromString (name ++ " - " ++ desc)))
+    (eval . unDP . argToEx)
+    (TacticHelp (name ++ " - " ++ desc) "" "" [])
 
 
 unaryStringCT :: String
-              -> (String -> ProofState TermReact)
+              -> (String -> ProofState UserMessage)
               -> String
               -> CochonTactic
 unaryStringCT name eval desc = simpleCT
@@ -220,8 +217,8 @@ unaryStringCT name eval desc = simpleCT
     Historic
     (fromString desc)
     (TfSequence [ TfPseudoKeyword (fromString name), TfName "x" ])
-    ((locally <$>) . eval . argToStr . head)
-    (Left (fromString (name ++ " - " ++ desc)))
+    (eval . argToStr)
+    (TacticHelp (name ++ " - " ++ desc) "" "" [])
 
 
 -- Construction Tactics
@@ -265,7 +262,7 @@ lambdaTac = simpleCT
               Trav.mapM (lambdaParam . argToStr) args
               return "Lambdafied"
        )
-     (Right (TacticHelp
+     (TacticHelp
          "lambda <labels> [ : <type> ]"
          "lambda X, Y : Set"
          -- TODO(joel) - better description
@@ -273,7 +270,7 @@ lambdaTac = simpleCT
          [ ("<labels>", "One or more names to introduce")
          , ("<type>", "(optional) their type")
          ]
-     ))
+     )
 
 
 letTac = simpleCT
@@ -292,7 +289,7 @@ letTac = simpleCT
         optional problemSimplify
         optional seekGoal
         return (fromString $ "Let there be " ++ name' ++ "."))
-    (Right (TacticHelp
+    (TacticHelp
         "let <label> <scheme> : <type>"
         "let A (m : Nat) : Nat -> Nat"
         -- TODO(joel) - better description
@@ -300,7 +297,7 @@ letTac = simpleCT
         [ ("<labels>", "One or more names to introduce")
         , ("<type>", "(optional) their type")
         ]
-    ))
+    )
 
 
 makeTac = simpleCT
@@ -331,7 +328,7 @@ makeTac = simpleCT
               goIn
               return "Appended goal!"
     )
-    (Right (TacticHelp
+    (TacticHelp
         "make <x> : <type> OR make <x> := <term> : <type>"
         "make A := ? : Set"
         -- TODO(joel) - better description
@@ -340,7 +337,7 @@ makeTac = simpleCT
         , ("<term>", "its definition (this could be a hole (\"?\"))")
         , ("<type>", "its type (this could be a hole (\"?\"))")
         ]
-    ))
+    )
 
 
 moduleTac = unaryStringCT "module"
@@ -367,7 +364,7 @@ piTac = simpleCT
         elabPiParam ((T.unpack name) :<: ty)
         return "Made pi!"
     )
-    (Right (TacticHelp
+    (TacticHelp
         "pi <x> : <type>"
         "pi A : Set"
         -- TODO(joel) - better description
@@ -375,7 +372,7 @@ piTac = simpleCT
         [ ("<x>", "Pi to introduce")
         , ("<type>", "its type")
         ]
-    ))
+    )
 
 
 programTac = simpleCT
@@ -391,14 +388,14 @@ programTac = simpleCT
         elabProgram (map argToStr as)
         return "Programming."
     )
-    (Right (TacticHelp
+    (TacticHelp
         "program <labels>"
         "(make plus : Nat -> Nat -> Nat) ; program x, y ;"
         -- TODO(joel) - better description
         "set up a programming problem"
         [ ("<labels>", "One or more names to introduce")
         ]
-    ))
+    )
 
 
 doitTac = simpleCT
@@ -406,29 +403,26 @@ doitTac = simpleCT
     Historic
     "pigment tries to implement it for you"
     "demoMagic"
-    (pure B0)
     (\_ -> assumption >> return "Did it!")
-    (Right (TacticHelp
+    (TacticHelp
         "demoMagic"
         "demoMagic"
         "pigment tries to implement it for you"
         []
-    ))
-
+    )
 
 autoTac = simpleCT
     "auto"
     Historic
     "coq's auto"
     "auto"
-    (pure B0)
     (\_ -> auto >> return "Auto... magic!")
-    (Right (TacticHelp
+    (TacticHelp
         "auto"
         "auto"
         "coq's auto"
         []
-    ))
+    )
 
 
 -- ungawa: Word used by tarzan to communicate with animals? Also by chance
@@ -519,12 +513,11 @@ undoTac = CochonTactic
           case locs of
               B0  -> tellUser "Cannot undo."  >> setCtx (locs :< loc)
               _   -> tellUser "Undone."       >> setCtx locs
-    , ctHelp = Right (TacticHelp
+    , ctHelp = TacticHelp
           "undo"
           "undo"
           "goes back to a previous state."
           []
-      )
     }
 
 
@@ -561,14 +554,14 @@ dataTac = CochonTactic
         , TrRepeatZero pars
         , TrKeyword
         , TrSep cons
-        ]) -> simpleOutput $ do
+        ]) -> simpleOutput Historic $ do
             let pars' = undefined pars
                 cons' = undefined cons
                 name' = T.unpack name
             elabData name' (argList (argPair argToStr argToIn) pars')
                            (argList (argPair argToStr argToIn) cons')
             return "Data'd."
-    ,  ctHelp = Right (TacticHelp
+    ,  ctHelp = TacticHelp
            "data <name> [<para>]* := [(<con> : <ty>) ;]*"
            "data List (X : Set) := ('nil : List X) ; ('cons : X -> List X -> List X) ;"
            "Create a new data type"
@@ -576,7 +569,6 @@ dataTac = CochonTactic
            , ("<para>", "Type parameters")
            , ("<con : ty>", "Give each constructor a unique name and a type")
            ]
-       )
     }
 
 
@@ -593,7 +585,7 @@ eliminateTac = simpleCT
     (\(TrSequence [ _, TrOption maybeName, TrAlternative elim ]) ->
         undefined)
         -- elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
-    (Right (TacticHelp
+    (TacticHelp
         "eliminate [<comma>] <eliminator>"
         "eliminate induction NatD m"
         -- TODO(joel) - better description
@@ -601,7 +593,7 @@ eliminateTac = simpleCT
         [ ("<comma>", "TODO(joel)")
         , ("<eliminator>", "TODO(joel)")
         ]
-    ))
+    )
 
 
 retTac = unaryInCT "=" (\tm -> elabGiveNext (DLRET tm) >> return "Solved.")
@@ -620,7 +612,7 @@ defineTac = simpleCT
         ]
     )
     (\(TrSequence [_, TrExArg rl, TrInArg tm]) -> defineCTactic rl tm)
-    (Right (TacticHelp
+    (TacticHelp
         "define <prob> := <term>"
         "define vappend 'zero 'nil k bs := bs"
         -- TODO(joel) - better description
@@ -628,7 +620,7 @@ defineTac = simpleCT
         [ ("<prob>", "pattern to match and define")
         , ("<term>", "solution to the problem")
         ]
-    ))
+    )
 
 
 -- The By gadget, written `<=`, invokes elimination with a motive, then
@@ -645,7 +637,7 @@ byTac = simpleCT
     )
     -- XXX(joel)
     (\(TrSequence [_, n, e]) -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
-    (Right (TacticHelp
+    (TacticHelp
         "<= [<comma>] <eliminator>"
         "<= induction NatD m"
         -- TODO(joel) - better description
@@ -653,7 +645,7 @@ byTac = simpleCT
         [ ("<comma>", "TODO(joel)")
         , ("<eliminator>", "TODO(joel)")
         ]
-    ))
+    )
 
 
 -- The Refine gadget relabels the programming problem, then either defines
@@ -677,7 +669,7 @@ refineTac = simpleCT
     (\(TrSequence [TrExArg rl, arg]) -> case arg of
         TrInArg tm -> defineCTactic rl tm
         TrExArg tm -> relabel rl >> byCTactic Nothing tm)
-    (Right (TacticHelp
+    (TacticHelp
         "refine <prob> = <term> OR refine <prob> <= <eliminator>"
         "refine plus 'zero n = n"
         -- TODO(joel) - better description
@@ -687,7 +679,7 @@ refineTac = simpleCT
         , ("<prob>", "TODO(joel)")
         , ("<eliminator>", "TODO(joel)")
         ]
-    ))
+    )
 
 
 solveTac = simpleCT
@@ -708,7 +700,7 @@ solveTac = simpleCT
         solveHole ref tm'
         return "Solved."
     )
-    (Right (TacticHelp
+    (TacticHelp
         "solve <name> <term>"
         "solve a hole"
         -- TODO(joel) - better description
@@ -716,7 +708,7 @@ solveTac = simpleCT
         [ ("<name>", "The name of the hole to solve")
         , ("<term>", "Its solution")
         ]
-    ))
+    )
 
 
 {-
@@ -766,14 +758,14 @@ idataTac = CochonTactic
         , TrKeyword
         , TrKeyword
         , cons
-        ]) -> simpleOutput $ do
+        ]) -> simpleOutput Historic $ do
             ielabData
                 nom
                 (argList (argPair argToStr argToIn) pars)
                 (argToIn indty)
                 (argList (argPair argToStr argToIn) cons)
             return "Data'd."
-    , ctHelp = Right (TacticHelp
+    , ctHelp = TacticHelp
            "idata <name> [<para>]* : <inx> -> Set  := [(<con> : <ty>) ;]*"
            "idata Vec (A : Set) : Nat -> Set := ('cons : (n : Nat) -> (a : A) -> (as : Vec A n) -> Vec A ('suc n)) ;"
            "Create a new indexed data type"
@@ -782,7 +774,6 @@ idataTac = CochonTactic
            , ("<inx>", "??")
            , ("<con : ty>", "Give each constructor a unique name and a type")
            ]
-       )
     }
 -}
 
@@ -792,7 +783,7 @@ The `elm` Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation
 of the final type-term pair (using a quick hack).
 -}
-elmCT :: DExTmRN -> ProofState TermReact
+elmCT :: DExTmRN -> ProofState UserMessage
 elmCT tm = do
     suspend ("elab" :<: sigSetTM :=>: sigSetVAL) (ElabInferProb tm)
     startScheduler
@@ -819,15 +810,13 @@ parseTac = unaryInCT "parse" (return . fromString . show)
   "parses <term> and displays the internal display-sytnax representation."
 
 
-schemeTac = unaryNameCT "scheme" infoScheme
-  "looks up the scheme on the definition <name>."
+-- schemeTac = unaryNameCT "scheme" infoScheme
+--   "looks up the scheme on the definition <name>."
 
 
 dumpTac = nullaryCT "dump"
     Forgotten
-    (do x <- prettyProofState
-        return $ pre_ (fromString x)
-    )
+    (fromString <$> prettyProofState)
     "displays useless information."
 
 
@@ -867,7 +856,7 @@ matchTac = simpleCT
     )
     (\(TrSequence [ _, TrRepeatZero pars, TrExArg a, TrInArg b ]) ->
         matchCTactic (map (argPair argToStr argToIn) pars) a b)
-    (Right (TacticHelp
+    (TacticHelp
         "match [<para>]* ; <term> ; <term>"
         "TODO(joel)"
         -- TODO(joel) - better description
@@ -875,7 +864,7 @@ matchTac = simpleCT
         [ ("<para>", "TODO(joel)")
         , ("<term>", "TODO(joel)")
         ]
-    ))
+    )
 
 
 simplifyTac = nullaryCT
@@ -890,7 +879,7 @@ https://github.com/joelburget/pigment/blob/bee79687c30933b8199bd9ae6aaaf8048a0c1
 
 recordTac = CochonTactic
     {  ctName = "record"
-    , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput $
+    , ctIO = (\ [StrArg nom, pars, cons] -> simpleOutput Historic $
                 elabRecord nom (argList (argPair argToStr argToIn) pars)
                                (argList (argPair argToStr argToIn) cons)
                   >> return "Record'd.")
@@ -912,7 +901,7 @@ relabelTac = unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
 --
 -- propsimplifyTac = nullaryCT "propsimplify" propSimplifyTactic
 --     "applies propositional simplification to the current goal."
-propSimplifyTactic :: ProofState InteractionReact
+propSimplifyTactic :: ProofState UserMessage
 propSimplifyTactic = do
     subs <- propSimplifyHere
     case subs of
@@ -932,54 +921,54 @@ propSimplifyTactic = do
 -- pretty-printed string representation. Note that it works in its own
 -- module which it discards at the end, so it will not leave any subgoals
 -- lying around in the proof state.
-infoElaborate :: DExTmRN -> ProofState TermReact
+infoElaborate :: DExTmRN -> ProofState UserMessage
 infoElaborate tm = draftModule "__infoElaborate" $ do
     (tm' :=>: tmv :<: ty) <- elabInfer' tm
     tm'' <- bquoteHere tmv
-    reactHere (ty :>: tm'')
+    tellTermHere (ty :>: tm'')
 
 
 -- The `infoInfer` command is similar to `infoElaborate`, but it returns a
 -- string representation of the resulting type.
-infoInfer :: DExTmRN -> ProofState TermReact
+infoInfer :: DExTmRN -> ProofState UserMessage
 infoInfer tm = draftModule "__infoInfer" $ do
     (_ :<: ty) <- elabInfer' tm
     ty' <- bquoteHere ty
-    reactHere (SET :>: ty')
+    tellTermHere (SET :>: ty')
 
 
-infoScheme :: RelName -> ProofState TermReact
-infoScheme x = do
-    (_, as, ms) <- resolveHere x
-    case ms of
-        Just sch -> do
-            sch' <- distillSchemeHere (applyScheme sch as)
-            return $ reactify sch'
-        Nothing -> return $
-            fromString (showRelName x ++ " does not have a scheme.")
+-- infoScheme :: RelName -> ProofState UserMessage
+-- infoScheme x = do
+--     (_, as, ms) <- resolveHere x
+--     case ms of
+--         Just sch -> do
+--             sch' <- distillSchemeHere (applyScheme sch as)
+--             return $ reactify sch'
+--         Nothing -> return $
+--             fromString (showRelName x ++ " does not have a scheme.")
 
 
 -- The `infoWhatIs` command displays a term in various representations.
-infoWhatIs :: DExTmRN -> ProofState TermReact
+infoWhatIs :: DExTmRN -> ProofState UserMessage
 infoWhatIs tmd = draftModule "__infoWhatIs" $ do
     tm :=>: tmv :<: tyv <- elabInfer' tmd
     tmq <- bquoteHere tmv
     tms :=>: _ <- distillHere (tyv :>: tmq)
     ty <- bquoteHere tyv
     tys :=>: _ <- distillHere (SET :>: ty)
-    return $ sequence_
+    return $ mconcat
         [  "Parsed term:", fromString (show tmd)
         ,  "Elaborated term:", fromString (show tm)
         ,  "Quoted term:", fromString (show tmq)
         ,  "Distilled term:", fromString (show tms)
-        ,  "Pretty-printed term:", reactify tms
+        ,  "Pretty-printed term:", fromString (renderHouseStyle (pretty tms maxBound))
         ,  "Inferred type:", fromString (show tyv)
         ,  "Quoted type:", fromString (show ty)
         ,  "Distilled type:", fromString (show tys)
-        ,  "Pretty-printed type:", reactify tys
+        ,  "Pretty-printed type:", fromString (renderHouseStyle (pretty tys maxBound))
         ]
 
-byCTactic :: Maybe RelName -> DExTmRN -> ProofState InteractionReact
+byCTactic :: Maybe RelName -> DExTmRN -> ProofState UserMessage
 byCTactic n e = do
     elimCTactic n e
     optional problemSimplify           -- simplify first method
@@ -988,7 +977,7 @@ byCTactic n e = do
     optional seekGoal                  -- jump to goal
     return "Eliminated and simplified."
 
-defineCTactic :: DExTmRN -> DInTmRN -> ProofState InteractionReact
+defineCTactic :: DExTmRN -> DInTmRN -> ProofState UserMessage
 defineCTactic rl tm = do
     relabel rl
     elabGiveNext (DLRET tm)
@@ -997,7 +986,7 @@ defineCTactic rl tm = do
 matchCTactic :: [(String, DInTmRN)]
              -> DExTmRN
              -> DInTmRN
-             -> ProofState InteractionReact
+             -> ProofState UserMessage
 matchCTactic xs a b = draftModule "__match" $ do
     rs <- traverse matchHyp xs
     (_ :=>: av :<: ty) <- elabInfer' a
@@ -1012,7 +1001,7 @@ matchCTactic xs a b = draftModule "__match" $ do
         r   <- assumeParam (s :<: tt)
         return (r, Nothing)
 
-elimCTactic :: Maybe RelName -> DExTmRN -> ProofState InteractionReact
+elimCTactic :: Maybe RelName -> DExTmRN -> ProofState UserMessage
 elimCTactic c r = do
     c' <- traverse resolveDiscard c
     (e :=>: _ :<: elimTy) <- elabInferFully r
@@ -1027,24 +1016,15 @@ data Historic
     = Historic
     | Forgotten
 
-simpleOutput :: Historic -> ProofState InteractionReact -> Cmd ()
+simpleOutput :: Historic -> ProofState UserMessage -> Cmd ()
 simpleOutput hist eval = do
     locs :< loc <- getCtx
     case runProofState (eval <* startScheduler) loc of
         Left err -> do
             setCtx (locs :< loc)
-            displayUser "I'm sorry, Dave. I'm afraid I can't do that."
-            displayUser $ locally err
+            messageUser (UserMessage [UserMessagePart "I'm sorry, Dave. I'm afraid I can't do that." Nothing (Just err) Nothing Green])
         Right (msg, loc') -> do
             setCtx $ case hist of
                 Historic -> locs :< loc :< loc'
                 Forgotten -> locs :< loc'
-            -- XXX(joel) - line up (Pure React') / InteractionReact here
-            displayUser $ locally msg
-
-
--- XXX
-instance GeneralizeSignal Transition Void where
-    generalizeSignal = undefined
-instance GeneralizeSignal TermAction Void where
-    generalizeSignal = undefined
+            messageUser msg

@@ -51,6 +51,11 @@ import React.GHCJS
 
 -- We start out here. Main calls `cochon emptyContext`.
 
+animDispatch :: Transition
+             -> InteractionState
+             -> (InteractionState, [AnimConfig Transition ()])
+animDispatch trans st = (dispatch trans st, [])
+
 cochon :: ProofContext -> IO ()
 cochon loc = do
     Just doc <- currentDocument

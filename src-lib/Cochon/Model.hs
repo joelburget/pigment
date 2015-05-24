@@ -1,5 +1,5 @@
 {-# LANGUAGE LiberalTypeSynonyms, DeriveGeneric, TemplateHaskell,
-  MultiParamTypeClasses #-}
+  MultiParamTypeClasses, TypeOperators, OverloadedStrings #-}
 
 module Cochon.Model where
 
@@ -13,15 +13,19 @@ import GHC.Generics
 
 import Cochon.CommandLexer
 import DisplayLang.Lexer
+import DisplayLang.Name
+import Distillation.Distiller
+import Elaboration.Error
+import Evidences.Tm
 import Kit.BwdFwd
 import Kit.ListZip
 import Kit.Parsley
 import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
+import ProofState.Edition.ProofState
 
 import Lens.Family2
 import Lens.Family2.TH
-import React
 
 data SpecialKey
     = Enter
@@ -46,18 +50,43 @@ data TermAction
     | ToggleAnnotate Name
     | AnnotationTyping Name T.Text
 
--- The top level page
-type Cochon a = a InteractionState Transition ()
-type InteractionReact = Cochon React'
+data MessageSeverity = Green | Orange | Red
 
-type ReactTerm a = a ProofContext TermAction ()
-type TermReact = ReactTerm React'
+data UserMessagePart = UserMessagePart
+    { messageText :: T.Text
+    , relevantName :: Maybe Name
+    , stack :: Maybe (StackError DInTmRN)
+    , term :: Maybe DInTmRN
+    , messageSeverity :: MessageSeverity
+    }
 
-instance GeneralizeSignal TermAction Transition where
-    generalizeSignal = TermTransition
+newtype UserMessage = UserMessage [UserMessagePart]
+
+instance IsString UserMessage where
+    fromString str = textUserMessage (fromString str)
+
+instance Monoid UserMessage where
+    mempty = UserMessage []
+    (UserMessage part1) `mappend` (UserMessage part2) = UserMessage (part1 `mappend` part2)
+
+tellTermHere :: (TY :>: INTM) -> ProofState UserMessage
+tellTermHere tt = do
+    dtm :=>: _ <- distillHere tt
+    return (termMessage "told term" dtm)
+
+-- TODO replace these will defaultMessagePart
+
+termMessage :: T.Text -> DInTmRN -> UserMessage
+termMessage str tm = UserMessage [UserMessagePart str Nothing Nothing (Just tm) Green]
+
+textUserMessage :: T.Text -> UserMessage
+textUserMessage str = UserMessage [UserMessagePart str Nothing Nothing Nothing Green]
+
+stackMessage :: T.Text -> StackError DInTmRN -> UserMessage
+stackMessage str stack = UserMessage [UserMessagePart str Nothing (Just stack) Nothing Green]
 
 -- TODO(joel) - give this a TacticResult reader?
-type Cmd a = WriterT (Pure React') (State (Bwd ProofContext)) a
+type Cmd a = WriterT UserMessage (State (Bwd ProofContext)) a
 
 setCtx :: Bwd ProofContext -> Cmd ()
 setCtx = put
@@ -65,11 +94,21 @@ setCtx = put
 getCtx :: Cmd (Bwd ProofContext)
 getCtx = get
 
-displayUser :: Pure React' -> Cmd ()
-displayUser = tell
+messageUser :: UserMessage -> Cmd ()
+messageUser = tell
 
-tellUser :: String -> Cmd ()
-tellUser = displayUser . fromString
+tellUser :: T.Text -> Cmd ()
+tellUser = messageUser . textUserMessage
+
+-- TODO put this in a more fitting place
+-- Given a proof state command and a context, we can run the command with
+-- `runProofState` to produce a message (either the response from the
+-- command or the error message) and `Maybe` a new proof context.
+runProofState
+    :: ProofState a
+    -> ProofContext
+    -> Either (StackError DInTmRN) (a, ProofContext)
+runProofState m loc = runStateT (m `catchStack` catchUnprettyErrors) loc
 
 -- matchTactic' :: TacticFormat -> Text -> Maybe Text
 -- matchTactic' (TfKeyword kw) str = T.stripPrefix kw str -- TODO separator
@@ -119,7 +158,7 @@ data CochonTactic = CochonTactic
     , ctDesc   :: TacticDescription
     , ctxTrans :: TacticResult -> Cmd ()
     -- TODO(joel) - remove
-    , ctHelp   :: Either (Pure React') TacticHelp
+    , ctHelp   :: TacticHelp
     } deriving Generic
 
 instance Show CochonTactic where
@@ -138,7 +177,7 @@ instance Ord CochonTactic where
 -- * help for each individual argument (yes, they're named)
 
 data TacticHelp = TacticHelp
-    { template :: Pure React' -- TODO highlight each piece individually
+    { template :: String -- TODO highlight each piece individually
     , example :: String
     , summary :: String
 
@@ -168,7 +207,7 @@ data Command = Command
 -- first two fields.
 
     , commandParsed :: Either String CTData -- is this really necessary?
-    , commandOutput :: Pure React'
+    , commandOutput :: UserMessage
     } deriving Generic
 
 -- we presently need to be able to add a latest, move to earlier / later, and

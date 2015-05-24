@@ -75,6 +75,92 @@ import Tactics.Unification
 
 import Kit.Trace
 
+-- The top level page
+type Cochon a = a InteractionState Transition ()
+type InteractionReact = Cochon React'
+
+type ReactTerm a = a ProofContext TermAction ()
+type TermReact = ReactTerm React'
+
+instance GeneralizeSignal TermAction Transition where
+    generalizeSignal = TermTransition
+
+
+-- XXX
+instance GeneralizeSignal Transition Void where
+    generalizeSignal = undefined
+instance GeneralizeSignal TermAction Void where
+    generalizeSignal = undefined
+
+
+-- handlers
+
+constTransition :: trans -> MouseEvent -> Maybe trans
+constTransition = const . Just
+
+
+handleEntryToggle :: Name -> MouseEvent -> Maybe TermAction
+handleEntryToggle = constTransition . ToggleTerm
+
+
+handleEntryGoTo :: Name -> MouseEvent -> Maybe TermAction
+handleEntryGoTo = constTransition . GoToTerm
+
+
+handleToggleAnnotate :: Name -> MouseEvent -> Maybe TermAction
+handleToggleAnnotate = constTransition . ToggleAnnotate
+
+
+-- TODO(joel) - stop faking this
+handleAddConstructor :: Name -> MouseEvent -> Maybe TermAction
+handleAddConstructor _ _ = Nothing
+
+handleToggleEntry :: Name -> MouseEvent -> Maybe Transition
+-- handleToggleEntry name _ = Just $ ToggleEntry name
+handleToggleEntry = constTransition . ToggleEntry
+
+-- TODO(joel) this and handleEntryClick duplicate functionality
+handleGoTo :: Name -> MouseEvent -> Maybe Transition
+handleGoTo = constTransition . GoTo
+
+handleSelectPane :: Pane -> MouseEvent -> Maybe Transition
+handleSelectPane pane _ = Just $ SelectPane pane
+
+handleToggleRightPane :: MouseEvent -> Maybe Transition
+handleToggleRightPane _ = Just ToggleRightPane
+
+handleKey :: KeyboardEvent -> Maybe Transition
+handleKey KeyboardEvent{React.key="Enter"}     = Just $ CommandKeypress Enter
+handleKey KeyboardEvent{React.key="Tab"}       = Just $ CommandKeypress Tab
+handleKey KeyboardEvent{React.key="ArrowUp"}   = Just $ CommandKeypress UpArrow
+handleKey KeyboardEvent{React.key="ArrowDown"} = Just $ CommandKeypress DownArrow
+handleKey _ = Nothing
+
+handleCmdChange :: ChangeEvent -> Maybe Transition
+handleCmdChange = Just . CommandTyping . fromJSString . value . target
+
+
+-- views
+
+reactStackError :: StackError DInTmRN -> TermReact
+reactStackError (StackError errors) = div_ [ class_ "stack-error" ] $ do
+    div_ "Error:"
+    ul_ [ class_ "stack-error-list" ] $
+        forM_ errors $ \error ->
+            li_ [ class_ "stack-error-item" ] $
+                mapM_ reactErrorTok error
+
+reactErrorTok :: ErrorTok DInTmRN -> TermReact
+reactErrorTok (StrMsg s)           = fromString s
+reactErrorTok (ErrorTm (v :<: _))  = reactify v
+reactErrorTok (ErrorCan   v)       = reactify v
+reactErrorTok (ErrorElim  e)       = reactify e
+reactErrorTok (ErrorREF ref)       = fromString $ show ref
+reactErrorTok (ErrorVAL (v :<: _)) = do
+    "ErrorVAL"
+    -- reactBrackets Round (reactify v)
+    reactBrackets Round $ fromString $ show v
+
 
 instance (ToJSRef a, ToJSRef b) => ToJSRef (Either a b) where
     toJSRef (Left a) = do

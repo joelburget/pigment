@@ -4,16 +4,21 @@
 module Main where
 
 import Control.Monad.State
-import System
+import Data.Foldable as Foldable
+import System.Environment
 import System.IO
 import System.Console.GetOpt
 
 import Kit.BwdFwd
 
+import DisplayLang.PrettyPrint
+import Elaboration.Error
+import Evidences.Tm
 import ProofState.Edition.ProofContext
+import ProofState.Interface.ProofKit
+import ProofState.Interface.Solving
 
 import Cochon.DevLoad
-import Cochon.Cochon
 
 data Options = LoadFile FilePath
              | CheckFile FilePath
@@ -39,9 +44,28 @@ message = "Epigram version (suc n)\n" ++
           "Given the file name '-', Pig will read from standard input.\n\n" ++
           "Options: "
 
+paranoid = False
+veryParanoid = False
+
+-- XXX(joel) refactor this whole thing - remove putStrLn
+
+validateDevelopment :: Bwd ProofContext -> IO ()
+validateDevelopment locs@(_ :< loc)
+    | veryParanoid = Foldable.mapM_ validateCtxt locs
+    | paranoid = validateCtxt loc
+    | otherwise = return ()
+    where result = evalStateT
+              (validateHere `catchStack` catchUnprettyErrors)
+              loc
+          validateCtxt loc = case result of
+              Left ss -> do
+                  putStrLn "*** Warning: definition failed to type-check! ***"
+                  putStrLn $ renderHouseStyle $ prettyStackError ss
+              _ -> return ()
+
 main :: IO ()
 main = do
-       argv <- System.getArgs
+       argv <- getArgs
        case getOpt RequireOrder options argv of
          -- Help:
          (Help : _, _, [])            -> do
@@ -60,12 +84,6 @@ main = do
          -- Load a development (no flag provided):
          ([],(file:[]),[])            -> do
            loadDev file
-         -- Empty development:
-         (Interactive : _,[],[])      -> do
-           cochon emptyContext
-         -- Empty development:
-         ([],[],[])                   -> do
-           cochon emptyContext
          -- Error:
          (_,_,errs)                   -> do
            ioError (userError (Prelude.concat errs ++

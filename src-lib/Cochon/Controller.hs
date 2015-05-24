@@ -13,8 +13,9 @@ import Data.List
 import Data.String
 import Data.Traversable
 
+import Lens.Family2
+
 import Cochon.CommandLexer
-import Cochon.Error
 import Cochon.Model
 import Cochon.Tactics
 import Cochon.TermController
@@ -67,42 +68,6 @@ import Tactics.Record
 import Tactics.Relabel
 import Tactics.Unification
 
-import Lens.Family2
-
-import GHCJS.Foreign
-import React hiding (key)
-import qualified React
-
-import Debug.Trace
-
-handleToggleEntry :: Name -> MouseEvent -> Maybe Transition
--- handleToggleEntry name _ = Just $ ToggleEntry name
-handleToggleEntry = constTransition . ToggleEntry
-
--- TODO(joel) this and handleEntryClick duplicate functionality
-handleGoTo :: Name -> MouseEvent -> Maybe Transition
-handleGoTo = constTransition . GoTo
-
-handleSelectPane :: Pane -> MouseEvent -> Maybe Transition
-handleSelectPane pane _ = Just $ SelectPane pane
-
-handleToggleRightPane :: MouseEvent -> Maybe Transition
-handleToggleRightPane _ = Just ToggleRightPane
-
-handleKey :: KeyboardEvent -> Maybe Transition
-handleKey KeyboardEvent{React.key="Enter"}     = Just $ CommandKeypress Enter
-handleKey KeyboardEvent{React.key="Tab"}       = Just $ CommandKeypress Tab
-handleKey KeyboardEvent{React.key="ArrowUp"}   = Just $ CommandKeypress UpArrow
-handleKey KeyboardEvent{React.key="ArrowDown"} = Just $ CommandKeypress DownArrow
-handleKey _ = Nothing
-
-handleCmdChange :: ChangeEvent -> Maybe Transition
-handleCmdChange = Just . CommandTyping . fromJSString . value . target
-
-animDispatch :: Transition
-             -> InteractionState
-             -> (InteractionState, [AnimConfig Transition ()])
-animDispatch trans st = (dispatch trans st, [])
 
 dispatch :: Transition -> InteractionState -> InteractionState
 dispatch (SelectPane pane) state = state & currentPane .~ pane
@@ -134,13 +99,13 @@ dispatch (CommandKeypress DownArrow)
     autocompleteDownArrow state
 dispatch (CommandKeypress DownArrow) state = historyDownArrow state
 
-dispatch (ToggleEntry name) state = trace "here1" $ toggleTerm name state
+dispatch (ToggleEntry name) state = toggleTerm name state
 dispatch (GoTo name) state = goToTerm name state
 
 dispatch (TermTransition (GoToTerm name)) state = goToTerm name state
-dispatch (TermTransition (ToggleTerm name)) state = trace "here2" $ toggleTerm name state
+dispatch (TermTransition (ToggleTerm name)) state = toggleTerm name state
 
-dispatch (TermTransition act) state = trace "here3" $ termDispatch act state
+dispatch (TermTransition act) state = termDispatch act state
 
 dispatch _ state = state
 
@@ -149,7 +114,7 @@ toggleTerm :: Name -> InteractionState -> InteractionState
 toggleTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
     case execProofState (toggleEntryVisibility name) ctx of
         Left err ->
-            let cmd = displayUser $ locally err
+            let cmd = messageUser err
                 (output, newCtx) = runCmd cmd (state^.proofCtx)
                 cmd' = Command "(toggle term)" (ctxs :< ctx)
                                (Left "(no parse)") output
@@ -162,7 +127,7 @@ goToTerm :: Name -> InteractionState -> InteractionState
 goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
     case execProofState (goTo name) ctx of
         Left err ->
-            let cmd = displayUser $ locally err
+            let cmd = messageUser err
                 (output, newCtx) = runCmd cmd (state^.proofCtx)
                 cmd' = Command "(go to term)" (ctxs :< ctx)
                                (Left "(no parse)") output
@@ -207,10 +172,10 @@ historyDownArrow state = state & commandFocus %~ \hist -> case hist of
             Nothing -> InPresent (deferred hist)
         InPresent str -> hist
 
-runCmd :: Cmd a -> Bwd ProofContext -> (Pure React', Bwd ProofContext)
+runCmd :: Cmd a -> Bwd ProofContext -> (UserMessage, Bwd ProofContext)
 runCmd cmd ctx =
-    let ((_, react), ctx') = runState (runWriterT cmd) ctx
-    in (react, ctx')
+    let ((_, msg), ctx') = runState (runWriterT cmd) ctx
+    in (msg, ctx')
 
 runAndLogCmd :: InteractionState -> InteractionState
 runAndLogCmd state =
