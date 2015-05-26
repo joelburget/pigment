@@ -5,6 +5,8 @@ undefined="[UNDEFINED]"
 passed="[PASSED]"
 disabled="[DISABLED]"
 
+sandbox="/home/vagrant/pigment-sandbox/bin"
+
 case ${TERM} in
         dumb*) # emacs shell is "dumb"
 	# no color for the dumbs
@@ -18,14 +20,16 @@ case ${TERM} in
         ;;
 esac
 
+echo "${sandbox}/Pig"
+
 ## Check that Pig is nearby
-if [ ! -f "../src/Pig" ]
+if [ ! -f "${sandbox}/Pig" ]
 then
     echo "Pig is absent. Please 'make' it."
     exit 2
 fi
 
-## Make a clean cache directory 
+## Make a clean cache directory
 if [ -d ".tests" ]
 then
     rm -fR ".tests"
@@ -71,7 +75,7 @@ then
 
     ## Ensure that measures can be stored
     mkdir -p "./.measures/hpc/${time}" \
-	     "./.measures/stats/${time}" 
+	     "./.measures/stats/${time}"
 
 fi
 
@@ -93,7 +97,7 @@ PIG_OPTS=""
 for script in $scripts
 do
     if [ -f "${script}.disabled" ]
-    then 
+    then
 	echo -e "$disabled $script is disabled"
 	continue
     fi
@@ -105,7 +109,7 @@ do
     then
 	PIG_OPTS="+RTS -p -RTS"
     fi
-    ../src/Pig $PIG_OPTS --check "$script" &> ".tests/$script.log"    
+    ${sandbox}/Pig $PIG_OPTS --check "$script" &> ".tests/$script.log"
     if [ $advanced -eq 1 ]
     then
 	mv "./Pig.tix" "./.measures/hpc/${time}/${script}.tix"
@@ -135,7 +139,7 @@ done
 echo ""
 
 ## Delegate post-processing of measurements
-if [ $advanced -eq 1 ] 
+if [ $advanced -eq 1 ]
 then
   ./hpc.sh $time
   ./stats.sh $time
@@ -146,7 +150,7 @@ then
 
     if [ -f "./.measures/hpc/${time}/all.coverage" ]
     then
-	
+
 	echo ""
 	echo "Code coverage:"
 	echo "=============="
