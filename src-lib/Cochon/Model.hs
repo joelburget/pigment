@@ -50,7 +50,7 @@ data TermAction
     | ToggleAnnotate Name
     | AnnotationTyping Name T.Text
 
-data MessageSeverity = Green | Orange | Red
+data MessageSeverity = Green | Orange | Red deriving Show
 
 data UserMessagePart = UserMessagePart
     { messageText :: T.Text
@@ -58,9 +58,9 @@ data UserMessagePart = UserMessagePart
     , stack :: Maybe (StackError DInTmRN)
     , term :: Maybe DInTmRN
     , messageSeverity :: MessageSeverity
-    }
+    } deriving Show
 
-newtype UserMessage = UserMessage [UserMessagePart]
+newtype UserMessage = UserMessage [UserMessagePart] deriving Show
 
 instance IsString UserMessage where
     fromString str = textUserMessage (fromString str)
@@ -160,6 +160,9 @@ data CochonTactic = CochonTactic
     -- TODO(joel) - remove
     , ctHelp   :: TacticHelp
     } deriving Generic
+
+ctParse :: CochonTactic -> Parsley Token TacticResult
+ctParse = parseTactic . ctDesc
 
 instance Show CochonTactic where
     show = ctName

@@ -3,18 +3,29 @@
 
 module Main where
 
+import Control.Applicative
 import Control.Monad.State
 import Data.Foldable as Foldable
+import Data.List
 import System.Environment
 import System.IO
 import System.Console.GetOpt
 
 import Kit.BwdFwd
+import Kit.Parsley
 
+import Cochon.Controller
+import Cochon.DevLoad
+import Cochon.Model
+import DisplayLang.Lexer
+import DisplayLang.Name
 import DisplayLang.PrettyPrint
+import Distillation.Distiller
 import Elaboration.Error
 import Evidences.Tm
+import ProofState.Edition.GetSet
 import ProofState.Edition.ProofContext
+import ProofState.Edition.ProofState
 import ProofState.Interface.ProofKit
 import ProofState.Interface.Solving
 
@@ -63,6 +74,56 @@ validateDevelopment locs@(_ :< loc)
                   putStrLn $ renderHouseStyle $ prettyStackError ss
               _ -> return ()
 
+cochon' :: Bwd ProofContext -> IO ()
+cochon' (locs :< loc) = do
+    -- Safety belt: this *must* type-check!
+    validateDevelopment (locs :< loc)
+    -- Show goal and prompt
+    case runProofState showPrompt loc of
+        Left err -> print err
+        Right (str, _) -> do
+            putStr str
+            hFlush stdout
+    l <- getLine
+    case parse tokenize l of
+        Left pf -> do
+            putStrLn ("Tokenize failure: " ++ describePFailure pf id)
+            cochon' (locs :< loc)
+        Right ts ->
+          case parse pCochonTactics ts of
+              Left pf -> do
+                  putStrLn ("Parse failure: " ++ describePFailure pf (intercalate " " . map crushToken))
+                  cochon' (locs :< loc)
+              Right cds -> do
+                  locs' <- doCTactics cds (locs :< loc)
+                  cochon' locs'
+
+showPrompt :: ProofState String
+showPrompt = do
+    mty <- optional getHoleGoal
+    case mty of
+        Just (_ :=>: ty)  -> (++) <$> showGoal ty <*> showInputLine
+        Nothing           -> showInputLine
+  where
+    showGoal :: TY -> ProofState String
+    showGoal ty@(LABEL _ _) = do
+        -- h <- infoHypotheses
+        s <- prettyHere . (SET :>:) =<< bquoteHere ty
+        return $ {- h ++ "\n" ++ -} "Programming: " ++ show s ++ "\n"
+    showGoal ty = do
+        s <- prettyHere . (SET :>:) =<< bquoteHere ty
+        return $ "Goal: " ++ show s ++ "\n"
+
+    showInputLine :: ProofState String
+    showInputLine = do
+        mn <- optional getCurrentName
+        case mn of
+            Just n   -> return $ showName n ++ " > "
+            Nothing  -> return "> "
+
+pCochonTactics :: Parsley Token [CTData]
+pCochonTactics = pSepTerminate (keyword KwSemi) pCochonTactic
+
 main :: IO ()
 main = do
        argv <- getArgs
@@ -90,7 +151,7 @@ main = do
                                usageInfo message options))
  where
    withFile :: String -> (Bwd ProofContext -> IO a) -> IO a
-   withFile "-" g = devLoad' (Just stdin) (return []) >>= g
+   withFile "-" g = devLoad' stdin (return []) >>= g
    withFile file g = devLoad file >>= g
 
    loadDev :: String -> IO ()

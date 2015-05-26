@@ -1,5 +1,5 @@
 {-# LANGUAGE PatternSynonyms #-}
-module Traif (main) where
+module Main (main) where
 
 import Control.Applicative (many)
 import Control.Arrow (left)

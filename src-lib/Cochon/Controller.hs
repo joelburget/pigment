@@ -255,3 +255,50 @@ pCochonTactic  = do
             -- over
             return (ct, args)
         Nothing -> fail "unknown tactic name."
+
+
+{-
+data ContextualInfo = InfoHypotheses | InfoContextual
+    deriving Eq
+
+
+infoHypotheses  = infoContextual InfoHypotheses
+infoContext     = infoContextual InfoContextual
+
+
+infoContextual :: ContextualInfo -> ProofState []
+infoContextual gals = do
+    inScope <- getInScope
+    bsc <- gets inBScope
+    -- holeTy <- optional getHoleGoal
+    entries <- Traversable.mapM (entryHelp gals bsc) inScope
+    return $ Foldable.sequence_ entries
+  where
+    entryHelp :: Traversable f
+              => ContextualInfo
+              -> BScopeContext
+              -> Entry f
+              -> ProofState InteractionReact
+    entryHelp InfoHypotheses bsc p@(EPARAM ref _ k _ _ _) = do
+        ty       <- bquoteHere (pty ref)
+        reactTy  <- reactHere (SET :>: ty)
+        return $ ParamEntry
+        return $ locally $ li_ [ class_ "param-entry" ] $ do
+            paramEntryView p
+            div_ [ class_ "param-entry-asc" ] $ do
+                reactKword KwAsc
+                reactTy
+    entryHelp InfoContextual bsc d@(EDEF ref _ _ _ _ _ _) = do
+        -- ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
+        ty       <- bquoteHere $ pty ref
+        reactTy  <- reactHere (SET :>: ty)
+        return $ locally $ li_ [ class_ "def-entry" ] $ do
+            fromString $ showRelName $ christenREF bsc ref
+            reactKword KwAsc
+            reactTy
+    entryHelp _ _ _ = return $ return ()
+
+    removeShared :: Spine TT REF -> TY -> TY
+    removeShared []       ty        = ty
+    removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
+-}

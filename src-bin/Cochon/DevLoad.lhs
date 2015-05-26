@@ -3,10 +3,11 @@ Loading Developments
 
 > {-# LANGUAGE TypeOperators #-}
 
-> module Cochon.DevLoad () where
+> module Cochon.DevLoad (devLoad, devLoad', doCTactics) where
 
 > import Control.Monad.State
 > import Control.Error
+> import Control.Exception (catch)
 > import Control.Applicative
 > import Data.Foldable as Foldable
 > import Data.Functor
@@ -243,22 +244,19 @@ Section~\ref{sec:ProofState.Edition.ProofState} to build up the proof
 state.
 
 > devLoad :: String -> IO (Bwd ProofContext)
-> devLoad file = do
+> devLoad file =
 >   -- Load the development file
 >   let devFile = dropExtension file ++ ".dev"
->   devFileH <- (openFile devFile ReadMode >>= return . Just)
->               `catchError` \ _ -> return Nothing
->   devLoad' devFileH $
->       withFile file ReadMode readCommands
+>   in withFile devFile ReadMode $ \devFileH ->
+>       let ctDataCmd = withFile file ReadMode readCommands
+>       in devLoad' devFileH ctDataCmd
 
-> devLoad' :: Maybe Handle -> IO [CTData] -> IO (Bwd ProofContext)
-> devLoad'  fileH commandLoad = do
+> devLoad' :: Handle -> IO [CTData] -> IO (Bwd ProofContext)
+> devLoad' fileH commandLoad = do
 >   -- Load the development file
->   dev <- case fileH of
->            Just f   -> loadDevelopment f
->            Nothing  -> return []
+>   dev <- loadDevelopment fileH
 >   -- Load the development in an empty proof state
->   case runStateT (makeDev dev [] `catchError` catchUnprettyErrors) emptyContext of
+>   case runStateT (makeDev dev [] `catchStack` catchUnprettyErrors) emptyContext of
 >     Left errs -> do
 >       putStrLn "Failed to load development:"
 >       putStrLn $ renderHouseStyle $ prettyStackError errs
@@ -358,22 +356,15 @@ The following companion function takes care of the dirty details:
 >                             <|> nextToken *> eatNestedComments i
 
 
-> pCochonTactic :: Parsley Token CTData
-> pCochonTactic  = do
->     x <- ident <|> (key <$> anyKeyword)
->     case tacticsMatching x of
->         [ct] -> do
->             args <- ctParse ct
->             return (ct, trail args)
->         [] -> fail "unknown tactic name."
->         cts -> fail ("ambiguous tactic name (could be " ++ tacticNames cts ++ ").")
-
 > pCochonTactics :: Parsley Token [CTData]
 > pCochonTactics = pSepTerminate (keyword KwSemi) pCochonTactic
 
 
 > doCTactic :: CTData -> Bwd ProofContext -> IO (Bwd ProofContext)
-> doCTactic (ct, args) (locs :< loc) = ctxTrans ct args (locs :< loc)
+> doCTactic (ct, args) (locs :< loc) =
+>     let (msg, ctx') = runCmd (ctxTrans ct args) (locs :< loc)
+>     in do print msg
+>           return ctx'
 
 > doCTactics :: [CTData] -> Bwd ProofContext -> IO (Bwd ProofContext)
 > doCTactics [] locs = return locs
