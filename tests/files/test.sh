@@ -98,41 +98,50 @@ for script in $scripts
 do
     if [ -f "${script}.disabled" ]
     then
-	echo -e "$disabled $script is disabled"
-	continue
+        echo -e "$disabled $script is disabled"
+        continue
     fi
     # echo -n "Running test $script..."
     if [ $advanced -eq 1 ]
     then
-	PIG_OPTS="+RTS -t./.measures/stats/${time}/${script}.stat --machine-readable -RTS"
+        PIG_OPTS="+RTS -t./.measures/stats/${time}/${script}.stat --machine-readable -RTS"
     elif [ $profiling -eq 1 ]
     then
-	PIG_OPTS="+RTS -p -RTS"
+        PIG_OPTS="+RTS -p -RTS"
     fi
-    ${sandbox}/Pig $PIG_OPTS --check "$script" &> ".tests/$script.log"
-    if [ $advanced -eq 1 ]
+
+    FILE_BASE=`basename $script .pig`
+    if [ ! -f "$FILE_BASE.dev" ]
     then
-	mv "./Pig.tix" "./.measures/hpc/${time}/${script}.tix"
-    elif [ $profiling -eq 1 ]
-    then
-        mv "./Pig.prof" "./.measures/prof/${time}/${script}.prof"
-    fi
-    # echo " Done."
-    if [ ! -f "results/$script.log" ]
-    then
-	echo -e "$undefined Please provide the desired output for $script"
+        echo -e "$disabled $script is missing dev ($FILE_BASE.dev)"
     else
-	if ! diff -u "results/$script.log" ".tests/$script.log" > ".tests/$script.diff"
-	then
-	    echo -e "$failed $script does not match the expected output"
-	    status=1
-	    if [ $quiet -eq 0 ]
-	    then
-		cat ".tests/$script.diff"
-	    fi
-	else
-	    echo -e "$passed $script looks alright!"
-	fi
+        ${sandbox}/Pig $PIG_OPTS --check "$script" &> ".tests/$script.log"
+
+        if [ $advanced -eq 1 ]
+        then
+            mv "./Pig.tix" "./.measures/hpc/${time}/${script}.tix"
+        elif [ $profiling -eq 1 ]
+        then
+            mv "./Pig.prof" "./.measures/prof/${time}/${script}.prof"
+        fi
+
+        # echo " Done."
+        if [ ! -f "results/$script.log" ]
+        then
+            echo -e "$undefined Please provide the desired output for $script"
+        else
+        if ! diff -u "results/$script.log" ".tests/$script.log" > ".tests/$script.diff"
+        then
+            echo -e "$failed $script does not match the expected output"
+            status=1
+            if [ $quiet -eq 0 ]
+            then
+                cat ".tests/$script.diff"
+            fi
+        else
+            echo -e "$passed $script looks alright!"
+        fi
+    fi
     fi
 done
 

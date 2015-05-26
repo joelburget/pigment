@@ -60,8 +60,8 @@ A module may have a list of definitions in square brackets, followed by
 an optional semicolon-separated list of commands.
 
 > parseDevelopment :: Parsley Token [DevLine]
-> parseDevelopment  = bracket Square (many (pDef <|> pModule))
->                   <|> pure []
+> parseDevelopment = bracket Square (many (pDef <|> pModule))
+>                <|> pure []
 
 Parsing definitions
 
@@ -316,6 +316,7 @@ The following companion function takes care of the dirty details:
 >         putStrLn $ "Input was: " ++ command
 >         exitFailure
 >       Right toks -> do
+>         print toks
 >         case parse pCochonTactics toks of
 >           Left err -> do
 >             putStrLn $ "readCommand: failed to parse:\n" ++
@@ -332,17 +333,6 @@ The following companion function takes care of the dirty details:
 >                <|> (openBlockComment *> eatNestedComments 0 *> tokenizeCommands)
 >                <|> (spaces *> endOfLine *> tokenizeCommands)
 >                <|> ((:) <$> consumeUntil' endOfCommand <*> tokenizeCommands)
-> -- tokenizeCommands = (|id ~ [] (% pEndOfStream %)
-> --                     |id (% oneLineComment %)
-> --                         (% consumeUntil' endOfLine %)
-> --                         tokenizeCommands
-> --                     |id (% openBlockComment %)
-> --                         (% (eatNestedComments 0) %)
-> --                         tokenizeCommands
-> --                     |id (spaces *> endOfLine *> tokenizeCommands)
-> --                     |consumeUntil' endOfCommand :
-> --                      tokenizeCommands
-> --                     |)
 >     where endOfCommand = tokenEq ';' *> spaces *> endOfLine
 >                      <|> pEndOfStream *> pure ()
 >           endOfLine = tokenEq (head "\n") <|> pEndOfStream
