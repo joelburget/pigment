@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators, GADTs, KindSignatures,
-    TypeSynonymInstances, FlexibleInstances, ScopedTypeVariables #-}
+    TypeSynonymInstances, FlexibleInstances, ScopedTypeVariables,
+    OverloadedStrings #-}
 
 module Main where
 
@@ -7,6 +8,7 @@ import Control.Applicative
 import Control.Monad.State
 import Data.Foldable as Foldable
 import Data.List
+import Data.String
 import System.Environment
 import System.IO
 import System.Console.GetOpt
@@ -17,6 +19,7 @@ import Kit.Parsley
 import Cochon.Controller
 import Cochon.DevLoad
 import Cochon.Model
+import Cochon.Tactics
 import DisplayLang.Lexer
 import DisplayLang.Name
 import DisplayLang.PrettyPrint
@@ -26,6 +29,7 @@ import Evidences.Tm
 import ProofState.Edition.GetSet
 import ProofState.Edition.ProofContext
 import ProofState.Edition.ProofState
+import ProofState.Interface.NameResolution
 import ProofState.Interface.ProofKit
 import ProofState.Interface.Solving
 
@@ -121,8 +125,33 @@ showPrompt = do
             Just n   -> return $ showName n ++ " > "
             Nothing  -> return "> "
 
+tacs :: [CochonTactic]
+tacs =
+    showTac :
+    cochonTactics
+
+showTac :: CochonTactic
+showTac = unaryStringCT "show" (\s -> case s of
+        -- "inscope"  -> infoInScope
+        "context"  -> (fromString . show) <$> infoContext
+        "dump"     -> fromString <$> infoDump
+        "hyps"     -> (fromString . show) <$> infoHypotheses
+        "state"    -> fromString <$> prettyProofState
+        _          -> return "show: please specify exactly what to show."
+      )
+      "show <inscope/context/dump/hyps/state> - displays useless information."
+
+-- infoInScope :: ProofState UserMessage
+-- infoInScope = do
+--     pc <- get
+--     inScope <- getInScope
+--     return (showEntries (inBScope pc) inScope)
+
+infoDump :: ProofState String
+infoDump = gets show
+
 pCochonTactics :: Parsley Token [CTData]
-pCochonTactics = pSepTerminate (keyword KwSemi) pCochonTactic
+pCochonTactics = pSepTerminate (keyword KwSemi) (pTactic tacs)
 
 main :: IO ()
 main = do
@@ -151,8 +180,8 @@ main = do
                                usageInfo message options))
  where
    withFile :: String -> (Bwd ProofContext -> IO a) -> IO a
-   withFile "-" g = devLoad' stdin (return []) >>= g
-   withFile file g = devLoad file >>= g
+   withFile "-" g = devLoad' tacs stdin (return []) >>= g
+   withFile file g = devLoad tacs file >>= g
 
    loadDev :: String -> IO ()
    loadDev file = withFile file cochon'

@@ -104,13 +104,13 @@ Parsing commands:
 
 Commands can be typed directly in the developments by enclosing them
 inside `[| ... |]` brackets. They are parsed in one go by
-`pCochonTactics`, so this is quite fragile. This is better used when we
+`pTactics`, so this is quite fragile. This is better used when we
 know things work.
 
 > pCTSuffix  :: Parsley Token [CTData]
 > pCTSuffix = pure []
 
-pCTSuffix  = bracket (SquareB "") pCochonTactics
+pCTSuffix  = bracket (SquareB "") pTactics
            <|> pure []
 
 Parsing Modules
@@ -154,6 +154,7 @@ the proof state to represent the given list of `DevLine`s, accumulating
 pairs of names and command lists along the way.
 
 > type NamedCommand = (Name, [CTData])
+
 > makeDev :: [DevLine] -> [NamedCommand] -> ProofState [NamedCommand]
 > makeDev []      ncs = return ncs
 > makeDev (l:ls)  ncs = makeEntry l ncs >>= makeDev ls
@@ -243,16 +244,16 @@ from them.  The idea is to use commands defined in
 Section~\ref{sec:ProofState.Edition.ProofState} to build up the proof
 state.
 
-> devLoad :: String -> IO (Bwd ProofContext)
-> devLoad file =
+> devLoad :: [CochonTactic] -> String -> IO (Bwd ProofContext)
+> devLoad tacs file =
 >   -- Load the development file
 >   let devFile = dropExtension file ++ ".dev"
 >   in withFile devFile ReadMode $ \devFileH ->
->       let ctDataCmd = withFile file ReadMode readCommands
->       in devLoad' devFileH ctDataCmd
+>       let ctDataCmd = withFile file ReadMode (readCommands tacs)
+>       in devLoad' tacs devFileH ctDataCmd
 
-> devLoad' :: Handle -> IO [CTData] -> IO (Bwd ProofContext)
-> devLoad' fileH commandLoad = do
+> devLoad' :: [CochonTactic] -> Handle -> IO [CTData] -> IO (Bwd ProofContext)
+> devLoad' tacs fileH commandLoad = do
 >   -- Load the development file
 >   dev <- loadDevelopment fileH
 >   -- Load the development in an empty proof state
@@ -295,8 +296,8 @@ The following companion function takes care of the dirty details:
 >               -- Return the result
 >               return dev
 
-> readCommands :: Handle -> IO [CTData]
-> readCommands file = do
+> readCommands :: [CochonTactic] -> Handle -> IO [CTData]
+> readCommands tacs file = do
 >   f <- hGetContents file
 >   case parse tokenizeCommands f of
 >     Left err -> do
@@ -304,11 +305,11 @@ The following companion function takes care of the dirty details:
 >                  show err
 >       exitFailure
 >     Right lines -> do
->          t <- Data.Traversable.sequence $ map readCommand lines
+>          t <- Data.Traversable.sequence $ map (readCommand tacs) lines
 >          return $ Data.List.concat t
 
-> readCommand :: String -> IO [CTData]
-> readCommand command =
+> readCommand :: [CochonTactic] -> String -> IO [CTData]
+> readCommand tacs command =
 >     case parse tokenize command of
 >       Left err -> do
 >         putStrLn $ "readCommand: failed to tokenize:\n" ++
@@ -317,14 +318,13 @@ The following companion function takes care of the dirty details:
 >         exitFailure
 >       Right toks -> do
 >         print toks
->         case parse pCochonTactics toks of
+>         case parse (pTactics tacs) toks of
 >           Left err -> do
 >             putStrLn $ "readCommand: failed to parse:\n" ++
 >                        show err
 >             putStrLn $ "Input was: " ++ command
 >             exitFailure
->           Right command -> do
->             return command
+>           Right command -> return command
 
 
 > tokenizeCommands :: Parsley Char [String]
@@ -346,13 +346,13 @@ The following companion function takes care of the dirty details:
 >                             <|> nextToken *> eatNestedComments i
 
 
-> pCochonTactics :: Parsley Token [CTData]
-> pCochonTactics = pSepTerminate (keyword KwSemi) pCochonTactic
+> pTactics :: [CochonTactic] -> Parsley Token [CTData]
+> pTactics tacs = pSepTerminate (keyword KwSemi) (pTactic tacs)
 
 
 > doCTactic :: CTData -> Bwd ProofContext -> IO (Bwd ProofContext)
-> doCTactic (ct, args) (locs :< loc) =
->     let (msg, ctx') = runCmd (ctxTrans ct args) (locs :< loc)
+> doCTactic (ct, args) ctx =
+>     let (msg, ctx') = runCmd (ctxTrans ct args) ctx
 >     in do print msg
 >           return ctx'
 

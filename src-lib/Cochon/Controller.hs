@@ -11,7 +11,7 @@ import Control.Monad.Writer
 import qualified Data.Foldable as Foldable
 import Data.List
 import Data.String
-import Data.Traversable
+import Data.Traversable as Traversable
 
 import Lens.Family2
 
@@ -221,8 +221,8 @@ parseCmd l = case parse tokenize l of
 tacticsMatching :: String -> [CochonTactic]
 tacticsMatching x = filter (isPrefixOf x . ctName) cochonTactics
 
-tacticNamed :: String -> Maybe CochonTactic
-tacticNamed x = find ((== x) . ctName) cochonTactics
+tacticNamed :: [CochonTactic] -> String -> Maybe CochonTactic
+tacticNamed tacs x = find ((== x) . ctName) tacs
 
 describePFailure :: PFailure a -> ([a] -> String) -> String
 describePFailure (PFailure (ts, fail)) f =
@@ -241,9 +241,12 @@ tacticNames :: [CochonTactic] -> String
 tacticNames = intercalate ", " . map ctName
 
 pCochonTactic :: Parsley Token CTData
-pCochonTactic  = do
+pCochonTactic = pTactic cochonTactics
+
+pTactic :: [CochonTactic] -> Parsley Token CTData
+pTactic tacs = do
     x <- ident <|> (key <$> anyKeyword)
-    case tacticNamed x of
+    case tacticNamed tacs x of
         Just ct -> do
             args <- parseTactic (ctDesc ct)
 
@@ -257,48 +260,46 @@ pCochonTactic  = do
         Nothing -> fail "unknown tactic name."
 
 
-{-
 data ContextualInfo = InfoHypotheses | InfoContextual
     deriving Eq
+
+data EntryInfo
+    = ParamEntry Name INTM
+    | DefEntry Name INTM
+    | ErrEntryInfo
+    deriving Show
+
+
+-- instance Show EntryInfo where
+--     show (ParamEntry name tm) =
 
 
 infoHypotheses  = infoContextual InfoHypotheses
 infoContext     = infoContextual InfoContextual
 
 
-infoContextual :: ContextualInfo -> ProofState []
+infoContextual :: ContextualInfo -> ProofState (Bwd EntryInfo)
 infoContextual gals = do
     inScope <- getInScope
     bsc <- gets inBScope
     -- holeTy <- optional getHoleGoal
     entries <- Traversable.mapM (entryHelp gals bsc) inScope
-    return $ Foldable.sequence_ entries
+    return entries
   where
     entryHelp :: Traversable f
               => ContextualInfo
               -> BScopeContext
               -> Entry f
-              -> ProofState InteractionReact
+              -> ProofState EntryInfo
     entryHelp InfoHypotheses bsc p@(EPARAM ref _ k _ _ _) = do
         ty       <- bquoteHere (pty ref)
-        reactTy  <- reactHere (SET :>: ty)
-        return $ ParamEntry
-        return $ locally $ li_ [ class_ "param-entry" ] $ do
-            paramEntryView p
-            div_ [ class_ "param-entry-asc" ] $ do
-                reactKword KwAsc
-                reactTy
+        return $ ParamEntry (entryName p) ty
     entryHelp InfoContextual bsc d@(EDEF ref _ _ _ _ _ _) = do
         -- ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
         ty       <- bquoteHere $ pty ref
-        reactTy  <- reactHere (SET :>: ty)
-        return $ locally $ li_ [ class_ "def-entry" ] $ do
-            fromString $ showRelName $ christenREF bsc ref
-            reactKword KwAsc
-            reactTy
-    entryHelp _ _ _ = return $ return ()
+        return $ DefEntry (entryName d) (ty)
+    entryHelp _ _ _ = return $ ErrEntryInfo
 
-    removeShared :: Spine TT REF -> TY -> TY
-    removeShared []       ty        = ty
-    removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
--}
+    -- removeShared :: Spine TT REF -> TY -> TY
+    -- removeShared []       ty        = ty
+    -- removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
