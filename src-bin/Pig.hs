@@ -78,52 +78,52 @@ validateDevelopment locs@(_ :< loc)
                   putStrLn $ renderHouseStyle $ prettyStackError ss
               _ -> return ()
 
-cochon' :: Bwd ProofContext -> IO ()
-cochon' (locs :< loc) = do
-    -- Safety belt: this *must* type-check!
-    validateDevelopment (locs :< loc)
-    -- Show goal and prompt
-    case runProofState showPrompt loc of
-        Left err -> print err
-        Right (str, _) -> do
-            putStr str
-            hFlush stdout
-    l <- getLine
-    case parse tokenize l of
-        Left pf -> do
-            putStrLn ("Tokenize failure: " ++ describePFailure pf id)
-            cochon' (locs :< loc)
-        Right ts ->
-          case parse pCochonTactics ts of
-              Left pf -> do
-                  putStrLn ("Parse failure: " ++ describePFailure pf (intercalate " " . map crushToken))
-                  cochon' (locs :< loc)
-              Right cds -> do
-                  locs' <- doCTactics cds (locs :< loc)
-                  cochon' locs'
+-- cochon' :: Bwd ProofContext -> IO ()
+-- cochon' (locs :< loc) = do
+--     -- Safety belt: this *must* type-check!
+--     validateDevelopment (locs :< loc)
+--     -- Show goal and prompt
+--     case runProofState showPrompt loc of
+--         Left err -> print err
+--         Right (str, _) -> do
+--             putStr str
+--             hFlush stdout
+--     l <- getLine
+--     case parse tokenize l of
+--         Left pf -> do
+--             putStrLn ("Tokenize failure: " ++ describePFailure pf id)
+--             cochon' (locs :< loc)
+--         Right ts ->
+--           case parse pCochonTactics ts of
+--               Left pf -> do
+--                   putStrLn ("Parse failure: " ++ describePFailure pf (intercalate " " . map crushToken))
+--                   cochon' (locs :< loc)
+--               Right cds -> do
+--                   locs' <- doCTactics cds (locs :< loc)
+--                   cochon' locs'
 
-showPrompt :: ProofState String
-showPrompt = do
-    mty <- optional getHoleGoal
-    case mty of
-        Just (_ :=>: ty)  -> (++) <$> showGoal ty <*> showInputLine
-        Nothing           -> showInputLine
-  where
-    showGoal :: TY -> ProofState String
-    showGoal ty@(LABEL _ _) = do
-        -- h <- infoHypotheses
-        s <- prettyHere . (SET :>:) =<< bquoteHere ty
-        return $ {- h ++ "\n" ++ -} "Programming: " ++ show s ++ "\n"
-    showGoal ty = do
-        s <- prettyHere . (SET :>:) =<< bquoteHere ty
-        return $ "Goal: " ++ show s ++ "\n"
+-- showPrompt :: ProofState String
+-- showPrompt = do
+--     mty <- optional getHoleGoal
+--     case mty of
+--         Just (_ :=>: ty)  -> (++) <$> showGoal ty <*> showInputLine
+--         Nothing           -> showInputLine
+--   where
+--     showGoal :: TY -> ProofState String
+--     showGoal ty@(LABEL _ _) = do
+--         -- h <- infoHypotheses
+--         s <- prettyHere . (SET :>:) =<< bquoteHere ty
+--         return $ {- h ++ "\n" ++ -} "Programming: " ++ show s ++ "\n"
+--     showGoal ty = do
+--         s <- prettyHere . (SET :>:) =<< bquoteHere ty
+--         return $ "Goal: " ++ show s ++ "\n"
 
-    showInputLine :: ProofState String
-    showInputLine = do
-        mn <- optional getCurrentName
-        case mn of
-            Just n   -> return $ showName n ++ " > "
-            Nothing  -> return "> "
+--     showInputLine :: ProofState String
+--     showInputLine = do
+--         mn <- optional getCurrentName
+--         case mn of
+--             Just n   -> return $ showName n ++ " > "
+--             Nothing  -> return "> "
 
 tacs :: [CochonTactic]
 tacs =
@@ -160,9 +160,9 @@ main = do
          -- Help:
          (Help : _, _, [])            -> do
            putStrLn $ usageInfo message options
-         -- Load a development:
-         (LoadFile file : _, _, [])   -> do
-           loadDev file
+         -- -- Load a development:
+         -- (LoadFile file : _, _, [])   -> do
+         --   loadDev file
          -- Check a development:
          (CheckFile file : _, _, [])  -> do
            withFile file (\loc -> do
@@ -171,9 +171,9 @@ main = do
          -- Print a development:
          (PrintFile file : _, _, [])  -> do
            withFile file printTopDev
-         -- Load a development (no flag provided):
-         ([],(file:[]),[])            -> do
-           loadDev file
+         -- -- Load a development (no flag provided):
+         -- ([],(file:[]),[])            -> do
+         --   loadDev file
          -- Error:
          (_,_,errs)                   -> do
            ioError (userError (Prelude.concat errs ++
@@ -183,8 +183,8 @@ main = do
    withFile "-" g = devLoad' tacs stdin (return []) >>= g
    withFile file g = devLoad tacs file >>= g
 
-   loadDev :: String -> IO ()
-   loadDev file = withFile file cochon'
+   -- loadDev :: String -> IO ()
+   -- loadDev file = withFile file cochon'
 
    printTopDev :: Bwd ProofContext -> IO ()
    printTopDev (_ :< loc) = do
