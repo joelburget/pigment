@@ -27,6 +27,12 @@ import ProofState.Edition.ProofState
 import Lens.Family2
 import Lens.Family2.TH
 
+-- | Some commands (state modifications) should be added to the undo stack.
+--   Some should be forgotten.
+data Historic
+    = Historic
+    | Forgotten
+
 data SpecialKey
     = Enter
     | Tab

@@ -318,13 +318,14 @@ The following companion function takes care of the dirty details:
 >         exitFailure
 >       Right toks -> do
 >         print toks
->         case parse (pTactics tacs) toks of
+>         -- case parse (pTactics tacs) toks of
+>         case parse (pTactic tacs) toks of
 >           Left err -> do
 >             putStrLn $ "readCommand: failed to parse:\n" ++
 >                        show err
 >             putStrLn $ "Input was: " ++ command
 >             exitFailure
->           Right command -> return command
+>           Right command -> return [command]
 
 
 > tokenizeCommands :: Parsley Char [String]

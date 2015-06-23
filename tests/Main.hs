@@ -13,6 +13,7 @@ import Kit.BwdFwd
 import NameSupply.NameSupplier
 import NameSupply.NameSupply
 
+import qualified TacticParse as Parse
 
 ev :: (TY :>: VAL) -> Either (StackError VAL) ((TY :>: VAL) :=>: VAL)
 ev tx@(_ :>: x) = Right (tx :=>: x)
@@ -80,7 +81,12 @@ inferBasics = do
     assertInfers (UNIT :? SET) (UNIT :<: SET)
 
     let constUnit = LK UNIT
-        constUnitTy = PI SET (LK UNIT)
+        -- No way this is allowed...
+        underscore :: TY -> REF
+        underscore ty = mkName fakeNameSupply "_" := (DECL :<: ty)
+        constTy :: TY -> TY
+        constTy ty = C (Pi (NP (underscore ty)) (LK ty))
+        constUnitTy = constTy UNIT
     assertInfers (constUnit :? constUnitTy) (constUnit :<: constUnitTy)
 
     -- elimination
@@ -88,12 +94,15 @@ inferBasics = do
     --     ((constUnit :? constUnitTy) :$ (A UNIT))
     --     (UNIT :<: SET)
 
-tests :: TestTree
-tests = testGroup "Tests"
+checkTests :: TestTree
+checkTests = testGroup "Type Checking Tests"
     [ testCase "canTy basics" canTyBasics
     , testCase "check basics" checkBasics
     , testCase "infer basics" inferBasics
     ]
+
+tests :: TestTree
+tests = testGroup "Tests" [ checkTests, Parse.tests ]
 
 main :: IO ()
 main = defaultMain tests

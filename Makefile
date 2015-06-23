@@ -18,7 +18,7 @@ print-%: ; @echo $*=$($*)
 clean:
 	git clean -xf
 
-$(SANDBOX)/bin/pigment.jsexe/all.js: $(SANDBOX) $(LIB_SOURCE_FILES) src-web/Main.hs
+$(SANDBOX)/bin/pigment.jsexe/all.js: $(SANDBOX) $(LIB_SOURCE_FILES) src-web/hs/Main.hs
 	cabal install --ghcjs --flag ghcjs --disable-documentation --disable-library-profiling --disable-benchmarks
 
 $(SANDBOX):

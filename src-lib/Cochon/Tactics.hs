@@ -1009,12 +1009,6 @@ elimCTactic c r = do
     return "Eliminated. Subgoals awaiting work..."
 
 
--- | Some commands (state modifications) should be added to the undo stack.
---   Some should be forgotten.
-data Historic
-    = Historic
-    | Forgotten
-
 simpleOutput :: Historic -> ProofState UserMessage -> Cmd ()
 simpleOutput hist eval = do
     locs :< loc <- getCtx

@@ -69,6 +69,8 @@ import Tactics.Relabel
 import Tactics.Unification
 
 
+import Kit.Trace
+
 dispatch :: Transition -> InteractionState -> InteractionState
 dispatch (SelectPane pane) state = state & currentPane .~ pane
 dispatch ToggleRightPane state = state & rightPaneVisible %~ toggleVisibility
@@ -248,7 +250,9 @@ pTactic tacs = do
     x <- ident <|> (key <$> anyKeyword)
     case tacticNamed tacs x of
         Just ct -> do
+            elabTrace $ "found tactic named " ++ (ctName ct)
             args <- parseTactic (ctDesc ct)
+            elabTrace $ "found args"
 
             -- trailing semicolons are cool, or not
             -- XXX(joel)

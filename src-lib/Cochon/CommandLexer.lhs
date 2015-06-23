@@ -7,6 +7,7 @@ Cochon Command Lexer
 > module Cochon.CommandLexer where
 
 > import Control.Applicative
+> import Control.Monad
 > import Data.Functor
 > import Data.Either
 > import Data.Monoid
@@ -22,6 +23,7 @@ Cochon Command Lexer
 > import DisplayLang.Name
 > import DisplayLang.Scheme
 
+> import Debug.Trace
 
 #ifdef __GHCJS__
 
@@ -137,20 +139,20 @@ pAscriptionTC = typeAnnot <$> pDInTm <* keyword KwAsc <*> pDInTm
 > matchTactic fmt tokens = isRight (parse (parseTactic fmt) tokens)
 
 > parseTactic :: TacticDescription -> Parsley Token TacticResult
-> parseTactic (TfName _) = tokenString
-> parseTactic (TfKeyword kw) = keyword kw $> TrKeyword
-> parseTactic (TfPseudoKeyword str) = TrPseudoKeyword <$ tokenEq (Identifier (T.unpack str))
-> parseTactic (TfInArg _ _) = tokenInTm
-> parseTactic (TfExArg _ _) = tokenExTm
-> parseTactic (TfScheme _ _) = tokenScheme
+> parseTactic (TfName _) = trace "TfName" tokenString
+> parseTactic (TfKeyword kw) = trace "TfKeyword" $ keyword kw $> TrKeyword
+> parseTactic (TfPseudoKeyword str) = trace "TfPseudoKeyword" $ trace (T.unpack str) $ TrPseudoKeyword <$ tokenEq (Identifier (T.unpack str))
+> parseTactic (TfInArg _ _) = trace "TfInArg" tokenInTm
+> parseTactic (TfExArg _ _) = trace "TfExArg" tokenExTm
+> parseTactic (TfScheme _ _) = trace "TfScheme" tokenScheme
 
 > -- XXX parseTactic (TfAlternative l r) = parseTactic l <|> parseTactic r
-> parseTactic (TfOption fmt) = parseTactic fmt <|> empty
+> parseTactic (TfOption fmt) = trace "TfOption" $ parseTactic fmt <|> empty
 
-> parseTactic (TfRepeatZero format) = TrRepeatZero <$> some (parseTactic format)
-> parseTactic (TfSequence formats) = foldr (>>) empty $ map parseTactic formats
-> parseTactic (TfBracketed bTy format) = bracket bTy (parseTactic format)
-> parseTactic (TfSep format kwd) =
+> parseTactic (TfRepeatZero format) = trace "TfRepeatZero" $ TrRepeatZero <$> some (parseTactic format)
+> parseTactic (TfSequence formats) = trace "TfSequence" $ TrSequence <$> sequence (map parseTactic formats)
+> parseTactic (TfBracketed bTy format) = trace "TfBracketed" $ bracket bTy (parseTactic format)
+> parseTactic (TfSep format kwd) = trace "TfSep" $
 >     TrSep <$> pSep (keyword kwd) (parseTactic format)
 
 

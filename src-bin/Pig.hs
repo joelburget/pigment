@@ -126,9 +126,7 @@ validateDevelopment locs@(_ :< loc)
 --             Nothing  -> return "> "
 
 tacs :: [CochonTactic]
-tacs =
-    showTac :
-    cochonTactics
+tacs = showTac : cochonTactics
 
 showTac :: CochonTactic
 showTac = unaryStringCT "show" (\s -> case s of
