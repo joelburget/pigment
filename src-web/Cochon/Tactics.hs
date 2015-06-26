@@ -9,6 +9,7 @@ import Control.Monad
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
 import Data.List
+import Data.Monoid
 import Data.String
 import Data.Traversable
 import qualified Data.Text as T

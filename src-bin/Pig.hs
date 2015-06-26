@@ -68,7 +68,7 @@ main = do
            cochon emptyContext
          -- Error:
          (_,_,errs)                   -> do
-           ioError (userError (concat errs ++
+           ioError (userError (Prelude.concat errs ++
                                usageInfo message options))
  where
    withFile :: String -> (Bwd ProofContext -> IO a) -> IO a

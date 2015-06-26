@@ -27,14 +27,14 @@ library
       base >= 4.6,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
-      mtl >= 2.2,
-      transformers == 0.4.3.0,
+      mtl >= 2.1,
+      transformers >= 0.3,
       errors == 1.4.7,
       text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1.1
+      recursion-schemes >= 4.1
   exposed-modules:
     DisplayLang.DisplayTm
     DisplayLang.Lexer
@@ -112,22 +112,15 @@ executable pigment
       base >= 4.6,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
-      mtl >= 2.2,
-      transformers == 0.4.3.0,
+      mtl >= 2.1,
+      transformers >= 0.3,
       errors == 1.4.7,
       text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1.1
-
-  if flag(ghcjs)
-    build-depends:
-      -- ghcjs-specific
-      ghcjs-base >= 0.1,
-      ghcjs-dom >=0.1.1.1,
-      ghcjs-prim >= 0.1.0.0,
-      react-haskell == 1.3.0.0,
+      recursion-schemes >= 4.1,
+      react-haskell == 1.4.0.0,
       material-ui == 0.1.0.0
 
 executable Pig
@@ -137,14 +130,15 @@ executable Pig
       base >= 4.6,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
-      mtl >= 2.2,
-      transformers == 0.4.3.0,
+      mtl >= 2.1,
+      transformers >= 0.3,
       errors == 1.4.7,
       text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1.1,
+      recursion-schemes >= 4.1,
+      filepath >= 1.3,
       pigment
 
 executable Traif
@@ -154,14 +148,15 @@ executable Traif
       base >= 4.6,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
-      mtl >= 2.2,
-      transformers == 0.4.3.0,
+      mtl >= 2.1,
+      transformers >= 0.3,
       errors == 1.4.7,
       text >= 1.2,
       void >= 0.7,
       newtype == 0.2,
       pretty >= 1.1,
-      recursion-schemes == 4.1.1
+      recursion-schemes >= 4.1,
+      pigment
 
 test-suite tests
   type: exitcode-stdio-1.0

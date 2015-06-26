@@ -15,7 +15,7 @@ are round, square, or curly, and you can make fancy brackets by wedging
 an identifier between open-and-bar, or bar-and-close without whitespace.
 Sequences of non-whitespace are identifiers unless they're keywords.
 
-> {-# LANGUAGE GADTs, TypeSynonymInstances, CPP, DeriveGeneric #-}
+> {-# LANGUAGE GADTs, TypeSynonymInstances, DeriveGeneric #-}
 
 > module DisplayLang.Lexer where
 
@@ -27,25 +27,6 @@ Sequences of non-whitespace are identifiers unless they're keywords.
 > import GHC.Generics
 
 > import Kit.Parsley
-
-#ifdef __GHCJS__
-
-> import GHCJS.Marshal
-> import GHCJS.Types
-
-This instance is kind of strange, but should work.
-
-> instance ToJSRef Bracket where
->     toJSRef = (castRef <$>) . toJSRef' where
->         toJSRef' Round = toJSRef "("
->         toJSRef' Square = toJSRef "["
->         toJSRef' Curly = toJSRef "{"
->         toJSRef' (RoundB str) = toJSRef $ "(" ++ str
->         toJSRef' (SquareB str) = toJSRef $ "[" ++ str
->         toJSRef' (CurlyB str) = toJSRef $ "{" ++ str
->
-
-#endif
 
 What are tokens?
 ----------------
@@ -213,12 +194,6 @@ things...
 >     | KwCon
 >     | KwOut
 >   deriving (Bounded, Enum, Eq, Show, Generic)
-
-#ifdef __GHCJS__
-
-> instance ToJSRef Keyword where
-
-#endif
 
 ...and they look like this:
 

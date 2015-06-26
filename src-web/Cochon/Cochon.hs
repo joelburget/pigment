@@ -2,7 +2,7 @@
 -- ====================
 
 {-# LANGUAGE TypeOperators, TypeSynonymInstances, GADTs,
-    OverloadedStrings, CPP, NamedFieldPuns #-}
+    OverloadedStrings, NamedFieldPuns #-}
 
 module Cochon.Cochon where
 
@@ -47,11 +47,7 @@ import Cochon.Reactify
 
 import Kit.BwdFwd
 
-import GHCJS.Types
-import GHCJS.DOM (runWebGUI, currentDocument)
-import GHCJS.DOM.Document (documentGetElementById, documentGetDocumentElement)
-import React hiding (key)
-import qualified React
+import React.GHCJS
 
 -- We start out here. Main calls `cochon emptyContext`.
 

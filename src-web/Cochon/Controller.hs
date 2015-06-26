@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings, TypeFamilies, LiberalTypeSynonyms #-}
+{-# LANGUAGE OverloadedStrings, TypeFamilies, LiberalTypeSynonyms,
+    PatternSynonyms #-}
 
 module Cochon.Controller where
 

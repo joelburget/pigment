@@ -9,6 +9,7 @@
 > import Prelude hiding (any, foldl)
 > import Control.Applicative
 > import Control.Monad.Reader
+> import qualified Data.Foldable as Foldable
 > import Data.Traversable
 > import Data.Monoid
 
@@ -290,7 +291,7 @@ value.
 >         return $ Simply qs gs $
 >             L $ "xe" :. N (switchOp :@ [e', NV 0,
 >                                         L $ "yb" :. PRF (N (b'' :$ A (NV 0))),
->                                         Prelude.foldr PAIR VOID hs])
+>                                         Foldable.foldr PAIR VOID hs])
 >     process qs1 gs1 hs1 (n :=>: nv) (ts :< t) =
 >         forkSimplify delta (b $$ A nv) $ \ (btSimp, _) -> case btSimp of
 >             SimplyAbsurd prf  -> return $ SimplyAbsurd (prf . (:$ A n))
