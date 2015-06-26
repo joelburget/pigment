@@ -1,10 +1,13 @@
-.PHONY: build clean docs web install_less_deps dash lint
+.PHONY: build repl clean docs web install_less_deps dash lint
 
 LIB_SOURCE_FILES = $(wildcard src-lib/**/*hs)
 LHS_FILES = $(wildcard src-lib/**/*.lhs)
 SANDBOX = /home/vagrant/pigment-sandbox
 
 build: build/index.css build/mui.css build/index.html build/all.js
+
+repl: $(SANDBOX)
+	cabal repl
 
 install_less_deps:
 	npm install -g less less-plugin-autoprefix
