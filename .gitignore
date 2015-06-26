@@ -18,3 +18,5 @@ src/main/
 node_modules
 build
 site/public/
+.stack-work
+tests/files/.tests
