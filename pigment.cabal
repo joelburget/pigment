@@ -24,7 +24,7 @@ flag ghcjs
 library
   hs-source-dirs: src-lib
   build-depends:
-      base >= 4.6,
+      base >= 4.6 && < 5,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
       mtl >= 2.1,
@@ -98,7 +98,7 @@ library
     Tactics.Record
     Tactics.Relabel
     Tactics.Unification
-  ghc-options: -Wall -fwarn-tabs -O2 -fdicts-cheap -funbox-strict-fields -fmax-simplifier-iterations=10
+  ghc-options: -Wall -fwarn-tabs -fdicts-cheap -funbox-strict-fields -fmax-simplifier-iterations=10
 
 executable pigment
   main-is:        Main.hs
@@ -109,7 +109,7 @@ executable pigment
       src-web/js/mui.js
       src-web/js/react-stubs.js
   build-depends:
-      base >= 4.6,
+      base >= 4.6 && < 5,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
       mtl >= 2.1,
@@ -127,7 +127,7 @@ executable Pig
   main-is: Pig.hs
   hs-source-dirs: src-bin
   build-depends:
-      base >= 4.6,
+      base >= 4.6 && < 5,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
       mtl >= 2.1,
@@ -145,7 +145,7 @@ executable Traif
   main-is: Pig.hs
   hs-source-dirs: src-bin
   build-depends:
-      base >= 4.6,
+      base >= 4.6 && < 5,
       lens-family == 1.2.0,
       lens-family-th == 0.4.1.0,
       mtl >= 2.1,
@@ -164,7 +164,7 @@ test-suite tests
   ghc-options: -Wall -threaded
   hs-source-dirs: tests
   build-depends:
-    base,
+    base >= 4.6 && < 5,
     pigment,
     -- QuickCheck           >= 2.4,
     HUnit                >= 1.2.5,
@@ -178,6 +178,6 @@ test-suite hlint
   hs-source-dirs: tests
 
   build-depends:
-    base,
+    base >= 4.6 && < 5,
     pigment,
     hlint >= 1.7
