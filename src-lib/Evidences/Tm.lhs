@@ -688,7 +688,24 @@ following to make it suit your need.
 >     | ErrorElim     (Elim t)
 >     | ErrorREF      REF
 >     | ErrorVAL      (VAL     :<: Maybe TY)
->     deriving Show
+
+> instance Show t => Show (ErrorTok t) where
+>     show (StrMsg str) = str
+>     show (ErrorTm (tm :<: ty)) = tmValShow "term" tm ty
+>     show (ErrorCan c) = "(can) [" <> show c <> "]"
+>     show (ErrorElim e) = "(elim) [" <> show e <> "]"
+>     show (ErrorREF r) = "(ref) [" <> show r <> "]"
+>     show (ErrorVAL (tm :<: ty)) = tmValShow "val" tm ty
+
+> tmValShow :: Show t => String -> t -> Maybe t -> String
+> tmValShow prefix tm ty = mconcat
+>         [ "(" <> prefix <> ") ["
+>         , show tm
+>         , case ty of
+>               Just ty' -> " : " <> show ty'
+>               Nothing  -> ""
+>         , "]"
+>         ]
 
 > instance Functor ErrorTok where
 >     fmap f (StrMsg x)            = StrMsg x
@@ -702,11 +719,22 @@ An error is list of error tokens:
 
 > type ErrorItem t = [ErrorTok t]
 
+> showErrorItem :: Show t => ErrorItem t -> String
+> showErrorItem = unlines . map show
+
 Errors a reported in a stack, as failure is likely to be followed by
 further failures. The top of the stack is the head of the list.
 
 > newtype StackError t = StackError { unStackError :: [ErrorItem t] }
->     deriving Show
+
+> prePostStr :: String -> String -> String -> String
+> prePostStr pre post str = pre <> str <> post
+
+> instance Show t => Show (StackError t) where
+>     show = prePostStr "StackError (\n" "\n)"
+>          . unlines
+>          . map showErrorItem
+>          . unStackError
 
 > -- XXX(joel) this is gross
 > -- With ProofStateT, we use the alternative instance for StateT, which

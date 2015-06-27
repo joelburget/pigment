@@ -509,8 +509,8 @@ $$\Rule{\star \ni \mbox{ty}  \qquad
 Which translates directly into the following code:
 
 > infer (t :? ty)           = do
->   _ :=>:  vty  <- check (SET  :>: ty  )
->   _ :=>:  v    <- check (vty  :>: t   )
+>   _ :=>:  vty  <- check (SET  :>: ty)
+>   _ :=>:  v    <- check (vty  :>: t )
 >   return $ v :<: vty
 
 Obviously, if none of the rule above applies, then there is something

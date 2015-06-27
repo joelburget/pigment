@@ -7,20 +7,9 @@ import Data.Either
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Evidences.TypeChecker
-import Evidences.Tm
-import Kit.BwdFwd
-import NameSupply.NameSupplier
-import NameSupply.NameSupply
+import PigmentPrelude
 
 import qualified TacticParse as Parse
-
-ev :: (TY :>: VAL) -> Either (StackError VAL) ((TY :>: VAL) :=>: VAL)
-ev tx@(_ :>: x) = Right (tx :=>: x)
-
-assertRight :: (Eq a, Show a, Show b) => String -> a -> Either b a -> Assertion
-assertRight msg _ (Left err) = assertFailure (msg ++ " " ++ show err)
-assertRight msg a (Right a') = assertEqual msg a a'
 
 canTyBasics :: Assertion
 canTyBasics = do
@@ -39,21 +28,6 @@ canTyBasics = do
     --     -- )
     --     (canTy ev (Set :>: Pi s s))
 
-fakeNameSupply :: NameSupply
-fakeNameSupply = (B0, 0)
-
-assertChecks :: (TY :>: INTM) -> VAL -> Assertion
-assertChecks start finish =
-    let resultVal = do
-            _ :=>: val <- typeCheck (check start) fakeNameSupply
-            return val
-    in assertRight "checks" finish resultVal
-
-assertNoCheck :: (TY :>: INTM) -> Assertion
-assertNoCheck problem =
-    let result = typeCheck (check problem) fakeNameSupply
-    in assertBool "doesn't check" (isLeft result)
-
 -- check :: (TY :>: INTM) -> Check INTM (INTM :=>: VAL)
 checkBasics :: Assertion
 checkBasics = do
@@ -69,25 +43,25 @@ checkBasics = do
     -- assertChecks (PI SET (L (K SET)) :>: L ("s" :. SET)) (L (K SET))
     assertChecks (PI SET (L (K SET)) :>: L (K SET)) (L (K SET))
 
-assertInfers :: EXTM -> (VAL :<: TY) -> Assertion
-assertInfers start finish =
-    let resultVal = typeCheck (infer start) fakeNameSupply
-    in assertRight "infers" finish resultVal
-
 -- infer :: EXTM -> Check INTM (VAL :<: TY)
 inferBasics :: Assertion
 inferBasics = do
     -- trivial checks - we infer the ascripted type
-    assertInfers (UNIT :? SET) (UNIT :<: SET)
+    assertInfers (UNIT ?? SET) (UNIT :<: SET)
+    assertInfers (VOID ?? UNIT) (VOID :<: UNIT)
 
-    let constUnit = LK UNIT
-        -- No way this is allowed...
-        underscore :: TY -> REF
-        underscore ty = mkName fakeNameSupply "_" := (DECL :<: ty)
-        constTy :: TY -> TY
-        constTy ty = C (Pi (NP (underscore ty)) (LK ty))
-        constUnitTy = constTy UNIT
-    assertInfers (constUnit :? constUnitTy) (constUnit :<: constUnitTy)
+    assertInfers (ARR UNIT UNIT ?? SET)
+                 (ARR UNIT UNIT :<: SET)
+    assertInfers (LK VOID ?? ARR UNIT UNIT)
+                 (LK VOID :<: ARR UNIT UNIT)
+
+    -- this SIGMA and TIMES are really the same thing
+    assertInfers (PAIR UNIT UNIT ??  SIGMA SET (LK SET))
+                 (PAIR UNIT UNIT :<: TIMES SET SET)
+
+    -- this ARR and PI are really the same thing
+    assertInfers (LAV "x" (NV 0) ?? ARR SET SET)
+                 (LAV "x" (NV 0) :<: PI SET (LK SET))
 
     -- elimination
     -- assertInfers

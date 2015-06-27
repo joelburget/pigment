@@ -163,6 +163,18 @@ executable Traif
       recursion-schemes >= 4.1,
       pigment
 
+executable PigmentPrelude
+  main-is: PigmentPrelude.hs
+  hs-source-dirs: tests
+  build-depends:
+    base >= 4.6 && < 5,
+    pigment,
+    text >= 1.2,
+    -- QuickCheck           >= 2.4,
+    HUnit                >= 1.2.5,
+    tasty       >= 0.7,
+    tasty-hunit >= 0.9
+
 test-suite tests
   type: exitcode-stdio-1.0
   main-is: Main.hs

@@ -130,6 +130,7 @@ any auxiliary code.
 >       "P" :<: ARR xX SET :-: \pP ->
 >       "v" :<: (descOp @@ [dD,xX]) :-: \v ->
 >       Target SET
+
 > mapBoxOp :: Op
 > mapBoxOp = Op
 >   { opName = "mapBox"
@@ -159,6 +160,7 @@ any auxiliary code.
 >       "p" :<: (PI xX $ L $ "x" :. (let x = 0 :: Int in pP -$ [ NV x ] )) :-: \ _ ->
 >       "v" :<: (descOp @@ [dD,xX]) :-: \v ->
 >        Target (boxOp @@ [dD,xX,pP,v])
+
 > mapOp = Op
 >   { opName  = "map"
 >   , opArity = 5
