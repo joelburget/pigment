@@ -8,14 +8,9 @@
 > module Evidences.TypeChecker where
 
 > import Control.Applicative
-> import Control.Monad.Trans.Class
 > import Data.Functor.Identity
-> import Data.Monoid ((<>))
 > import Data.Traversable
 
-> import Control.Error
-
-> import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Evidences.Tm
 > import Evidences.Mangler

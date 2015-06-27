@@ -8,7 +8,6 @@ Operator DSL
 > module Evidences.OperatorDSL where
 >
 > import Control.Applicative
-> import Control.Error
 > import Evidences.Tm
 > import {-# SOURCE #-} Evidences.Eval
 
@@ -62,7 +61,7 @@ try this.
 > runOpTree (OCon f) (CON t : xs)  = runOpTree f (t : xs)
 > runOpTree (OSet f) (C c :  xs)   = runOpTree (f c) xs
 > runOpTree (ORet v)          xs   = Right (v $$$ map A xs)
-> runOpTree _  (N e : xs)   = Left e
+> runOpTree _  (N e : _)   = Left e
 
 Grot! Why does the `Monad (Either e)` instance demand `(Except e)`? I
 shut it up.

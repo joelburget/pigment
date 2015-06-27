@@ -101,10 +101,10 @@ $\lambda$-abstractions in the proof state.
 >     disMangle :: Bwd REF -> Int -> Mangle Identity REF REF
 >     disMangle ys i = Mang
 >       {  mangP = \ x ies -> (h ys x i $:$) <$> ies
->       ,  mangV = \ i ies -> (V i $:$) <$> ies
+>       ,  mangV = \ j ies -> (V j $:$) <$> ies
 >       ,  mangB = \ _ -> disMangle ys (i + 1)
 >       }
->     h B0                        x i  = P x
+>     h B0                        x _  = P x
 >     h (ys :< y) x i
 >       | x == y     = V i
 >       | otherwise  = h ys x (i + 1)
@@ -122,7 +122,7 @@ target term, it substitutes the terms for the references in the target.
 >     substMangle :: Bwd (REF :<: INTM) -> Bwd INTM -> Mangle Identity REF REF
 >     substMangle bs vs = Mang
 >       {  mangP = \ x ies -> (help bs vs x $:$) <$> ies
->       ,  mangV = \ i ies -> (V i $:$) <$> ies
+>       ,  mangV = \ j ies -> (V j $:$) <$> ies
 >       ,  mangB = \ _ -> substMangle bs vs
 >       }
 >

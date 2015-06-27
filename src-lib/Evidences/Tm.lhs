@@ -12,7 +12,6 @@ Tm
 > import Prelude hiding (foldl)
 > import Control.Applicative
 > import Control.Monad.State
-> import Control.Monad.Trans.Class
 > import Control.Monad.Trans.Error
 > import qualified Data.Monoid as M
 > import Data.Monoid (mappend, mconcat, mempty, (<>))
@@ -139,7 +138,7 @@ operators. Again, we must be careful of not building a stuck operator
 for no good reason.
 
 > (-$) :: VAL -> [INTM] -> INTM
-> f -$ as = N (foldl (\f a -> f :$ A a) (Yuk f) as)
+> f -$ as = N (foldl (\g a -> g :$ A a) (Yuk f) as)
 
 Scopes
 
@@ -289,9 +288,9 @@ telescope, checking and evaluating as it moves further.
 > telCheck ::  forall m t s x. (Monad m, ErrorStack m t)
 >          => (TY :>: t -> m (s :=>: VAL))
 >          -> (TEL x :>: [t]) -> m ([s :=>: VAL] , x)
-> telCheck chev (Target x :>: []) = return ([] , x)
+> telCheck _ (Target x :>: []) = return ([] , x)
 > telCheck chev ((_ :<: sS :-: tT) :>: (s : t)) = do
->     ssv@(s :=>: sv) <- chev (sS :>: s)
+>     ssv@(_ :=>: sv) <- chev (sS :>: s)
 >     (svs , x) <- telCheck chev ((tT sv) :>: t)
 >     return (ssv : svs , x)
 > telCheck _ _ = throwStack (errMsgStack "telCheck: opTy mismatch" :: StackError t)
@@ -708,12 +707,12 @@ following to make it suit your need.
 >         ]
 
 > instance Functor ErrorTok where
->     fmap f (StrMsg x)            = StrMsg x
+>     fmap _ (StrMsg x)            = StrMsg x
 >     fmap f (ErrorTm (t :<: mt))  = ErrorTm (f t :<: fmap f mt)
 >     fmap f (ErrorCan t)          = ErrorCan (fmap f t)
 >     fmap f (ErrorElim t)         = ErrorElim (fmap f t)
->     fmap f (ErrorREF r)          = ErrorREF r
->     fmap f (ErrorVAL (t :<: mt)) = ErrorVAL (t :<: mt)
+>     fmap _ (ErrorREF r)          = ErrorREF r
+>     fmap _ (ErrorVAL (t :<: mt)) = ErrorVAL (t :<: mt)
 
 An error is list of error tokens:
 
@@ -753,8 +752,8 @@ further failures. The top of the stack is the head of the list.
 
 > instance (Monad m, ErrorStack m e) => ErrorStack (StateT s m) e where
 >     throwStack = lift . throwStack
->     catchStack m h = StateT $ \state ->
->         (runStateT m state) `catchStack` (\e -> runStateT (h e) state)
+>     catchStack m h = StateT $ \st ->
+>         (runStateT m st) `catchStack` (\e -> runStateT (h e) st)
 
 > instance M.Monoid (StackError t) where
 >   (StackError a) `mappend` (StackError b) = StackError (a ++ b)
@@ -854,6 +853,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >     traverse f (Label l t) = Label <$> f l <*> f t
 >     traverse f (LRet t)    = LRet <$> f t
 >     traverse f (Nu t) = Nu <$> traverse f t
+>     traverse f (Record t) = Record <$> traverse f t
 >     traverse f (CoIt d sty g s) = CoIt <$> f d <*> f sty <*> f g <*> f s
 >     traverse _ Prob = pure Prob
 >     traverse f (ProbLabel u s a) = ProbLabel <$> f u <*> f s <*> f a
@@ -1052,10 +1052,11 @@ throwErrTm = throwStack . StackError . pure . errTm
 >   traverse f (C c)      = C <$> traverse (traverse f) c
 >   traverse f (N n)      = N <$> traverse f n
 >   traverse f (P x)      = P <$> f x
->   traverse f (V i)      = pure (V i)
+>   traverse _ (V i)      = pure (V i)
 >   traverse f (t :$ u)   = (:$) <$> traverse f t <*> traverse (traverse f) u
 >   traverse f (op :@ ts) = (op :@) <$> traverse (traverse f) ts
 >   traverse f (tm :? ty) = (:?) <$> traverse f tm <*> traverse f ty
+>   traverse f (Yuk tm)   = Yuk <$> traverse f tm
 
 > instance Functor (Tm d) where
 >     fmap = fmapDefault
