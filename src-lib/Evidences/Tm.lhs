@@ -157,7 +157,7 @@ In both cases, we represent constant functions with `K t`, equivalent of
 > data Scope :: * -> * where
 >   (:.)  :: String -> Tm In x           -> Scope x  -- binding
 >   H     :: Env x -> String -> Tm In x  -> Scope x
->   K     :: Tm In x                     -> Scope x     -- constant
+>   K     :: Tm In x                     -> Scope x  -- constant
 
 Canonical objects
 
@@ -418,10 +418,10 @@ i.e. we can push the `typ` in the `thing`. Conversely, we write `thing
 the type `typ` out of the `thing`. Therefore, we can read `:>:` as
 "accepts" and `:<:` as "has inferred type".
 
-> data ty :>: tm = ty :>: tm  deriving (Show,Eq)
+> data ty :>: tm = ty :>: tm  deriving (Show, Eq)
 > infix 4 :>:
 
-> data tm :<: ty = tm :<: ty  deriving (Show,Eq)
+> data tm :<: ty = tm :<: ty  deriving (Show, Eq)
 > infix 4 :<:
 
 > fstIn :: (a :>: b) -> a
@@ -1001,10 +1001,10 @@ throwErrTm = throwStack . StackError . pure . errTm
 >     foldMap = foldMapDefault
 
 > instance Show x => Show (Tm dir x) where
->   show (L s)       = "L (" ++ show s ++ ")"
->   show (C c)       = "C (" ++ show c ++ ")"
->   show (N n)       = "N (" ++ show n ++ ")"
->   show (P x)       = "P (" ++ show x ++ ")"
+>   show (L s)       = "(L " ++ show s ++ ")"
+>   show (C c)       = "(C " ++ show c ++ ")"
+>   show (N n)       = "(N " ++ show n ++ ")"
+>   show (P x)       = "(P " ++ show x ++ ")"
 >   show (V i)       = "V " ++ show i
 >   show (n :$ e)    = "(" ++ show n ++ " :$ " ++ show e ++ ")"
 >   show (op :@ vs)  = "(" ++ opName op ++ " :@ " ++ show vs ++ ")"

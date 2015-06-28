@@ -68,11 +68,19 @@ inferBasics = do
     --     ((constUnit :? constUnitTy) :$ (A UNIT))
     --     (UNIT :<: SET)
 
+equalBasics :: Assertion
+equalBasics = do
+    let pair = PAIR UNIT UNIT
+        result = pair $$ Fst
+    assertTrue $ equal (SET :>: (result, UNIT)) fakeNameSupply
+
 checkTests :: TestTree
 checkTests = testGroup "Type Checking Tests"
     [ testCase "canTy basics" canTyBasics
     , testCase "check basics" checkBasics
     , testCase "infer basics" inferBasics
+    , testCase "equal basics" equalBasics
+    -- , testCase "tactics" testTactics
     ]
 
 tests :: TestTree

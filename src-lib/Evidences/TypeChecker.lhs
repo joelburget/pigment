@@ -456,7 +456,11 @@ This translates into the following signature:
 > infer :: EXTM -> Check INTM (VAL :<: TY)
 
 We all know the rule to infer the type of a free variable from the
-context: $$\CAxiom{\Gamma, x : A, \Delta \vdash x \in A}$$
+context:
+
+$$
+\CAxiom{\Gamma, x : A, \Delta \vdash x \in A}
+$$
 
 In Epigram, parameters carry their types, so it is even easier:
 
@@ -464,9 +468,12 @@ In Epigram, parameters carry their types, so it is even easier:
 
 The rule for eliminators is a generalization of the rule for function
 application. Let us give a look at its formal rule:
-$$\Rule{f \in \Pi\ S\ T  \qquad
+
+$$
+\Rule{f \in \Pi\ S\ T  \qquad
       S \ni x}
-     {f x \in {(B x)}^\downarrow}$$
+     {f x \in {(B x)}^\downarrow}
+$$
 
 The story is the same in the general case: we infer the eliminated term
 `t` and we type-check the eliminator, using `elimTy`. Because `elimTy`
@@ -497,9 +504,12 @@ operator application:
 >   return $ (op @@ (fmap valueOf vs)) :<: t
 
 Type ascription is formalized by the following rule:
-$$\Rule{\star \ni \mbox{ty}  \qquad
+
+$$
+\Rule{\star \ni \mbox{ty}  \qquad
       \mbox{ty}^\downarrow \ni t}
-     {(t :\in T) \in \mbox{ty}^\downarrow}$$
+     {(t :\in T) \in \mbox{ty}^\downarrow}
+$$
 
 Which translates directly into the following code:
 

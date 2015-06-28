@@ -7,6 +7,8 @@
 > module Evidences.Operators where
 
 > import Control.Applicative
+> import Control.Exception
+> import Data.Typeable
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Evidences.Tm
@@ -1084,10 +1086,14 @@ references.
 >     Just ref  -> ref
 >     Nothing   -> error $ "lookupOpRef: missing operator primitive " ++ show op
 
+> -- "type undefined
+> data PityException = PityException String TY deriving (Show, Typeable)
+> instance Exception PityException
+
 > pity :: NameSupplier m => TEL TY -> m TY
 > pity (Target t)       = return t
 > pity (x :<: s :-: t)  = do
->   let pityTy = error "pity: type undefined"
+>   let pityTy = throw (PityException x s)
 >   freshRef  (x :<: pityTy)
 >             (\xref -> do
 >                t' <- pity $ t (pval xref)

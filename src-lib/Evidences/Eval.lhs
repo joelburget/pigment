@@ -57,13 +57,17 @@ This translates into the following code:
 > L (x :. t)   $$ A v
 >   = eval t (B0 :< v, naming x v [])    -- elim-bind
 > C (Con t)    $$ Out  = t               -- elim-con
+> N n          $$ e    = N (n :$ e)      -- elim-stuck
+
+-- extensions
+
+> PAIR x y $$ Fst = x
+> PAIR x y $$ Snd = y
 > LRET t $$ Call l = t
 > COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
 >     L $ "s" :. (let s = 0 in COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)),
 >     f $$ A s]
-> PAIR x y $$ Fst = x
-> PAIR x y $$ Snd = y
-> N n          $$ e    = N (n :$ e)      -- elim-stuck
+
 > f            $$ e    =  error $
 >     "Can't eliminate `" ++ show f ++ "` with eliminator `" ++ show e ++ "`"
 
