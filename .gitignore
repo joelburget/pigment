@@ -13,6 +13,7 @@ dist/
 *.hspp
 *.dvi
 *.pdf
+*.agdai
 src/main/
 *.iml
 node_modules
