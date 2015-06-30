@@ -1,21 +1,24 @@
 {-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
   MultiParamTypeClasses, LambdaCase, LiberalTypeSynonyms, DataKinds,
-  NamedFieldPuns, TypeOperators #-}
+  NamedFieldPuns, TypeOperators, RebindableSyntax, TypeSynonymInstances,
+  FlexibleInstances #-}
 
 module Cochon.View where
 
+import Prelude hiding ((>>), return)
+
 import Control.Applicative
-import Control.Monad as Monad
-import Control.Monad.State
 import qualified Data.Foldable as Foldable
 import Data.Monoid
 import Data.List
 import Data.String
+import Data.Text (Text)
 import Data.Traversable as Traversable
 import Data.Void
 
 import Lens.Family2
-import React hiding (label_)
+import React
+import React.DOM hiding (label_)
 import React.GHCJS
 import React.MaterialUI
 
@@ -40,6 +43,7 @@ import Elaboration.ElabProb
 import Elaboration.ElabMonad
 import Elaboration.MakeElab
 import Elaboration.RunElab
+import Evidences.DefinitionalEquality
 import Evidences.Eval hiding (($$))
 import qualified Evidences.Eval (($$))
 import Evidences.Tm
@@ -75,23 +79,12 @@ import Tactics.Unification
 
 import Kit.Trace
 
--- The top level page
-type Cochon a = a InteractionState Transition ()
-type InteractionReact = Cochon React'
 
-type ReactTerm a = a ProofContext TermAction ()
-type TermReact = ReactTerm React'
+forReact :: Foldable f => f a -> (a -> ReactNode b) -> ReactNode b
+forReact = flip Foldable.foldMap
 
-instance GeneralizeSignal TermAction Transition where
-    generalizeSignal = TermTransition
-
-
--- XXX
-instance GeneralizeSignal Transition Void where
-    generalizeSignal = undefined
-instance GeneralizeSignal TermAction Void where
-    generalizeSignal = undefined
-
+-- The autocomplete overlay
+type Autocomplete = ReactNode AutocompleteState
 
 -- handlers
 
@@ -144,9 +137,9 @@ handleCmdChange = Just . CommandTyping . fromJSString . value . target
 
 reactStackError :: StackError DInTmRN -> TermReact
 reactStackError (StackError errors) = div_ [ class_ "stack-error" ] $ do
-    div_ "Error:"
+    div_ [] "Error:"
     ul_ [ class_ "stack-error-list" ] $
-        forM_ errors $ \error ->
+        forReact errors $ \error ->
             li_ [ class_ "stack-error-item" ] $
                 mapM_ reactErrorTok error
 
@@ -162,49 +155,8 @@ reactErrorTok (ErrorVAL (v :<: _)) = do
     reactBrackets Round $ fromString $ show v
 
 
-instance (ToJSRef a, ToJSRef b) => ToJSRef (Either a b) where
-    toJSRef (Left a) = do
-        obj <- newObj
-        a' <- toJSRef a
-        let propName :: JSString
-            propName = "left"
-        setProp propName a' obj
-        return obj
-
-    toJSRef (Right b) = do
-        obj <- newObj
-        b' <- toJSRef b
-        let propName :: JSString
-            propName = "right"
-        setProp propName b' obj
-        return obj
-
-
--- This instance is kind of strange, but should work.
-instance ToJSRef Bracket where
-    toJSRef = (castRef <$>) . toJSRef' where
-        toJSRef' Round = toJSRef "("
-        toJSRef' Square = toJSRef "["
-        toJSRef' Curly = toJSRef "{"
-        toJSRef' (RoundB str) = toJSRef $ "(" ++ str
-        toJSRef' (SquareB str) = toJSRef $ "[" ++ str
-        toJSRef' (CurlyB str) = toJSRef $ "{" ++ str
-
-
-instance ToJSRef Keyword where
-instance ToJSRef TacticDescription where
-
-
-instance GeneralizeSignal TermAction Transition where
-    generalizeSignal = TermTransition
-
-
-instance Reactive EntityAnchor where
-    reactify x = span_ [ class_ "anchor" ] $ fromString $ show x
-
-
-page :: InteractionState -> InteractionReact
-page state = div_ [ class_ "page" ] $ do
+page :: () -> InteractionState -> InteractionReact
+page _ state = div_ [ class_ "page" ] $ do
     div_ [ class_ "left-pane" ] $ do
         div_ [ class_ "top-pane" ] $ do
             -- div_ [ class_ "ctx-layers" ] $
@@ -220,12 +172,9 @@ page state = div_ [ class_ "page" ] $ do
     rightPane state
 
 
--- The autocomplete overlay
-type Autocomplete a = a AutocompleteState Void ()
-
 
 -- proofCtxLayers :: Bwd Layer -> InteractionReact
--- proofCtxLayers layers = ol_ $ Foldable.forM_ layers $ \layer ->
+-- proofCtxLayers layers = ol_ $ forReact layers $ \layer ->
 --     li_ "layer"
 
 
@@ -269,31 +218,29 @@ innerRightPane InteractionState{_currentPane=pane, _interactions=ixs} =
             Settings -> "TODO(joel) - settings"
 
 
-autocompleteView :: AutocompleteState -> Autocomplete React'
+autocompleteView :: AutocompleteState -> Autocomplete
 autocompleteView mtacs = case mtacs of
     Stowed -> ""
     CompletingTactics tacs -> div_ [ class_ "autocomplete" ] $
         innerAutocomplete tacs
-    CompletingParams tac -> locally $ case ctHelp tac of
-        Left react -> div_ [ class_ "tactic-help" ] react
-        Right tacticHelp -> longHelp tacticHelp
+    CompletingParams tac -> longHelp (ctHelp tac)
 
 
-innerAutocomplete :: ListZip CochonTactic -> Autocomplete React'
+innerAutocomplete :: ListZip CochonTactic -> Autocomplete
 innerAutocomplete (ListZip early focus late) = do
-    let desc :: Foldable a => a CochonTactic -> Autocomplete React'
-        desc tacs = Foldable.forM_ tacs (div_ . fromString . ctName)
+    let desc :: Foldable a => a CochonTactic -> Autocomplete
+        desc tacs = forReact tacs (div_ . fromString . ctName)
 
     desc early
 
     locally $ div_ [ class_ "autocomplete-focus" ] $ do
-        div_ $ fromString $ ctName focus
-        div_ $ renderHelp $ ctHelp focus
+        div_ [] $ fromString $ ctName focus
+        div_ [] $ renderHelp $ ctHelp focus
 
     desc late
 
 
-promptArrow :: Pure React'
+promptArrow :: ReactNode a
 promptArrow = i_ [ class_ "icon ion-ios-arrow-forward" ] ""
 
 
@@ -332,7 +279,7 @@ prettyDevView loc (Dev entries tip _ suspended) =
                --     suspendView suspended
                locally $ div_ [ class_ "dev-header-tip" ] runner'
            -- ol_ [ class_ "dev-entries" ] $
-           --     Foldable.forM_ entriesWeCareAbout (locally . entryView loc)
+           --     forReact entriesWeCareAbout (locally . entryView loc)
 
 
 workingOn :: ProofContext -> InteractionReact
@@ -342,7 +289,7 @@ workingOn loc =
             mty <- optional getHoleGoal
             case mty of
                 Just (_ :=>: ty) -> workingOn' ty
-                Nothing          -> return ""
+                Nothing          -> ""
 
         val :: InteractionReact
         val = case runProofState runner loc of
@@ -356,49 +303,50 @@ workingOn loc =
 
 
 workingOn' :: TY -> ProofState InteractionReact
-workingOn' ty@(LABEL _ _) = do
-    inScope <- infoInScope
-    hypotheses <- infoHypotheses
-    context <- infoContext
-    goal <- reactHere . (SET :>:) =<< bquoteHere ty
+workingOn' ty@(LABEL _ _) = workingView <$> infoHypotheses
+    -- inScope <- infoInScope
+    -- hypotheses <- infoHypotheses
+    -- context <- infoContext
+    -- ty' <- quote' (SET :>: ty)
+    -- goal <- reactHere ty'
+    where workingView hyp = do
 
-    return $ div_ [ class_ "working-on" ] $ do
-        -- div_ [ class_ "goal-inscope" ] $ do
-        --     div_ "in scope: "
-        --     ul_ [ class_ "goal-inscope-list" ] inScope
-        div_ [ class_ "goal-hypotheses" ] $ do
-            div_ [ class_ "goal-hypotheses-header" ] "in scope: "
-            div_ hypotheses
-        -- div_ [ class_ "goal-context" ] $ do
-        --     div_ "context: "
-        --     div_ context
-        -- div_ [ class_ "goal-body" ] $ do
-        --     div_ [ class_ "goal-body-header" ] "working on"
-        --     locally $ div_ goal
+              div_ [ class_ "working-on" ] $ do
+              -- div_ [ class_ "goal-inscope" ] $ do
+              --     div_ "in scope: "
+              --     ul_ [ class_ "goal-inscope-list" ] inScope
+              div_ [ class_ "goal-hypotheses" ] $ do
+                  div_ [ class_ "goal-hypotheses-header" ] "in scope: "
+                  div_ hypotheses
+              -- div_ [ class_ "goal-context" ] $ do
+              --     div_ "context: "
+              --     div_ context
+              -- div_ [ class_ "goal-body" ] $ do
+              --     div_ [ class_ "goal-body-header" ] "working on"
+              --     locally $ div_ goal
 
-workingOn' ty = do
-    goal <- reactHere . (SET :>:) =<< bquoteHere ty
-    return $ div_ [ class_ "goal" ] $ do
-        div_ [ class_ "goal-header" ] "Goal:"
-        div_ [ class_ "goal-body" ] (locally goal)
+workingOn' ty = workingView <$> (reactHere =<< quote' (SET :>: ty))
+    where workingView goal = div_ [ class_ "goal" ] $ do
+              div_ [ class_ "goal-header" ] "Goal:"
+              div_ [ class_ "goal-body" ] (locally goal)
 
 
 infoInScope :: ProofState InteractionReact
-infoInScope = do
-    pc <- get
-    inScope <- getInScope
-    return (locally (reactEntries' (inBScope pc) inScope))
+infoInScope =
+    (\pc inScope -> locally (reactEntries' (inBScope pc) inScope))
+    <$> get
+    <*> getInScope
 
 
 reactEntries' :: (Traversable f, Traversable g)
               => BScopeContext
               -> f (Entry g)
               -> TermReact
-reactEntries' bsc fs = Foldable.forM_ fs $ \entry ->
+reactEntries' bsc fs = forReact fs $ \entry -> li_ $
     -- TODO(joel) what is this even doing?
     case entryRef entry of
-        Just ref -> li_ $ paramEntryView entry
-        Nothing -> return ()
+        Just ref -> paramEntryView entry
+        Nothing -> ""
 
 
 
@@ -409,72 +357,15 @@ reactEntriesAbs = div_ . Foldable.foldMap f
 
 -- The `reactBKind` function reactifies a `ParamKind` if supplied with an
 -- element representing its name and type.
-reactBKind :: ParamKind -> React a b c () -> React a b c ()
+reactBKind :: ParamKind -> ReactNode a -> ReactNode a
 reactBKind ParamLam  d = reactKword KwLambda >> d >> reactKword KwArr
 reactBKind ParamAll  d = reactKword KwLambda >> d >> reactKword KwImp
 reactBKind ParamPi   d = "(" >> d >> ")" >> reactKword KwArr
 
 
-data ContextualInfo = InfoHypotheses | InfoContextual
-    deriving Eq
-
-
-infoHypotheses  = infoContextual InfoHypotheses
-infoContext     = infoContextual InfoContextual
-
-
-infoContextual :: ContextualInfo -> ProofState InteractionReact
-infoContextual gals = do
-    inScope <- getInScope
-    bsc <- gets inBScope
-    -- holeTy <- optional getHoleGoal
-    entries <- Traversable.mapM (entryHelp gals bsc) inScope
-    return $ ul_ [ class_ "info-contextual" ] $ Foldable.sequence_ entries
-  where
-    entryHelp :: Traversable f
-              => ContextualInfo
-              -> BScopeContext
-              -> Entry f
-              -> ProofState InteractionReact
-    entryHelp InfoHypotheses bsc p@(EPARAM ref _ k _ _ _) = do
-        ty       <- bquoteHere (pty ref)
-        reactTy  <- reactHere (SET :>: ty)
-        return $ locally $ li_ [ class_ "param-entry" ] $ do
-            paramEntryView p
-            div_ [ class_ "param-entry-asc" ] $ do
-                reactKword KwAsc
-                reactTy
-    entryHelp InfoContextual bsc d@(EDEF ref _ _ _ _ _ _) = do
-        -- ty       <- bquoteHere $ removeShared (paramSpine es) (pty ref)
-        ty       <- bquoteHere $ pty ref
-        reactTy  <- reactHere (SET :>: ty)
-        return $ locally $ li_ [ class_ "def-entry" ] $ do
-            fromString $ showRelName $ christenREF bsc ref
-            reactKword KwAsc
-            reactTy
-    entryHelp _ _ _ = return $ return ()
-
-    -- paramEntry :: Traversable f => Entry f -> TermReact
-    -- paramEntry (EPARAM ref _ k _ _ _) = div_ [ class_ "param-entry" ] $ do
-    --     reactBKind k $ do
-    --         fromString $ showRelName $ christenREF bsc ref
-    --         reactKword KwAsc
-    --         reactTy
-
-    -- defEntry :: Traversable f => Entry f -> TermReact
-    -- defEntry (EDEF ref _ _ _ _ _ _) = div_ [ class_ "def-entry" ] $ do
-    --     fromString $ showRelName $ christenREF bsc ref
-    --     reactKword KwAsc
-    --     reactTy
-
-    removeShared :: Spine REF -> TY -> TY
-    removeShared []       ty        = ty
-    removeShared (A (NP r) : as) (PI s t)  = t Evidences.Eval.$$ A (NP r)
-
-
-interactionLog :: InteractionHistory -> Pure React'
+interactionLog :: InteractionHistory -> ReactNode a
 interactionLog logs = div_ [ class_ "interaction-log" ] $
-    Foldable.forM_ logs $ \(Command cmdStr _ _ out) ->
+    forReact logs $ \(Command cmdStr _ _ out) ->
         div_ [ class_ "log-elem" ] $ do
             div_ [ class_ "log-prompt" ] $ do
                 promptArrow
@@ -488,7 +379,7 @@ proofCtxDisplay (_ :< ctx) = div_ [ class_ "ctx-display" ] $
     proofContextView ctx
 
 
-longHelp :: TacticHelp -> Pure React'
+longHelp :: TacticHelp -> ReactNode a
 longHelp (TacticHelp template example summary args) =
     div_ [ class_ "tactic-help" ] $ do
         div_ [ class_ "tactic-template" ] template
@@ -501,20 +392,20 @@ longHelp (TacticHelp template example summary args) =
             div_ [ class_ "tactic-help-title" ] "Summary"
             div_ [ class_ "tactic-help-body" ] $ fromString summary
 
-        Foldable.forM_ args $ \(argName, argSummary) ->
+        forReact args $ \(argName, argSummary) ->
             div_ [ class_ "tactic-arg-help" ] $ do
                 div_ [ class_ "tactic-help-title" ] $ fromString argName
                 div_ [ class_ "tactic-help-body" ] $ fromString argSummary
 
 
-renderHelp :: Either (Pure React') TacticHelp -> Pure React'
+renderHelp :: Either (ReactNode a) TacticHelp -> ReactNode a
 renderHelp (Left react) = react
 renderHelp (Right (TacticHelp _ _ summary _)) = fromString summary
 
 
-tacticList :: Pure React'
+tacticList :: ReactNode a
 tacticList = div_ [ class_ "tactic-list" ] $
-    Foldable.forM_ cochonTactics $ \tactic ->
+    forReact cochonTactics $ \tactic ->
         li_ [ class_ "tactic-info" ] $ renderHelp $ ctHelp tactic
 
 
@@ -534,23 +425,22 @@ layerView layer@(Layer aboveEntries currentEntry belowEntries tip _ suspend) =
         flatButton
             [ class_ "layer-button"
             , label_ (reasonableName currentEntry)
-            , onClick (handleGoTo (currentEntryName currentEntry)) ] $
-                return ()
+            , onClick (handleGoTo (currentEntryName currentEntry)) ]
         locally $ div_ [ class_ "layer-info" ] $ do
             -- XXX(joel) this size is about the layer outside this one?
             -- fromString $ "size: " ++ show (numEntries layer)
             suspendView suspend
 
 
-reasonableName :: CurrentEntry -> JSString
+reasonableName :: CurrentEntry -> Text
 reasonableName = fromString . fst . last . currentEntryName
 
 
-entryReasonableName :: Traversable f => Entry f -> JSString
+entryReasonableName :: Traversable f => Entry f -> Text
 entryReasonableName = fromString . fst . last . entryName
 
 
--- currentEntryView :: CurrentEntry -> Pure React'
+-- currentEntryView :: CurrentEntry -> ReactNode a
 -- currentEntryView entry@(CDefinition _ _ _ _ _ expanded _) =
 --     div_ [ class_ "current-entry cdefinition" ] $
 --         reasonableName entry
@@ -573,13 +463,13 @@ paramEntryView entry@(EEntity _ _ entity term _ _) =
     --         flatButton
     --             [ label_ (entryReasonableName entry)
     --             , onClick (handleEntryGoTo (entryName entry))
-    --             ] $ return ()
+    --             ]
 paramEntryView mod = div_ $ do
     text_ $ fromString $ showName $ entryName mod
     " (module)" -- TODO(joel) I don't know what to show
     let entries = Foldable.toList (devEntries (dev mod))
     ol_ [ class_ "dev-entries" ] $
-        Foldable.forM_ entries collapsedEntry
+        forReact entries collapsedEntry
 
 
 -- TODO(joel) think about how to guarantee an ol_'s children are li_'s
@@ -593,8 +483,7 @@ entryView _ entry@(EModule _ dev purpose _) = li_ $
     div_ [ class_ "module" ] $ do
         flatButton
             [ label_ (entryReasonableName entry)
-            , onClick (handleEntryToggle (entryName entry)) ] $
-                return ()
+            , onClick (handleEntryToggle (entryName entry)) ]
         div_ $ do
             span_ "(module)"
             span_ $ fromString $ "purpose: " ++ showPurpose purpose
@@ -611,7 +500,7 @@ dataRunner ctx entry@(EEntity _ _ (Definition LETG dev) _ AnchDataDef _) = do
                "data "
                text_ $ entryReasonableName entry
            let params = filter paramDecl entries
-           ul_ [ class_ "data-params" ] $ Foldable.forM_ params $
+           ul_ [ class_ "data-params" ] $ forReact params $
                -- TODO(joel) have paramDecl return the name
                \entry@(EEntity _ _ _ _ (AnchParTy name) _) -> li_ $
                    reactBrackets Round $ do
@@ -620,8 +509,8 @@ dataRunner ctx entry@(EEntity _ _ (Definition LETG dev) _ AnchDataDef _) = do
                        expandedEntry' ctx entry
        ol_ [ class_ "data-entries" ] $
            let constrs = filter dataConDecl entries
-           -- in Foldable.forM_ entries $ li_ . expandedEntry' ctx
-           in Foldable.forM_ constrs $ \entry -> do
+           -- in forReact entries $ li_ . expandedEntry' ctx
+           in forReact constrs $ \entry -> do
                elabTrace ("entry anchor: " ++ show (entryAnchor entry))
                li_ $ expandedEntry' ctx entry
 
@@ -632,11 +521,11 @@ dataRunner ctx entry@(EEntity _ _ (Definition LETG dev) _ AnchDataDef _) = do
            flatButton
                [ label_ "add constructor"
                , onClick (handleAddConstructor (entryName entry))
-               ] $ return ()
+               ]
            flatButton
                [ label_ "toggle annotation"
                , onClick (handleToggleAnnotate (entryName entry))
-               ] $ return ()
+               ]
 
        div_ [ class_ "data-meta" ] $ do
            input_ [ value_ "metadata!!" ]
@@ -665,19 +554,18 @@ expandedEntry ctx entry@EEntity{term} =
         flatButton
             [ label_ "collapse"
             , onClick (handleEntryToggle (entryName entry))
-            ] $ return ()
+            ]
         div_ $ do
             text_ $ entryReasonableName entry
             reactKword KwAsc
         expandedEntry' ctx entry
-expandedEntry _ _ = return ()
+expandedEntry _ _ = ""
 
 
 collapsedEntry :: Traversable f => Entry f -> TermReact
 collapsedEntry entry = flatButton
     [ label_ (entryReasonableName entry)
-    , onClick (handleEntryToggle (entryName entry)) ] $
-        return ()
+    , onClick (handleEntryToggle (entryName entry)) ]
 
 
 -- class Classes a where
@@ -690,7 +578,7 @@ collapsedEntry entry = flatButton
 --     classes_ x =
 
 
-suspendView :: SuspendState -> Pure React'
+suspendView :: SuspendState -> ReactNode a
 suspendView state =
     let (elem, cls) = case state of
             SuspendNone -> ("not suspended", "none")
@@ -708,7 +596,6 @@ tipView (Unknown (ty :=>: _)) = do
     hk <- getHoleKind
     tyd <- reactHere (SET :>: ty)
     x <- prettyHere (SET :>: ty)
-    elabTrace $ renderHouseStyle x
     return $ div_ [ class_ "tip" ] $ do
         reactHKind hk
         reactKword KwAsc
@@ -717,7 +604,6 @@ tipView (Suspended (ty :=>: _) prob) = do
     hk <- getHoleKind
     tyd <- reactHere (SET :>: ty)
     x <- prettyHere (SET :>: ty)
-    elabTrace $ renderHouseStyle x
     return $ div_ [ class_ "tip" ] $ do
         fromString $ "(SUSPENDED: " ++ show prob ++ ")"
         reactHKind hk
@@ -729,8 +615,6 @@ tipView (Defined tm (ty :=>: tyv)) = do
 
     x <- prettyHere (SET :>: ty)
     y <- prettyHere (tyv :>: tm)
-    elabTrace $ renderHouseStyle x
-    elabTrace $ renderHouseStyle y
     return $ div_ [ class_ "tip" ] $ do
         tmd
         reactKword KwAsc
@@ -750,9 +634,8 @@ proofContextView pc@(PC layers aboveCursor belowCursor) =
                     flatButton
                         [ class_ "layer-button"
                         , label_ "root"
-                        , onClick (handleGoTo []) ] $
-                            return ()
-                Foldable.forM_ layers layerView
+                        , onClick (handleGoTo []) ]
+                forReact layers layerView
         workingOn pc
         -- if foldableSize layers == 0
         --     then "(root module)"
@@ -761,7 +644,7 @@ proofContextView pc@(PC layers aboveCursor belowCursor) =
         -- XXX(joel) bring this back
         -- div_ "below cursor:"
         -- locally $ div_ [ class_ "proof-context-below-cursor" ] $
-        --     ol_ $ Foldable.forM_ belowCursor (entryView pc)
+        --     ol_ $ forReact belowCursor (entryView pc)
 
 
 
@@ -779,7 +662,7 @@ paramDecl _ = False
 -- "Developments can be of different nature: this is indicated by the Tip"
 
 
-reactHKind :: HKind -> React a b c ()
+reactHKind :: HKind -> ReactNode a
 reactHKind kind = span_ [ class_ "hole" ] $ case kind of
     Waiting    -> "?"
     Hoping     -> "HOPE?"

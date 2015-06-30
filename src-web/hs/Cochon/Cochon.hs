@@ -51,19 +51,21 @@ import React.GHCJS
 
 -- We start out here. Main calls `cochon emptyContext`.
 
-animDispatch :: Transition
-             -> InteractionState
-             -> (InteractionState, [AnimConfig Transition ()])
-animDispatch trans st = (dispatch trans st, [])
-
 cochon :: ProofContext -> IO ()
 cochon loc = do
     Just doc <- currentDocument
     Just e <- documentGetElementById doc ("inject" :: JSString)
     let startCtx = B0 :< loc
     validateDevelopment startCtx
-    cls <- createClass page animDispatch (startState startCtx) () []
-    render e cls
+
+    let page_ = classLeaf $ smartClass
+            { name = "Page"
+            , renderFn = page
+            , transition = dispatch
+            , initialState = startState startCtx
+            }
+
+    render (page_ [] ()) e
     return ()
 
 paranoid = False

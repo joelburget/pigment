@@ -3,14 +3,17 @@
 
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
 >     TypeSynonymInstances, OverloadedStrings, PatternSynonyms,
->     LiberalTypeSynonyms, FlexibleContexts #-}
+>     LiberalTypeSynonyms, FlexibleContexts, RebindableSyntax,
+>     MultiParamTypeClasses #-}
 
 > module Cochon.Reactify where
 
+> import Prelude hiding ((>>), return)
 > import Data.Functor.Identity
 > import Data.List
 > import Data.Monoid ((<>))
 > import Data.String (fromString)
+> import Data.Void
 
 > import Cochon.Model
 > import ProofState.Structure.Developments
@@ -26,24 +29,42 @@
 > import ProofState.Edition.ProofState
 
 > import React hiding (key)
+> import React.DOM
 
 > import DisplayLang.PrettyPrint
 > import Kit.Trace
 > import Debug.Trace
 
+> -- The top level page
+> -- type Cochon a = a InteractionState Transition ()
+> type InteractionReact = ReactNode Transition
+
+> -- type ReactTerm a = a ProofContext TermAction ()
+> type TermReact = ReactNode TermAction
+
+> instance GeneralizeSignal TermAction Transition where
+>     generalizeSignal = TermTransition
+
+
+> -- XXX
+> instance GeneralizeSignal Transition Void where
+>     generalizeSignal = undefined
+> instance GeneralizeSignal TermAction Void where
+>     generalizeSignal = undefined
+
 The `reactKword` function gives a react element representing a `Keyword`.
 
-> reactKword :: Keyword -> React a b c ()
+> reactKword :: Keyword -> ReactNode a
 > reactKword kw = div_ [ class_ "kw" ] $ case kw of
->     KwArr -> span_ [ class_ "kw-arr" ] $ return ()
->     KwImp -> span_ [ class_ "kw-imp" ] $ return ()
->     KwLambda -> span_ [ class_ "kw-lambda" ] $ return ()
+>     KwArr -> span_ [ class_ "kw-arr" ] ""
+>     KwImp -> span_ [ class_ "kw-imp" ] ""
+>     KwLambda -> span_ [ class_ "kw-lambda" ] ""
 >     _ -> fromString (key kw)
 
-> reactBrackets :: Bracket -> React a b c d -> React a b c ()
+> reactBrackets :: Bracket -> ReactNode a -> ReactNode a
 > reactBrackets br r = do
 >     fromString (showOpenB br)
->     _ <- r
+>     r
 >     fromString (showCloseB br)
 
 The `Reactive` class describes things that can be made into React
@@ -243,7 +264,7 @@ a lambda term is reached.
 > instance Reactive DExTmRN where
 >     reactify (n ::$ els)  = div_ [ class_ "dextmrn" ] $ do
 >         reactify n
->         mapM_ reactify els
+>         foldr (>>) "" $ map reactify els
 
 > instance Reactive DHEAD where
 >     reactify dh = div_ [ class_ "dhead" ] $ reactify' dh where
