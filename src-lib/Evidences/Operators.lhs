@@ -2,7 +2,8 @@
 ========================
 
 > {-# LANGUAGE TypeOperators, GADTs, PatternSynonyms,
->     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, DataKinds #-}
+>     TypeSynonymInstances, FlexibleInstances, FlexibleContexts, DataKinds,
+>     DeriveDataTypeable #-}
 
 > module Evidences.Operators where
 
@@ -72,6 +73,85 @@ any auxiliary code.
 >         CONSN  -> Right $ consECase (args $$ Fst) (args $$ Snd $$ Fst)
 >         N t    -> Left t
 >         _      -> error "mkLazyEnumDef: invalid constructor!"
+
+> descConstructors :: Tm In x
+> descConstructors =  CONSE (TAG "idD")
+>                          (CONSE (TAG "constD")
+>                          (CONSE (TAG "sumD")
+>                          (CONSE (TAG "prodD")
+>                          (CONSE (TAG "sigmaD")
+>                          (CONSE (TAG "piD")
+>                           NILE)))))
+
+> descBranches :: Tm In x
+> descBranches = (PAIR (CONSTD UNIT)
+>                   (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
+>                   (PAIR (SIGMAD enumU (L $ "E" :. (let _E = 0 :: Int in
+>                                     (PRODD (TAG "T") (PID (ENUMT (NV _E)) (LK IDD))
+>                                            (CONSTD UNIT)))))
+>                   (PAIR (SIGMAD UID (L $ "u" :. PRODD (TAG "C") IDD (PRODD (TAG "D") IDD (CONSTD UNIT))))
+>                   (PAIR (SIGMAD SET (L $ "S" :. (let _S = 0 :: Int in
+>                                     (PRODD (TAG "T") (PID (NV _S) (LK IDD))
+>                                            (CONSTD UNIT)))))
+>                   (PAIR (SIGMAD SET (L $ "S" :. (let _S = 0 :: Int in
+>                                     (PRODD (TAG "T") (PID (NV _S) (LK IDD))
+>                                            (CONSTD UNIT)))))
+>                    VOID))))))
+
+> descD :: Tm In x
+> descD = SUMD descConstructors
+>              (L $ "c" :. (let c = 0 :: Int in N $
+>                  switchDOp :@ [ descConstructors , descBranches , NV c] ))
+
+> desc :: Tm In x
+> desc = MU (Just (ANCHOR (TAG "Desc") SET ALLOWEDEPSILON)) descD
+
+> descREF :: REF
+> descREF = [("Primitive", 0), ("Desc", 0)] := DEFN desc :<: SET
+
+> descDREF :: REF
+> descDREF = [("Primitive", 0), ("DescD", 0)] := DEFN descD :<: desc
+
+> descConstructorsREF :: REF
+> descConstructorsREF = [("Primitive", 0), ("DescConstructors", 0)] :=
+>     DEFN descConstructors :<: enumU
+
+> descBranchesREF :: REF
+> descBranchesREF = [("Primitive", 0), ("DescBranches", 0)] :=
+>     DEFN descBranches :<: branchesOp @@ [descConstructors, LK desc]
+
+> enumConstructors :: Tm In x
+> enumConstructors = CONSE (TAG "nil") (CONSE (TAG "cons") NILE)
+
+> enumBranches :: Tm In x
+> enumBranches =
+>     PAIR (CONSTD UNIT)
+>         (PAIR (SIGMAD UID (L $ "t" :. (PRODD (TAG "E") IDD (CONSTD UNIT))))
+>             VOID)
+
+> enumD :: Tm In x
+> enumD = SIGMAD  (ENUMT enumConstructors)
+>                   (L $ "c" :. (let c = 0 :: Int in N $
+>                       switchDOp :@ [ enumConstructors , enumBranches , NV c] ))
+
+> enumU :: Tm In x
+> enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
+
+> enumREF :: REF
+> enumREF = [("Primitive", 0), ("EnumU", 0)] := DEFN enumU :<: SET
+
+> enumDREF :: REF
+> enumDREF = [("Primitive", 0), ("EnumD", 0)] := DEFN enumD :<: desc
+
+> enumConstructorsREF :: REF
+> enumConstructorsREF = [("Primitive", 0), ("EnumConstructors", 0)] :=
+>     DEFN enumConstructors :<: enumU
+
+> enumBranchesREF :: REF
+> enumBranchesREF = [("Primitive", 0), ("EnumBranches", 0)] :=
+>     DEFN enumBranches :<:
+>         branchesOp @@ [enumConstructors, LK desc]
+
 
 > descOp :: Op
 > descOp = Op
@@ -817,84 +897,6 @@ any auxiliary code.
 >   , opSimp = \_ _ -> empty
 >   }
 
-> descConstructors :: Tm In x
-> descConstructors =  CONSE (TAG "idD")
->                          (CONSE (TAG "constD")
->                          (CONSE (TAG "sumD")
->                          (CONSE (TAG "prodD")
->                          (CONSE (TAG "sigmaD")
->                          (CONSE (TAG "piD")
->                           NILE)))))
-
-> descBranches :: Tm In x
-> descBranches = (PAIR (CONSTD UNIT)
->                   (PAIR (SIGMAD SET (L $ K $ CONSTD UNIT))
->                   (PAIR (SIGMAD enumU (L $ "E" :. (let _E = 0 :: Int in
->                                     (PRODD (TAG "T") (PID (ENUMT (NV _E)) (LK IDD))
->                                            (CONSTD UNIT)))))
->                   (PAIR (SIGMAD UID (L $ "u" :. PRODD (TAG "C") IDD (PRODD (TAG "D") IDD (CONSTD UNIT))))
->                   (PAIR (SIGMAD SET (L $ "S" :. (let _S = 0 :: Int in
->                                     (PRODD (TAG "T") (PID (NV _S) (LK IDD))
->                                            (CONSTD UNIT)))))
->                   (PAIR (SIGMAD SET (L $ "S" :. (let _S = 0 :: Int in
->                                     (PRODD (TAG "T") (PID (NV _S) (LK IDD))
->                                            (CONSTD UNIT)))))
->                    VOID))))))
-
-> descD :: Tm In x
-> descD = SUMD descConstructors
->              (L $ "c" :. (let c = 0 :: Int in N $
->                  switchDOp :@ [ descConstructors , descBranches , NV c] ))
-
-> desc :: Tm In x
-> desc = MU (Just (ANCHOR (TAG "Desc") SET ALLOWEDEPSILON)) descD
-
-> descREF :: REF
-> descREF = [("Primitive", 0), ("Desc", 0)] := DEFN desc :<: SET
-
-> descDREF :: REF
-> descDREF = [("Primitive", 0), ("DescD", 0)] := DEFN descD :<: desc
-
-> descConstructorsREF :: REF
-> descConstructorsREF = [("Primitive", 0), ("DescConstructors", 0)] :=
->     DEFN descConstructors :<: enumU
-
-> descBranchesREF :: REF
-> descBranchesREF = [("Primitive", 0), ("DescBranches", 0)] :=
->     DEFN descBranches :<: branchesOp @@ [descConstructors, LK desc]
-
-> enumConstructors :: Tm In x
-> enumConstructors = CONSE (TAG "nil") (CONSE (TAG "cons") NILE)
-
-> enumBranches :: Tm In x
-> enumBranches =
->     PAIR (CONSTD UNIT)
->         (PAIR (SIGMAD UID (L $ "t" :. (PRODD (TAG "E") IDD (CONSTD UNIT))))
->             VOID)
-
-> enumD :: Tm In x
-> enumD = SIGMAD  (ENUMT enumConstructors)
->                   (L $ "c" :. (let c = 0 :: Int in N $
->                       switchDOp :@ [ enumConstructors , enumBranches , NV c] ))
-
-> enumU :: Tm In x
-> enumU = MU (Just (ANCHOR (TAG "EnumU") SET ALLOWEDEPSILON)) enumD
-
-> enumREF :: REF
-> enumREF = [("Primitive", 0), ("EnumU", 0)] := DEFN enumU :<: SET
-
-> enumDREF :: REF
-> enumDREF = [("Primitive", 0), ("EnumD", 0)] := DEFN enumD :<: desc
-
-> enumConstructorsREF :: REF
-> enumConstructorsREF = [("Primitive", 0), ("EnumConstructors", 0)] :=
->     DEFN enumConstructors :<: enumU
-
-> enumBranchesREF :: REF
-> enumBranchesREF = [("Primitive", 0), ("EnumBranches", 0)] :=
->     DEFN enumBranches :<:
->         branchesOp @@ [enumConstructors, LK desc]
-
 > cohAx = [("Axiom",0),("coh",0)] := (DECL :<: cohType) where
 >   cohType = PRF $
 >             ALL SET $ L $ "S" :. (let _S = 0 :: Int in
@@ -1069,9 +1071,9 @@ each operator.
 >     mkRef :: Op -> REF
 >     mkRef op = [("Operators",0),(opName op,0)] := (DEFN opEta :<: opTy)
 >       where
->         opTy = pity (opTyTel op) (((B0 :<  ("Operators",0) :<
->                                            (opName op,0) :<
->                                            ("opTy",0)), 0) :: NameSupply)
+>         nameSupply :: NameSupply
+>         nameSupply = (bwdList [("Operators",0), (opName op,0), ("opTy",0)], 0)
+>         opTy = pity (opTyTel op) nameSupply
 >         ari = opArity op
 >         args = map NV [(ari-1),(ari-2)..0]
 >         names = take (ari-1) (map (\x -> [x]) ['b'..])
@@ -1099,5 +1101,6 @@ As in "Pi Type", not "Pity the fool"
 >   freshRef  (x :<: pityTy)
 >             (\xref -> do
 >                t' <- pity $ t (pval xref)
->                t'' <- quote' (pityTy :>: t')
+>                -- XXX type isn't SET
+>                t'' <- mQuote (SET :>: t')
 >                return $ PI s (L $ x :. t''))
