@@ -1087,13 +1087,15 @@ references.
 >     Nothing   -> error $ "lookupOpRef: missing operator primitive " ++ show op
 
 > -- "type undefined
-> data PityException = PityException String TY deriving (Show, Typeable)
-> instance Exception PityException
+> data PiTyException = PiTyException String TY deriving (Show, Typeable)
+> instance Exception PiTyException
+
+As in "Pi Type", not "Pity the fool"
 
 > pity :: NameSupplier m => TEL TY -> m TY
 > pity (Target t)       = return t
 > pity (x :<: s :-: t)  = do
->   let pityTy = throw (PityException x s)
+>   let pityTy = throw (PiTyException x s)
 >   freshRef  (x :<: pityTy)
 >             (\xref -> do
 >                t' <- pity $ t (pval xref)
