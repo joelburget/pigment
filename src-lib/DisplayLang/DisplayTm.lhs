@@ -195,6 +195,9 @@ appropriate places.
 > pattern DLK t       = DL (DK t)
 > pattern DTY ty tm   = DType ty ::$ [A tm]
 > pattern DANCHOR s args = DAnchor s args
+
+Desc
+
 > pattern DMU l x        = DC (Mu (l :?=: Identity x))
 > pattern DIDD           = DCON (DPAIR  DZE
 >                                       DVOID)
@@ -208,6 +211,7 @@ appropriate places.
 >                                       (DPAIR s (DPAIR t DVOID)))
 > pattern DPID s t       = DCON (DPAIR  (DSU (DSU (DSU (DSU (DSU DZE)))))
 >                                       (DPAIR s (DPAIR t DVOID)))
+
 > pattern DENUMT e    = DC (EnumT e)
 > pattern DNILE       = DCON (DPAIR DZE DVOID)
 > pattern DCONSE t e  = DCON (DPAIR (DSU DZE) (DPAIR t (DPAIR e DVOID)))

@@ -170,24 +170,48 @@ binding complicates the definition.
 >     Set            :: Can t                                   -- set of sets
 >     Pi             :: t -> t -> Can t                         -- functions
 >     Con            :: t -> Can t                              -- packing
->     Anchors        :: Can t
->     Anchor         :: t -> t -> t -> Can t
->     AllowedBy      :: t -> Can t
->     AllowedEpsilon :: Can t
->     AllowedCons    :: t -> t -> t -> t -> t -> Can t
+
+Desc
+
 >     Mu             :: Labelled Identity t -> Can t
+
+IDesc
+
+>     IMu            :: Labelled (Identity :*: Identity) t -> t -> Can t
+
+Enum
+
 >     EnumT          :: t -> Can t
 >     Ze             :: Can t
 >     Su             :: t -> Can t
+
+Equality
+
 >     EqBlue         :: (t :>: t) -> (t :>: t) -> Can t
+
+Free Monad
+
 >     Monad          :: t -> t -> Can t
 >     Return         :: t -> Can t
 >     Composite      :: t -> Can t
->     IMu            :: Labelled (Identity :*: Identity) t -> t -> Can t
+
+Labelled Types (chopping block)
+
 >     Label          :: t -> t -> Can t
 >     LRet           :: t -> Can t
+
+Nu
+
+Nu (ml : [Set?] :?=: Id (x : desc?)) : Set
+Con (y : (descOp @@ [x, C t])) : t@(Nu (_ :?=: Id x))
+CoIt (d : desc) (sty : Set) (f : sty -> descOp @@ [x, styv]) (s : sty)
+    : Nu (_ :?=: Id x)
+
 >     Nu             :: Labelled Identity t -> Can t
 >     CoIt           :: t -> t -> t -> t -> Can t
+
+Prob
+
 >     Prob           :: Can t
 >     ProbLabel      :: t -> t -> t -> Can t
 >     PatPi          :: t -> t -> t -> Can t
@@ -195,26 +219,88 @@ binding complicates the definition.
 >     SchTy          :: t -> Can t
 >     SchExpPi       :: t -> t -> Can t
 >     SchImpPi       :: t -> t -> Can t
+
+Prop
+
+Prop : Set
+Prf (p : Prop) : Set
+Trivial : Prop
+Absurd : Prop
+And : (p : Prop) (q : Prop) : Prop
+All (s : Set) (p : s -> Prop) : Prop
+(Box . Irr) (x : Prf p) : Prf p
+Pair (x : Prf p) (y : Prf q) : Prf (And p q)
+Void : Prf Trivial
+Inh (ty : Set) : Prop
+Wit (t : ty) : Prf (Inh ty)
+
 >     Prop           :: Can t
 >     Prf            :: t -> Can t
->     All            :: t -> t -> Can t
->     And            :: t -> t -> Can t
 >     Trivial        :: Can t
 >     Absurd         :: Can t
+>     And            :: t -> t -> Can t
+>     All            :: t -> t -> Can t
 >     Box            :: Irr t -> Can t
 >     Inh            :: t -> Can t
 >     Wit            :: t -> Can t
+
+Quotients
+
+Quotient (x : Set) (r : xv -> xv -> Prop) (p : Prf (equivalenceRelation x r))
+    : Set
+Con (x : a) : Quotient a r p
+
 >     Quotient       :: t -> t -> t -> Can t
->     Record         :: Labelled Identity t -> Can t
+
+Records
+
+RSig : Set
+REmpty : RSig
+RCons (sig : RSig) (id : UId) (ty : ?? -> Set) : RSig
+Record (ml : [Set?] :?=: Id (r : RSig)) : Set
+
+>     RSig           :: Can t
 >     REmpty         :: Can t
 >     RCons          :: t -> t -> t -> Can t
->     RSig           :: Can t
+>     Record         :: Labelled Identity t -> Can t
+
+Sigma
+
+Unit : Set
+Void : Unit
+Sigma (s : Set) (t : s -> Set) : Set
+Pair (x : s) (y : (t x)) : Sigma s t
+
 >     Unit           :: Can t
 >     Void           :: Can t
 >     Sigma          :: t -> t -> Can t
 >     Pair           :: t -> t -> Can t
+
+UId
+
 >     UId            :: Can t
 >     Tag            :: String -> Can t
+
+Anchors
+
+Anchors : Set
+Anchor (u : UId) (t : Set) (ts : AllowedBy t) : Anchors
+AllowedBy (t : Set) : Set
+AllowedEpsilon : AllowedBy t
+AllowedCons
+    (S : Set)
+    (T : S -> Set)
+    (q : ty = Pi S T)
+    (s : S)
+    (ts : AllowedBy (T s))
+    : AllowedBy ty
+
+>     Anchors        :: Can t
+>     Anchor         :: t -> t -> t -> Can t
+>     AllowedBy      :: t -> Can t
+>     AllowedEpsilon :: Can t
+>     AllowedCons    :: t -> t -> t -> t -> t -> Can t
+
 >   deriving (Show, Eq)
 
 The `Con` object is used and abused in many circumstances. However, all
@@ -285,13 +371,14 @@ model of `opTy` defined below, this interpretation uses a generic
 checker-evaluator `chev`. Based on this chev, it simply goes over the
 telescope, checking and evaluating as it moves further.
 
-> telCheck ::  forall m t s x. (Monad m, ErrorStack m t)
+> telCheck :: forall m t s x. (Monad m, ErrorStack m t)
 >          => (TY :>: t -> m (s :=>: VAL))
->          -> (TEL x :>: [t]) -> m ([s :=>: VAL] , x)
+>          -> (TEL x :>: [t])
+>          -> m ([s :=>: VAL] , x)
 > telCheck _ (Target x :>: []) = return ([] , x)
 > telCheck chev ((_ :<: sS :-: tT) :>: (s : t)) = do
 >     ssv@(_ :=>: sv) <- chev (sS :>: s)
->     (svs , x) <- telCheck chev ((tT sv) :>: t)
+>     (svs , x) <- telCheck chev (tT sv :>: t)
 >     return (ssv : svs , x)
 > telCheck _ _ = throwStack (errMsgStack "telCheck: opTy mismatch" :: StackError t)
 
@@ -317,24 +404,35 @@ We have some pattern synonyms for common, er, patterns.
 > pattern LAV x t   = L (x :. t)           -- Lambda (with variable)
 > pattern LK t      = L (K t)              -- Lambda (with constant)
 > pattern PIV x s t = PI s (LAV x t)       -- Pi (with variable)
+
+Anchors
+
 > pattern ANCHORS        = C Anchors
 > pattern ANCHOR u t ts  = C (Anchor u t ts)
 > pattern ALLOWEDBY t    = C (AllowedBy t)
 > pattern ALLOWEDEPSILON = C AllowedEpsilon
 > pattern ALLOWEDCONS _S _T q s ts = C (AllowedCons _S _T q s ts)
-> pattern IDN     = ZE
-> pattern CONSTN  = SU ZE
-> pattern SUMN    = SU (SU ZE)
-> pattern PRODN   = SU (SU (SU ZE))
-> pattern SIGMAN  = SU (SU (SU (SU ZE)))
-> pattern PIN     = SU (SU (SU (SU (SU ZE))))
-> pattern MU l x        = C (Mu (l :?=: Identity x))
-> pattern IDD           = CON (PAIR IDN     VOID)
-> pattern CONSTD x      = CON (PAIR CONSTN  (PAIR x VOID))
-> pattern SUMD e b      = CON (PAIR SUMN    (PAIR e (PAIR b VOID)))
-> pattern PRODD u d d'  = CON (PAIR PRODN   (PAIR u (PAIR d (PAIR d' VOID))))
-> pattern SIGMAD s t    = CON (PAIR SIGMAN  (PAIR s (PAIR t VOID)))
-> pattern PID s t       = CON (PAIR PIN     (PAIR s (PAIR t VOID)))
+
+Equality
+
+> pattern EQBLUE p q = C (EqBlue p q)
+
+Sigma
+
+> pattern SIGMA p q = C (Sigma p q)
+> pattern PAIR  p q = C (Pair p q)
+> pattern UNIT      = C Unit
+> pattern VOID      = C Void
+> pattern Times x y = Sigma x (L (K y))
+> pattern TIMES x y = C (Times x y)
+
+UId
+
+> pattern UID    = C UId
+> pattern TAG s  = C (Tag s)
+
+Enum
+
 > pattern ZE         = C Ze
 > pattern SU n       = C (Su n)
 > pattern NILN       = ZE
@@ -342,10 +440,35 @@ We have some pattern synonyms for common, er, patterns.
 > pattern ENUMT e    = C (EnumT e)
 > pattern NILE       = CON (PAIR NILN VOID)
 > pattern CONSE t e  = CON (PAIR CONSN (PAIR t (PAIR e VOID)))
-> pattern EQBLUE p q = C (EqBlue p q)
-> pattern MONAD d x   = C (Monad d x)
-> pattern RETURN x    = C (Return x)
-> pattern COMPOSITE t = C (Composite t)
+
+Desc
+
+> pattern MU l x        = C (Mu (l :?=: Identity x))
+
+Define a bunch of codes for the primitives of this universe:
+
+> pattern IDN     = ZE
+> pattern CONSTN  = SU ZE
+> pattern SUMN    = SU (SU ZE)
+> pattern PRODN   = SU (SU (SU ZE))
+> pattern SIGMAN  = SU (SU (SU (SU ZE)))
+> pattern PIN     = SU (SU (SU (SU (SU ZE))))
+
+... And their representation.
+
+> pattern IDD           = CON (PAIR IDN     VOID)
+> pattern CONSTD x      = CON (PAIR CONSTN  (PAIR x VOID))
+> pattern SUMD e b      = CON (PAIR SUMN    (PAIR e (PAIR b VOID)))
+> pattern PRODD u d d'  = CON (PAIR PRODN   (PAIR u (PAIR d (PAIR d' VOID))))
+> pattern SIGMAD s t    = CON (PAIR SIGMAN  (PAIR s (PAIR t VOID)))
+> pattern PID s t       = CON (PAIR PIN     (PAIR s (PAIR t VOID)))
+
+IDesc
+
+> pattern IMU l ii x i  = C (IMu (l :?=: (Identity ii :& Identity x)) i)
+
+Define a bunch of codes for the primitives of this universe:
+
 > pattern IVARN     = ZE
 > pattern ICONSTN   = SU ZE
 > pattern IPIN      = SU (SU ZE)
@@ -353,7 +476,9 @@ We have some pattern synonyms for common, er, patterns.
 > pattern ISIGMAN   = SU (SU (SU (SU ZE)))
 > pattern IFSIGMAN  = SU (SU (SU (SU (SU ZE))))
 > pattern IPRODN    = SU (SU (SU (SU (SU (SU ZE)))))
-> pattern IMU l ii x i  = C (IMu (l :?=: (Identity ii :& Identity x)) i)
+
+... And their representation
+
 > pattern IVAR i        = CON (PAIR IVARN     (PAIR i VOID))
 > pattern IPI s t       = CON (PAIR IPIN      (PAIR s (PAIR t VOID)))
 > pattern IFPI s t      = CON (PAIR IFPIN     (PAIR s (PAIR t VOID)))
@@ -361,10 +486,25 @@ We have some pattern synonyms for common, er, patterns.
 > pattern IFSIGMA s t   = CON (PAIR IFSIGMAN  (PAIR s (PAIR t VOID)))
 > pattern ICONST p      = CON (PAIR ICONSTN   (PAIR p VOID))
 > pattern IPROD u x y   = CON (PAIR IPRODN    (PAIR u (PAIR x (PAIR y VOID))))
+
+FreeMonad
+
+> pattern MONAD d x   = C (Monad d x)
+> pattern RETURN x    = C (Return x)
+> pattern COMPOSITE t = C (Composite t)
+
+Labelled Types (chopping block)
+
 > pattern LABEL l t = C (Label l t)
 > pattern LRET t    = C (LRet t)
+
+Nu
+
 > pattern NU l t = C (Nu (l :?=: Identity t))
 > pattern COIT d sty f s = C (CoIt d sty f s)
+
+Prob
+
 > pattern PROB             = C Prob
 > pattern PROBLABEL u s a  = C (ProbLabel u s a)
 > pattern PATPI u s p      = C (PatPi u s p)
@@ -372,6 +512,9 @@ We have some pattern synonyms for common, er, patterns.
 > pattern SCHTY s          = C (SchTy s)
 > pattern SCHEXPPI s t     = C (SchExpPi s t)
 > pattern SCHIMPPI s t     = C (SchImpPi s t)
+
+Prop
+
 > pattern PROP        = C Prop
 > pattern PRF p       = C (Prf p)
 > pattern ALL p q     = C (All p q)
@@ -383,30 +526,30 @@ We have some pattern synonyms for common, er, patterns.
 > pattern BOX p       = C (Box p)
 > pattern INH ty      = C (Inh ty)
 > pattern WIT t       = C (Wit t)
+
+Quotients
+
 > pattern QUOTIENT x r p = C (Quotient x r p)
 > pattern CLASS x        = C (Con x)
+
+Records
+
 > pattern RSIG         = C RSig
 > pattern REMPTY       = C REmpty
 > pattern RCONS s i t  = C (RCons s i t)
 > pattern RECORD l s   = C (Record (l :?=: Identity s))
-> pattern SIGMA p q = C (Sigma p q)
-> pattern PAIR  p q = C (Pair p q)
-> pattern UNIT      = C Unit
-> pattern VOID      = C Void
-> pattern Times x y = Sigma x (L (K y))
-> pattern TIMES x y = C (Times x y)
-> pattern UID    = C UId
-> pattern TAG s  = C (Tag s)
 
 We have some type synonyms for commonly occurring instances of `Tm`.
 
 > type InTm   = Tm In
-> type ExTm   = Tm Ex
 > type INTM   = InTm REF
-> type EXTM   = ExTm REF
-> type VAL    = Tm In REF
+> type VAL    = InTm REF
 > type TY     = VAL
-> type NEU    = Tm Ex REF
+
+> type ExTm   = Tm Ex
+> type EXTM   = ExTm REF
+> type NEU    = ExTm REF
+
 > type Env x  = (Bwd (Tm In x), TXTSUB)  -- values for deBruijn indices
 > type ENV    = Env REF
 > type TXTSUB = [(Char, String)]        -- renaming plan
@@ -662,7 +805,9 @@ extract a useful name from a binder.
 > fortran :: Tm In x -> String
 > fortran (L (x :. _))  | not (null x) = x
 > fortran (L (H _ x _)) | not (null x) = x
-> fortran _ = "xf" -- XXX(joel) this is unacceptable
+> -- XXX(joel) this is unacceptable. Actually, on second thought we should
+> -- never get here... This message is unlikely to be helpful, but worth a try.
+> fortran xt = "(XXX(joel) fortran unexpectedly called)"
 
 Similarly, it is useful to extract name advice from a `REF`.
 

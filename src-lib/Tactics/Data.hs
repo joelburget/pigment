@@ -58,9 +58,11 @@ elabCons nom ty ps (s, t) = do
     goOut
     return $ ElabResult s tyi x i j y
 
+-- Build a "levitated" description of this type
 ty2desc :: REF -> [Elim VAL] -> VAL ->
            ProofState (INTM, [String], [String], [REF] -> INTM)
 ty2desc r ps (PI a b) = do
+    -- Find something to call b.
     let anom = fortran b
     if occurs r a
       then do

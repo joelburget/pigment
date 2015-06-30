@@ -179,8 +179,12 @@ things...
 >     | KwFst
 >     | KwSnd
 >     | KwSig
+
+UId
+
 >     | KwUId
 >     | KwTag
+
 >     | KwAsc
 >     | KwComma
 >     | KwSemi
@@ -198,19 +202,58 @@ things...
 ...and they look like this:
 
 > key :: Keyword -> String
+
+> key KwAsc        = ":"
+> key KwComma      = ","
+> key KwSemi       = ";"
+> key KwDefn       = ":="
+> key KwUnderscore = "_"
+> key KwEq         = "="
+> key KwBy         = "<="
+
+> key KwSet        = "Set"
+> key KwPi         = "Pi"
+> key KwLambda     = "\\"
+
+> key KwCon        = "con"
+> key KwOut        = "%"
+
+Desc
+
 > key KwMu         = "Mu"
+
+Enum
+
 > key KwEnum       = "Enum"
 > key KwPlus       = "+"
+
+Equality
+
 > key KwEqBlue     = "=="
+
+Free Monad
+
 > key KwMonad      = "Monad"
 > key KwReturn     = "`"  -- rename me
+
+IDesc
+
 > key KwIMu        = "IMu"
+
+Labelled Types
+
 > key KwCall       = "call"
 > key KwLabel      = "<"
 > key KwLabelEnd   = ">"
 > key KwRet        = "return"  -- rename me
+
+Nu
+
 > key KwNu         = "Nu"
 > key KwCoIt       = "CoIt"
+
+Prob
+
 > key KwProb       = "Prob"
 > key KwProbLabel  = "ProbLabel"
 > key KwPatPi      = "PatPi"
@@ -218,6 +261,9 @@ things...
 > key KwSchTy      = "SchTy"
 > key KwExpPi      = "ExpPi"
 > key KwImpPi      = "ImpPi"
+
+Prop
+
 > key KwProp       = "Prop"
 > key KwAbsurd     = "FF"
 > key KwTrivial    = "TT"
@@ -228,28 +274,28 @@ things...
 > key KwAll        = "All"
 > key KwInh        = "Inh"
 > key KwWit        = "wit"
+
+Quotients
+
 > key KwQuotient   = "Quotient"
+
+Records
+
 > key KwRecord     = "Rec"
 > key KwRSig       = "RSig"
 > key KwREmpty     = "REmpty"
 > key KwRCons      = "RCons"
+
+Sigma
+
 > key KwFst        = "!"
 > key KwSnd        = "-"
 > key KwSig        = "Sig"
+
+UId
+
 > key KwUId        = "UId"
 > key KwTag        = "'"
-> key KwAsc        = ":"
-> key KwComma      = ","
-> key KwSemi       = ";"
-> key KwDefn       = ":="
-> key KwUnderscore = "_"
-> key KwEq         = "="
-> key KwBy         = "<="
-> key KwSet        = "Set"
-> key KwPi         = "Pi"
-> key KwLambda     = "\\"
-> key KwCon        = "con"
-> key KwOut        = "%"
 
     key k = error ("key: missing keyword " ++ show k)
 
