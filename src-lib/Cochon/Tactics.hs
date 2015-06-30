@@ -33,6 +33,7 @@ import Elaboration.ElabProb
 import Elaboration.ElabMonad
 import Elaboration.MakeElab
 import Elaboration.RunElab
+import Evidences.DefinitionalEquality
 import Evidences.Eval hiding (($$))
 import qualified Evidences.Eval (($$))
 import Evidences.Tm
@@ -190,7 +191,7 @@ unaryInCT name eval desc = simpleCT
     (TacticHelp (name ++ " - " ++ desc) "" "" [])
 
 
-unDP :: DExTm x -> x
+unDP :: DExTm p x -> x
 unDP (DP ref ::$ []) = ref
 
 
@@ -695,7 +696,7 @@ solveTac = simpleCT
         (ref, spine, _) <- resolveHere rn
         _ :<: ty <- inferHere (P ref $:$ toSpine spine)
         _ :=>: tv <- elaborate' (ty :>: tm)
-        tm' <- mQuote tv -- force definitional expansion
+        tm' <- mQuote (SET :>: tv) -- force definitional expansion
         solveHole ref tm'
         return "Solved."
     )
@@ -923,7 +924,7 @@ propSimplifyTactic = do
 infoElaborate :: DExTmRN -> ProofState UserMessage
 infoElaborate tm = draftModule "__infoElaborate" $ do
     (tm' :=>: tmv :<: ty) <- elabInfer' tm
-    tm'' <- mQuote tmv
+    tm'' <- mQuote (ty :>: tmv)
     tellTermHere (ty :>: tm'')
 
 
@@ -932,7 +933,7 @@ infoElaborate tm = draftModule "__infoElaborate" $ do
 infoInfer :: DExTmRN -> ProofState UserMessage
 infoInfer tm = draftModule "__infoInfer" $ do
     (_ :<: ty) <- elabInfer' tm
-    ty' <- mQuote ty
+    ty' <- mQuote (SET :>: ty)
     tellTermHere (SET :>: ty')
 
 
@@ -951,9 +952,9 @@ infoInfer tm = draftModule "__infoInfer" $ do
 infoWhatIs :: DExTmRN -> ProofState UserMessage
 infoWhatIs tmd = draftModule "__infoWhatIs" $ do
     tm :=>: tmv :<: tyv <- elabInfer' tmd
-    tmq <- mQuote tmv
+    tmq <- mQuote (tyv :>: tmv)
     tms :=>: _ <- distillHere (tyv :>: tmq)
-    ty <- mQuote tyv
+    ty <- mQuote (SET :>: tyv)
     tys :=>: _ <- distillHere (SET :>: ty)
     return $ mconcat
         [  "Parsed term:", fromString (show tmd)
