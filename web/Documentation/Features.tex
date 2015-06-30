@@ -13,6 +13,12 @@ the dispatch table with the relevant arguments; otherwise, it cannot compute,
 so it returns a term on the |Left|. Note that finite sums are handled using the
 case for sigma.
 
+< type DescDispatchTable = (VAL,
+<                       VAL -> VAL,
+<                       VAL -> VAL -> VAL,
+<                       VAL -> VAL -> VAL,
+<                       VAL -> VAL -> VAL)
+
 <   mkLazyDescDef :: VAL -> DescDispatchTable -> Either NEU VAL
 <   mkLazyDescDef arg (idCase, constCase, prodCase, sigmaCase, piCase) =
 <       let args = arg $$ Snd in
@@ -26,6 +32,16 @@ case for sigma.
 <           PIN     -> Right $ piCase     (args $$ Fst) (args $$ Snd $$ Fst)
 <           N t     -> Left t
 <           _       -> error "mkLazyDescDef: invalid constructor!"
+
+< type EnumDispatchTable = (VAL, VAL -> VAL -> VAL)
+
+< mkLazyEnumDef :: VAL -> EnumDispatchTable -> Either NEU VAL
+< mkLazyEnumDef arg (nilECase, consECase) = let args = arg $$ Snd in
+<     case arg $$ Fst of
+<         NILN   -> Right nilECase
+<         CONSN  -> Right $ consECase (args $$ Fst) (args $$ Snd $$ Fst)
+<         N t    -> Left t
+<         _      -> error "mkLazyEnumDef: invalid constructor!"
 
 \section{Equality}
 
