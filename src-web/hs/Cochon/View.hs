@@ -20,6 +20,7 @@ import Lens.Family2
 import React
 import React.DOM hiding (label_)
 import React.GHCJS
+import React.Rebindable
 import React.MaterialUI
 
 import Cochon.CommandLexer
@@ -133,7 +134,7 @@ handleCmdChange = Just . CommandTyping . fromJSString . value . target
 page_ :: InteractionState
       -> [AttrOrHandler Transition]
       -> ()
-      -> InteractionReact
+      -> ReactNode a
 page_ state = classLeaf $ smartClass
     { React.name = "Page"
     , transition = \(state, trans) -> (dispatch trans state, Nothing)

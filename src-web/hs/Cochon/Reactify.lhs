@@ -30,6 +30,7 @@
 
 > import React hiding (key)
 > import React.DOM
+> import React.Rebindable
 
 > import DisplayLang.PrettyPrint
 > import Kit.Trace
