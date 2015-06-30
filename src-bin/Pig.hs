@@ -2,7 +2,7 @@
     TypeSynonymInstances, FlexibleInstances, ScopedTypeVariables,
     OverloadedStrings #-}
 
-module Main where
+module Pig where
 
 import Control.Applicative
 import Control.Monad.State
