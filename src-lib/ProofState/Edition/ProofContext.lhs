@@ -89,13 +89,13 @@ piece of kit to deal with this global context.
 
 > instance Show (Entry NewsyFwd) where
 >     show (EEntity ref xn e t a _) = unwords
->         ["E", show ref, show xn, show e, show t, show a]
+>         ["\"E", show ref, show xn, show e, show t, show a, "\""]
 >     show (EModule n d p _) = unwords
 >         ["M", show n, show d, show p]
 
 > instance Show (Entity NewsyFwd) where
->     show (Parameter k) = "Param " ++ show k
->     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
+>     show (Parameter k) = "(Param " ++ show k ++ ")"
+>     show (Definition k d) = "(Def " ++ show k ++ " " ++ show d ++ ")"
 
 > instance Traversable NewsyFwd where
 >     traverse g (NF x) = NF <$> traverse (traverse g) x

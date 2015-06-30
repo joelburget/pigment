@@ -679,9 +679,9 @@ however.
 
 > instance Show REF where
 >   show (name := kt) = unwords
->       [ intercalate "." (map (\(x,n) -> x ++ "_" ++ show n) name)
->       , ":="
->       , show kt
+>       [ "\"" ++ intercalate "." (map (\(x,n) -> x ++ "_" ++ show n) name) ++ "\""
+>       -- , ":="
+>       -- , show kt ++ ")"
 >       ]
 
 A `REF` can be of one of four kinds:
@@ -1149,7 +1149,7 @@ throwErrTm = throwStack . StackError . pure . errTm
 >   show (L s)       = "(L " ++ show s ++ ")"
 >   show (C c)       = "(C " ++ show c ++ ")"
 >   show (N n)       = "(N " ++ show n ++ ")"
->   show (P x)       = "(P " ++ show x ++ ")"
+>   show (P x)       = "(P \"" ++ show x ++ "\")"
 >   show (V i)       = "V " ++ show i
 >   show (n :$ e)    = "(" ++ show n ++ " :$ " ++ show e ++ ")"
 >   show (op :@ vs)  = "(" ++ opName op ++ " :@ " ++ show vs ++ ")"
@@ -1158,8 +1158,8 @@ throwErrTm = throwStack . StackError . pure . errTm
 
 > instance Show x => Show (Scope x) where
 >   show (x :. t)   = show x ++ " :. " ++ show t
->   show (H g x t) = "H (" ++ show g ++ ") " ++ x ++ "(" ++ show t ++ ")"
->   show (K t) = "K (" ++ show t ++")"
+>   show (H g x t) = "(H " ++ show g ++ ") " ++ x ++ "(" ++ show t ++ ")"
+>   show (K t) = "(K " ++ show t ++")"
 
 > instance Show Op where
 >   show = opName

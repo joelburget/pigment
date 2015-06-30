@@ -116,32 +116,36 @@ either be:
 >     deriving Eq
 
 > instance Show EntityAnchor where
->     show AnchConc = "conc"
->     show AnchConNames = "constructor names"
->     -- show (AnchConName str) = "(AnchConName " ++ str ++ ")"
->     show (AnchConName str) = str
->     show AnchConDescs = "constructor descriptions"
->     show AnchDataDesc = "data description"
->     -- show (AnchDataTy str) = "(AnchDataTy " ++ str ++ ")"
->     show (AnchDataTy str) = str
->     show AnchInd = "ind"
->     show AnchIndTy = "ind type"
->     -- show (AnchTy str) = "(AnchTy " ++ str ++ ")"
->     show (AnchTy str) = str
->     -- show (AnchParTy str) = "(AnchParTy " ++ str ++ ")"
->     show (AnchParTy str) = str
->     show AnchRefine = "refine"
->     show AnchMotive = "motive"
->     show AnchMethod = "method"
->     show AnchSig = "sig"
->     show AnchHope = "hope"
->     show AnchElabInferFully = "elab infer fully"
->     show AnchTau = "tau"
->     show AnchDataDef = "data definition"
->     -- show (AnchStr str) = "(AnchStr " ++ str ++ ")"
->     show AnchImpl = "implementation"
->     show (AnchStr str) = str
->     show AnchNo = "(no anchor)"
+>     showsPrec p anch = showParen (p > 10) $
+>         -- showString (unwords ["Anchor", "\"" ++ anchShow anch ++ "\""])
+>         showString "Anchor"
+
+> anchShow AnchConc = "conc"
+> anchShow AnchConNames = "constructor names"
+> -- anchShow (AnchConName str) = "(AnchConName " ++ str ++ ")"
+> anchShow (AnchConName str) = str
+> anchShow AnchConDescs = "constructor descriptions"
+> anchShow AnchDataDesc = "data description"
+> -- anchShow (AnchDataTy str) = "(AnchDataTy " ++ str ++ ")"
+> anchShow (AnchDataTy str) = str
+> anchShow AnchInd = "ind"
+> anchShow AnchIndTy = "ind type"
+> -- anchShow (AnchTy str) = "(AnchTy " ++ str ++ ")"
+> anchShow (AnchTy str) = str
+> -- anchShow (AnchParTy str) = "(AnchParTy " ++ str ++ ")"
+> anchShow (AnchParTy str) = str
+> anchShow AnchRefine = "refine"
+> anchShow AnchMotive = "motive"
+> anchShow AnchMethod = "method"
+> anchShow AnchSig = "sig"
+> anchShow AnchHope = "hope"
+> anchShow AnchElabInferFully = "elab infer fully"
+> anchShow AnchTau = "tau"
+> anchShow AnchDataDef = "data definition"
+> -- anchShow (AnchStr str) = "(AnchStr " ++ str ++ ")"
+> anchShow AnchImpl = "implementation"
+> anchShow (AnchStr str) = str
+> anchShow AnchNo = "(no anchor)"
 
 > data ModulePurpose
 >     -- using a module to hold development
@@ -199,15 +203,15 @@ is `Bwd`:
 
 > instance Show (Entry Bwd) where
 >     show (EEntity ref xn e t a _) = intercalate " "
->         ["E", show ref, show xn, show e, show t, show a]
+>         ["(E ", show ref, show xn, show e, show t, show a, ")"]
 >     show (EModule n d p _) = intercalate " "
->         ["M", show n, show d, show p]
+>         ["(M ", show n, show d, show p, ")"]
 
 > instance Show (Entry Fwd) where
 >     show (EEntity ref xn e t a _) = intercalate " "
->         ["E", show ref, show xn, show e, show t, show a]
+>         ["(E ", show ref, show xn, show e, show t, show a, ")"]
 >     show (EModule n d p _) = intercalate " "
->         ["M", show n, show d, show p]
+>         ["(M ", show n, show d, show p, ")"]
 
 [Name caching]
 
@@ -273,11 +277,15 @@ The link between a type and the kind of parameter allowed is defined by
 > lambdable _                = Nothing
 
 > instance Show (Entity Bwd) where
->     show (Parameter k) = "Param " ++ show k
->     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
+>     showsPrec p (Parameter k) = showParen (p > 10) $ showString $
+>       unwords ["Param", show k]
+>     showsPrec p (Definition k d) = showParen (p > 10) $ showString $
+>       unwords ["Def", show k, show d]
 > instance Show (Entity Fwd) where
->     show (Parameter k) = "Param " ++ show k
->     show (Definition k d) = "Def " ++ show k ++ " " ++ show d
+>     showsPrec p (Parameter k) = showParen (p > 10) $ showString $
+>       unwords ["Param", show k]
+>     showsPrec p (Definition k d) = showParen (p > 10) $ showString $
+>       unwords ["Def", show k, show d]
 
 Suspension states
 
