@@ -5,4 +5,4 @@
 > import NameSupply.NameSupply
 > import Evidences.Tm
 > equal :: (TY :>: (VAL,VAL)) -> NameSupply -> Bool
-> quote' :: NameSupplier m => (TY :>: VAL) -> m INTM
+> mQuote :: NameSupplier m => (TY :>: VAL) -> m INTM

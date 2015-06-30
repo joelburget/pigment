@@ -695,7 +695,7 @@ solveTac = simpleCT
         (ref, spine, _) <- resolveHere rn
         _ :<: ty <- inferHere (P ref $:$ toSpine spine)
         _ :=>: tv <- elaborate' (ty :>: tm)
-        tm' <- bquoteHere tv -- force definitional expansion
+        tm' <- mQuote tv -- force definitional expansion
         solveHole ref tm'
         return "Solved."
     )
@@ -923,7 +923,7 @@ propSimplifyTactic = do
 infoElaborate :: DExTmRN -> ProofState UserMessage
 infoElaborate tm = draftModule "__infoElaborate" $ do
     (tm' :=>: tmv :<: ty) <- elabInfer' tm
-    tm'' <- bquoteHere tmv
+    tm'' <- mQuote tmv
     tellTermHere (ty :>: tm'')
 
 
@@ -932,7 +932,7 @@ infoElaborate tm = draftModule "__infoElaborate" $ do
 infoInfer :: DExTmRN -> ProofState UserMessage
 infoInfer tm = draftModule "__infoInfer" $ do
     (_ :<: ty) <- elabInfer' tm
-    ty' <- bquoteHere ty
+    ty' <- mQuote ty
     tellTermHere (SET :>: ty')
 
 
@@ -951,9 +951,9 @@ infoInfer tm = draftModule "__infoInfer" $ do
 infoWhatIs :: DExTmRN -> ProofState UserMessage
 infoWhatIs tmd = draftModule "__infoWhatIs" $ do
     tm :=>: tmv :<: tyv <- elabInfer' tmd
-    tmq <- bquoteHere tmv
+    tmq <- mQuote tmv
     tms :=>: _ <- distillHere (tyv :>: tmq)
-    ty <- bquoteHere tyv
+    ty <- mQuote tyv
     tys :=>: _ <- distillHere (SET :>: ty)
     return $ mconcat
         [  "Parsed term:", fromString (show tmd)

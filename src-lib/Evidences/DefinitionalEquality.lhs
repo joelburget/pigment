@@ -48,6 +48,11 @@ fresh namespace.
 
 > quote vty r = inQuote vty (freshNSpace r "quote")
 
+And a monadic version, for convenience.
+
+> mQuote :: NameSupplier m => (TY :>: VAL) -> m INTM
+> mQuote val = quote val <$> askNSupply
+
 inQuote
 -------
 
@@ -178,9 +183,6 @@ constructor which can always compute.
 >           chev (t :>: x) = do
 >               let tx = inQuote (t :>: x) r
 >               return $ tx :=>: x
-
-> quote' :: NameSupplier m => (TY :>: VAL) -> m INTM
-> quote' vty = quote vty <$> askNSupply
 
 Simplification of stuck terms
 -----------------------------

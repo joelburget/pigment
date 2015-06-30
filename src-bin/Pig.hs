@@ -112,10 +112,10 @@ validateDevelopment locs@(_ :< loc)
 --     showGoal :: TY -> ProofState String
 --     showGoal ty@(LABEL _ _) = do
 --         -- h <- infoHypotheses
---         s <- prettyHere . (SET :>:) =<< bquoteHere ty
+--         s <- prettyHere . (SET :>:) =<< mQuote (SET :>: ty)
 --         return $ {- h ++ "\n" ++ -} "Programming: " ++ show s ++ "\n"
 --     showGoal ty = do
---         s <- prettyHere . (SET :>:) =<< bquoteHere ty
+--         s <- prettyHere . (SET :>:) =<< mQuote (SET :>: ty)
 --         return $ "Goal: " ++ show s ++ "\n"
 
 --     showInputLine :: ProofState String

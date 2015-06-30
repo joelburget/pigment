@@ -296,7 +296,7 @@ infoContextual gals = do
               -> Entry f
               -> ProofState EntryInfo
     entryHelp InfoHypotheses _ p@(EPARAM ref _ k _ _ _) = do
-        -- ty       <- bquoteHere (pty ref)
+        -- ty       <- mQuote (pty ref)
         return $ ParamEntry (entryName p) (pty ref)
     entryHelp InfoContextual _ d@(EDEF ref _ _ _ _ _ _) = do
         -- ty       <- mQuote $ removeShared (paramSpine es) (pty ref)

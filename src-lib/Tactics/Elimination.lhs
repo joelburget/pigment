@@ -135,7 +135,7 @@ later:
 
 Make a goal for the motive:
 
->     -- telTypeTm              <- bquoteHere telType
+>     -- telTypeTm              <- mQuote telType
 >     motive :=>: motiveVal  <- make $ AnchMotive :<: motiveType
 
 Make goals for the methods and find the return type:

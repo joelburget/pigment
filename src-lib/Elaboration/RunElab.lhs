@@ -166,7 +166,7 @@ refers to. This is passed onto the next elaboration task.
 >     let  tm   = P ref $:$ toSpine as
 >          ms'  = applyScheme <$> ms <*> pure as
 >     (tmv :<: tyv) <- inferHere tm
->     tyv'  <- quote' (tyv :>: tmv)
+>     tyv'  <- mQuote (tyv :>: tmv)
 >     runElab wrk (ty :>: f (PAIR tyv' (N tm) :=>: PAIR tyv tmv, ms'))
 
 `EAskNSupply` gives access to the name supply to the next elaboration
@@ -462,12 +462,11 @@ of the equation.
 (q' :=>: q, _) <- simplifyProof False (EQBLUE (SET :>: _S) (SET :>: _T))
 
 >     ref  <- stripShared t
->     -- s'   <- bquoteHere s
->     -- _S'  <- bquoteHere _S
->     -- t'   <- bquoteHere t
->     -- _T'  <- bquoteHere _T
+>     _S'  <- mQuote (SET :>: _S)
+>     _T'  <- mQuote (SET :>: _T)
+>     s'   <- mQuote (_S' :>: s)
 >     let  p      = EQBLUE (_T   :>: N t   ) (_S   :>: s   )
->          p'     = p -- EQBLUE (_T'  :>: N t'  ) (_S'  :>: s'  )
+>          p'     = EQBLUE (_T'  :>: N t   ) (_S'  :>: s'  )
 
 N (coe :@ [_S', _T', q', s']) :=>: Just (coe @@ [_S, _T, q, s])
 
@@ -480,12 +479,11 @@ N (coe :@ [_S', _T', q', s']) :=>: Just (coe @@ [_S, _T, q, s])
 > flexiProofRight wrk (_S :>: s) (_T :>: N t) = do
 >     guard =<< withNSupply (equal (SET :>: (_S, _T)))
 >     ref  <- stripShared t
->     -- s'   <- bquoteHere s
->     -- _S'  <- bquoteHere _S
->     -- t'   <- bquoteHere t
->     -- _T'  <- bquoteHere _T
+>     _S'  <- mQuote (SET :>: _S)
+>     _T'  <- mQuote (SET :>: _T)
+>     s'   <- mQuote (_S' :>: s)
 >     let  p      = EQBLUE (_S   :>: s   ) (_T   :>: N t   )
->          p'     = p -- EQBLUE (_S'  :>: s'  ) (_T'  :>: N t'  )
+>          p'     = EQBLUE (_S'  :>: s'  ) (_T'  :>: N t   )
 >          eprob  = WaitSolve ref (s :=>: Just s) ElabHope
 >     suspendThis wrk ("eq" :<: PRF p' :=>: PRF p) eprob
 > flexiProofRight _ _ _ = empty

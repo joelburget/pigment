@@ -31,7 +31,7 @@ its type, but need an `EXTM`. We avoid `bquote` if possible.
 
 > annotate :: NameSupplier m => INTM -> TY -> m EXTM
 > annotate (N n)  _   = return n
-> annotate t      ty  = quote' (ty :>: t) >>= return . (t :?)
+> annotate t      ty  = mQuote (ty :>: t) >>= return . (t :?)
 
 Discharging a list of hypotheses over a term
 --------------------------------------------

@@ -188,7 +188,7 @@ restart elaboration to see if it can make any progress.
 >   | Just (ref'@(_ := DEFN tm :<: tmTy), GoodNews) <- getNews news ref = do
 >     -- We have a Definition for it
 >     es   <- getInScope
->     tm'  <- quote' (tmTy :>: tm $$$ paramSpine es)
+>     tm'  <- mQuote (tmTy :>: tm $$$ paramSpine es)
 >     let  (tt', _) = tellNewsEval news tt
 >          (ty', _) = tellNews news ty
 >     -- Define the hole
