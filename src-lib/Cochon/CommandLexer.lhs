@@ -25,33 +25,6 @@ Cochon Command Lexer
 
 > import Debug.Trace
 
-#ifdef __GHCJS__
-
-> import GHCJS.Foreign
-> import GHCJS.Marshal
-> import GHCJS.Types
-
-> instance ToJSRef TacticDescription where
-
-> instance (ToJSRef a, ToJSRef b) => ToJSRef (Either a b) where
->     toJSRef (Left a) = do
->         obj <- newObj
->         a' <- toJSRef a
->         let propName :: JSString
->             propName = "left"
->         setProp propName a' obj
->         return obj
->
->     toJSRef (Right b) = do
->         obj <- newObj
->         b' <- toJSRef b
->         let propName :: JSString
->             propName = "right"
->         setProp propName b' obj
->         return obj
-
-#endif
-
 Tokens
 ------
 
