@@ -62,7 +62,7 @@ data UserMessagePart = UserMessagePart
     { messageText :: T.Text
     , relevantName :: Maybe Name
     , stack :: Maybe (StackError DInTmRN)
-    , term :: Maybe DInTmRN
+    , messageTerm :: Maybe DInTmRN
     , messageSeverity :: MessageSeverity
     } deriving Show
 
