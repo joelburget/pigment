@@ -22,6 +22,18 @@ import ProofState.Edition.ProofContext
 
 import Kit.Trace
 
+#ifdef __GHCJS__
+foreign import javascript "window.PigmentView"
+    pageLayout :: ImportedClass Transition
+#else
+pageLayout :: ImportedClass Transition
+pageLayout = error "pageLayout not available from ghc"
+#endif
+
+
+pageLayout_ :: ReactNode Transition -> ReactNode Transition
+pageLayout_ = importParentClass pageLayout
+
 
 forReact :: Foldable f => f a -> (a -> ReactNode b) -> ReactNode b
 forReact = flip Foldable.foldMap
@@ -85,11 +97,7 @@ page_ initialState =
           }
     in classLeaf cls ()
 
-foreign import javascript "window.PigmentView.PageLayout" pageLayout
-    :: ImportedClass Transition
 
-pageLayout_ :: ReactNode Transition -> ReactNode Transition
-pageLayout_ = importParentClass pageLayout
 
 -- Top-level views:
 -- * develop / debug / chiusano edit
