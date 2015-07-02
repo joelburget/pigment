@@ -1,4 +1,4 @@
-{-# LANGUAGE RebindableSyntax, JavaScriptFFI, CPP #-}
+{-# LANGUAGE RebindableSyntax, OverloadedStrings, CPP #-}
 
 module Cochon.View where
 
@@ -9,10 +9,12 @@ import Data.String
 
 import Lens.Family2
 import React
+import React.DOM
 import React.GHCJS
 import React.Rebindable
 
 import Cochon.Controller
+import Cochon.Imports
 import Cochon.Model
 
 import Kit.BwdFwd
@@ -22,13 +24,6 @@ import ProofState.Edition.ProofContext
 
 import Kit.Trace
 
-#ifdef __GHCJS__
-foreign import javascript "window.PigmentView"
-    pageLayout :: ImportedClass Transition
-#else
-pageLayout :: ImportedClass Transition
-pageLayout = error "pageLayout not available from ghc"
-#endif
 
 
 pageLayout_ :: ReactNode Transition -> ReactNode Transition
@@ -108,12 +103,12 @@ editView_ :: Bwd ProofContext -> ReactNode Transition
 editView_ = classLeaf $ smartClass
     { React.name = "Edit View"
     , transition = \(state, trans) -> (state, trans)
-    , renderFn = \_ _ -> "Edit View"
+    , renderFn = \_ _ -> div_ [] "Edit View"
     }
 
 commandLine_ :: AutocompleteState -> ReactNode Transition
 commandLine_ = classLeaf $ smartClass
     { React.name = "Command Line"
     , transition = \(state, trans) -> (state, trans)
-    , renderFn = \_ _ -> "Command Line"
+    , renderFn = \_ _ -> div_ [] "Command Line"
     }

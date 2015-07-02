@@ -5,7 +5,7 @@ export default class PageLayout extends React.Component {
   render() {
     let [editView, commandLine] = this.props.children;
 
-    return <View row>
+    return <View column>
       <View>{editView}</View>
       <View>{commandLine}</View>
     </View>;
