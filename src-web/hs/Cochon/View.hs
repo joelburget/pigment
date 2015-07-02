@@ -1,81 +1,24 @@
-{-# LANGUAGE PatternSynonyms, OverloadedStrings, TypeFamilies,
-  MultiParamTypeClasses, LambdaCase, LiberalTypeSynonyms, DataKinds,
-  NamedFieldPuns, TypeOperators, RebindableSyntax, TypeSynonymInstances,
-  FlexibleInstances #-}
+{-# LANGUAGE RebindableSyntax, JavaScriptFFI, CPP #-}
 
 module Cochon.View where
 
 import Prelude hiding ((>>), return)
 
-import Control.Applicative
 import qualified Data.Foldable as Foldable
-import Data.Monoid
-import Data.List
 import Data.String
-import Data.Text (Text)
-import Data.Traversable as Traversable
-import Data.Void
 
 import Lens.Family2
 import React
-import React.DOM hiding (label_)
 import React.GHCJS
 import React.Rebindable
 
-import Cochon.CommandLexer
 import Cochon.Controller
-import Cochon.TermController
-import Cochon.Error
 import Cochon.Model
-import Cochon.Tactics
-import Cochon.Reactify
-import DisplayLang.Lexer
-import DisplayLang.Name
-import DisplayLang.TmParse
-import DisplayLang.DisplayTm
-import DisplayLang.PrettyPrint
-import DisplayLang.Scheme
-import Distillation.Distiller
-import Distillation.Scheme
-import Elaboration.Elaborator
-import Elaboration.Scheduler
-import Elaboration.ElabProb
-import Elaboration.ElabMonad
-import Elaboration.MakeElab
-import Elaboration.RunElab
-import Evidences.DefinitionalEquality
-import Evidences.Eval hiding (($$))
-import qualified Evidences.Eval (($$))
-import Evidences.Tm
+
 import Kit.BwdFwd
-import Kit.ListZip
-import Kit.Parsley
 import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
-import ProofState.Edition.ProofState
-import ProofState.Edition.Entries
-import ProofState.Edition.GetSet
-import ProofState.Edition.Navigation
-import ProofState.Edition.Scope
-import ProofState.Interface.Search
-import ProofState.Interface.ProofKit
-import ProofState.Interface.Lifting
-import ProofState.Interface.Module
-import ProofState.Interface.NameResolution
-import ProofState.Interface.Solving
-import ProofState.Interface.Parameter
-import ProofState.Structure.Developments
-import ProofState.Structure.Entries
 
-import Tactics.Data
-import Tactics.Elimination
-import Tactics.IData
-import Tactics.Matching
-import Tactics.ProblemSimplify
-import Tactics.PropositionSimplify
-import Tactics.Record
-import Tactics.Relabel
-import Tactics.Unification
 
 import Kit.Trace
 
