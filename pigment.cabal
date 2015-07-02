@@ -128,6 +128,8 @@ executable pigment
       react-haskell == 1.4.0.0
 
 executable Pig
+  if flag(ghcjs)
+    buildable: False
   main-is: Pig.hs
   hs-source-dirs: src-bin
   build-depends:
@@ -146,6 +148,8 @@ executable Pig
       pigment
 
 executable Traif
+  if flag(ghcjs)
+    buildable: False
   main-is: Traif.hs
   hs-source-dirs: src-bin
   build-depends:
@@ -163,6 +167,8 @@ executable Traif
       pigment
 
 executable PigmentPrelude
+  if flag(ghcjs)
+    buildable: False
   main-is: PigmentPrelude.hs
   hs-source-dirs: tests
   build-depends:
