@@ -23,7 +23,7 @@ main = do
     let startCtx = B0 :< emptyContext
     validateDevelopment startCtx
 
-    render (page_ (startState startCtx) [] ()) e
+    render (page_ (startState startCtx)) e
     return ()
 
 paranoid = False
