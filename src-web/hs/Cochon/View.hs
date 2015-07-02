@@ -130,21 +130,39 @@ handleCmdChange = Just . CommandTyping . fromJSString . value . target
 -- views
 
 
-page_ :: InteractionState
-      -> [AttrOrHandler Transition]
-      -> ()
-      -> ReactNode a
-page_ state = classLeaf $ smartClass
-    { React.name = "Page"
-    , transition = \(state, trans) -> (dispatch trans state, Nothing)
-    , initialState = state
-    , renderFn = \() state -> div_ [ class_ "page" ] $ do
-          div_ [ class_ "top-pane" ] $ do
+page_ :: InteractionState -> ReactNode a
+page_ initialState =
+    let cls = smartClass
+          { React.name = "Page"
+          , transition = \(state, trans) -> (dispatch trans state, Nothing)
+          , initialState = initialState
+          , renderFn = \() state -> pageLayout_ $ do
+                editView_ (state^.proofCtx)
+                commandLine_ (state^.autocomplete)
+          }
+    in classLeaf cls ()
 
-              -- proofCtxDisplay $ _proofCtx state
+foreign import javascript "window.PigmentView.PageLayout" pageLayout
+    :: ImportedClass Transition
 
-          div_ [ class_ "bottom-pane" ] $ do
-              "" -- TEMP
-              -- locally $ autocompleteView (_autocomplete state)
-              -- prompt state
+pageLayout_ :: ReactNode Transition -> ReactNode Transition
+pageLayout_ = importParentClass pageLayout
+
+-- Top-level views:
+-- * develop / debug / chiusano edit
+-- * node history (better: node focus?)
+-- * edit
+
+editView_ :: Bwd ProofContext -> ReactNode Transition
+editView_ = classLeaf $ smartClass
+    { React.name = "Edit View"
+    , transition = \(state, trans) -> (state, trans)
+    , renderFn = \_ _ -> "Edit View"
+    }
+
+commandLine_ :: AutocompleteState -> ReactNode Transition
+commandLine_ = classLeaf $ smartClass
+    { React.name = "Command Line"
+    , transition = \(state, trans) -> (state, trans)
+    , renderFn = \_ _ -> "Command Line"
     }

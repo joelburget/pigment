@@ -1,0 +1,20 @@
+{
+  "name": "pigment-js",
+  "version": "1.0.0",
+  "description": "the javascript (view) part of Pigment.",
+  "main": "exports.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel": "^5.6.14",
+    "babel-core": "^5.6.15",
+    "babel-loader": "^5.2.2",
+    "node-libs-browser": "^0.5.2",
+    "react": "^0.13.3",
+    "react-flexbox": "^2.0.1",
+    "webpack": "^1.10.0"
+  }
+}
