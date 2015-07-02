@@ -125,8 +125,7 @@ executable pigment
       newtype == 0.2,
       pretty >= 1.1,
       recursion-schemes >= 4.1,
-      react-haskell == 1.4.0.0,
-      material-ui == 0.1.0.0
+      react-haskell == 1.4.0.0
 
 executable Pig
   main-is: Pig.hs

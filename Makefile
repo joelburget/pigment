@@ -24,7 +24,6 @@ $(SANDBOX)/bin/pigment.jsexe/all.js: $(SANDBOX) $(LIB_SOURCE_FILES) src-web/hs/M
 $(SANDBOX):
 	cabal sandbox init --sandbox $(SANDBOX)
 	cabal sandbox add-source ../react-haskell
-	cabal sandbox add-source ../material-ui
 
 build/index.css: src-web/css/index.less src-web/css/mui.css
 	lessc src-web/css/index.less build/index.css --autoprefix=""

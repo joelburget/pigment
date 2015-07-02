@@ -21,7 +21,6 @@ import React
 import React.DOM hiding (label_)
 import React.GHCJS
 import React.Rebindable
-import React.MaterialUI
 
 import Cochon.CommandLexer
 import Cochon.Controller
