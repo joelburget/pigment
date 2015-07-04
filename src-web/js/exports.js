@@ -1,3 +1,3 @@
-import PageLayout from 'babel!./view/PageLayout';
+import PageLayout from './view/PageLayout';
 
 module.exports = {PageLayout};
