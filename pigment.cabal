@@ -111,7 +111,6 @@ executable pigment
     buildable: False
   hs-source-dirs: src-web/hs, src-lib
   js-sources:
-      src-web/js/stubs/react.js
       src-web/js/stubs/react-stubs.js
   build-depends:
       base >= 4.6 && < 5,
