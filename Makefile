@@ -31,11 +31,11 @@ build/index.css: src-web/css/index.less src-web/css/mui.css
 build/mui.css: src-web/css/mui.css
 	cp src-web/css/mui.css build/
 
-build/index.html: src-web/index.html
-	cp src-web/index.html build/
+build/assets/index.html: src-web/index.html
+	cp src-web/index.html build/assets/
 
-build/all.js: $(SANDBOX)/bin/pigment.jsexe/all.js
-	cp $(SANDBOX)/bin/pigment.jsexe/all.js build/
+build/assets/all.js: $(SANDBOX)/bin/pigment.jsexe/all.js
+	cp $(SANDBOX)/bin/pigment.jsexe/all.js build/assets/
 
 # This has a hidden dependency on global `hscolour`.
 dist/doc/html/pigment/index.html: $(SANDBOX) $(LIB_SOURCE_FILES)
