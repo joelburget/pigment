@@ -4,7 +4,8 @@
   "description": "the javascript (view) part of Pigment.",
   "main": "exports.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
@@ -12,9 +13,15 @@
     "babel": "^5.6.14",
     "babel-core": "^5.6.15",
     "babel-loader": "^5.2.2",
+    "material-ui": "^0.9.2",
     "node-libs-browser": "^0.5.2",
+    "radium": "^0.13.2",
     "react": "^0.13.3",
-    "react-flexbox": "^2.0.1",
+    "react-tap-event-plugin": "^0.1.7",
     "webpack": "^1.10.0"
+  },
+  "devDependencies": {
+    "react-hot-loader": "^1.2.7",
+    "webpack-dev-server": "^1.10.1"
   }
 }
