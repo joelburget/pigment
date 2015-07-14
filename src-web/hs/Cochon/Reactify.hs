@@ -6,12 +6,19 @@
 module Cochon.Reactify where
 
 import Prelude hiding ((>>), return)
+
+import qualified Data.Aeson as Aeson
+import qualified Data.Foldable as Foldable
 import Data.Functor.Identity
+import Data.HashMap.Strict as H
 import Data.List
-import Data.Monoid ((<>))
+import Data.Monoid ((<>), mempty, mconcat)
 import Data.String (fromString)
+import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Void
 
+import Cochon.Imports
 import Cochon.Model
 import ProofState.Structure.Developments
 import Distillation.Distiller
@@ -26,302 +33,340 @@ import Kit.MissingLibrary hiding ((<>))
 import ProofState.Edition.ProofState
 
 import React hiding (key)
-import React.DOM
 import React.Rebindable
 
-import DisplayLang.PrettyPrint
-import Kit.Trace
-import Debug.Trace
+
+forReact :: Foldable.Foldable f => f a -> (a -> ReactNode b) -> ReactNode b
+forReact = flip Foldable.foldMap
 
 
--- | Give a react element representing a `Keyword`.
+can_ :: Can DInTmRN -> ReactNode TermTransition
+can_ = classLeaf $ dumbClass
+    { React.name = "Can"
+    , renderFn = \props _ ->
+        let (tag, children) = canReactify props
+        in canLayout_ tag children
+    }
 
-reactKword :: Keyword -> ReactNode a
-reactKword kw = div_ [ class_ "kw" ] $ case kw of
-    KwArr -> span_ [ class_ "kw-arr" ] ""
-    KwImp -> span_ [ class_ "kw-imp" ] ""
-    KwLambda -> span_ [ class_ "kw-lambda" ] ""
-    _ -> fromString (key kw)
+canReactify :: Can DInTmRN -> (Text, ReactNode TermTransition)
+canReactify Set       = ("set", mempty)
+canReactify (Pi s t)  = ("pi", pi_ (DPI s t))
+canReactify (Con x)   = ("con", dInTmRN_ x)
 
-reactBrackets :: Bracket -> ReactNode a -> ReactNode a
-reactBrackets br r = do
-    fromString (showOpenB br)
-    r
-    fromString (showCloseB br)
+-- Desc
 
--- | Describe things that can be made into React elements.
-class Reactive x where
-    reactify :: x -> ReactNode TermTransition
+canReactify (Mu (Just l   :?=: _)) = ("mujust", dInTmRN_ l)
+canReactify (Mu (Nothing  :?=: Identity t)) = ("munothing", dInTmRN_ t)
 
-instance Reactive (Can DInTmRN) where
-    reactify x = div_ [ class_ "can-dintmrn" ] $ canReactify x
+-- IDesc
 
-canReactify :: Can DInTmRN -> ReactNode TermTransition
-canReactify Set       = reactKword KwSet
-canReactify (Pi s t)  = reactPi (DPI s t)
-canReactify (Label l t) = div_ [ class_ "can-label" ] $ do
-    reactify l
-    reactKword KwAsc
-    reactify t
+canReactify (IMu (Just l   :?=: _) i)  = ("imujust", dInTmRN_ l <> dInTmRN_ i)
+canReactify (IMu (Nothing  :?=: (Identity ii :& Identity d)) i)  =
+    ("imunothing", dInTmRN_ ii <> dInTmRN_ d <> dInTmRN_ i)
 
-canReactify (Con x)   = reactKword KwCon >> reactify x
+-- Enum
 
---  canReactify (Anchor (DTAG u) t ts) = fromString u >> reactify ts
---  canReactify AllowedEpsilon = ""
---  canReactify (AllowedCons _ _ _ s ts) = reactify s >> reactify ts
+canReactify (EnumT t)  = ("enumt", dInTmRN_ t)
+canReactify Ze         = ("ze", mempty)
+canReactify (Su t)     = ("su", "TODO Su") -- reactifyEnumIndex 1 t)
 
-canReactify (Mu (Just l   :?=: _)) = reactify l
-canReactify (Mu (Nothing  :?=: Identity t)) = reactKword KwMu >> reactify t
+-- Equality
 
---   canReactify (EnumT t)  = reactKword KwEnum >> reactify t
---   canReactify Ze         = "0"
---   canReactify (Su t)     = reactifyEnumIndex 1 t
---   canReactify (EqBlue pp qq) = reactify (DEqBlue (foo pp) (foo qq))
---     where
---       foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
---       foo (_    :>: DN x  ) = x
---       foo (xty  :>: x     ) = DType xty ::$ [A x]
---   canReactify (Monad d x)   = reactKword KwMonad >> reactify d >> reactify x
---   canReactify (Return x)    = div_ [ class_ "can-return" ] $ do
---       reactKword KwReturn
---       reactify x
---   canReactify (Composite x) = reactKword KwCon >> reactify x
---   canReactify (IMu (Just l   :?=: _) i)  = reactify l >> reactify i
---   canReactify (IMu (Nothing  :?=: (Identity ii :& Identity d)) i)  = do
---       reactKword KwIMu
---       reactify ii
---       reactify d
---       reactify i
+canReactify (EqBlue pp qq) = ("eqblue", dInTmRN_ (DEqBlue (foo pp) (foo qq)))
+  where
+    foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
+    foo (_    :>: DN x  ) = x
+    foo (xty  :>: x     ) = DType xty ::$ [A x]
 
-canReactify (LRet x) = reactKword KwRet >> reactify (traceShowId x)
+-- Free Monad
 
---   canReactify (Nu (Just l :?=: _))  = reactify l
---   canReactify (Nu (Nothing :?=: Identity t))  = reactKword KwNu >> reactify t
---   canReactify (CoIt d sty f s) = do
---       reactKword KwCoIt
---       reactify sty
---       reactify f
---       reactify s
---   canReactify Prop           = reactKword KwProp
+canReactify (Monad d x)   = ("monad", dInTmRN_ d <> dInTmRN_ x)
+canReactify (Return x)    = ("return", dInTmRN_ x)
+canReactify (Composite x) = ("composite", dInTmRN_ x)
 
-canReactify (Prf p)        = reactKword KwPrf >> reactify p
+-- Labelled Types
 
---   canReactify (All p q)      = reactifyAll "" (DALL p q)
---   canReactify (And p q)      = reactify p >> reactKword KwAnd >> reactify q
---   canReactify Trivial        = reactKword KwTrivial
---   canReactify Absurd         = reactKword KwAbsurd
---   canReactify (Box (Irr p))  = reactify p
---   canReactify (Inh ty)       = reactKword KwInh >> reactify ty
---   canReactify (Wit t)        = reactKword KwWit >> reactify t
---   canReactify (Quotient x r p) = do
---       reactKword KwQuotient
---       mapM_ reactify [x,r,p]
---   canReactify RSig              =  "RSignature"
---   canReactify REmpty            =  "empty"
---   canReactify (RCons s i t)     = do
---       reactify s
---       ">"
---       reactify i
---       " , "
---       reactify t
---   canReactify Unit         = reactKword KwSig >> "()"
---   canReactify Void         = reactifyPair DVOID
+canReactify (Label l t) = ("label", dInTmRN_ l <> dInTmRN_ t)
+canReactify (LRet x) = ("lret", dInTmRN_ x)
 
-canReactify (Sigma s t)  = reactifySigma "" (DSIGMA s t)
-canReactify (Pair a b)   = reactifyPair (DPAIR a b)
+-- Nu
 
---   canReactify UId      = reactKword KwUId
---   canReactify (Tag s)  = reactKword KwTag >> fromString s
+canReactify (Nu (Just l :?=: _))  = ("nujust", dInTmRN_ l)
+canReactify (Nu (Nothing :?=: Identity t))  = ("nunothing", dInTmRN_ t)
+canReactify (CoIt d sty f s) = ("coit", forReact [sty, f, s] dInTmRN_)
 
-canReactify can       = fromString $ "TODO(joel) - " ++ show can
+-- XXX Prob?
 
--- | Accumulate domains until a non-dependent pi is found.
-reactPi :: DInTmRN -> ReactNode TermTransition
-reactPi tm = div_ [ class_ "pi" ] $ do
-    -- elabTrace $ renderHouseStyle $ pretty tm PiSize
-    reactPi' tm
+-- Prop
 
-reactPi' :: DInTmRN -> ReactNode TermTransition
--- IE `s -> t`
-reactPi' (DPI s (DL (DK t))) = do
-    reactify s
-    reactKword KwArr
-    reactify t
--- IE `(x : s) -> t`
-reactPi' (DPI s (DL (x ::. t))) = do
-    reactBrackets Round $ do
-        fromString x
-        reactKword KwAsc
-        reactify s
-    -- TODO(joel) we don't *always* want this arrow here. it's not a huge
-    -- deal for now - nobody will notice, but it would be nice to elide
-    -- arrows
-    reactKword KwArr
-    reactPi' t
--- IE `pi s t`
-reactPi' (DPI s t) = do
-    reactKword KwPi
-    reactify s
-    reactify t
--- IE `tm`
-reactPi' tm = reactify tm
+canReactify Prop           = ("prop", mempty)
+canReactify (Prf p)        = ("prf", dInTmRN_ p)
+canReactify Trivial        = ("trivial", mempty)
+canReactify Absurd         = ("absurd", mempty)
+canReactify (And p q)      = ("and", dInTmRN_ p <> dInTmRN_ q)
+canReactify (All p q)      = ("all", all_ (DALL p q))
+canReactify (Box (Irr p))  = ("box", dInTmRN_ p)
+canReactify (Inh ty)       = ("inh", dInTmRN_ ty)
+canReactify (Wit t)        = ("wit", dInTmRN_ t)
 
--- | Take a bunch of domains (which may be empty) and a codomain, and
--- represents them appropriately for the current size.
+-- Quotients
+-- x : Set
+-- r - relation
+-- p - proof of equivalence relation
+canReactify (Quotient x r p) = ("quotient", forReact [x, r, p] dInTmRN_)
+    -- reactify x
+    -- " // "
+    -- reactify r
+    -- " ("
+    -- reactify p
+    -- ")"
 
-reactPiMore :: ReactNode TermTransition -> ReactNode TermTransition -> ReactNode TermTransition
-reactPiMore bs d = bs >> reactKword KwArr >> d
+canReactify RSig              = ("rsig", mempty)
+canReactify REmpty            = ("rempty", mempty)
+canReactify (RCons s i t)     = ("rcons", forReact [s, i, t] dInTmRN_)
+    -- reactify s
+    -- ">"
+    -- reactify i
+    -- " , "
+    -- reactify t
+-- XXX Record?
 
--- | To reactify a scope, we accumulate arguments until something other than a
--- lambda term is reached.
-instance Reactive DSCOPE where
-    reactify s = reactLambda (B0 :< dScopeName s) (dScopeTm s)
+-- Sigma
 
-reactLambda :: Bwd String -> DInTmRN -> ReactNode TermTransition
-reactLambda vs (DL s) = reactLambda (vs :< dScopeName s) (dScopeTm s)
-reactLambda vs tm = div_ [ class_ "lambda" ] $ do
-    reactKword KwLambda
-    reactBrackets Round $ fromString $ unwords $ trail vs
-    reactKword KwArr
-    reactify tm
+canReactify Unit         = ("unit", mempty)
+canReactify Void         = ("void", mempty)
+canReactify (Sigma s t)  = ("sigma", sigma_ (DSIGMA s t))
+canReactify (Pair a b)   = ("pair", pair_ (DPAIR a b))
 
-handleLambdaContext, handleCanonicalContext, handleNeutralContext, handleQuestionContext, handleUnderscoreContext :: MouseEvent -> Maybe TermTransition
-handleLambdaContext = undefined
-handleCanonicalContext = undefined
-handleNeutralContext = undefined
-handleQuestionContext = undefined
-handleUnderscoreContext = undefined
+-- UId
 
-instance Reactive DInTmRN where
-    reactify (DL s)          =
-        div_ [ class_ "dintmrn-canonical"
-             -- , onClick (handleLambdaContext s)
-             ] $
-            reactify s
-    reactify (DC c)          =
-        div_ [ class_ "dintmrn-canonical"
-             -- , onClick (handleCanonicalContext c)
-             ] $
-            reactify c
-    reactify (DN n)          =
-        div_ [ class_ "dintmrn-neutral"
-             -- , onClick (handleNeutralContext n)
-             ] $
-            reactify n
-    reactify (DQ x)          =
-        div_ [ class_ "dintmrn-question"
-             -- , onClick (handleQuestionContext x)
-             ] $
-            fromString $ '?':x
-    reactify DU              =
-        div_ [ class_ "dintmrn-underscore"
-             -- TODO(joel) - provide some info so we can locate this
-             -- underscore!
-             -- , onClick (handleUnderscoreContext)
-             ] $
-            reactKword KwUnderscore
+canReactify UId      = ("uid", mempty)
+canReactify (Tag s)  = ("tag", fromString s)
 
---       reactify (DEqBlue t u) = reactify t >> reactKword KwEqBlue >> reactify u
---       reactify (DIMu (Just s   :?=: _) _) = reactify s
---       reactify (DIMu (Nothing  :?=: (Identity ii :& Identity d)) i) = do
---           reactKword KwIMu
---           reactify ii
---           reactify d
---           reactify i
+-- Anchors
 
-    reactify (DAnchor name _)  = fromString name
+canReactify (Anchor (DTAG u) t ts) =
+    ("anchor", fromString u <> dInTmRN_ t <> dInTmRN_ ts)
+canReactify AllowedEpsilon = ("allowedepsilon", mempty)
+canReactify (AllowedCons _ _ _ s ts) =
+    ("allowedcons", dInTmRN_ s <> dInTmRN_ ts)
+-- XXX Anchors, AllowedBy
 
---       reactify (DTAG name)        = reactKword KwTag >> fromString name
---       reactify (DTag name tms) = do
---           reactKword KwTag
---           fromString name
---           mapM_ reactify tms
+-- canReactify can       = fromString $ "TODO(joel) - " ++ show can
 
-    reactify indtm           = fromString $ "TODO(joel) - " ++ show indtm
+pi_ :: DInTmRN -> ReactNode TermTransition
+pi_ (DPI s t) = piLayout_ (dInTmRN_ s <> dInTmRN_ t)
 
-instance Reactive DExTmRN where
-    reactify (n ::$ els)  = div_ [ class_ "dextmrn" ] $ do
-        reactify n
-        foldr (>>) "" $ map reactify els
+-- reactPi' :: DInTmRN -> ReactNode TermTransition
+-- -- IE `s -> t`
+-- reactPi' (DPI s (DL (DK t))) = do
+--     reactify s
+--     reactKword KwArr
+--     reactify t
+-- -- IE `(x : s) -> t`
+-- reactPi' (DPI s (DL (x ::. t))) = do
+--     reactBrackets Round $ do
+--         fromString x
+--         reactKword KwAsc
+--         reactify s
+--     -- TODO(joel) we don't *always* want this arrow here. it's not a huge
+--     -- deal for now - nobody will notice, but it would be nice to elide
+--     -- arrows
+--     reactKword KwArr
+--     reactPi' t
+-- -- IE `pi s t`
+-- reactPi' (DPI s t) = do
+--     reactKword KwPi
+--     reactify s
+--     reactify t
+-- -- IE `tm`
+-- reactPi' tm = reactify tm
 
-instance Reactive DHEAD where
-    reactify dh = div_ [ class_ "dhead" ] $ reactify' dh where
-        -- Parameter (RelName)
-        -- TODO(joel) this is the same as `reasonableName`
-        reactify' (DP x)       = fromString $ fst $ last x
-        reactify' (DType ty)   = reactKword KwAsc >> reactify ty
-        reactify' (DTEx ex)    = "TODO(joel) - DTEx"
 
-instance Reactive (Scheme DInTmRN) where
-    reactify sch = div_ [ class_ "scheme-dintmrn" ] $ reactify' sch where
+dscope_ :: DSCOPE -> ReactNode TermTransition
+dscope_ = classLeaf $ dumbClass
+    { React.name = "DSCOPE"
+    , renderFn = \s _ ->
+        let (bindings, result) = lambdaAccum (B0 :< dScopeName s) (dScopeTm s)
+            bindings' = forReact bindings fromString
+            result' = dInTmRN_ result
+        in dscopeLayout_ (bindings' <> result')
+    }
 
-        reactify' (SchType ty) = reactKword KwAsc >> reactify ty
-        reactify' (SchExplicitPi (x :<: schS) schT) = do
-            reactBrackets Round (fromString x >> reactify schS)
-            reactify schT
-        reactify' (SchImplicitPi (x :<: s) schT) = do
-            reactBrackets Square $ do
-                fromString x
-                reactKword KwAsc
-                reactify s
-            reactify schT
+lambdaAccum :: Bwd String -> DInTmRN -> (Bwd String, DInTmRN)
+lambdaAccum vs (DL s) = lambdaAccum (vs :< dScopeName s) (dScopeTm s)
+lambdaAccum vs tm = (vs, tm)
 
---   reactifyEnumIndex :: Int -> DInTmRN -> Pure React'
---   reactifyEnumIndex n DZE      = fromString $ show n
---   reactifyEnumIndex n (DSU t)  = reactifyEnumIndex (succ n) t
---   reactifyEnumIndex n tm       = do
---       fromString (show n)
---       reactKword KwPlus
---       reactify tm
+
+dInTmRN_ :: DInTmRN -> ReactNode TermTransition
+dInTmRN_ = classLeaf $ dumbClass
+    { React.name = "DInTmRN"
+    , renderFn = \tm _ ->
+        let (tag, details) = case tm of
+                DL s -> ("dl", dscope_ s)
+                (DC c) -> ("dc", can_ c)
+                (DN n) -> ("dn", dExTmRN_ n)
+                (DQ x) -> ("dq", fromString x)
+                DU     -> ("du", mempty)
+                (DT (InTmWrap tm)) -> ("dt", "TODO DT")
+                (DEqBlue t u) -> ("deqblue", dExTmRN_ t <> dExTmRN_ u)
+                (DIMu (Just s   :?=: _) _) -> ("dimujust", dInTmRN_ s)
+                (DIMu (Nothing  :?=: (Identity ii :& Identity d)) i) ->
+                    ("dimunothing", forReact [ii, d, i] dInTmRN_)
+                (DAnchor name _) -> ("danchor", fromString name)
+                (DTAG name) -> ("dtag1", fromString name)
+                (DTag name tms) ->
+                    ("dtag2", fromString name <> forReact tms dInTmRN_)
+        in dInTmRNLayout_ tag details
+    }
+
+
+dExTmRN_ :: DExTmRN -> ReactNode TermTransition
+dExTmRN_ = classLeaf $ dumbClass
+    { React.name = "DExTmRN"
+    , renderFn = \(n ::$ els) _ -> dExTmRNLayout_ $ do
+        dhead_ n
+        dspine_ els
+    }
+
+
+dspine_ :: DSPINE -> ReactNode TermTransition
+dspine_ = classLeaf $ dumbClass
+    { React.name = "DSpine"
+    , renderFn = \els _ -> dspineLayout_ (forReact els elim_)
+    }
+
+
+relname_ :: RelName -> ReactNode TermTransition
+relname_ name = relnameLayout_ (forReact name relnamePiece_)
+
+relnamePiece_ :: (String, Offs) -> ReactNode TermTransition
+relnamePiece_ (str, offs) =
+    let (tag, n) = case offs of
+            Rel n -> ("rel", T.pack (show n))
+            Abs n -> ("abs", T.pack (show n))
+    in relnamePieceLayout_ tag n (T.pack str)
+
+
+dhead_ :: DHEAD -> ReactNode TermTransition
+dhead_ = classLeaf $ dumbClass
+    { React.name = "DHEAD"
+    , renderFn = \dhead _ ->
+        let (tag, children) = case dhead of
+                DP x -> ("param", relname_ x)
+                DType ty -> ("annotation", dInTmRN_ ty)
+                DTEx (ExTmWrap ex) -> ("embedding", "TODO DTEx")
+        in dheadLayout_ tag children
+    }
+
+scheme_ :: Scheme DInTmRN -> ReactNode TermTransition
+scheme_ = classLeaf $ dumbClass
+    { React.name = "Scheme"
+    , renderFn = \scheme _ ->
+        let (tag, children) = case scheme of
+                SchType ty -> ("type", dInTmRN_ ty)
+                SchExplicitPi (name :<: from) to ->
+                    ("explicit", do
+                        fromString name
+                        scheme_ from
+                        scheme_ to
+                    )
+                SchImplicitPi (name :<: from) to ->
+                    ("implicit", do
+                        fromString name
+                        dInTmRN_ from
+                        scheme_ to
+                    )
+        in schemeLayout_ tag children
+    }
+
+  -- reactifyEnumIndex :: Int -> DInTmRN -> Pure React'
+  -- reactifyEnumIndex n DZE      = fromString $ show n
+  -- reactifyEnumIndex n (DSU t)  = reactifyEnumIndex (succ n) t
+  -- reactifyEnumIndex n tm       = do
+  --     fromString (show n)
+  --     reactKword KwPlus
+  --     reactify tm
+
+
+-- build up a list of inputs
+-- allHelper :: DInTmRN -> []
+-- allHelper (DALL (DPRF p) (DLK q)) = Implies p q
+-- allHelper (DALL s (DL x ::. t)) = Implies (x : s) (allHelper t)
+-- allHelper (DALL s (DLK t)) = allHelper (DALL s (DL ("_" ::. t)))
+-- allHelper (DALL s t) = All s t
+-- allHelper tm = reactify tm
 --
---   reactifyAll :: Pure React' -> DInTmRN -> Pure React'
---   reactifyAll bs (DALL (DPRF p) (DL (DK q))) = reactifyAllMore
---     bs
---     (reactify p >> reactKword KwImp >> reactify q)
---   reactifyAll bs (DALL s (DL (x ::. t))) = reactifyAll
---       (bs >>
---        reactBrackets Round (fromString x >> reactKword KwAsc >> reactify s))
---       t
---   reactifyAll bs (DALL s (DL (DK t))) = reactifyAll bs
---       (DALL s (DL ("_" ::. t)))
---   reactifyAll bs (DALL s t) = reactifyAllMore bs
---     (reactKword KwAll >> reactify s >> reactify t)
---   reactifyAll bs tm = reactifyAllMore bs (reactify tm)
---
---   reactifyAllMore :: Pure React' -> Pure React' -> Pure React'
---   reactifyAllMore bs d = div_ [ class_ "all-more" ] $
---       bs >> reactKword KwImp >> d
+-- allLayout_ ::
 
-reactifyPair :: DInTmRN -> ReactNode TermTransition
-reactifyPair p = reactBrackets Square $ reactifyPairMore "" p
+all_ :: DInTmRN -> ReactNode TermTransition
+all_ = classLeaf $ dumbClass
+    { React.name = "All"
+    , renderFn = \props _ -> "TODO all_" -- allLayout_ (allHelper props)
+    }
 
-reactifyPairMore :: ReactNode TermTransition -> DInTmRN -> ReactNode TermTransition
-reactifyPairMore d DVOID        = d
-reactifyPairMore d (DPAIR a b)  = reactifyPairMore
-    (d >> reactify a)
-    b
-reactifyPairMore d t            = d >> reactKword KwComma >> reactify t
+pairLayout_ :: [DInTmRN] -> ReactNode TermTransition
+pairLayout_ = undefined
 
-reactifySigma :: ReactNode TermTransition -> DInTmRN -> ReactNode TermTransition
-reactifySigma d DUNIT                      = reactifySigmaDone d ""
-reactifySigma d (DSIGMA s (DL (x ::. t)))  = reactifySigma
+pair_ :: DInTmRN -> ReactNode TermTransition
+pair_ = classLeaf $ dumbClass
+    { React.name = "Pair"
+    , renderFn = \props _ -> pairLayout_ (pairHelper props)
+    }
+
+pairHelper :: DInTmRN -> [DInTmRN]
+pairHelper DVOID = []
+pairHelper (DPAIR a b) = a : pairHelper b
+
+
+{-
+sigma_ :: ReactNode TermTransition -> DInTmRN -> ReactNode TermTransition
+sigma_ d DUNIT                      = reactifySigmaDone d ""
+sigma_ d (DSIGMA s (DL (x ::. t)))  = reactifySigma
     (d >> fromString x >> reactKword KwAsc >> reactify s >> reactKword KwSemi)
     t
-reactifySigma d (DSIGMA s (DL (DK t)))     = reactifySigma
+sigma_ d (DSIGMA s (DL (DK t)))     = reactifySigma
     (d >> reactify s >> reactKword KwSemi) t
-reactifySigma d (DSIGMA s t) = reactifySigmaDone d
+sigma_ d (DSIGMA s t) = reactifySigmaDone d
     (reactKword KwSig >> reactify s >> reactify t)
-reactifySigma d t = reactifySigmaDone d (reactify t)
+sigma_ d t = reactifySigmaDone d (reactify t)
 
 reactifySigmaDone :: ReactNode TermTransition -> ReactNode TermTransition -> ReactNode TermTransition
 reactifySigmaDone s t = div_ [ class_ "sigma-done" ] $
     reactKword KwSig >> reactBrackets Round (s >> t)
+-}
+
+sigma_ :: DInTmRN -> ReactNode TermTransition
+sigma_ = classLeaf $ dumbClass
+    { React.name = "Sigma"
+    , renderFn = \sigma _ ->
+        let (tag, children) = case sigma of
+                DUNIT -> ("dunit", mempty)
+
+                -- lambda with binding
+                DSIGMA s (DL (x ::. t)) ->
+                    ("bind", dInTmRN_ s <> fromString x <> dInTmRN_ t)
+
+                -- lambda with a constant
+                DSIGMA s (DL (DK t)) -> ("const", dInTmRN_ s <> dInTmRN_ t)
+
+                -- something else? what could this be?
+                DSIGMA s t -> ("other", dInTmRN_ s <> dInTmRN_ t)
+        in sigmaLayout_ tag children
+    }
 
 -- The `Elim` functor is straightforward.
 
-instance Reactive (Elim DInTmRN) where
-    reactify elim = div_ [ class_ "elim-dintmrn" ] $ reactify' elim where
-        reactify' (A t)  = reactify t
-        reactify' Out    = reactKword KwOut
-        reactify' (Call _) = reactKword KwCall
-        reactify' elim   = fromString $ show elim
+elimLayout_ :: (Text, Maybe (ReactNode TermTransition)) -> ReactNode TermTransition
+elimLayout_ = undefined
+
+elim_ :: Elim DInTmRN -> ReactNode TermTransition
+elim_ = classLeaf $ dumbClass
+    { React.name = "Elim"
+    , renderFn = \elim _ -> elimLayout_ $ case elim of
+        A t -> ("a", Just (dInTmRN_ t))
+        Out -> ("out", Nothing)
+        Call t -> ("call", Just (dInTmRN_ t))
+        Fst -> ("fst", Nothing)
+        Snd -> ("snd", Nothing)
+    }
