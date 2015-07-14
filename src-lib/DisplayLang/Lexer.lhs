@@ -141,51 +141,7 @@ Keywords are slightly more involved. A keyword is one of the following
 things...
 
 > data Keyword
->     = KwMu
->     | KwEnum
->     | KwPlus
->     | KwEqBlue
->     | KwMonad
->     | KwReturn
->     | KwIMu
->     | KwCall
->     | KwLabel
->     | KwLabelEnd
->     | KwRet
->     | KwNu
->     | KwCoIt
->     | KwProb
->     | KwProbLabel
->     | KwPatPi
->     | KwSch
->     | KwSchTy
->     | KwExpPi
->     | KwImpPi
->     | KwProp
->     | KwAbsurd
->     | KwTrivial
->     | KwPrf
->     | KwAnd
->     | KwArr
->     | KwImp
->     | KwAll
->     | KwInh
->     | KwWit
->     | KwQuotient
->     | KwRecord
->     | KwRSig
->     | KwREmpty
->     | KwRCons
->     | KwFst
->     | KwSnd
->     | KwSig
-
-UId
-
->     | KwUId
->     | KwTag
-
->     | KwAsc
+>     = KwAsc
 >     | KwComma
 >     | KwSemi
 >     | KwDefn
@@ -197,6 +153,86 @@ UId
 >     | KwLambda
 >     | KwCon
 >     | KwOut
+
+Desc
+
+>     | KwMu
+
+EnumT
+
+>     | KwEnum
+>     | KwPlus
+
+Equality
+
+>     | KwEqBlue
+
+Free Monad
+
+>     | KwMonad
+>     | KwReturn
+
+IDesc
+
+>     | KwIMu
+
+Labelled Types
+
+>     | KwCall
+>     | KwLabel
+>     | KwLabelEnd
+>     | KwRet
+
+Nu
+
+>     | KwNu
+>     | KwCoIt
+
+Prob
+
+>     | KwProb
+>     | KwProbLabel
+>     | KwPatPi
+>     | KwSch
+>     | KwSchTy
+>     | KwExpPi
+>     | KwImpPi
+
+Prop
+
+>     | KwProp
+>     | KwAbsurd
+>     | KwTrivial
+>     | KwPrf
+>     | KwAnd
+>     | KwArr
+>     | KwImp
+>     | KwAll
+>     | KwInh
+>     | KwWit
+
+Quotients
+
+>     | KwQuotient
+
+Records
+
+>     | KwRecord
+>     | KwRSig
+>     | KwREmpty
+>     | KwRCons
+
+Sigma
+
+>     | KwFst
+>     | KwSnd
+>     | KwSig
+
+UId
+
+>     | KwUId
+>     | KwTag
+
 >   deriving (Bounded, Enum, Eq, Show, Generic)
 
 ...and they look like this:
