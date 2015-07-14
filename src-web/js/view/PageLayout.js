@@ -5,35 +5,21 @@ import Radium from 'radium';
 let ThemeManager = new Styles.ThemeManager();
 
 let styles = {
-  page: {
-    display: 'flex',
-    flexDirection: 'column',
+  page: {},
+  editView: {
+    padding: '10px 10px 100px 10px'
   },
-  commandLine: {
-    flex: '1'
-  }
 };
 
 @Radium
 export default class PageLayout extends React.Component {
   render() {
-    let [editView, commandLine, messages] = this.props.children;
+    let [ editView, commandLine, messages ] = this.props.children;
 
     return <div style={styles.page}>
-      <div>{editView}</div>
-      <div styles={[styles.commandLine]}>{commandLine}</div>
+      <div style={styles.editView}>{editView}</div>
+      <div>{commandLine}</div>
       <div>{messages}</div>
     </div>;
   }
-
-  getChildContext() {
-    return {
-      muiTheme: ThemeManager.getCurrentTheme()
-    };
-  }
-
 }
-
-PageLayout.childContextTypes = {
-  muiTheme: React.PropTypes.object
-};
