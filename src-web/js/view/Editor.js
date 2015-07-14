@@ -1,23 +1,94 @@
 import React from 'react';
 import Radium from 'radium';
+import * as MaterialUI from 'material-ui';
+import { getChildren, reactJoin } from './util';
 
-function getChildren(children) {
-  let arr = [];
-  React.Children.forEach(children, child => arr.push(child));
-  return arr;
-}
+let { Styles: { Colors } } = MaterialUI;
+let theme = MaterialUI.Styles.ThemeManager().getCurrentTheme();
+
+const headerStyle = {
+  //borderLeft: '4px solid gray',
+  borderBottom: '2px dashed #aaa',
+  padding: '0 0 10px',
+};
+
+const blockStyle = color => ({
+    borderLeft: `4px solid ${color}`,
+    borderTop: `1px solid ${Colors.grey200}`,
+    borderBottom: `1px solid ${Colors.grey200}`,
+    margin: '10px 0',
+    padding: '10px 0 10px 10px',
+});
 
 let styles = {
-  refLayout: {},
-  parameterLayout: {},
-  definitionLayout: {},
-  entryModuleLayout: {},
-  devLayout: {},
-  entriesLayout: {},
-  entryHeaderLayout: {},
-  moduleHeaderLayout: {},
+  refLayout: {
+    display: 'flex',
+    flexDirection: 'row',
+  },
+
+  devLayout: {
+    marginTop: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    // ...blockStyle(Colors.deepPurple200),
+  },
+
+  parameterLayout: {
+    marginTop: 10,
+    // ...blockStyle(Colors.orange500)
+  },
+
+  moduleLayout: {...blockStyle(Colors.cyan500)},
+
+  entryEntityLayout: {...blockStyle(Colors.red200)},
+
+  definitionLayout: {...blockStyle(Colors.amber500)},
+
+  purposeLet: {
+    color: Colors.indigo900
+  },
+  purposeProg: {
+    color: Colors.indigo900, display: 'flex'
+  },
+
+  entriesLayout: {
+    marginTop: 10,
+  },
+
+  entriesLayoutHeader: {
+    fontWeight: 400,
+  },
+
+  entryHeaderLayout: {...headerStyle},
+  moduleHeaderLayout: {...headerStyle},
   nameExplainLayout: {},
-  entryEntityLayout: {},
+
+  suspendedStyle: { color: Colors.blue900 },
+  unstableStyle: { color: Colors.deepOrange500 },
+  stableStyle: { color: Colors.green700 },
+
+  dInTmRN: {
+    backgroundColor: Colors.blue100,
+    margin: '0 2px',
+    padding: '0 4px'
+  },
+
+  name: {
+    display: 'flex',
+    backgroundColor: Colors.orange100,
+    margin: '0 2px',
+    padding: '0 4px'
+  },
+
+  scheme: {
+    backgroundColor: Colors.teal100,
+    display: 'flex',
+    flexDirection: 'row',
+    padding: 4,
+    border: '4px solid white'
+  },
+
+  err: { backgroundColor: Colors.orange700 },
 };
 
 @Radium
@@ -26,7 +97,7 @@ export class RefLayout extends React.Component {
     const [name, ty] = getChildren(this.props.children);
 
     return <div style={styles.refLayout}>
-      {name} : {ty}
+      defining {name} as {ty}
     </div>;
   }
 }
@@ -34,23 +105,56 @@ export class RefLayout extends React.Component {
 @Radium
 export class ParameterLayout extends React.Component {
   render () {
-    const [pKind] = getChildren(this.props.children);
+    const [ tag ] = getChildren(this.props.children);
 
     return <div style={styles.parameterLayout}>
-      {pKind}
+      (this definition is a {this.getParamDescription(tag)})
     </div>;
+  }
+
+  getParamDescription(tag) {
+    switch (tag) {
+      case 'ParamLam':
+        return 'lambda';
+      case 'ParamAll':
+        return 'for all';
+      case 'ParamPi':
+        return 'pi';
+    }
+  }
+}
+
+const bracketedBorder = '1px solid #bbb';
+
+class Bracketed extends React.Component {
+  render() {
+    return (
+      <div style={{borderLeft: bracketedBorder, display: 'flex', flexDirection: 'column'}}>
+        <div style={{display: 'flex', flexDirection: 'row'}}>
+          <div style={{width: 20, height: '50%', borderTop: bracketedBorder, borderLeft: bracketedBorder}} />
+          <div>{this.props.title}</div>
+        </div>
+        <div>
+          {this.props.children}
+        </div>
+        <div style={{width: 20, height: '50%', borderBottom: bracketedBorder, borderLeft: bracketedBorder}} />
+      </div>
+    );
   }
 }
 
 @Radium
 export class DefinitionLayout extends React.Component {
   render () {
-    const [dKind, dev] = getChildren(this.props.children);
+    const [ dev, kindTag, kindInfo ] = getChildren(this.props.children);
 
-    return <div style={styles.definitionLayout}>
-      {dKind}
-      {dev}
-    </div>;
+    return dev;
+    // return (
+    //   <div style={styles.definitionLayout}>
+    //     <PurposeLayout purpose={kindTag} info={kindInfo} />
+    //     {dev}
+    //   </div>
+    // );
   }
 }
 
@@ -72,9 +176,32 @@ export class DevLayout extends React.Component {
     const [suspendState, entries] = getChildren(this.props.children);
 
     return <div style={styles.devLayout}>
-      {suspendState}
+      {this.showSuspend(suspendState)}
       {entries}
     </div>;
+  }
+
+  showSuspend(str) {
+    switch(str) {
+      case 'SuspendNone':
+        return (
+          <div style={styles.suspendedStyle}>
+            Not Suspended
+          </div>
+        );
+      case 'SuspendUnstable':
+        return (
+          <div style={styles.unstableStyle}>
+            Unstable
+          </div>
+        );
+      case 'SuspendStable':
+        return (
+          <div style={styles.stableStyle}>
+            Stable
+          </div>
+        );
+    }
   }
 }
 
@@ -84,6 +211,7 @@ export class EntriesLayout extends React.Component {
     const entries = getChildren(this.props.children);
 
     return <div style={styles.entriesLayout}>
+      <div style={styles.entriesLayoutHeader}>ENTRIES</div>
       {entries}
     </div>;
   }
@@ -96,8 +224,6 @@ export class EntryHeaderLayout extends React.Component {
 
     return <div style={styles.entryHeaderLayout}>
       {ref}
-      {metadata}
-      {ty}
     </div>;
   }
 }
@@ -109,9 +235,34 @@ export class ModuleHeaderLayout extends React.Component {
 
     return <div style={styles.moduleHeaderLayout}>
       {name}
-      {purpose}
-      {metadata}
+      <PurposeLayout purpose={purpose} />
     </div>;
+  }
+}
+
+@Radium
+export class PurposeLayout extends React.Component {
+  render() {
+    switch(this.props.purpose) {
+      case "LETG":
+        return (
+          <div style={styles.purposeLet}>
+            defining
+          </div>
+        );
+      case "PROGERR":
+        return (
+          <div style={styles.err}>
+            ERROR distilling scheme
+          </div>
+        );
+      case "PROG":
+        return (
+          <div style={styles.purposeProg}>
+            programming scheme {this.props.info}
+          </div>
+        );
+    }
   }
 }
 
@@ -129,6 +280,31 @@ export class NameExplainLayout extends React.Component {
 }
 
 @Radium
+export class NameLayout extends React.Component {
+  render () {
+    const pieces = getChildren(this.props.children);
+
+    return <div style={styles.name}>
+      {reactJoin(pieces, ".")}
+    </div>;
+  }
+}
+
+@Radium
+export class NamePieceLayout extends React.Component {
+  render () {
+    const { str, n } = this.props;
+
+    const sub = n === '0' ? "" : <sub style={{verticalAlign: 'sub'}}>{n}</sub>;
+
+    return <div style={{}}>
+      {str}
+      {sub}
+    </div>;
+  }
+}
+
+@Radium
 export class EntryEntityLayout extends React.Component {
   render () {
     const [header, entity] = getChildren(this.props.children);
@@ -137,5 +313,182 @@ export class EntryEntityLayout extends React.Component {
       {header}
       {entity}
     </div>;
+  }
+}
+
+@Radium
+export class SigmaLayout extends React.Component {
+  render() {
+    return (
+      <div style={{}}>
+        sigma tag: {this.props.tag}
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+@Radium
+export class SchemeLayout extends React.Component {
+  render() {
+    return (
+      <div style={styles.scheme}>
+        {this.props.tag}
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+@Radium
+export class DHeadLayout extends React.Component {
+  render() {
+    return (
+      <div style={{}}>
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+DHeadLayout.tags = {
+  // param:
+  // annotation:
+  // embedding:
+};
+
+
+@Radium
+export class CanLayout extends React.Component {
+  render() {
+    return (
+      <div style={{}}>
+        {this.selectTag(this.props.tag, getChildren(this.props.children))}
+      </div>
+    );
+  }
+
+  selectTag(tagName, children) {
+    return this.constructor.tags[tagName](children);
+  }
+}
+
+CanLayout.tags = {
+  set: () => "SET",
+  pi: p => p,
+  label: ([l, t]) => <div style={{display: 'flex', flexDirection: 'row'}}>{l} := {t}</div>,
+};
+
+
+@Radium
+export class PiLayout extends React.Component {
+  render() {
+    const [ s, t ] = getChildren(this.props.children);
+
+    return (
+      <div style={{display: 'flex'}}>
+        {s} -> {t}
+      </div>
+    );
+  }
+}
+
+@Radium
+export class DScopeLayout extends React.Component {
+  render() {
+    const bindings = getChildren(this.props.children);
+
+    return (
+      <div style={{display: 'flex'}}>
+        {reactJoin(bindings, ". ")}.
+      </div>
+    );
+  }
+}
+
+@Radium
+export class DInTmRNLayout extends React.Component {
+  render() {
+    return (
+      <div className="dintmrn" style={styles.dInTmRN}>
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+DInTmRNLayout.tags = {
+  // neutral
+  // dn:
+
+  // canonical
+  // dc:
+
+  // lambda
+  // dl:
+};
+
+
+@Radium
+export class DExTmRNLayout extends React.Component {
+  render() {
+    return (
+      <div style={{}}>
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+@Radium
+export class DSpineLayout extends React.Component {
+  render() {
+    return (
+      <div style={{}}>
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+@Radium
+export class RelNameLayout extends React.Component {
+  render() {
+    return (
+      <div style={{}}>
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+@Radium
+export class RelNamePieceLayout extends React.Component {
+  render() {
+    const { str, tag, n } = this.props;
+
+    return (
+      <div style={{}}>
+        {str}{this.constructor.tags[tag](n)}
+      </div>
+    );
+  }
+}
+
+RelNamePieceLayout.tags = {
+  rel: n => {
+    if (n === '0') {
+      return "";
+    } else {
+      return <sup style={{verticalAlign: 'super'}}>{n}</sup>;
+    }
+  },
+
+  abs: n => {
+    if (n === '0') {
+      return "";
+    } else {
+      return <sub style={{verticalAlign: 'sub'}}>{n}</sub>;
+    }
   }
 }
