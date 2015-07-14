@@ -1,16 +1,13 @@
-.PHONY: build repl clean docs web install_less_deps dash lint
+.PHONY: build repl clean docs web dash lint
 
 LIB_SOURCE_FILES = $(wildcard src-lib/**/*hs)
 LHS_FILES = $(wildcard src-lib/**/*.lhs)
 SANDBOX = /home/vagrant/pigment-sandbox
 
-build: build/index.css build/mui.css build/index.html build/all.js
+build: build/index.html build/assets/index.css build/assets/all.js
 
 repl: $(SANDBOX)
 	cabal repl
-
-install_less_deps:
-	npm install -g less less-plugin-autoprefix
 
 # http://blog.jgc.org/2015/04/the-one-line-you-should-add-to-every.html
 print-%: ; @echo $*=$($*)
@@ -25,14 +22,11 @@ $(SANDBOX):
 	cabal sandbox init --sandbox $(SANDBOX)
 	cabal sandbox add-source ../react-haskell
 
-build/index.css: src-web/css/index.less src-web/css/mui.css
-	lessc src-web/css/index.less build/index.css --autoprefix=""
-
-build/mui.css: src-web/css/mui.css
-	cp src-web/css/mui.css build/
-
 build/assets/index.html: src-web/index.html
 	cp src-web/index.html build/assets/
+	
+build/assets/index.css: src-web/css/index.css
+	cp src-web/index.css build/assets/
 
 build/assets/all.js: $(SANDBOX)/bin/pigment.jsexe/all.js
 	cp $(SANDBOX)/bin/pigment.jsexe/all.js build/assets/

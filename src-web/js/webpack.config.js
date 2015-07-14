@@ -8,7 +8,7 @@ module.exports = {
   ],
 
   output: {
-    path: __dirname + "/../../build/",
+    path: __dirname + "/../../build/assets/",
     publicPath: '/assets/',
     filename: "jsview.js",
     libraryTarget: "var",

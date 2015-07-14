@@ -1,3 +1,15 @@
+li {
+    list-style-type: none;
+}
+
+body {
+    font-family: "Roboto", sans-serif !important;
+    font-weight: lighter !important;
+    font-size: 17px !important;
+}
+
+/* END CUSTOM; BEGIN RESET */
+
 /**
  * Global Reset of all HTML Elements
  *
