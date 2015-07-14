@@ -1,6 +1,3 @@
 [submodule "web/fixed-sticky"]
 	path = web/fixed-sticky
 	url = git@github.com:filamentgroup/fixed-sticky.git
-[submodule "ionicons"]
-	path = ionicons
-	url = git@github.com:driftyco/ionicons.git
