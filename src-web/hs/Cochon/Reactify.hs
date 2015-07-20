@@ -93,7 +93,7 @@ canReactify (LRet x) = ("lret", dInTmRN_ x)
 
 canReactify (Nu (Just l :?=: _))  = ("nujust", dInTmRN_ l)
 canReactify (Nu (Nothing :?=: Identity t))  = ("nunothing", dInTmRN_ t)
-canReactify (CoIt d sty f s) = ("coit", forReact [sty, f, s] dInTmRN_)
+canReactify (CoIt d sty f s) = ("coit", forReact [d, sty, f, s] dInTmRN_)
 
 -- XXX Prob?
 
