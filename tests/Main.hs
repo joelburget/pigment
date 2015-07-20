@@ -10,6 +10,7 @@ import Test.Tasty.HUnit
 import PigmentPrelude
 
 import qualified TacticParse as Parse
+import qualified Operators
 
 canTyBasics :: Assertion
 canTyBasics = do
@@ -84,7 +85,7 @@ checkTests = testGroup "Type Checking Tests"
     ]
 
 tests :: TestTree
-tests = testGroup "Tests" [ checkTests, Parse.tests ]
+tests = testGroup "Tests" [ checkTests, Parse.tests, Operators.tests ]
 
 main :: IO ()
 main = defaultMain tests
