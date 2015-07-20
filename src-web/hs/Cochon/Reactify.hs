@@ -155,32 +155,19 @@ canReactify (AllowedCons _ _ _ s ts) =
 -- canReactify can       = fromString $ "TODO(joel) - " ++ show can
 
 pi_ :: DInTmRN -> ReactNode TermTransition
-pi_ (DPI s t) = piLayout_ (dInTmRN_ s <> dInTmRN_ t)
+pi_ p@(DPI s t) = piLayout_ (mconcat (piHelper p))
 
--- reactPi' :: DInTmRN -> ReactNode TermTransition
--- -- IE `s -> t`
--- reactPi' (DPI s (DL (DK t))) = do
---     reactify s
---     reactKword KwArr
---     reactify t
--- -- IE `(x : s) -> t`
--- reactPi' (DPI s (DL (x ::. t))) = do
---     reactBrackets Round $ do
---         fromString x
---         reactKword KwAsc
---         reactify s
---     -- TODO(joel) we don't *always* want this arrow here. it's not a huge
---     -- deal for now - nobody will notice, but it would be nice to elide
---     -- arrows
---     reactKword KwArr
---     reactPi' t
--- -- IE `pi s t`
--- reactPi' (DPI s t) = do
---     reactKword KwPi
---     reactify s
---     reactify t
--- -- IE `tm`
--- reactPi' tm = reactify tm
+
+piHelper :: DInTmRN -> [ReactNode TermTransition]
+-- IE `s -> t`
+piHelper (DPI s (DL (DK t))) = dInTmRN_ s : piHelper t
+-- IE `(x : s) -> t`
+piHelper (DPI s (DL (x ::. t))) =
+    dependentParamLayout_ (T.pack x) (dInTmRN_ s) : piHelper t
+-- IE `pi s t`
+piHelper (DPI s t) = [justPiLayout_ (dInTmRN_ s) (dInTmRN_ t)]
+-- IE `tm`
+piHelper tm = [dInTmRN_ tm]
 
 
 dscope_ :: DSCOPE -> ReactNode TermTransition
@@ -305,15 +292,13 @@ all_ = classLeaf $ dumbClass
     , renderFn = \props _ -> "TODO all_" -- allLayout_ (allHelper props)
     }
 
-pairLayout_ :: [DInTmRN] -> ReactNode TermTransition
-pairLayout_ = undefined
-
 pair_ :: DInTmRN -> ReactNode TermTransition
 pair_ = classLeaf $ dumbClass
     { React.name = "Pair"
-    , renderFn = \props _ -> pairLayout_ (pairHelper props)
+    , renderFn = \props _ -> pairLayout_ (forReact (pairHelper props) dInTmRN_)
     }
 
+-- TODO - as written this always requires a terminating DVOID
 pairHelper :: DInTmRN -> [DInTmRN]
 pairHelper DVOID = []
 pairHelper (DPAIR a b) = a : pairHelper b
