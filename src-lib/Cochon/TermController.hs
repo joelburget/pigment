@@ -20,7 +20,7 @@ import Evidences.Tm
 execProofState :: forall a. ProofState a
                -> ProofContext
                -> Either UserMessage ProofContext
-execProofState state = left (stackMessage "stack!") . right snd . runProofState state
+execProofState state = left (stackMessage Red "stack!") . right snd . runProofState state
 
 
 toggleAnnotate :: Name -> InteractionState -> InteractionState
@@ -30,9 +30,9 @@ toggleAnnotate name state@InteractionState{_proofCtx=ctxs :< ctx} =
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
 
 
-termDispatch :: TermAction -> InteractionState -> InteractionState
+termDispatch :: TermTransition -> InteractionState -> InteractionState
 termDispatch (ToggleTerm name) state = state
 termDispatch (GoToTerm name) state = state
 termDispatch (BeginDrag name) state = state
 termDispatch (ToggleAnnotate name) state = toggleAnnotate name state
-termDispatch (AnnotationTyping name text) state = state
+-- termDispatch (AnnotationTyping name text) state = state

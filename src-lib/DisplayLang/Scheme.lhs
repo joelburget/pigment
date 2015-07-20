@@ -32,7 +32,7 @@ generality, we will parameterise over the exact representation of types:
 > data Scheme x  =  SchType x
 >                |  SchExplicitPi (String :<: Scheme x) (Scheme x)
 >                |  SchImplicitPi (String :<: x) (Scheme x)
->   deriving Show
+>   deriving (Show, Eq)
 
 > instance Traversable Scheme where
 >     traverse f (SchType t) = SchType <$> f t

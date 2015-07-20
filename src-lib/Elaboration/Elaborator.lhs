@@ -137,7 +137,7 @@ goal.
 >     return tm
 
 The `elabPiParam` command elaborates the given display term to produce a
-type, and creates a $\Pi$ with that type.
+type, and creates a Pi with that type.
 
 > elabPiParam :: (String :<: DInTmRN) -> ProofState REF
 > elabPiParam (s :<: ty) = do
@@ -184,8 +184,7 @@ the following proof state:
 First we need to elaborate the scheme so it contains evidence terms,
 then convert the module into a goal with the scheme assigned.
 
->     -- TODO(joel) - AnchType?
->     make (AnchStr (x ++ "-type") :<: SET)
+>     make (AnchTy x :<: SET)
 >     goIn
 >     (sch', ty :=>: _) <- elabLiftedScheme sch
 >     moduleToGoal (N ty)
@@ -201,7 +200,7 @@ recursive call.
 >     let schCall = makeCall (P $ mnom := FAKE :<: ty) 0 sch'
 >     us <- getParamsInScope
 >     let schCallLocal = applyScheme schCall us
->     make (AnchStr x :<: schemeToInTm schCallLocal)
+>     make (AnchScheme x :<: schemeToInTm schCallLocal)
 >     goIn
 >     putCurrentScheme schCall
 >     refs <- traverse lambdaParam (schemeNames schCallLocal)

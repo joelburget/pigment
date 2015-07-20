@@ -36,7 +36,6 @@ functions.
 >     = TrName T.Text
 >     -- ^ Pair with TfName
 >     | TrKeyword
->     | TrPseudoKeyword
 >     | TrInArg DInTmRN
 >     -- ^ Pair with TfInArg
 >     | TrExArg DExTmRN
@@ -50,6 +49,7 @@ functions.
 >     | TrSequence [TacticResult]
 >     | TrBracketed Bracket TacticResult
 >     | TrSep [TacticResult]
+>     deriving Show
 
 
 Describing the Format of a Command
@@ -71,8 +71,6 @@ How do we pull out the pieces of a command?
 >     -- ^ Pair with StrArg
 >     | TfKeyword Keyword
 >     -- ^ Thrown away
->     | TfPseudoKeyword a
->     -- ^ hack until I can get the keyword situation worked out (thrown away)
 >     | TfInArg a (Maybe T.Text)
 >     -- ^ Pair with InArg
 >     | TfExArg a (Maybe T.Text)
@@ -88,7 +86,8 @@ How do we pull out the pieces of a command?
 >     | TfRepeatZero (TacticFormat f a) -- TODO(joel) - should be list?
 >     -- | TfRepeatOne (TacticFormat f a)
 >     -- ^ (both) Pair with ListArgs / PairArgs
->     | TfSequence [TacticFormat f a]
+>     | TfInlineSequence [TacticFormat f a]
+>     | TfBlockSequence [TacticFormat f a]
 >     | TfBracketed Bracket (TacticFormat f a)
 >     | TfSep (TacticFormat f a) Keyword
 >     deriving Generic
@@ -97,14 +96,11 @@ pAscriptionTC = typeAnnot <$> pDInTm <* keyword KwAsc <*> pDInTm
   where typeAnnot tm ty = DType ty ::$ [A tm]
 
 > tfAscription :: TacticDescription
-> tfAscription = TfSequence
+> tfAscription = TfInlineSequence
 >     [ TfInArg "term" Nothing
 >     , TfKeyword KwAsc
 >     , TfInArg "type" Nothing
 >     ]
-
-> instance IsString TacticDescription where
->     fromString = TfPseudoKeyword . fromString
 
 > -- XXX if we did the work to successfully parse a command we should use that
 > -- parse
@@ -114,7 +110,6 @@ pAscriptionTC = typeAnnot <$> pDInTm <* keyword KwAsc <*> pDInTm
 > parseTactic :: TacticDescription -> Parsley Token TacticResult
 > parseTactic (TfName _) = trace "TfName" tokenString
 > parseTactic (TfKeyword kw) = trace "TfKeyword" $ keyword kw $> TrKeyword
-> parseTactic (TfPseudoKeyword str) = trace "TfPseudoKeyword" $ trace (T.unpack str) $ TrPseudoKeyword <$ tokenEq (Identifier (T.unpack str))
 > parseTactic (TfInArg _ _) = trace "TfInArg" tokenInTm
 > parseTactic (TfExArg _ _) = trace "TfExArg" tokenExTm
 > parseTactic (TfScheme _ _) = trace "TfScheme" tokenScheme
@@ -123,7 +118,8 @@ pAscriptionTC = typeAnnot <$> pDInTm <* keyword KwAsc <*> pDInTm
 > parseTactic (TfOption fmt) = trace "TfOption" $ parseTactic fmt <|> empty
 
 > parseTactic (TfRepeatZero format) = trace "TfRepeatZero" $ TrRepeatZero <$> some (parseTactic format)
-> parseTactic (TfSequence formats) = trace "TfSequence" $ TrSequence <$> sequence (map parseTactic formats)
+> parseTactic (TfBlockSequence formats) = trace "TfBlockSequence" $ TrSequence <$> sequence (map parseTactic formats)
+> parseTactic (TfInlineSequence formats) = trace "TfInlineSequence" $ TrSequence <$> sequence (map parseTactic formats)
 > parseTactic (TfBracketed bTy format) = trace "TfBracketed" $ bracket bTy (parseTactic format)
 > parseTactic (TfSep format kwd) = trace "TfSep" $
 >     TrSep <$> pSep (keyword kwd) (parseTactic format)
@@ -190,8 +186,8 @@ tokenEither p q = (TrAlternative . Left <$> p) <|> (TrAlternative . Right <$> q)
 Printers
 --------
 
-> argToStr :: TacticResult -> String
-> argToStr (TrName s) = T.unpack s
+> argToStr :: TacticResult -> T.Text
+> argToStr (TrName s) = s
 
 > argToIn :: TacticResult -> DInTmRN
 > argToIn (TrInArg a) = a

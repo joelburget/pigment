@@ -12,7 +12,8 @@ import Data.Monoid
 import Data.String
 import Data.Traversable as Trav
 import qualified Data.Text as T
-import Text.PrettyPrint.HughesPJ
+import Data.Text (Text)
+import Text.PrettyPrint.HughesPJ hiding ((<>))
 
 import Control.Error
 import Data.Void
@@ -121,52 +122,52 @@ We have some shortcuts for building common kinds of tactics: `simpleCT`
 builds a tactic that works in the proof state, and there are various
 specialised versions of it for nullary and unary tactics.
 -}
-simpleCT :: String
+simpleCT :: Text
          -> Historic
-         -> T.Text -- XXX remove
+         -> Text
          -> TacticDescription
          -> (TacticResult -> ProofState UserMessage)
          -> TacticHelp
          -> CochonTactic
 simpleCT name hist desc fmt eval help = CochonTactic
     {  ctName = name
+    ,  ctMessage = desc
     ,  ctDesc = fmt
     ,  ctxTrans = simpleOutput hist . eval
     ,  ctHelp = help
     }
 
 
-nullaryCT :: String
+nullaryCT :: Text
           -> Historic
           -> ProofState UserMessage
-          -> String
+          -> Text
           -> CochonTactic
 nullaryCT name hist eval desc = simpleCT
     name
     hist
-    (fromString desc)
-    (TfPseudoKeyword (fromString name))
+    desc
+    (TfInlineSequence [])
     (const eval)
     (TacticHelp
-        (name ++ " - " ++ desc)
+        (name <> " - " <> desc)
         "" "" []
     )
 
 
-unaryExCT :: String
+unaryExCT :: Text
           -> (DExTmRN -> ProofState UserMessage)
-          -> String
+          -> Text
           -> CochonTactic
 unaryExCT name eval help = simpleCT
     name
     Historic
-    (fromString help)
-    (TfSequence
-        [ TfPseudoKeyword (fromString name)
-        , TfExArg "term" Nothing
+    help
+    (TfBlockSequence
+        [ TfExArg "term" Nothing
         , TfAlternative
             ( TfExArg "term" Nothing
-            , TfSequence
+            , TfInlineSequence
                 [ TfInArg "term" Nothing
                 , TfKeyword KwAsc
                 , TfInArg "ty" Nothing
@@ -178,47 +179,47 @@ unaryExCT name eval help = simpleCT
     (TacticHelp help "" "" [])
 
 
-unaryInCT :: String
+unaryInCT :: Text
           -> (DInTmRN -> ProofState UserMessage)
-          -> String
+          -> Text
           -> CochonTactic
 unaryInCT name eval desc = simpleCT
     name
     Historic
-    (fromString desc)
-    (TfSequence [ TfPseudoKeyword (fromString name), TfInArg "term" Nothing ])
+    desc
+    (TfInlineSequence [ TfInArg "term" Nothing ])
     (eval . argToIn)
-    (TacticHelp (name ++ " - " ++ desc) "" "" [])
+    (TacticHelp (name <> " - " <> desc) "" "" [])
 
 
 unDP :: DExTm p x -> x
 unDP (DP ref ::$ []) = ref
 
 
-unaryNameCT :: String
+unaryNameCT :: Text
             -> (RelName -> ProofState UserMessage)
-            -> String
+            -> Text
             -> CochonTactic
 unaryNameCT name eval desc = simpleCT
     name
     Historic
-    (fromString desc)
-    (TfSequence [ TfPseudoKeyword (fromString name), TfName "name" ])
+    desc
+    (TfInlineSequence [ TfName "name" ])
     (eval . unDP . argToEx)
-    (TacticHelp (name ++ " - " ++ desc) "" "" [])
+    (TacticHelp (name <> " - " <> desc) "" "" [])
 
 
-unaryStringCT :: String
-              -> (String -> ProofState UserMessage)
-              -> String
+unaryStringCT :: Text
+              -> (Text -> ProofState UserMessage)
+              -> Text
               -> CochonTactic
 unaryStringCT name eval desc = simpleCT
     name
     Historic
-    (fromString desc)
-    (TfSequence [ TfPseudoKeyword (fromString name), TfName "x" ])
+    desc
+    (TfInlineSequence [ TfName "x" ])
     (eval . argToStr)
-    (TacticHelp (name ++ " - " ++ desc) "" "" [])
+    (TacticHelp (name <> " - " <> desc) "" "" [])
 
 
 -- Construction Tactics
@@ -240,11 +241,10 @@ lambdaTac = simpleCT
     "lambda"
     Historic
     "introduce new module parameters or hypotheses"
-     (TfSequence
-         [ "lambda"
-         , TfSep (TfName "label") KwComma
+     (TfBlockSequence
+         [ TfSep (TfName "label") KwComma
          , TfOption (
-                TfSequence
+                TfInlineSequence
                     [ TfKeyword KwAsc
                     , TfInArg "type" (Just "(optional) their type")
                     ]
@@ -253,13 +253,13 @@ lambdaTac = simpleCT
      )
      (\case
           -- TODO(joel) - give an actually useful message
-          TrSequence [ _, TrSequence [], _ ] ->
+          TrSequence [ TrSequence [], _ ] ->
               return "This lambda needs no introduction!"
-          TrSequence [ _, TrSequence args, TrOption (Just (TrInArg ty)) ] -> do
-              Trav.mapM (elabLamParam . (:<: ty) . argToStr) args
+          TrSequence [ TrSequence args, TrOption (Just (TrInArg ty)) ] -> do
+              Trav.mapM (elabLamParam . (:<: ty) . T.unpack . argToStr) args
               return "Lambdafied"
-          TrSequence [ _, TrSequence args, TrOption (Nothing) ] -> do
-              Trav.mapM (lambdaParam . argToStr) args
+          TrSequence [ TrSequence args, TrOption (Nothing) ] -> do
+              Trav.mapM (lambdaParam . T.unpack . argToStr) args
               return "Lambdafied"
        )
      (TacticHelp
@@ -277,18 +277,17 @@ letTac = simpleCT
     "let"
     Historic
     "introduce new module parameters or hypotheses"
-    (TfSequence
-        [ "let"
-        , TfName "label" -- (Just "Name to introduce")
+    (TfBlockSequence
+        [ TfName "label" -- (Just "Name to introduce")
         , TfScheme "scheme" Nothing -- XXX
         ]
     )
-    (\(TrSequence [ _, TrName name, TrScheme scheme ]) -> do
+    (\(TrSequence [ TrName name, TrScheme scheme ]) -> do
         let name' = T.unpack name
         elabLet (name' :<: scheme)
         optional problemSimplify
         optional seekGoal
-        return (fromString $ "Let there be " ++ name' ++ "."))
+        return (fromString $ "Let there be " <> name' <> "."))
     (TacticHelp
         "let <label> <scheme> : <type>"
         "let A (m : Nat) : Nat -> Nat"
@@ -304,16 +303,14 @@ makeTac = simpleCT
     "make"
     Historic
     "the first form creates a new goal of the given type; the second adds a definition to the context"
-    (TfSequence
-        [ "make"
-        , TfName "x"
+    (TfInlineSequence
+        [ TfName "x"
         , TfOption (TfInArg "term" Nothing)
         , TfInArg "type" Nothing
         ]
     )
     (\(TrSequence
-        [ _
-        , TrName name
+        [ TrName name
         , TrOption maybeTerm
         , TrInArg ty
         ]
@@ -342,7 +339,7 @@ makeTac = simpleCT
 
 moduleTac = unaryStringCT "module"
     (\name -> do
-        makeModule DevelopModule name
+        makeModule DevelopModule (T.unpack name)
         goIn
         return "Made module."
     )
@@ -353,15 +350,14 @@ piTac = simpleCT
     "pi"
     Historic
     "introduce a pi"
-    (TfSequence
-        [ "pi"
-        , TfName "x"
+    (TfInlineSequence
+        [ TfName "x"
         , TfKeyword KwAsc
         , TfInArg "type" Nothing
         ]
     )
-    (\(TrSequence [ _, TrName name, TrKeyword, TrInArg ty ]) -> do
-        elabPiParam ((T.unpack name) :<: ty)
+    (\(TrSequence [ TrName name, TrKeyword, TrInArg ty ]) -> do
+        elabPiParam (T.unpack name :<: ty)
         return "Made pi!"
     )
     (TacticHelp
@@ -379,13 +375,9 @@ programTac = simpleCT
     "program"
     Historic
     "set up a programming problem"
-    (TfSequence
-        [ "program"
-        , TfSep (TfName "label") KwComma
-        ]
-    )
-    (\(TrSequence [ _, TrSep as ]) -> do
-        elabProgram (map argToStr as)
+    (TfSep (TfName "label") KwComma)
+    (\(TrSep as) -> do
+        elabProgram (map (T.unpack . argToStr) as)
         return "Programming."
     )
     (TacticHelp
@@ -402,7 +394,7 @@ doitTac = simpleCT
     "demoMagic"
     Historic
     "pigment tries to implement it for you"
-    "demoMagic"
+    (TfInlineSequence [])
     (\_ -> assumption >> return "Did it!")
     (TacticHelp
         "demoMagic"
@@ -415,7 +407,7 @@ autoTac = simpleCT
     "auto"
     Historic
     "coq's auto"
-    "auto"
+    (TfInlineSequence [])
     (\_ -> auto >> return "Auto... magic!")
     (TacticHelp
         "auto"
@@ -507,7 +499,8 @@ jumpTac = unaryNameCT "jump" (\ x -> do
 -- TODO(joel) visual display of previous states
 undoTac = CochonTactic
     { ctName = "undo"
-    , ctDesc = "undo"
+    , ctMessage = "undo"
+    , ctDesc = TfInlineSequence []
     , ctxTrans = \_ -> do
           locs :< loc <- getCtx
           case locs of
@@ -527,30 +520,29 @@ validateTac = nullaryCT "validate" Forgotten (validateHere >> return "Validated.
 
 dataTac = CochonTactic
     {  ctName = "data"
-    ,  ctDesc = TfSequence
-           [ "data"
-           , TfName "name"
+    ,  ctMessage = "Create a new data type"
+    ,  ctDesc = TfBlockSequence
+           [ TfName "name"
            , TfRepeatZero (
-                TfSequence
-                    [ TfName "para"
+                TfInlineSequence
+                    [ TfName "parameter"
                     , TfKeyword KwAsc
-                    , TfInArg "ty" Nothing
+                    , TfInArg "type" (Just "type of this parameter")
                     ]
                 )
            , TfKeyword KwDefn
            , TfSep
-                (TfSequence
+                (TfInlineSequence
                     [ TfKeyword KwTag
-                    , TfName "con"
+                    , TfName "constructor"
                     , TfKeyword KwAsc
-                    , TfInArg "ty" Nothing
+                    , TfInArg "type" (Just "type of this constructor")
                     ]
                 )
                 KwSemi
            ]
     , ctxTrans = \(TrSequence
-        [ _
-        , TrName name
+        [ TrName name
         , TrRepeatZero pars
         , TrKeyword
         , TrSep cons
@@ -558,8 +550,9 @@ dataTac = CochonTactic
             let pars' = undefined pars
                 cons' = undefined cons
                 name' = T.unpack name
-            elabData name' (argList (argPair argToStr argToIn) pars')
-                           (argList (argPair argToStr argToIn) cons')
+                argToStr' = T.unpack . argToStr
+            elabData name' (argList (argPair argToStr' argToIn) pars')
+                           (argList (argPair argToStr' argToIn) cons')
             return "Data'd."
     ,  ctHelp = TacticHelp
            "data <name> [<para>]* := [(<con> : <ty>) ;]*"
@@ -576,13 +569,12 @@ eliminateTac = simpleCT
     "eliminate"
     Historic
     "eliminate with a motive (same as <=)"
-    (TfSequence
-        [ "eliminate"
-        , TfOption (TfName "comma")
+    (TfInlineSequence
+        [ TfOption (TfName "comma")
         , TfAlternative (TfExArg "eliminator" Nothing, tfAscription)
         ]
     )
-    (\(TrSequence [ _, TrOption maybeName, TrAlternative elim ]) ->
+    (\(TrSequence [ TrOption maybeName, TrAlternative elim ]) ->
         undefined)
         -- elimCTactic (argOption (unDP . argToEx) n) (argToEx e))
     (TacticHelp
@@ -604,14 +596,13 @@ defineTac = simpleCT
      "define"
     Historic
      "relabel and solve <prob> with <term>"
-     (TfSequence
-        [ "define"
-        , TfInArg "prob" Nothing
+     (TfInlineSequence
+        [ TfInArg "prob" Nothing
         , TfKeyword KwDefn
         , TfInArg "term" Nothing
         ]
     )
-    (\(TrSequence [_, TrExArg rl, TrInArg tm]) -> defineCTactic rl tm)
+    (\(TrSequence [ TrExArg rl, TrInArg tm ]) -> defineCTactic rl tm)
     (TacticHelp
         "define <prob> := <term>"
         "define vappend 'zero 'nil k bs := bs"
@@ -629,14 +620,13 @@ byTac = simpleCT
     "<="
     Historic
     "eliminate with a motive (same as eliminate)"
-    (TfSequence
-        [ "<="
-        , TfOption (TfName "comma")
+    (TfInlineSequence
+        [ TfOption (TfName "comma")
         , TfAlternative (TfExArg "eliminator" Nothing, tfAscription)
         ]
     )
     -- XXX(joel)
-    (\(TrSequence [_, n, e]) -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
+    (\(TrSequence [ n, e ]) -> byCTactic (argOption (unDP . argToEx) n) (argToEx e))
     (TacticHelp
         "<= [<comma>] <eliminator>"
         "<= induction NatD m"
@@ -654,19 +644,18 @@ refineTac = simpleCT
     "refine"
     Historic
     "relabel and solve or eliminate with a motive"
-    (TfSequence
-        [ "refine"
-        , TfExArg "prob" Nothing
+    (TfBlockSequence
+        [ TfExArg "prob" Nothing
         , TfAlternative
-            ((TfSequence [ TfKeyword KwEq, TfInArg "term" Nothing ]),
-            (TfSequence
+            ((TfInlineSequence [ TfKeyword KwEq, TfInArg "term" Nothing ]),
+            (TfInlineSequence
                 [ TfKeyword KwBy
                 , TfAlternative (TfExArg "prob" Nothing, tfAscription)
                 ]
             ))
         ]
     )
-    (\(TrSequence [TrExArg rl, arg]) -> case arg of
+    (\(TrSequence [ TrExArg rl, arg ]) -> case arg of
         TrInArg tm -> defineCTactic rl tm
         TrExArg tm -> relabel rl >> byCTactic Nothing tm)
     (TacticHelp
@@ -686,13 +675,12 @@ solveTac = simpleCT
     "solve"
     Historic
     "solve a hole"
-    (TfSequence
-        [ "solve"
-        , TfName "name"
+    (TfBlockSequence
+        [ TfName "name"
         , TfInArg "term" Nothing
         ]
     )
-    (\(TrSequence [TrExArg (DP rn ::$ []), TrInArg tm]) -> do
+    (\(TrSequence [ TrExArg (DP rn ::$ []), TrInArg tm ]) -> do
         (ref, spine, _) <- resolveHere rn
         _ :<: ty <- inferHere (P ref $:$ toSpine spine)
         _ :=>: tv <- elaborate' (ty :>: tm)
@@ -749,8 +737,7 @@ idataTac = CochonTactic
             ]
         )
     , ctxTrans = \(TrSequence
-        [ _
-        , TrName nom
+        [ TrName nom
         , TrRepeatZero pars
         , TrKeyword
         , indty
@@ -834,27 +821,23 @@ matchTac = simpleCT
     "match"
     Historic
     "match parameters in first term against second."
-    (TfSequence
-        [ "match"
-        , TfSequence
-            [ "match"
-            , TfRepeatZero -- XXX(joel) - RepeatOne?
-                (TfBracketed Round
-                    (TfSequence
-                        [ TfName "tm"
-                        , TfKeyword KwAsc
-                        , TfInArg "ty" Nothing
-                        ]
-                    )
+    (TfBlockSequence
+        [ TfRepeatZero -- XXX(joel) - RepeatOne?
+            (TfBracketed Round
+                (TfInlineSequence
+                    [ TfName "tm"
+                    , TfKeyword KwAsc
+                    , TfInArg "ty" Nothing
+                    ]
                 )
-            , TfKeyword KwSemi
-            , TfExArg "term" Nothing
-            , TfKeyword KwSemi
-            , TfInArg "term" Nothing
-            ]
+            )
+        , TfKeyword KwSemi
+        , TfExArg "term" Nothing
+        , TfKeyword KwSemi
+        , TfInArg "term" Nothing
         ]
     )
-    (\(TrSequence [ _, TrRepeatZero pars, TrExArg a, TrInArg b ]) ->
+    (\(TrSequence [ TrRepeatZero pars, TrExArg a, TrInArg b ]) ->
         matchCTactic (map (argPair argToStr argToIn) pars) a b)
     (TacticHelp
         "match [<para>]* ; <term> ; <term>"
@@ -983,7 +966,7 @@ defineCTactic rl tm = do
     elabGiveNext (DLRET tm)
     return "Hurrah!"
 
-matchCTactic :: [(String, DInTmRN)]
+matchCTactic :: [(Text, DInTmRN)]
              -> DExTmRN
              -> DInTmRN
              -> ProofState UserMessage
@@ -995,10 +978,10 @@ matchCTactic xs a b = draftModule "__match" $ do
     rs' <- runStateT (matchValue B0 (ty :>: (av, bv))) (bwdList rs)
     return (fromString (show rs'))
   where
-    matchHyp :: (String, DInTmRN) -> ProofState (REF, Maybe VAL)
+    matchHyp :: (Text, DInTmRN) -> ProofState (REF, Maybe VAL)
     matchHyp (s, t) = do
         tt  <- elaborate' (SET :>: t)
-        r   <- assumeParam (s :<: tt)
+        r   <- assumeParam (T.unpack s :<: tt)
         return (r, Nothing)
 
 elimCTactic :: Maybe RelName -> DExTmRN -> ProofState UserMessage

@@ -10,7 +10,10 @@ import Control.Monad.State
 import Control.Monad.Writer
 import qualified Data.Foldable as Foldable
 import Data.List
+import Data.Monoid
 import Data.String
+import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Traversable as Traversable
 
 import Lens.Family2
@@ -68,41 +71,17 @@ import Tactics.Record
 import Tactics.Relabel
 import Tactics.Unification
 
-
 import Kit.Trace
+import Debug.Trace
+
 
 dispatch :: Transition -> InteractionState -> InteractionState
-dispatch (SelectPane pane) state = state & currentPane .~ pane
-dispatch ToggleRightPane state = state & rightPaneVisible %~ toggleVisibility
-dispatch (CommandTyping str) state = doCmdChange state str
+-- dispatch (SelectPane pane) state = state & currentPane .~ pane
+-- dispatch ToggleRightPane state = state & rightPaneVisible %~ toggleVisibility
+dispatch (CommandTransition trans) state = commandDispatch trans state
 
--- Enter can mean:
--- * complete the currently autocompleted tactic
--- * run the command
-
--- TODO(joel) maybe run it too if it doesn't take any parameters
-dispatch (CommandKeypress Enter)
-         state@InteractionState{_autocomplete=(CompletingTactics zip)} =
-    completeTactic (focus zip) state
-dispatch (CommandKeypress Enter) state = runAndLogCmd state
-
--- TODO(joel) handle focus here
-dispatch (CommandKeypress Tab)
-         state@InteractionState{_autocomplete=(CompletingTactics zip)} =
-    completeTactic (focus zip) state
-
-dispatch (CommandKeypress UpArrow)
-          state@InteractionState{_autocomplete=(CompletingTactics zip)} =
-    autocompleteUpArrow state
-dispatch (CommandKeypress UpArrow) state = historyUpArrow state
-
-dispatch (CommandKeypress DownArrow)
-        state@InteractionState{_autocomplete=(CompletingTactics zip)} =
-    autocompleteDownArrow state
-dispatch (CommandKeypress DownArrow) state = historyDownArrow state
-
-dispatch (ToggleEntry name) state = toggleTerm name state
-dispatch (GoTo name) state = goToTerm name state
+-- dispatch (ToggleEntry name) state = toggleTerm name state
+-- dispatch (GoTo name) state = goToTerm name state
 
 dispatch (TermTransition (GoToTerm name)) state = goToTerm name state
 dispatch (TermTransition (ToggleTerm name)) state = toggleTerm name state
@@ -110,6 +89,51 @@ dispatch (TermTransition (ToggleTerm name)) state = toggleTerm name state
 dispatch (TermTransition act) state = termDispatch act state
 
 dispatch _ state = state
+
+
+commandDispatch :: CommandTransition -> InteractionState -> InteractionState
+commandDispatch (CommandTyping str) state = doCmdChange state str
+
+-- Enter can mean:
+-- * complete the currently autocompleted tactic
+-- * run the command
+
+-- TODO(joel) maybe run it too if it doesn't take any parameters
+commandDispatch (CommandKeypress Enter)
+         state@InteractionState{_autocomplete=(CompletingTactics zip)} =
+    completeTactic (focus zip) state
+commandDispatch (CommandKeypress Enter) state = runAndLogCmd state
+
+-- TODO(joel) handle focus here
+commandDispatch (CommandKeypress Tab)
+         state@InteractionState{_autocomplete=(CompletingTactics zip)} =
+    completeTactic (focus zip) state
+
+commandDispatch (CommandKeypress UpArrow)
+          state@InteractionState{_autocomplete=(CompletingTactics zip)} =
+    autocompleteUpArrow state
+commandDispatch (CommandKeypress UpArrow) state = historyUpArrow state
+
+commandDispatch (CommandKeypress DownArrow)
+        state@InteractionState{_autocomplete=(CompletingTactics zip)} =
+    autocompleteDownArrow state
+commandDispatch (CommandKeypress DownArrow) state = historyDownArrow state
+
+commandDispatch CommandFocus state =
+    let newAutocomplete = case state^.autocomplete of
+            Stowed (JustLeft z) -> CompletingTactics z
+            Stowed (JustRight tac) -> CompletingParams tac
+            Stowed NotEither -> Welcoming
+            x -> x
+    in state & autocomplete .~ newAutocomplete
+
+commandDispatch CommandBlur state =
+    let stowedAutocomplete = case state^.autocomplete of
+            CompletingTactics z -> JustLeft z
+            CompletingParams tac -> JustRight tac
+            Welcoming -> NotEither
+            _ -> NotEither
+    in state & autocomplete .~ (Stowed stowedAutocomplete)
 
 
 toggleTerm :: Name -> InteractionState -> InteractionState
@@ -155,12 +179,12 @@ autocompleteDownArrow state = state & autocomplete %~ \auto -> case auto of
 
 completeTactic :: CochonTactic -> InteractionState -> InteractionState
 completeTactic tac state = state
-    & commandFocus .~ InPresent (ctName tac ++ " ")
+    & commandFocus .~ InPresent (ctName tac <> " ")
     & autocomplete .~ CompletingParams tac
 
 historyUpArrow :: InteractionState -> InteractionState
 historyUpArrow state = state & commandFocus %~ \hist -> case hist of
-        (InHistory _ _) -> case moveEarlier (current hist) of
+        InHistory _ _ -> case moveEarlier (current hist) of
             Just current' -> hist{current=current'}
             Nothing -> hist
         InPresent str -> case listZipFromFwd (_interactions state) of
@@ -181,66 +205,70 @@ runCmd cmd ctx =
 
 runAndLogCmd :: InteractionState -> InteractionState
 runAndLogCmd state =
-    let cmdStr = userInput state
+    let cmdStr = userInput' state
         ctx = state^.proofCtx
         parsed = parseCmd cmdStr
         (output, newCtx) = case parsed of
-            Left err -> (fromString err, ctx)
+            Left err -> (textUserMessage Red err, ctx)
             Right (tac, args) -> runCmd (ctxTrans tac args) ctx
         cmd' = Command cmdStr ctx parsed output
 
     in state & proofCtx .~ newCtx
              & commandFocus .~ InPresent ""
              & interactions %~ (cmd' :>)
-             & autocomplete .~ Stowed
+             & autocomplete .~ (Stowed NotEither)
+             & messages <>~ [output]
 
-doCmdChange :: InteractionState -> String -> InteractionState
+doCmdChange :: InteractionState -> Text -> InteractionState
 doCmdChange state str= state & commandFocus .~ InPresent str
                              & autocomplete .~ findCompletion str
 
-findCompletion :: String -> AutocompleteState
-findCompletion str = if ' ' `elem` str
-    then let name = head (words str)
-         in case find ((== name) . ctName) cochonTactics of
-        Nothing -> Stowed
-        Just tac -> CompletingParams tac
-    else case listZipFromList $ take 10 $ tacticsMatching str of
-        Just listZip -> CompletingTactics listZip
-        Nothing -> Stowed
+findCompletion :: Text -> AutocompleteState
+findCompletion str =
+    let words = T.words str
+        namedTacticParams = case tacticNamed cochonTactics (head words) of
+            Nothing -> Stowed NotEither
+            Just tac -> CompletingParams tac
+    in case length words of
+        0 -> Welcoming
+        1 -> case listZipFromList $ take 10 $ tacticsMatching str of
+                 Just listZip -> CompletingTactics listZip
+                 Nothing -> namedTacticParams
+        _ -> namedTacticParams
 
-parseCmd :: String -> Either String CTData
-parseCmd l = case parse tokenize l of
-    Left  pf -> Left $ "Tokenize failure: " ++ describePFailure pf id
+parseCmd :: Text -> Either Text CTData
+parseCmd l = case parse tokenize (traceId $ T.unpack l) of
+    Left  pf -> Left $ "Tokenize failure: " <> describePFailure pf T.pack
     Right ts -> case parse pCochonTactic ts of
         Left pf -> Left $
-            "Parse failure: " ++
-            describePFailure pf (unwords . map crushToken)
+            "Parse failure: " <>
+            describePFailure pf (T.unwords . map T.pack . map crushToken)
         Right ctdata -> Right ctdata
 
 -- The `tacticsMatching` function identifies Cochon tactics that match the
 -- given string as a prefix.
 
-tacticsMatching :: String -> [CochonTactic]
-tacticsMatching x = filter (isPrefixOf x . ctName) cochonTactics
+tacticsMatching :: Text -> [CochonTactic]
+tacticsMatching x = filter (T.isPrefixOf x . ctName) cochonTactics
 
-tacticNamed :: [CochonTactic] -> String -> Maybe CochonTactic
+tacticNamed :: [CochonTactic] -> Text -> Maybe CochonTactic
 tacticNamed tacs x = find ((== x) . ctName) tacs
 
-describePFailure :: PFailure a -> ([a] -> String) -> String
+describePFailure :: PFailure a -> ([a] -> Text) -> Text
 describePFailure (PFailure (ts, fail)) f =
     let msg = case fail of
             Abort        -> "parser aborted."
             EndOfStream  -> "end of stream."
             EndOfParser  -> "end of parser."
-            Expect t     -> "expected " ++ f [t] ++ "."
-            Fail s       -> s
+            Expect t     -> "expected " <> f [t] <> "."
+            Fail s       -> T.pack s
         sucMsg = if not (null ts)
-               then "\nSuccessfully parsed: ``" ++ f ts ++ "''."
+               then "\nSuccessfully parsed: ``" <> f ts <> "''."
                else ""
-    in msg ++ sucMsg
+    in msg <> sucMsg
 
-tacticNames :: [CochonTactic] -> String
-tacticNames = intercalate ", " . map ctName
+tacticNames :: [CochonTactic] -> Text
+tacticNames = T.intercalate ", " . map ctName
 
 pCochonTactic :: Parsley Token CTData
 pCochonTactic = pTactic cochonTactics
@@ -248,9 +276,10 @@ pCochonTactic = pTactic cochonTactics
 pTactic :: [CochonTactic] -> Parsley Token CTData
 pTactic tacs = do
     x <- ident <|> (key <$> anyKeyword)
-    case tacticNamed tacs x of
+    case tacticNamed tacs (T.pack x) of
         Just ct -> do
-            elabTrace $ "found tactic named " ++ (ctName ct)
+            elabTrace $ "found tactic named " ++ (T.unpack $ ctName ct)
+-- parseTactic :: TacticDescription -> Parsley Token TacticResult
             args <- parseTactic (ctDesc ct)
             elabTrace $ "found args"
 

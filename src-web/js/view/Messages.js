@@ -4,18 +4,41 @@ import * as MaterialUI from 'material-ui';
 
 let { Styles: { Colors } } = MaterialUI;
 
-var styles = {
-  green: { color: Colors.green500 },
-  orange: { color: Colors.orange500 },
-  red: { color: Colors.red500 },
+const styles = {
+  messages: {
+    margin: 10,
+  },
+};
+
+const messagePart = {
+  padding: 5,
+  color: 'white',
+  fontWeight: 400,
 }
+
+const colors = {
+  Green: {
+    backgroundColor: Colors.lightGreen900,
+    ...messagePart,
+  },
+  Orange: {
+    backgroundColor: Colors.orange900,
+    ...messagePart,
+  },
+  Red: {
+    backgroundColor: Colors.red900,
+    ...messagePart,
+  },
+};
 
 @Radium
 export class MessagesLayout extends React.Component {
   render() {
-    return <div>
-      {this.props.children}
-    </div>;
+    return (
+      <div style={styles.messages}>
+        {this.props.children}
+      </div>
+    );
   }
 }
 
@@ -34,17 +57,10 @@ export class MessageLayout extends React.Component {
 export class MessagePartLayout extends React.Component {
   render() {
     return (
-      <div style={this.severity(this.props.severity)}>
-        {this.props.message}
+      <div style={colors[this.props.severity]}>
+        {this.props.text}
       </div>
     );
   }
 
-  severity(str) {
-    const selector = {
-      Green: styles.green,
-      Orange: styles.orange,
-      Red: styles.red,
-    }
-  }
 }

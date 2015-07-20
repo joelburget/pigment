@@ -316,13 +316,41 @@ export class EntryEntityLayout extends React.Component {
   }
 }
 
+const flexRow = {
+  display: 'flex',
+  flexDirection: 'row'
+};
+
+const sigmaTags = {
+
+  dunit: () => "*",
+
+  bind: ([s, x, t]) => (
+    <div style={flexRow}>
+      ( {s} , \ {x} -> {t} )
+    </div>
+  ),
+
+  const: ([s, t]) => (
+    <div style={flexRow}>
+      ({s}, {t})
+    </div>
+  ),
+
+  other: ([s, t]) => (
+    <div style={flexRow}>
+      Other({s}, {t})
+    </div>
+  ),
+
+}
+
 @Radium
 export class SigmaLayout extends React.Component {
   render() {
     return (
       <div style={{}}>
-        sigma tag: {this.props.tag}
-        {this.props.children}
+        {sigmaTags[this.props.tag](this.props.children)}
       </div>
     );
   }
@@ -335,6 +363,17 @@ export class SchemeLayout extends React.Component {
       <div style={styles.scheme}>
         {this.props.tag}
         {this.props.children}
+      </div>
+    );
+  }
+}
+
+@Radium
+export class PairLayout extends React.Component {
+  render() {
+    return (
+      <div style={styles.scheme}>
+        &lang;{reactJoin(getChildren(this.props.children), ",")}&rang;
       </div>
     );
   }
@@ -376,22 +415,90 @@ export class CanLayout extends React.Component {
 CanLayout.tags = {
   set: () => "SET",
   pi: p => p,
+  con: tm => <div>Con({tm})</div>,
+
+  // desc
+  mujust: tm => <div>Mu({tm})</div>,
+  munothing: tm => <div>Mu({tm})</div>,
+
+  // idesc
+  imujust: (tm, i) => <div>IMu({tm}, {i})</div>,
+  imunothing: (ii, d, i) => <div>Mu({ii}, {d}, {i})</div>,
+
+  // enum
+  enumt: tm => tm,
+  ze: () => "ze",
+  su: tm => tm,
+
+  // equality
+  eqblue: tm => tm,
+
+  // free monad
+  monad: (d, x) => <div>monad({d}, {x})</div>,
+  "return": tm => <div>return {tm}</div>,
+  composite: tm => <div>composite {tm}</div>,
+
+  // labelled types
   label: ([l, t]) => <div style={{display: 'flex', flexDirection: 'row'}}>{l} := {t}</div>,
+  lret: tm => <div>lret {tm}</div>,
+
+  // nu
+  nujust: tm => <div>nujust({tm})</div>,
+  nunothing: tm => <div>nunothing({tm})</div>,
+  coit: (d, sty, f, s) => <div>coit({d}, {sty}, {f}, {s})</div>,
+
+  // TODO prop, etc
+  sigma: s => s,
+  pair: p => p,
+
+  unit: () => "1",
+  void: () => "0",
 };
 
 
 @Radium
 export class PiLayout extends React.Component {
   render() {
-    const [ s, t ] = getChildren(this.props.children);
+    // const [ s, t ] = getChildren(this.props.children);
+    const childs = reactJoin(getChildren(this.props.children), "->")
 
     return (
       <div style={{display: 'flex'}}>
-        {s} -> {t}
+        {childs}
       </div>
     );
   }
 }
+
+
+@Radium
+export class JustPiLayout extends React.Component {
+  render() {
+    const [ s, t ] = getChildren(this.props.children);
+
+    return (
+      <div style={{display: 'flex'}}>
+        Pi({s}, {t})
+      </div>
+    );
+  }
+}
+
+
+@Radium
+export class DependentParamLayout extends React.Component {
+  render() {
+    const { name } = this.props;
+    const [ s ] = getChildren(this.props.children);
+
+    return (
+      <div style={{display: 'flex'}}>
+        {name} : {s}
+      </div>
+    );
+  }
+}
+
 
 @Radium
 export class DScopeLayout extends React.Component {

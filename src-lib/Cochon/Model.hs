@@ -9,6 +9,7 @@ import Control.Monad.Writer
 import Data.Ord
 import Data.String
 import qualified Data.Text as T
+import Data.Text (Text)
 import GHC.Generics
 
 import Cochon.CommandLexer
@@ -27,6 +28,9 @@ import ProofState.Edition.ProofState
 import Lens.Family2
 import Lens.Family2.TH
 
+import React
+
+
 -- | Some commands (state modifications) should be added to the undo stack.
 --   Some should be forgotten.
 data Historic
@@ -38,25 +42,48 @@ data SpecialKey
     | Tab
     | UpArrow
     | DownArrow
+    | Escape
     deriving Show
 
+-- Top level transitions that the whole page can undergo
 data Transition
-    = SelectPane Pane
-    | ToggleRightPane
-    | CommandKeypress SpecialKey
-    | CommandTyping String
-    | ToggleEntry Name
-    | GoTo Name
-    | TermTransition TermAction
+    = CommandTransition CommandTransition
+    | TermTransition TermTransition
 
-data TermAction
+
+-- Transitions scoped to just the command line
+data CommandTransition
+    -- | Special keys trigger a transition to a new state
+    = CommandKeypress SpecialKey
+    -- | We need to track each keypress so autocomplete can do its thing
+    | CommandTyping Text
+
+    -- | Track input focus and blur
+    | CommandFocus
+    | CommandBlur
+
+instance GeneralizeSignal CommandTransition Transition where
+    generalizeSignal = CommandTransition
+
+
+data TermTransition
+    -- | Expand / collapse a term
     = ToggleTerm Name
+    -- | Jump to a term
     | GoToTerm Name
+    -- | This is kind of open ended -- where are you dragging it?
+    -- I notice there's no EndDrag, yet.
     | BeginDrag Name
+    -- | Names can have attached notes. Toggle its visibility.
     | ToggleAnnotate Name
-    | AnnotationTyping Name T.Text
+    -- | AnnotationTyping Name T.Text
+
+instance GeneralizeSignal TermTransition Transition where
+    generalizeSignal = TermTransition
+
 
 data MessageSeverity = Green | Orange | Red deriving Show
+
 
 data UserMessagePart = UserMessagePart
     { messageText :: T.Text
@@ -66,30 +93,32 @@ data UserMessagePart = UserMessagePart
     , messageSeverity :: MessageSeverity
     } deriving Show
 
+
 newtype UserMessage = UserMessage [UserMessagePart] deriving Show
 
 instance IsString UserMessage where
-    fromString str = textUserMessage (fromString str)
+    fromString str = textUserMessage Green (fromString str)
 
 instance Monoid UserMessage where
     mempty = UserMessage []
     (UserMessage part1) `mappend` (UserMessage part2) = UserMessage (part1 `mappend` part2)
 
+
 tellTermHere :: (TY :>: INTM) -> ProofState UserMessage
 tellTermHere tt = do
     dtm :=>: _ <- distillHere tt
-    return (termMessage "told term" dtm)
+    return (termMessage Green "told term" dtm)
 
 -- TODO replace these will defaultMessagePart
 
-termMessage :: T.Text -> DInTmRN -> UserMessage
-termMessage str tm = UserMessage [UserMessagePart str Nothing Nothing (Just tm) Green]
+termMessage :: MessageSeverity -> T.Text -> DInTmRN -> UserMessage
+termMessage severity str tm = UserMessage [UserMessagePart str Nothing Nothing (Just tm) severity]
 
-textUserMessage :: T.Text -> UserMessage
-textUserMessage str = UserMessage [UserMessagePart str Nothing Nothing Nothing Green]
+textUserMessage :: MessageSeverity -> T.Text -> UserMessage
+textUserMessage severity str = UserMessage [UserMessagePart str Nothing Nothing Nothing severity]
 
-stackMessage :: T.Text -> StackError DInTmRN -> UserMessage
-stackMessage str stack = UserMessage [UserMessagePart str Nothing (Just stack) Nothing Green]
+stackMessage :: MessageSeverity -> T.Text -> StackError DInTmRN -> UserMessage
+stackMessage severity str stack = UserMessage [UserMessagePart str Nothing (Just stack) Nothing severity]
 
 -- TODO(joel) - give this a TacticResult reader?
 type Cmd a = WriterT UserMessage (State (Bwd ProofContext)) a
@@ -104,7 +133,7 @@ messageUser :: UserMessage -> Cmd ()
 messageUser = tell
 
 tellUser :: T.Text -> Cmd ()
-tellUser = messageUser . textUserMessage
+tellUser = messageUser . textUserMessage Green
 
 -- TODO put this in a more fitting place
 -- Given a proof state command and a context, we can run the command with
@@ -125,28 +154,7 @@ runProofState m loc = runStateT (m `catchStack` catchUnprettyErrors) loc
 --     many (matchTactic'
 
 -- instance ToJSRef TacticFormat where
---     toJSRef a = do
---         obj <- newObj
---         case a of
---             TfKeyword str -> do
---                 setProp "alt" "TfKeyword" obj
---                 setProp "val" (toJSRef str) obj
---             TfAlternative alts -> do
---                 setProp "alt" "TfAlternative" obj
---                 setProp "val" (toJSRef alts) obj
---             TfOption format -> do
---                 setProp "alt" "TfOption" obj
---                 setProp "val" (toJSRef format) obj
---             TfRepeat format -> do
---                 setProp "alt" "TfRepeat" obj
---                 setProp "val" (toJSRef format) obj
---             TfName str -> do
---                 setProp "alt" "TfName" obj
---                 setProp "val" (toJSRef format) obj
---             TfRepeat format -> do
---                 setProp "alt" "TfRepeat" obj
---                 setProp "val" (toJSRef format) obj
---         return obj
+--   toJSRef (TfName a) = [jMacroE|{alt: 'TfKeyword', val: `a`}|]
 
 -- A Cochon tactic consists of:
 --
@@ -160,18 +168,19 @@ runProofState m loc = runStateT (m `catchStack` catchUnprettyErrors) loc
 -- * `ctHelp` - help text for this tactic
 
 data CochonTactic = CochonTactic
-    { ctName   :: String
-    , ctDesc   :: TacticDescription
-    , ctxTrans :: TacticResult -> Cmd ()
+    { ctName    :: Text
+    , ctMessage :: Text
+    , ctDesc    :: TacticDescription
+    , ctxTrans  :: TacticResult -> Cmd ()
     -- TODO(joel) - remove
-    , ctHelp   :: TacticHelp
+    , ctHelp    :: TacticHelp
     } deriving Generic
 
 ctParse :: CochonTactic -> Parsley Token TacticResult
 ctParse = parseTactic . ctDesc
 
 instance Show CochonTactic where
-    show = ctName
+    show = T.unpack . ctName
 
 instance Eq CochonTactic where
     ct1 == ct2 = ctName ct1 == ctName ct2
@@ -186,13 +195,13 @@ instance Ord CochonTactic where
 -- * help for each individual argument (yes, they're named)
 
 data TacticHelp = TacticHelp
-    { template :: String -- TODO highlight each piece individually
-    , example :: String
-    , summary :: String
+    { template :: Text -- TODO highlight each piece individually
+    , example :: Text
+    , summary :: Text
 
     -- maps from the name of the arg to its help
     -- this is not a map because it's ordered
-    , argHelp :: [(String, String)]
+    , argHelp :: [(Text, Text)]
     }
 
 data Pane = Log | Commands | Settings deriving (Eq, Generic)
@@ -209,13 +218,13 @@ toggleVisibility Invisible = Visible
 type CTData = (CochonTactic, TacticResult)
 
 data Command = Command
-    { commandStr :: String
+    { commandStr :: Text
     , commandCtx :: Bwd ProofContext
 
 -- Derivative fields - these are less fundamental and can be derived from the
 -- first two fields.
 
-    , commandParsed :: Either String CTData -- is this really necessary?
+    , commandParsed :: Either Text CTData -- is this really necessary?
     , commandOutput :: UserMessage
     } deriving Generic
 
@@ -226,16 +235,29 @@ type InteractionHistory = Fwd Command
 
 data CommandFocus
     = InHistory
-        { deferred :: String
+        { deferred :: Text
         , current :: ListZip Command
         }
-    | InPresent String
+    | InPresent Text
     deriving Generic
 
+
+data EitherOrNot a b
+    = JustLeft a
+    | JustRight b
+    | NotEither
+
+
+-- TODO _completingTactics would make a nice prism. Used when stowing the
+-- current autocomplete state
 data AutocompleteState
     = CompletingTactics (ListZip CochonTactic)
     | CompletingParams CochonTactic
-    | Stowed
+    | Welcoming
+
+    -- If the autocomplete is stowed we store its last state so that we can pick
+    -- back up there if the user clicks back in.
+    | Stowed (EitherOrNot (ListZip CochonTactic) CochonTactic)
     deriving Generic
 
 data InteractionState = InteractionState
@@ -260,15 +282,25 @@ data InteractionState = InteractionState
 -- but that's quite cumbersome.
 
     , _rightPaneVisible :: Visibility
-    , _currentPane :: Pane
+    , _messages :: [UserMessage]
     } deriving (Generic)
 
 $(makeLenses ''InteractionState)
 
 startState :: Bwd ProofContext -> InteractionState
-startState pc = InteractionState pc (InPresent "") F0 Stowed Invisible Log
+startState pc = InteractionState
+    pc
+    (InPresent "")
+    F0
+    (Stowed NotEither)
+    Invisible
+    []
 
-userInput :: InteractionState -> String
-userInput (InteractionState _ _commandFocus _ _ _ _) = case _commandFocus of
-    (InHistory _ current) -> let Command str _ _ _ = focus current in str
-    InPresent str -> str
+userInput :: CommandFocus -> Text
+userInput (InHistory _ current) =
+    let Command str _ _ _ = focus current
+    in str
+userInput (InPresent str) = str
+
+userInput' :: InteractionState -> Text
+userInput' (InteractionState _ _commandFocus _ _ _ _) = userInput _commandFocus
