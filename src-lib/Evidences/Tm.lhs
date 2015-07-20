@@ -156,7 +156,7 @@ In both cases, we represent constant functions with `K t`, equivalent of
 
 > data Scope :: * -> * where
 >   (:.)  :: String -> Tm In x           -> Scope x  -- binding
->   H     :: Env x -> String -> Tm In x  -> Scope x
+>   H     :: Env x -> String -> Tm In x  -> Scope x  -- closure
 >   K     :: Tm In x                     -> Scope x  -- constant
 
 Canonical objects

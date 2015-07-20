@@ -11,6 +11,8 @@ import PigmentPrelude
 
 import qualified TacticParse as Parse
 import qualified Operators
+import qualified AlphaConversions
+import qualified Mangler
 
 canTyBasics :: Assertion
 canTyBasics = do
@@ -85,7 +87,13 @@ checkTests = testGroup "Type Checking Tests"
     ]
 
 tests :: TestTree
-tests = testGroup "Tests" [ checkTests, Parse.tests, Operators.tests ]
+tests = testGroup "Tests"
+    [ checkTests
+    , Parse.tests
+    , Operators.tests
+    , AlphaConversion.tests
+    , Mangler.tests
+    ]
 
 main :: IO ()
 main = defaultMain tests

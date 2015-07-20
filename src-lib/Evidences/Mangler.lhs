@@ -83,8 +83,9 @@ The `underScope` function goes under a binding, instantiating the bound
 variable to the given reference.
 
 > underScope :: Scope x -> x -> InTm x
-> underScope (K t)     _ = t
-> underScope (_ :. t)  x = under 0 x %% t
+> underScope (K t)       _ = t
+> underScope (_ :. t)    x = under 0 x %% t
+> underScope (H env _ t) x = under 0 x %% t
 
 The deBruijnifying mangle
 -------------------------

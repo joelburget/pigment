@@ -10,6 +10,7 @@ Evaluation
 > import Control.Applicative
 > import Data.Foldable
 > import Data.Maybe
+> import Data.Monoid
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Evidences.Tm
@@ -116,6 +117,7 @@ with the awaited argument, and evaluate the whole term down to a value.
 
 This naturally leads to the following code:
 
+> -- Apply the environment's renaming scheme to the bound variable names.
 > body :: Scope REF -> ENV -> Scope REF
 > body (K v)     g          = K (eval v g)
 > body (x :. t)  (B0, rho)  = txtSub rho x :. t  -- closed lambdas stay syntax
@@ -123,6 +125,10 @@ This naturally leads to the following code:
 
 Now, as well as making closures, the current renaming scheme is applied
 to the bound variable name, for cosmetic purposes.
+
+> -- Close over the new environment
+> -- TODO(joel) questionable...
+> body (H env x t) g        = H (g <> env) x t
 
 Evaluator
 ---------
