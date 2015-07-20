@@ -14,6 +14,7 @@ import DisplayLang.Name
 import DisplayLang.PrettyPrint
 import DisplayLang.Scheme
 import Distillation.Distiller
+import Distillation.ShowPity
 import Elaboration.Error
 import Elaboration.Elaborator
 import Evidences.Operators
@@ -118,16 +119,6 @@ main = do
               putStrLn "\n\n"
               putStrLn view
     val `catch` \ (ex :: PiTyException) -> showPity ex
-
-showPity :: PiTyException -> IO ()
-showPity (PiTyException name ty) = do
-    putStrLn "Caught pity error:"
-    putStrLn $ "name: " ++ name
-    let val = case runTraifProofState (prettyHere (SET :>: ty)) emptyContext of
-                  Left err -> err
-                  Right (doc, _) -> renderHouseStyle doc
-    putStrLn $ "type: " ++ val
-    putStrLn "\n"
 
 -- Given a proof state command and a context, we can run the command with
 -- `runProofState` to produce a message (either the response from the command

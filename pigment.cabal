@@ -45,6 +45,7 @@ library
     Distillation.Distiller
     Distillation.Moonshine
     Distillation.Scheme
+    Distillation.ShowPity
     Elaboration.ElabMonad
     Elaboration.ElabProb
     Elaboration.Elaborator
