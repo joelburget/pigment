@@ -109,6 +109,7 @@ either be:
 >     | AnchTau
 >     | AnchDataDef
 >     | AnchImpl
+>     | AnchScheme String
 >     -- Anchors with cryptic names I don't understand
 >     | AnchStr String
 >     -- "Nothing"
@@ -116,9 +117,7 @@ either be:
 >     deriving Eq
 
 > instance Show EntityAnchor where
->     showsPrec p anch = showParen (p > 10) $
->         -- showString (unwords ["Anchor", "\"" ++ anchShow anch ++ "\""])
->         showString "Anchor"
+>     showsPrec p anch = showParen (p > 10) $ showString (anchShow anch)
 
 > anchShow AnchConc = "conc"
 > anchShow AnchConNames = "constructor names"
@@ -144,6 +143,7 @@ either be:
 > anchShow AnchDataDef = "data definition"
 > -- anchShow (AnchStr str) = "(AnchStr " ++ str ++ ")"
 > anchShow AnchImpl = "implementation"
+> anchShow (AnchScheme str) = str
 > anchShow (AnchStr str) = str
 > anchShow AnchNo = "(no anchor)"
 

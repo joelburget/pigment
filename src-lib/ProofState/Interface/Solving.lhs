@@ -295,7 +295,7 @@ scope.
 >     prettyE (EPARAM (_ := DECL :<: ty) (x, _) k _ anchor _)  = do
 >         tyd <- prettyHereAt (pred ArrSize) (SET :>: ty)
 >         return (prettyBKind k
->                  (text x  <+> (brackets $ brackets $ text $ show anchor)
+>                  (text x  <+> (showAnchor anchor)
 >                           <+> kword KwAsc
 >                           <+> tyd))
 >
@@ -304,9 +304,13 @@ scope.
 >         d <- prettyPS aus me
 >         goOut
 >         return (sep  [  text (fst (entryLastName e))
->                         <+> (brackets $ brackets $ text $ show $ entryAnchor e)
+>                         <+> (showAnchor $ entryAnchor e)
 >                      ,  nest 2 d <+> kword KwSemi
 >                      ])
+>
+>     showAnchor :: EntityAnchor -> Doc
+>     showAnchor (AnchStr str) = brackets $ brackets $ text str
+>     showAnchor _ = empty
 >
 >     prettyEmptyTip :: ProofState Doc
 >     prettyEmptyTip = do
