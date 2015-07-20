@@ -21,3 +21,4 @@ build
 site/public/
 .stack-work
 tests/files/.tests
+npm-debug.log
