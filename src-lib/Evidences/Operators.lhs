@@ -1097,8 +1097,8 @@ As in "Pi Type", not "Pity the fool"
 > pity :: NameSupplier m => TEL TY -> m TY
 > pity (Target t)       = return t
 > pity (x :<: s :-: t)  = do
->   let pityTy = throw (PiTyException x s)
->   freshRef  (x :<: pityTy)
+>   let badPiTy = throw (PiTyException x s)
+>   freshRef  (x :<: badPiTy)
 >             (\xref -> do
 >                t' <- pity $ t (pval xref)
 >                -- XXX type isn't SET
