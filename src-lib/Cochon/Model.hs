@@ -5,7 +5,7 @@ module Cochon.Model where
 
 import Control.Applicative
 import Control.Monad.State
-import Control.Monad.Writer
+import Data.Monoid
 import Data.String
 import qualified Data.Text as T
 import Data.Text (Text)
@@ -26,12 +26,6 @@ import Lens.Family2.TH
 
 import React
 
-
--- | Some commands (state modifications) should be added to the undo stack.
---   Some should be forgotten.
-data Historic
-    = Historic
-    | Forgotten
 
 data SpecialKey
     = Enter
@@ -65,6 +59,7 @@ instance GeneralizeSignal TermTransition Transition where
 data MessageSeverity = Green | Orange | Red deriving Show
 
 
+-- TODO UserMessage is used in Cochon.Tactics, part of src-bin. It's certainly
 data UserMessagePart = UserMessagePart
     { messageText :: T.Text
     , relevantName :: Maybe Name
@@ -99,12 +94,6 @@ textUserMessage severity str = UserMessage [UserMessagePart str Nothing Nothing 
 
 stackMessage :: MessageSeverity -> T.Text -> StackError DInTmRN -> UserMessage
 stackMessage severity str stack = UserMessage [UserMessagePart str Nothing (Just stack) Nothing severity]
-
--- TODO(joel) - give this a TacticResult reader?
-type Cmd a = WriterT UserMessage (State (Bwd ProofContext)) a
-
-messageUser :: UserMessage -> Cmd ()
-messageUser = tell
 
 -- TODO put this in a more fitting place
 -- Given a proof state command and a context, we can run the command with

@@ -16,9 +16,11 @@ import System.Console.GetOpt
 import Kit.BwdFwd
 import Kit.Parsley
 
+import Cochon.CommandLexer
 import Cochon.Controller
 import Cochon.DevLoad
 import Cochon.Model
+import Cochon.PrettyProofState
 import Cochon.Tactics
 import DisplayLang.Lexer
 import DisplayLang.Name
