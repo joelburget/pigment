@@ -23,18 +23,6 @@ makeTag text = Aeson.Object $ H.singleton "tag" (Aeson.String text)
 
 pageLayout_ :: ReactNode Transition -> ReactNode Transition
 
-commandLineLayout_ :: ReactNode CommandTransition
-                   -> ReactNode TermTransition
-                   -> ReactNode Transition
-
-autocompleteLayout_ :: ReactNode Transition
-                    -> ReactNode Transition
-
-tacticCompletionLayout_ :: [Text]
-                        -> Text
-                        -> ReactNode Void
-                        -> ReactNode Void
-
 parameterLayout_ :: ReactNode TermTransition -> ReactNode TermTransition
 
 definitionLayout_ :: ReactNode TermTransition -> ReactNode TermTransition
@@ -112,35 +100,6 @@ foreign import javascript "window.PigmentView.PageLayout"
     pageLayout :: ImportedClass NoProps Transition
 
 pageLayout_ = importParentClass pageLayout noProps
-
-
-foreign import javascript "window.PigmentView.CommandLine"
-    commandLineLayout :: ImportedClass NoProps Transition
-
-commandLineLayout_ textArea_ completions_ =
-    let commandLineLayout_' :: ReactNode Transition -> ReactNode Transition
-        commandLineLayout_' = importParentClass commandLineLayout noProps
-    in commandLineLayout_' $ mconcat
-         [ locally textArea_
-         , locally completions_
-         ]
-
-
-foreign import javascript "window.PigmentView.AutocompleteLayout"
-    autocompleteLayout :: ImportedClass NoProps Transition
-
-autocompleteLayout_ = importParentClass autocompleteLayout noProps
-
-
-foreign import javascript "window.PigmentView.TacticCompletion"
-    tacticCompletionLayout :: ImportedClass Aeson.Value Void
-
-tacticCompletionLayout_ allNames name = importParentClass tacticCompletionLayout
-    (Aeson.Object (H.fromList
-      [ ("name", (Aeson.String name))
-      , ("allNames", Aeson.Array (V.map Aeson.String (V.fromList allNames)))
-      ]
-    ))
 
 
 foreign import javascript "window.PigmentView.ParameterLayout"
@@ -363,12 +322,6 @@ justPiLayout_ s t = importParentClass justPiLayout noProps (s <> t)
 
 
 pageLayout_ = error "pageLayout_ not available from ghc"
-
-commandLineLayout_ = error "commandLine_ not available from ghc"
-
-autocompleteLayout_ = error "autocompleteLayout_ not available from ghc"
-
-tacticCompletionLayout_ = error "tacticCompletion_ not available from ghc"
 
 parameterLayout_ = error "parameterLayout_ not available from ghc"
 
