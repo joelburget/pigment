@@ -20,7 +20,6 @@ I'm sick of the hostile relationship I have with my compiler. It sits there sile
 Installing Pigment yourself is poorly tested at the moment. Please contribute back steps which I've forgotten.
 
 * Install [GHCJS](https://github.com/ghcjs/ghcjs) - Pigment's compiler. The easiest way to do this at the moment is through the [ghcjs-box](https://github.com/joelburget/ghcjs-box) vagrant box.
-* Now install [react-haskell](https://github.com/joelburget/react-haskell).
 * Clone this repository - `git clone https://github.com/joelburget/pigment.git`
 * `cd pigment`
 * If you've made it this far you can finally run `make` to build the thing!
