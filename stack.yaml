@@ -4,5 +4,5 @@ packages:
 extra-deps:
 - lens-family-1.2.0
 - recursion-schemes-4.1.2
-- react-haskell-1.4.0.0
+- react-haskell-2.0.0
 resolver: lts-2.15
