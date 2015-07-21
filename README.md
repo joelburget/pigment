@@ -19,16 +19,11 @@ I'm sick of the hostile relationship I have with my compiler. It sits there sile
 
 Installing Pigment yourself is poorly tested at the moment. Please contribute back steps which I've forgotten.
 
-* Install [Haste](http://haste-lang.org/) - Pigment's compiler.
-* Install the libraries Pigment depends on - `haste-inst install lens-family mtl pretty`. Warning - this step is completely untested and written from memory. I mean, it won't break anything, but probably also won't get you to a working installation. Don't say I didn't warn you.
+* Install [GHCJS](https://github.com/ghcjs/ghcjs) - Pigment's compiler. The easiest way to do this at the moment is through the [ghcjs-box](https://github.com/joelburget/ghcjs-box) vagrant box.
+* Now install [react-haskell](https://github.com/joelburget/react-haskell).
 * Clone this repository - `git clone https://github.com/joelburget/pigment.git`
-* `git clone https://github.com/joelburget/react-haskell`
 * `cd pigment`
-* `git submodule update --init`
-* [install ghcjs](https://github.com/ghcjs/ghcjs#install-ghcjs)
-* `npm install -g less less-plugin-autoprefix`
 * If you've made it this far you can finally run `make` to build the thing!
-* Oh yeah, one last step - `make server` then visit `localhost:8765`. *Now*, now you can use Pigment.
 
 # Contributing
 
