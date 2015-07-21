@@ -185,12 +185,7 @@ tried.
 >         subattempts = map autoWith (focuses' entries)
 >     elabTrace $ show (length entries) ++ " entries in scope"
 >     elabTrace $ show (length subattempts) ++ " subattempts"
->     void done <|>
->         (do str <- prettyProofState
->             elabTrace $ "autospreader proof state:"
->             elabTrace $ str
->             assumption <|> foldl (<|>) notFound subattempts
->         )
+>     void done <|> (assumption <|> foldl (<|>) notFound subattempts)
 
 > typeof :: Entry Bwd -> Maybe TY
 > typeof (EDEF (_ := _ :<: ty) _ _ _ _ _ _) = Just ty
