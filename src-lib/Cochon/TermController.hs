@@ -2,7 +2,11 @@
 module Cochon.TermController where
 
 import Control.Arrow
+import Control.Monad.State
+import Control.Monad.Writer
 import qualified Data.Text as T
+
+import Lens.Family2
 
 import Kit.BwdFwd
 import Cochon.Model
@@ -31,8 +35,22 @@ toggleAnnotate name state@InteractionState{_proofCtx=ctxs :< ctx} =
 
 
 termDispatch :: TermTransition -> InteractionState -> InteractionState
-termDispatch (ToggleTerm name) state = state
-termDispatch (GoToTerm name) state = state
+termDispatch (ToggleTerm name) state = toggleTerm name state
+termDispatch (GoToTerm name) state = goToTerm name state
 termDispatch (BeginDrag name) state = state
 termDispatch (ToggleAnnotate name) state = toggleAnnotate name state
 -- termDispatch (AnnotationTyping name text) state = state
+
+
+toggleTerm :: Name -> InteractionState -> InteractionState
+toggleTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
+    case execProofState (toggleEntryVisibility name) ctx of
+        Left err -> state & messages <>~ [err]
+        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
+
+
+goToTerm :: Name -> InteractionState -> InteractionState
+goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
+    case execProofState (goTo name) ctx of
+        Left err -> state & messages <>~ [err]
+        Right ctx' -> state{_proofCtx=ctxs :< ctx'}

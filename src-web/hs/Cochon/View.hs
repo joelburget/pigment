@@ -35,9 +35,6 @@ import ProofState.Edition.ProofContext
 import ProofState.Structure.Developments
 
 
--- The autocomplete overlay
-type Autocomplete = ReactNode AutocompleteState
-
 -- handlers
 
 constTransition :: trans -> MouseEvent -> Maybe trans
@@ -68,23 +65,6 @@ handleAddConstructor _ _ = Nothing
 -- handleGoTo :: Name -> MouseEvent -> Maybe Transition
 -- handleGoTo = constTransition . GoTo
 
-handleKey :: KeyboardEvent -> Maybe CommandTransition
-handleKey KeyboardEvent{React.key="Enter"}     = Just $ CommandKeypress Enter
-handleKey KeyboardEvent{React.key="Tab"}       = Just $ CommandKeypress Tab
-handleKey KeyboardEvent{React.key="ArrowUp"}   = Just $ CommandKeypress UpArrow
-handleKey KeyboardEvent{React.key="ArrowDown"} = Just $ CommandKeypress DownArrow
--- handleKey KeyboardEvent{React.key="Escape"}    = Just $ CommandKeypress Escape
-handleKey _ = Nothing
-
-handleBlur :: BlurEvent -> Maybe CommandTransition
-handleBlur _ = Just CommandBlur
-
-handleFocus :: FocusEvent -> Maybe CommandTransition
-handleFocus _ = Just CommandFocus
-
-handleCmdChange :: ChangeEvent -> Maybe CommandTransition
-handleCmdChange = Just . CommandTyping . fromJSString . value . target
-
 
 -- views
 
@@ -97,7 +77,6 @@ page_ initialState =
           , initialState = initialState
           , renderFn = \() state -> pageLayout_ $ do
                 editView_ (state^.proofCtx)
-                commandLine_ state
                 messages_ (state^.messages)
 
                 -- testing only
@@ -206,106 +185,3 @@ entity_ pc (Definition dKind dev) = definitionLayout_ $ do
       PROG sch -> case runProofState (distillSchemeHere sch) pc of
           Left err -> "PROGERR"
           Right (sch', _) -> "PROG" <> scheme_ sch'
-
-
--- Command Line
-
-commandLine_ :: InteractionState -> ReactNode Transition
-commandLine_ = classLeaf $ smartClass
-    { React.name = "Command Line"
-    , transition = \(state, trans) -> (state, Just trans)
-    , renderFn = \props _ ->
-          let focus = props^.commandFocus
-              input = textarea_ [ autofocus_ True
-                                , placeholder_ "enter a command"
-                                , onChange handleCmdChange
-                                , onKeyDown handleKey
-                                , onBlur handleBlur
-                                , onFocus handleFocus
-                                ]
-                                (userInput focus)
-              completions = autocomplete_ (props^.autocomplete)
-          in commandLineLayout_ input completions
-    }
-
-
-autocomplete_ :: AutocompleteState -> ReactNode TermTransition
-autocomplete_ = classLeaf $ smartClass
-  { React.name = "Autocomplete"
-  , transition = \(state, sig) -> (state, Nothing)
-  , renderFn = \auto _ -> autocompleteLayout_ $ case auto of
-      CompletingTactics zipper -> locally $ tacticCompletion_ zipper
-      CompletingParams tac -> locally $ paramFormat_ tac
-      Welcoming -> locally $ autocompleteWelcome_
-      Stowed _ -> mempty
-  }
-
-
--- tactic name autocompletion / preview
-tacticCompletion_ :: ListZip CochonTactic -> ReactNode Void
-tacticCompletion_ = classLeaf $ smartClass
-  { React.name = "Tactic Completion"
-  , renderFn = \zip@(ListZip late focus early) _ ->
-      let -- desc :: Foldable a => a CochonTactic -> ReactNode a
-          desc tacs = forReact tacs (div_ [] . text_' . ctName)
-          text_' :: T.Text -> ReactNode a
-          text_' = text_ . fromString . T.unpack
-
-          allNames = map ctName (Foldable.toList zip)
-
-          name = ctName focus
-
-      in tacticCompletionLayout_ allNames name $ do
-             locally $ tacticPreview_ focus
-
-             div_ [] $ desc early
-
-             div_ [] $ text_' name
-               -- div_ [] $ renderHelp $ ctHelp focus
-
-
-             div_ [] $ desc late
-  }
-
-
--- The preview part of tactic name autocomplete
-tacticPreview_ :: CochonTactic -> ReactNode Void
-tacticPreview_ (CochonTactic name message desc _ _) =
-    tacticLayout_ name (text_ message <> tacticFormat_ desc)
-
-
--- parameter autocompletion
-paramFormat_ :: CochonTactic -> ReactNode Void
-paramFormat_ (CochonTactic name message desc _ _) =
-    paramLayout_ name (text_ message <> tacticFormat_ desc)
-
-
-tacticFormat_ :: TacticDescription -> ReactNode Void
-tacticFormat_ = classLeaf $ dumbClass
-  { React.name = "Tactic Format"
-  , renderFn = \fmt _ ->
-      let (tag, children) = case fmt of
-              TfName name -> ("name", text_ name)
-              TfKeyword k -> ("keyword", fromString (key k))
-              TfInArg name Nothing -> ("inarg", text_ name)
-              TfInArg name (Just explain) ->
-                  ("inarg", text_ name <> text_ explain)
-              TfExArg name Nothing -> ("exarg", text_ name)
-              TfExArg name (Just explain) ->
-                  ("exarg", text_ name <> text_ explain)
-              TfScheme name Nothing -> ("scheme", text_ name)
-              TfScheme name (Just explain) ->
-                  ("scheme", text_ name <> text_ explain)
-
-              TfAlternative (l, r) ->
-                  ("alternative", tacticFormat_ l <> tacticFormat_ r)
-              TfOption fmt -> ("option", tacticFormat_ fmt)
-              TfRepeatZero fmt -> ("repeatzero", tacticFormat_ fmt)
-              TfBlockSequence fmts -> ("blocksequence", forReact fmts tacticFormat_)
-              TfInlineSequence fmts -> ("inlinesequence", forReact fmts tacticFormat_)
-              TfBracketed bracket fmt ->
-                  ("bracketed", fromString (show bracket) <> tacticFormat_ fmt)
-              TfSep fmt kwd ->
-                  ("sep", tacticFormat_ fmt <> fromString (key kwd))
-      in tacticFormatLayout_ tag children
-  }

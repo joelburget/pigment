@@ -23,18 +23,6 @@ makeTag text = Aeson.Object $ H.singleton "tag" (Aeson.String text)
 
 pageLayout_ :: ReactNode Transition -> ReactNode Transition
 
-commandLineLayout_ :: ReactNode CommandTransition
-                   -> ReactNode TermTransition
-                   -> ReactNode Transition
-
-autocompleteLayout_ :: ReactNode Transition
-                    -> ReactNode Transition
-
-tacticCompletionLayout_ :: [Text]
-                        -> Text
-                        -> ReactNode Void
-                        -> ReactNode Void
-
 parameterLayout_ :: ReactNode TermTransition -> ReactNode TermTransition
 
 definitionLayout_ :: ReactNode TermTransition -> ReactNode TermTransition
@@ -96,15 +84,6 @@ justPiLayout_ :: ReactNode TermTransition
               -> ReactNode TermTransition
 
 
-tacticLayout_ :: Text -> ReactNode Void -> ReactNode Void
-
-paramLayout_ :: Text -> ReactNode Void -> ReactNode Void
-
-tacticFormatLayout_ :: Text -> ReactNode Void -> ReactNode Void
-
-autocompleteWelcome_ :: ReactNode Void
-
-
 #ifdef __GHCJS__
 
 
@@ -112,35 +91,6 @@ foreign import javascript "window.PigmentView.PageLayout"
     pageLayout :: ImportedClass NoProps Transition
 
 pageLayout_ = importParentClass pageLayout noProps
-
-
-foreign import javascript "window.PigmentView.CommandLine"
-    commandLineLayout :: ImportedClass NoProps Transition
-
-commandLineLayout_ textArea_ completions_ =
-    let commandLineLayout_' :: ReactNode Transition -> ReactNode Transition
-        commandLineLayout_' = importParentClass commandLineLayout noProps
-    in commandLineLayout_' $ mconcat
-         [ locally textArea_
-         , locally completions_
-         ]
-
-
-foreign import javascript "window.PigmentView.AutocompleteLayout"
-    autocompleteLayout :: ImportedClass NoProps Transition
-
-autocompleteLayout_ = importParentClass autocompleteLayout noProps
-
-
-foreign import javascript "window.PigmentView.TacticCompletion"
-    tacticCompletionLayout :: ImportedClass Aeson.Value Void
-
-tacticCompletionLayout_ allNames name = importParentClass tacticCompletionLayout
-    (Aeson.Object (H.fromList
-      [ ("name", (Aeson.String name))
-      , ("allNames", Aeson.Array (V.map Aeson.String (V.fromList allNames)))
-      ]
-    ))
 
 
 foreign import javascript "window.PigmentView.ParameterLayout"
@@ -315,35 +265,6 @@ relnamePieceLayout_ tag n str =
     in importLeafClass relnamePieceLayout props
 
 
-foreign import javascript "window.PigmentView.TacticLayout"
-    tacticLayout :: ImportedClass Aeson.Value Void
-
-tacticLayout_ text =
-    let props = Aeson.Object $ H.singleton "name" (Aeson.String text)
-    in importParentClass tacticLayout props
-
-
-foreign import javascript "window.PigmentView.ParamLayout"
-    paramLayout :: ImportedClass Aeson.Value Void
-
-paramLayout_ text =
-    let props = Aeson.Object $ H.singleton "name" (Aeson.String text)
-    in importParentClass paramLayout props
-
-
-foreign import javascript "window.PigmentView.TacticFormatLayout"
-    tacticFormatLayout :: ImportedClass Aeson.Value Void
-
-tacticFormatLayout_ tag =
-    importParentClass tacticFormatLayout (makeTag tag)
-
-
-foreign import javascript "window.PigmentView.AutocompleteWelcome"
-    autocompleteWelcome :: ImportedClass NoProps Void
-
-autocompleteWelcome_ = importLeafClass autocompleteWelcome noProps
-
-
 foreign import javascript "window.PigmentView.DependentParamLayout"
     dependentParamLayout :: ImportedClass Aeson.Value TermTransition
 
@@ -363,12 +284,6 @@ justPiLayout_ s t = importParentClass justPiLayout noProps (s <> t)
 
 
 pageLayout_ = error "pageLayout_ not available from ghc"
-
-commandLineLayout_ = error "commandLine_ not available from ghc"
-
-autocompleteLayout_ = error "autocompleteLayout_ not available from ghc"
-
-tacticCompletionLayout_ = error "tacticCompletion_ not available from ghc"
 
 parameterLayout_ = error "parameterLayout_ not available from ghc"
 
@@ -421,14 +336,6 @@ dspineLayout_ = error "dspineLayout_ not available from ghc"
 relnameLayout_ = error "relnameLayout_ not available from ghc"
 
 relnamePieceLayout_ = error "relnamePieceLayout_ not available from ghc"
-
-tacticLayout_ = error "tacticLayout_ not available from ghc"
-
-paramLayout_ = error "paramLayout_ not available from ghc"
-
-tacticFormatLayout_ = error "tacticFormatLayout_ not available from ghc"
-
-autocompleteWelcome_ = error "autocompleteWelcome_ not available from ghc"
 
 dependentParamLayout_ = error "dependentParamLayout_ not available from ghc"
 
