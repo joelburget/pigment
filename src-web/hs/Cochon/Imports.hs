@@ -84,15 +84,6 @@ justPiLayout_ :: ReactNode TermTransition
               -> ReactNode TermTransition
 
 
-tacticLayout_ :: Text -> ReactNode Void -> ReactNode Void
-
-paramLayout_ :: Text -> ReactNode Void -> ReactNode Void
-
-tacticFormatLayout_ :: Text -> ReactNode Void -> ReactNode Void
-
-autocompleteWelcome_ :: ReactNode Void
-
-
 #ifdef __GHCJS__
 
 
@@ -274,35 +265,6 @@ relnamePieceLayout_ tag n str =
     in importLeafClass relnamePieceLayout props
 
 
-foreign import javascript "window.PigmentView.TacticLayout"
-    tacticLayout :: ImportedClass Aeson.Value Void
-
-tacticLayout_ text =
-    let props = Aeson.Object $ H.singleton "name" (Aeson.String text)
-    in importParentClass tacticLayout props
-
-
-foreign import javascript "window.PigmentView.ParamLayout"
-    paramLayout :: ImportedClass Aeson.Value Void
-
-paramLayout_ text =
-    let props = Aeson.Object $ H.singleton "name" (Aeson.String text)
-    in importParentClass paramLayout props
-
-
-foreign import javascript "window.PigmentView.TacticFormatLayout"
-    tacticFormatLayout :: ImportedClass Aeson.Value Void
-
-tacticFormatLayout_ tag =
-    importParentClass tacticFormatLayout (makeTag tag)
-
-
-foreign import javascript "window.PigmentView.AutocompleteWelcome"
-    autocompleteWelcome :: ImportedClass NoProps Void
-
-autocompleteWelcome_ = importLeafClass autocompleteWelcome noProps
-
-
 foreign import javascript "window.PigmentView.DependentParamLayout"
     dependentParamLayout :: ImportedClass Aeson.Value TermTransition
 
@@ -374,14 +336,6 @@ dspineLayout_ = error "dspineLayout_ not available from ghc"
 relnameLayout_ = error "relnameLayout_ not available from ghc"
 
 relnamePieceLayout_ = error "relnamePieceLayout_ not available from ghc"
-
-tacticLayout_ = error "tacticLayout_ not available from ghc"
-
-paramLayout_ = error "paramLayout_ not available from ghc"
-
-tacticFormatLayout_ = error "tacticFormatLayout_ not available from ghc"
-
-autocompleteWelcome_ = error "autocompleteWelcome_ not available from ghc"
 
 dependentParamLayout_ = error "dependentParamLayout_ not available from ghc"
 
