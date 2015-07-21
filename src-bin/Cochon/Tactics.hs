@@ -116,6 +116,16 @@ data TacticHelp = TacticHelp
     }
 
 
+setCtx :: Bwd ProofContext -> Cmd ()
+setCtx = put
+
+getCtx :: Cmd (Bwd ProofContext)
+getCtx = get
+
+tellUser :: T.Text -> Cmd ()
+tellUser = messageUser . textUserMessage Green
+
+
 cochonTactics :: [CochonTactic]
 cochonTactics = sort
     [ applyTac

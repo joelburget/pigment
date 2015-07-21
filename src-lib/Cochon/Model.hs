@@ -103,17 +103,8 @@ stackMessage severity str stack = UserMessage [UserMessagePart str Nothing (Just
 -- TODO(joel) - give this a TacticResult reader?
 type Cmd a = WriterT UserMessage (State (Bwd ProofContext)) a
 
-setCtx :: Bwd ProofContext -> Cmd ()
-setCtx = put
-
-getCtx :: Cmd (Bwd ProofContext)
-getCtx = get
-
 messageUser :: UserMessage -> Cmd ()
 messageUser = tell
-
-tellUser :: T.Text -> Cmd ()
-tellUser = messageUser . textUserMessage Green
 
 -- TODO put this in a more fitting place
 -- Given a proof state command and a context, we can run the command with
