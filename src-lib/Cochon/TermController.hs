@@ -10,7 +10,6 @@ import Lens.Family2
 
 import Kit.BwdFwd
 import Cochon.Model
-import Cochon.Tactics
 import DisplayLang.Name
 import NameSupply.NameSupply
 import ProofState.Edition.ProofContext
@@ -24,7 +23,9 @@ import Evidences.Tm
 execProofState :: forall a. ProofState a
                -> ProofContext
                -> Either UserMessage ProofContext
-execProofState state = left (stackMessage Red "stack!") . right snd . runProofState state
+execProofState state = left (stackMessage Red "stack!")
+                     . right snd
+                     . runProofState state
 
 
 toggleAnnotate :: Name -> InteractionState -> InteractionState

@@ -2,21 +2,226 @@
 ===============
 
 > {-# LANGUAGE ScopedTypeVariables, GADTs, FlexibleInstances, TypeOperators,
->     TypeSynonymInstances, PatternSynonyms #-}
+>     TypeSynonymInstances, PatternSynonyms, DeriveGeneric #-}
 
 > module DisplayLang.PrettyPrint where
 
 > import Data.Functor.Identity
 > import Data.List
+> import GHC.Generics
 > import Text.PrettyPrint.HughesPJ
+
 > import ProofState.Structure.Developments
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
 > import DisplayLang.Scheme
-> import DisplayLang.Lexer
 > import Evidences.Tm
 > import Kit.BwdFwd
 > import Kit.MissingLibrary hiding ((<>))
+
+
+TODO this Keyword business doesn't belong here
+
+> data Keyword
+>     = KwAsc
+>     | KwComma
+>     | KwSemi
+>     | KwDefn
+>     | KwUnderscore
+>     | KwEq
+>     | KwBy
+>     | KwSet
+>     | KwPi
+>     | KwLambda
+>     | KwCon
+>     | KwOut
+
+Desc
+
+>     | KwMu
+
+EnumT
+
+>     | KwEnum
+>     | KwPlus
+
+Equality
+
+>     | KwEqBlue
+
+Free Monad
+
+>     | KwMonad
+>     | KwReturn
+
+IDesc
+
+>     | KwIMu
+
+Labelled Types
+
+>     | KwCall
+>     | KwLabel
+>     | KwLabelEnd
+>     | KwRet
+
+Nu
+
+>     | KwNu
+>     | KwCoIt
+
+Prob
+
+>     | KwProb
+>     | KwProbLabel
+>     | KwPatPi
+>     | KwSch
+>     | KwSchTy
+>     | KwExpPi
+>     | KwImpPi
+
+Prop
+
+>     | KwProp
+>     | KwAbsurd
+>     | KwTrivial
+>     | KwPrf
+>     | KwAnd
+>     | KwArr
+>     | KwImp
+>     | KwAll
+>     | KwInh
+>     | KwWit
+
+Quotients
+
+>     | KwQuotient
+
+Records
+
+>     | KwRecord
+>     | KwRSig
+>     | KwREmpty
+>     | KwRCons
+
+Sigma
+
+>     | KwFst
+>     | KwSnd
+>     | KwSig
+
+UId
+
+>     | KwUId
+>     | KwTag
+
+>   deriving (Bounded, Enum, Eq, Show, Generic)
+
+...and they look like this:
+
+> key :: Keyword -> String
+
+> key KwAsc        = ":"
+> key KwComma      = ","
+> key KwSemi       = ";"
+> key KwDefn       = ":="
+> key KwUnderscore = "_"
+> key KwEq         = "="
+> key KwBy         = "<="
+
+> key KwSet        = "Set"
+> key KwPi         = "Pi"
+> key KwLambda     = "\\"
+
+> key KwCon        = "con"
+> key KwOut        = "%"
+
+Desc
+
+> key KwMu         = "Mu"
+
+Enum
+
+> key KwEnum       = "Enum"
+> key KwPlus       = "+"
+
+Equality
+
+> key KwEqBlue     = "=="
+
+Free Monad
+
+> key KwMonad      = "Monad"
+> key KwReturn     = "`"  -- rename me
+
+IDesc
+
+> key KwIMu        = "IMu"
+
+Labelled Types
+
+> key KwCall       = "call"
+> key KwLabel      = "<"
+> key KwLabelEnd   = ">"
+> key KwRet        = "return"  -- rename me
+
+Nu
+
+> key KwNu         = "Nu"
+> key KwCoIt       = "CoIt"
+
+Prob
+
+> key KwProb       = "Prob"
+> key KwProbLabel  = "ProbLabel"
+> key KwPatPi      = "PatPi"
+> key KwSch        = "Sch"
+> key KwSchTy      = "SchTy"
+> key KwExpPi      = "ExpPi"
+> key KwImpPi      = "ImpPi"
+
+Prop
+
+> key KwProp       = "Prop"
+> key KwAbsurd     = "FF"
+> key KwTrivial    = "TT"
+> key KwPrf        = ":-"
+> key KwAnd        = "&&"
+> key KwArr        = "->"
+> key KwImp        = "=>"
+> key KwAll        = "All"
+> key KwInh        = "Inh"
+> key KwWit        = "wit"
+
+Quotients
+
+> key KwQuotient   = "Quotient"
+
+Records
+
+> key KwRecord     = "Rec"
+> key KwRSig       = "RSig"
+> key KwREmpty     = "REmpty"
+> key KwRCons      = "RCons"
+
+Sigma
+
+> key KwFst        = "!"
+> key KwSnd        = "-"
+> key KwSig        = "Sig"
+
+UId
+
+> key KwUId        = "UId"
+> key KwTag        = "'"
+
+    key k = error ("key: missing keyword " ++ show k)
+
+It is straightforward to make a translation table, `keywords`:
+
+> keywords :: [(String, Keyword)]
+> keywords = map (\k -> (key k, k)) (enumFromTo minBound maxBound)
+
 
 We use the `HughesPJ` pretty-printing combinators. This section defines
 how to pretty-print everything defined in the Core chapter, and provides

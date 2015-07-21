@@ -19,12 +19,10 @@ import Data.Traversable as Traversable
 import Lens.Family2
 
 import Cochon.Model
-import Cochon.Tactics
 import Cochon.TermController
 
 import DisplayLang.Name
 import DisplayLang.DisplayTm
-import DisplayLang.PrettyPrint
 import DisplayLang.Scheme
 import Distillation.Distiller
 import Distillation.Scheme

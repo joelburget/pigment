@@ -22,7 +22,7 @@ import ProofState.Edition.ProofContext
 import ProofState.Edition.ProofState
 
 import Lens.Family2
-import Lens.Family2.TH
+-- import Lens.Family2.TH
 
 import React
 
@@ -111,7 +111,15 @@ data InteractionState = InteractionState
     , _messages :: [UserMessage]
     } deriving (Generic)
 
-$(makeLenses ''InteractionState)
+-- $(makeLenses ''InteractionState)
+
+-- TEMP stopgap until makeLenses works again
+-- https://github.com/ghcjs/ghcjs/issues/267
+proofCtx f (InteractionState ctx ms) =
+    (\ctx' -> InteractionState ctx' ms) <$> (f ctx)
+
+messages f (InteractionState ctx ms) =
+    (\ms' -> InteractionState ctx ms') <$> (f ms)
 
 startState :: Bwd ProofContext -> InteractionState
 startState pc = InteractionState

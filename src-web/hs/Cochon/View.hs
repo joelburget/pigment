@@ -18,13 +18,11 @@ import React.DOM
 import React.GHCJS
 import React.Rebindable
 
-import Cochon.CommandLexer
 import Cochon.Controller
 import Cochon.Imports
 import Cochon.Model
 import Cochon.Reactify
 
-import DisplayLang.Lexer
 import Distillation.Distiller
 import Distillation.Scheme
 import Evidences.Tm

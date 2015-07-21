@@ -26,7 +26,6 @@ import Distillation.Scheme
 import DisplayLang.DisplayTm
 import DisplayLang.Name
 import DisplayLang.Scheme
-import DisplayLang.Lexer
 import Evidences.Tm
 import Kit.BwdFwd
 import Kit.MissingLibrary hiding ((<>))

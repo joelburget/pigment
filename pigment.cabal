@@ -38,11 +38,9 @@ library
       react-haskell == 2.0.0
   exposed-modules:
     DisplayLang.DisplayTm
-    DisplayLang.Lexer
     DisplayLang.Name
     DisplayLang.PrettyPrint
     DisplayLang.Scheme
-    DisplayLang.TmParse
     Distillation.Distiller
     Distillation.Moonshine
     Distillation.Scheme
@@ -67,7 +65,6 @@ library
     Kit.BwdFwd
     Kit.ListZip
     Kit.MissingLibrary
-    Kit.Parsley
     Kit.Trace
     NameSupply.NameSupplier
     NameSupply.NameSupply
