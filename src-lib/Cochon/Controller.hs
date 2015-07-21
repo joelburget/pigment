@@ -72,43 +72,8 @@ import Debug.Trace
 
 
 dispatch :: Transition -> InteractionState -> InteractionState
-
--- dispatch (ToggleEntry name) state = toggleTerm name state
--- dispatch (GoTo name) state = goToTerm name state
-
-dispatch (TermTransition (GoToTerm name)) state = goToTerm name state
-dispatch (TermTransition (ToggleTerm name)) state = toggleTerm name state
-
 dispatch (TermTransition act) state = termDispatch act state
-
 dispatch _ state = state
-
-
-toggleTerm :: Name -> InteractionState -> InteractionState
-toggleTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
-    case execProofState (toggleEntryVisibility name) ctx of
-        Left err ->
-            let cmd = messageUser err
-                (output, newCtx) = runCmd cmd (state^.proofCtx)
-            in state & proofCtx .~ newCtx
-        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
-
-
-goToTerm :: Name -> InteractionState -> InteractionState
-goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
-    case execProofState (goTo name) ctx of
-        Left err ->
-            let cmd = messageUser err
-                (output, newCtx) = runCmd cmd (state^.proofCtx)
-            in state & proofCtx .~ newCtx
-        Right ctx' -> state{_proofCtx=ctxs :< ctx'}
-
-
-
-runCmd :: Cmd a -> Bwd ProofContext -> (UserMessage, Bwd ProofContext)
-runCmd cmd ctx =
-    let ((_, msg), ctx') = runState (runWriterT cmd) ctx
-    in (msg, ctx')
 
 
 data ContextualInfo = InfoHypotheses | InfoContextual
