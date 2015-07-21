@@ -100,10 +100,8 @@ library
     Tactics.Record
     Tactics.Relabel
     Tactics.Unification
-    Cochon.CommandLexer
     Cochon.Controller
     Cochon.Model
-    Cochon.Tactics
     Cochon.TermController
   ghc-options: -Wall -fwarn-tabs -fdicts-cheap -funbox-strict-fields -fmax-simplifier-iterations=10
 

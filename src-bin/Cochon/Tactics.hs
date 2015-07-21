@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, GADTs, PatternSynonyms, DataKinds,
-  LambdaCase, LiberalTypeSynonyms, MultiParamTypeClasses #-}
+  LambdaCase, LiberalTypeSynonyms, MultiParamTypeClasses, DeriveGeneric #-}
 
 module Cochon.Tactics where
 
@@ -7,8 +7,10 @@ import Control.Applicative hiding (empty)
 import Control.Monad
 import Control.Monad.State
 import qualified Data.Foldable as Foldable
+import GHC.Generics
 import Data.List
 import Data.Monoid
+import Data.Ord
 import Data.String
 import Data.Traversable as Trav
 import qualified Data.Text as T
@@ -65,6 +67,53 @@ import Tactics.PropositionSimplify
 import Tactics.Record
 import Tactics.Relabel
 import Tactics.Unification
+
+
+-- A Cochon tactic consists of:
+--
+-- * `ctName` - the name of this tactic
+-- * `ctDesc` - high level description of the functionality
+-- * `ctFormat` - description of the command format for both parsing and
+--   contextual help
+-- * `ctParse` - parser that parses the arguments for this tactic
+-- * `ctxTrans` - state transition to perform for a given list of arguments and
+--     current context
+-- * `ctHelp` - help text for this tactic
+
+data CochonTactic = CochonTactic
+    { ctName    :: Text
+    , ctMessage :: Text
+    , ctDesc    :: TacticDescription
+    , ctxTrans  :: TacticResult -> Cmd ()
+    -- TODO(joel) - remove
+    , ctHelp    :: TacticHelp
+    } deriving Generic
+
+instance Show CochonTactic where
+    show = T.unpack . ctName
+
+instance Eq CochonTactic where
+    ct1 == ct2 = ctName ct1 == ctName ct2
+
+instance Ord CochonTactic where
+    compare = comparing ctName
+
+-- The help for a tactic is:
+-- * a template showing the syntax of the command
+-- * an example use
+-- * a summary of what the command does
+-- * help for each individual argument (yes, they're named)
+
+data TacticHelp = TacticHelp
+    { template :: Text -- TODO highlight each piece individually
+    , example :: Text
+    , summary :: Text
+
+    -- maps from the name of the arg to its help
+    -- this is not a map because it's ordered
+    , argHelp :: [(Text, Text)]
+    }
+
 
 cochonTactics :: [CochonTactic]
 cochonTactics = sort
