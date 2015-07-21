@@ -4,7 +4,8 @@
 > {-# LANGUAGE GADTs, PatternGuards, PatternSynonyms, DataKinds #-}
 
 > module ProofState.Interface.NameResolution
->     (BScopeContext, inBScope, resolveHere, resolveDiscard, unresolve)
+>     (BScopeContext, inBScope, resolveHere, resolveDiscard, unresolve,
+>     showEntriesAbs)
 >     where
 
 > import Control.Applicative

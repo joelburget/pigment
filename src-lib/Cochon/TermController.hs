@@ -45,25 +45,12 @@ termDispatch (ToggleAnnotate name) state = toggleAnnotate name state
 toggleTerm :: Name -> InteractionState -> InteractionState
 toggleTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
     case execProofState (toggleEntryVisibility name) ctx of
-        Left err ->
-            let cmd = messageUser err
-                (output, newCtx) = runCmd cmd (state^.proofCtx)
-            in state & proofCtx .~ newCtx
+        Left err -> state & messages <>~ [err]
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
 
 
 goToTerm :: Name -> InteractionState -> InteractionState
 goToTerm name state@InteractionState{_proofCtx=ctxs :< ctx} =
     case execProofState (goTo name) ctx of
-        Left err ->
-            let cmd = messageUser err
-                (output, newCtx) = runCmd cmd (state^.proofCtx)
-            in state & proofCtx .~ newCtx
+        Left err -> state & messages <>~ [err]
         Right ctx' -> state{_proofCtx=ctxs :< ctx'}
-
-
-
-runCmd :: Cmd a -> Bwd ProofContext -> (UserMessage, Bwd ProofContext)
-runCmd cmd ctx =
-    let ((_, msg), ctx') = runState (runWriterT cmd) ctx
-    in (msg, ctx')

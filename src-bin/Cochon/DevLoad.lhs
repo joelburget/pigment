@@ -3,16 +3,19 @@ Loading Developments
 
 > {-# LANGUAGE TypeOperators #-}
 
-> module Cochon.DevLoad (devLoad, devLoad', doCTactics) where
+> module Cochon.DevLoad (devLoad, devLoad', doCTactics, pTactic) where
 
-> import Control.Monad.State
+> import Control.Applicative
 > import Control.Error
 > import Control.Exception (catch)
-> import Control.Applicative
+> import Control.Monad.State
+> import Control.Monad.Writer
 > import Data.Foldable as Foldable
 > import Data.Functor
 > import Data.List
 > import Data.Traversable
+> import qualified Data.Text as T
+> import Data.Text (Text)
 > import System.Exit
 > import System.FilePath
 > import System.IO
@@ -20,8 +23,9 @@ Loading Developments
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 > import Kit.Parsley
+> import Kit.Trace
+> import Cochon.CommandLexer
 > import Cochon.Controller
-> import Cochon.Model
 > import Cochon.Tactics
 > import DisplayLang.DisplayTm
 > import DisplayLang.Name
@@ -346,9 +350,37 @@ The following companion function takes care of the dirty details:
 >                             <|> closeBlockComment *> eatNestedComments (i-1)
 >                             <|> nextToken *> eatNestedComments i
 
+> tacticNamed :: [CochonTactic] -> Text -> Maybe CochonTactic
+> tacticNamed tacs x = Foldable.find ((== x) . ctName) tacs
+
+> pTactic :: [CochonTactic] -> Parsley Token CTData
+> pTactic tacs = do
+>     x <- ident <|> (key <$> anyKeyword)
+>     case tacticNamed tacs (T.pack x) of
+>         Just ct -> do
+>             elabTrace $ "found tactic named " ++ (T.unpack $ ctName ct)
+> -- parseTactic :: TacticDescription -> Parsley Token TacticResult
+>             args <- parseTactic (ctDesc ct)
+>             elabTrace $ "found args"
+>
+>             -- trailing semicolons are cool, or not
+>             -- XXX(joel)
+>             optional (tokenEq (Keyword KwSemi))
+>
+>             -- this parser is not gonna be happy if there are args left
+>             -- over
+>             return (ct, args)
+>         Nothing -> fail "unknown tactic name."
+
 
 > pTactics :: [CochonTactic] -> Parsley Token [CTData]
 > pTactics tacs = pSepTerminate (keyword KwSemi) (pTactic tacs)
+
+
+> runCmd :: Cmd a -> Bwd ProofContext -> (String, Bwd ProofContext)
+> runCmd cmd ctx =
+>     let ((_, msg), ctx') = runState (runWriterT cmd) ctx
+>     in (msg, ctx')
 
 
 > doCTactic :: CTData -> Bwd ProofContext -> IO (Bwd ProofContext)

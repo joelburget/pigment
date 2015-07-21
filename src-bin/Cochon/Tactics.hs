@@ -6,6 +6,7 @@ module Cochon.Tactics where
 import Control.Applicative hiding (empty)
 import Control.Monad
 import Control.Monad.State
+import Control.Monad.Writer
 import qualified Data.Foldable as Foldable
 import GHC.Generics
 import Data.List
@@ -21,7 +22,7 @@ import Control.Error
 import Data.Void
 
 import Cochon.CommandLexer
-import Cochon.Model
+import Cochon.Model (runProofState)
 import Cochon.PrettyProofState
 import DisplayLang.Lexer
 import DisplayLang.Name
@@ -70,60 +71,8 @@ import Tactics.Relabel
 import Tactics.Unification
 
 
--- A Cochon tactic consists of:
---
--- * `ctName` - the name of this tactic
--- * `ctDesc` - high level description of the functionality
--- * `ctFormat` - description of the command format for both parsing and
---   contextual help
--- * `ctParse` - parser that parses the arguments for this tactic
--- * `ctxTrans` - state transition to perform for a given list of arguments and
---     current context
--- * `ctHelp` - help text for this tactic
-
-data CochonTactic = CochonTactic
-    { ctName    :: Text
-    , ctMessage :: Text
-    , ctDesc    :: TacticDescription
-    , ctxTrans  :: TacticResult -> Cmd ()
-    -- TODO(joel) - remove
-    , ctHelp    :: TacticHelp
-    } deriving Generic
-
-instance Show CochonTactic where
-    show = T.unpack . ctName
-
-instance Eq CochonTactic where
-    ct1 == ct2 = ctName ct1 == ctName ct2
-
-instance Ord CochonTactic where
-    compare = comparing ctName
-
--- The help for a tactic is:
--- * a template showing the syntax of the command
--- * an example use
--- * a summary of what the command does
--- * help for each individual argument (yes, they're named)
-
-data TacticHelp = TacticHelp
-    { template :: Text -- TODO highlight each piece individually
-    , example :: Text
-    , summary :: Text
-
-    -- maps from the name of the arg to its help
-    -- this is not a map because it's ordered
-    , argHelp :: [(Text, Text)]
-    }
-
-
-setCtx :: Bwd ProofContext -> Cmd ()
-setCtx = put
-
-getCtx :: Cmd (Bwd ProofContext)
-getCtx = get
-
-tellUser :: T.Text -> Cmd ()
-tellUser = messageUser . textUserMessage Green
+tellTermHere :: (TY :>: INTM) -> ProofState String
+tellTermHere tt = renderHouseStyle <$> prettyHere tt
 
 
 cochonTactics :: [CochonTactic]
@@ -186,7 +135,7 @@ simpleCT :: Text
          -> Historic
          -> Text
          -> TacticDescription
-         -> (TacticResult -> ProofState UserMessage)
+         -> (TacticResult -> ProofState String)
          -> TacticHelp
          -> CochonTactic
 simpleCT name hist desc fmt eval help = CochonTactic
@@ -200,7 +149,7 @@ simpleCT name hist desc fmt eval help = CochonTactic
 
 nullaryCT :: Text
           -> Historic
-          -> ProofState UserMessage
+          -> ProofState String
           -> Text
           -> CochonTactic
 nullaryCT name hist eval desc = simpleCT
@@ -216,7 +165,7 @@ nullaryCT name hist eval desc = simpleCT
 
 
 unaryExCT :: Text
-          -> (DExTmRN -> ProofState UserMessage)
+          -> (DExTmRN -> ProofState String)
           -> Text
           -> CochonTactic
 unaryExCT name eval help = simpleCT
@@ -240,7 +189,7 @@ unaryExCT name eval help = simpleCT
 
 
 unaryInCT :: Text
-          -> (DInTmRN -> ProofState UserMessage)
+          -> (DInTmRN -> ProofState String)
           -> Text
           -> CochonTactic
 unaryInCT name eval desc = simpleCT
@@ -257,7 +206,7 @@ unDP (DP ref ::$ []) = ref
 
 
 unaryNameCT :: Text
-            -> (RelName -> ProofState UserMessage)
+            -> (RelName -> ProofState String)
             -> Text
             -> CochonTactic
 unaryNameCT name eval desc = simpleCT
@@ -270,7 +219,7 @@ unaryNameCT name eval desc = simpleCT
 
 
 unaryStringCT :: Text
-              -> (Text -> ProofState UserMessage)
+              -> (Text -> ProofState String)
               -> Text
               -> CochonTactic
 unaryStringCT name eval desc = simpleCT
@@ -564,8 +513,8 @@ undoTac = CochonTactic
     , ctxTrans = \_ -> do
           locs :< loc <- getCtx
           case locs of
-              B0  -> tellUser "Cannot undo."  >> setCtx (locs :< loc)
-              _   -> tellUser "Undone."       >> setCtx locs
+              B0  -> tell "Cannot undo."  >> setCtx (locs :< loc)
+              _   -> tell "Undone."       >> setCtx locs
     , ctHelp = TacticHelp
           "undo"
           "undo"
@@ -830,7 +779,7 @@ The `elm` Cochon tactic elaborates a term, then starts the scheduler to
 stabilise the proof state, and returns a pretty-printed representation
 of the final type-term pair (using a quick hack).
 -}
-elmCT :: DExTmRN -> ProofState UserMessage
+elmCT :: DExTmRN -> ProofState String
 elmCT tm = do
     suspend ("elab" :<: sigSetTM :=>: sigSetVAL) (ElabInferProb tm)
     startScheduler
@@ -944,7 +893,7 @@ relabelTac = unaryExCT "relabel" (\ ex -> relabel ex >> return "Relabelled.")
 --
 -- propsimplifyTac = nullaryCT "propsimplify" propSimplifyTactic
 --     "applies propositional simplification to the current goal."
-propSimplifyTactic :: ProofState UserMessage
+propSimplifyTactic :: ProofState String
 propSimplifyTactic = do
     subs <- propSimplifyHere
     case subs of
@@ -964,7 +913,7 @@ propSimplifyTactic = do
 -- pretty-printed string representation. Note that it works in its own
 -- module which it discards at the end, so it will not leave any subgoals
 -- lying around in the proof state.
-infoElaborate :: DExTmRN -> ProofState UserMessage
+infoElaborate :: DExTmRN -> ProofState String
 infoElaborate tm = draftModule "__infoElaborate" $ do
     (tm' :=>: tmv :<: ty) <- elabInfer' tm
     tm'' <- mQuote (ty :>: tmv)
@@ -973,14 +922,14 @@ infoElaborate tm = draftModule "__infoElaborate" $ do
 
 -- The `infoInfer` command is similar to `infoElaborate`, but it returns a
 -- string representation of the resulting type.
-infoInfer :: DExTmRN -> ProofState UserMessage
+infoInfer :: DExTmRN -> ProofState String
 infoInfer tm = draftModule "__infoInfer" $ do
     (_ :<: ty) <- elabInfer' tm
     ty' <- mQuote (SET :>: ty)
     tellTermHere (SET :>: ty')
 
 
--- infoScheme :: RelName -> ProofState UserMessage
+-- infoScheme :: RelName -> ProofState String
 -- infoScheme x = do
 --     (_, as, ms) <- resolveHere x
 --     case ms of
@@ -992,7 +941,7 @@ infoInfer tm = draftModule "__infoInfer" $ do
 
 
 -- The `infoWhatIs` command displays a term in various representations.
-infoWhatIs :: DExTmRN -> ProofState UserMessage
+infoWhatIs :: DExTmRN -> ProofState String
 infoWhatIs tmd = draftModule "__infoWhatIs" $ do
     tm :=>: tmv :<: tyv <- elabInfer' tmd
     tmq <- mQuote (tyv :>: tmv)
@@ -1011,7 +960,7 @@ infoWhatIs tmd = draftModule "__infoWhatIs" $ do
         ,  "Pretty-printed type:", fromString (renderHouseStyle (pretty tys maxBound))
         ]
 
-byCTactic :: Maybe RelName -> DExTmRN -> ProofState UserMessage
+byCTactic :: Maybe RelName -> DExTmRN -> ProofState String
 byCTactic n e = do
     elimCTactic n e
     optional problemSimplify           -- simplify first method
@@ -1020,7 +969,7 @@ byCTactic n e = do
     optional seekGoal                  -- jump to goal
     return "Eliminated and simplified."
 
-defineCTactic :: DExTmRN -> DInTmRN -> ProofState UserMessage
+defineCTactic :: DExTmRN -> DInTmRN -> ProofState String
 defineCTactic rl tm = do
     relabel rl
     elabGiveNext (DLRET tm)
@@ -1029,7 +978,7 @@ defineCTactic rl tm = do
 matchCTactic :: [(Text, DInTmRN)]
              -> DExTmRN
              -> DInTmRN
-             -> ProofState UserMessage
+             -> ProofState String
 matchCTactic xs a b = draftModule "__match" $ do
     rs <- traverse matchHyp xs
     (_ :=>: av :<: ty) <- elabInfer' a
@@ -1044,7 +993,7 @@ matchCTactic xs a b = draftModule "__match" $ do
         r   <- assumeParam (T.unpack s :<: tt)
         return (r, Nothing)
 
-elimCTactic :: Maybe RelName -> DExTmRN -> ProofState UserMessage
+elimCTactic :: Maybe RelName -> DExTmRN -> ProofState String
 elimCTactic c r = do
     c' <- traverse resolveDiscard c
     (e :=>: _ :<: elimTy) <- elabInferFully r
@@ -1053,15 +1002,15 @@ elimCTactic c r = do
     return "Eliminated. Subgoals awaiting work..."
 
 
-simpleOutput :: Historic -> ProofState UserMessage -> Cmd ()
+simpleOutput :: Historic -> ProofState String -> Cmd ()
 simpleOutput hist eval = do
     locs :< loc <- getCtx
     case runProofState (eval <* startScheduler) loc of
         Left err -> do
             setCtx (locs :< loc)
-            messageUser (UserMessage [UserMessagePart "I'm sorry, Dave. I'm afraid I can't do that." Nothing (Just err) Nothing Green])
+            tell "I'm sorry, Dave. I'm afraid I can't do that."
         Right (msg, loc') -> do
             setCtx $ case hist of
                 Historic -> locs :< loc :< loc'
                 Forgotten -> locs :< loc'
-            messageUser msg
+            tell msg
