@@ -48,6 +48,11 @@ Because of a limitation of GHC `deriving Traversable`, we define two
 mutually recursive data types instead of taking a `Dir` parameter.
 Thanks to this hack, we can use `deriving Traversable`.
 
+Of the two type parameters, the first, `p`, represents the type of variable
+names in embedded (non-display) terms. I believe this only rears its head in
+`InTmWrap` and `ExTmWrap`, but am not sure. The second, `x`, represents the
+type of variable names in display terms.
+
 > data DInTm :: * -> * -> * where
 >     DL     :: DScope p x       ->  DInTm p x -- lambda
 >     DC     :: Can (DInTm p x)  ->  DInTm p x -- canonical

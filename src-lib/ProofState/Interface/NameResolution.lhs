@@ -3,7 +3,9 @@
 
 > {-# LANGUAGE GADTs, PatternGuards, PatternSynonyms, DataKinds #-}
 
-> module ProofState.Interface.NameResolution where
+> module ProofState.Interface.NameResolution
+>     (BScopeContext, inBScope, resolveHere, resolveDiscard, unresolve)
+>     where
 
 > import Control.Applicative
 > import Control.Arrow
