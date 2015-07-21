@@ -22,6 +22,7 @@ import Data.Void
 
 import Cochon.CommandLexer
 import Cochon.Model
+import Cochon.PrettyProofState
 import DisplayLang.Lexer
 import DisplayLang.Name
 import DisplayLang.TmParse
