@@ -805,9 +805,7 @@ extract a useful name from a binder.
 > fortran :: Tm In x -> String
 > fortran (L (x :. _))  | not (null x) = x
 > fortran (L (H _ x _)) | not (null x) = x
-> -- XXX(joel) this is unacceptable. Actually, on second thought we should
-> -- never get here... This message is unlikely to be helpful, but worth a try.
-> fortran xt = "(XXX(joel) fortran unexpectedly called)"
+> fortran _ = "_"
 
 Similarly, it is useful to extract name advice from a `REF`.
 
