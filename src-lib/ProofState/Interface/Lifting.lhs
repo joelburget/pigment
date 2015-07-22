@@ -33,8 +33,8 @@ represented by de Brujin indices. It makes key use of the `(-||)` mangler.
 Binding a term
 --------------
 
-The `parBind` function $\lambda$-binds a term over a list $\Delta$ of
-entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
+The `parBind` function lambda-binds a term over a list Delta of
+entries and lambda- and Pi-binds over a list nabla of entries.
 
 > parBind :: Bwd (Entry Bwd) -- Delta
 >         -> Bwd (Entry Bwd) -- Nabla
@@ -59,7 +59,7 @@ entries and $\lambda$- and $\Pi$-binds over a list $\nabla$ of entries.
 Binding a type
 --------------
 
-The `liftType` function $\Pi$-binds a type over a list of entries.
+The `liftType` function Pi-binds a type over a list of entries.
 
 > liftType :: Entries -> INTM -> INTM
 > liftType es = liftType' (bwdList $ foldMap param es)
@@ -79,9 +79,9 @@ The `liftType` function $\Pi$-binds a type over a list of entries.
 Making a type out of a goal
 ---------------------------
 
-The `inferGoalType` function $\Pi$-binds the type when it encounters a
-$\lambda$ in the list of entries, and produces `SET` when it encounters
-a $\Pi$.
+The `inferGoalType` function Pi-binds the type when it encounters a
+lambda in the list of entries, and produces `SET` when it encounters
+a Pi.
 
 > inferGoalType :: Bwd (Entry Bwd) -> INTM -> INTM
 > inferGoalType B0 t = t
