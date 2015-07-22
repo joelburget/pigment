@@ -88,6 +88,16 @@ let styles = {
     border: '4px solid white'
   },
 
+  pair: {
+    display: 'inline-flex',
+    flexDirection: 'row',
+    borderStyle: 'solid',
+    borderColor: Colors.teal100,
+    borderWidth: '1px 1px 1px 4px',
+    margin: '2px',
+    alignItems: 'center',
+  },
+
   err: { backgroundColor: Colors.orange700 },
 };
 
@@ -372,7 +382,7 @@ export class SchemeLayout extends React.Component {
 export class PairLayout extends React.Component {
   render() {
     return (
-      <div style={styles.scheme}>
+      <div style={styles.pair}>
         &lang;{reactJoin(getChildren(this.props.children), ",")}&rang;
       </div>
     );
@@ -517,7 +527,7 @@ export class DScopeLayout extends React.Component {
 export class DInTmRNLayout extends React.Component {
   render() {
     return (
-      <div className="dintmrn" style={styles.dInTmRN}>
+      <div className="dintmrn" style={{}}>
         {this.props.children}
       </div>
     );
