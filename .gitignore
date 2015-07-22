@@ -23,3 +23,4 @@ site/public/
 tests/files/.tests
 npm-debug.log
 designmode/assets/all.js
+.DS_Store
