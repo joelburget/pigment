@@ -67,7 +67,9 @@ provided type under the given module.
 >           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm AnchNo
 >                                  emptyMetadata
 >           return ref
->       _    -> throwDTmStr "assumeParam: only possible for modules."
+>       nonModule -> throwDTmStr (
+>           "assumeParam: only possible for modules.\n" ++
+>           "instead found: " ++ show nonModule)
 
 `Pi`-abstraction
 ----------------
