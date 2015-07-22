@@ -49,10 +49,10 @@ dist/doc/html/pigment/index.html: $(SANDBOX) $(LIB_SOURCE_FILES)
 # this has a hidden dependency on sandbox-installed dash-haskell
 dash: dist/doc/html/pigment/index.html
 	rm -rf docsets
-	../sandbox/.cabal-sandbox/bin/dash-haskell -c pigment.cabal -o docsets
+	$(SANDBOX)/bin/dash-haskell -c pigment.cabal -o docsets
 
 lint:
-	../sandbox/.cabal-sandbox/bin/hlint src-lib
+	$(SANDBOX)/bin/hlint src-lib
 
 # *caution*
 docs:
