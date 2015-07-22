@@ -49,6 +49,7 @@ To cope with shadowing, we will need some form of `RelativeAnchor`:
 
 With shadowing punished by De Bruijn. Meanwhile, let's keep it simple.
 
+> -- similar to lookupName - maybe they should be the same?
 > resolveAnchor :: EntityAnchor -> ProofStateT e (Maybe REF)
 > resolveAnchor anchor = do
 >   scope <- getInScope

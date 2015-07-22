@@ -65,6 +65,19 @@ Section [Tactics.Elimination.analysis](#Tactics.Elimination.analysis).
 >     putDevTip $ Unknown (ty :=>: tyv)
 >     return $ applySpine ref inScope
 
+
+> withOpenDefinition :: ProofState a -> ProofState a
+> withOpenDefinition run = do
+>     CDefinition LETG ref@(n := defn) _ ty anch meta <- getCurrentEntry
+>     Unknown (_ :=>: tyv) <- getDevTip
+>     putCurrentEntry (CModule n DevelopData meta)
+>     putDevTip Module
+>     x <- run
+>     putCurrentEntry $ CDefinition LETG ref (last n) ty anch meta
+>     putDevTip $ Unknown (ty :=>: tyv)
+>     return x
+
+
 The last usage of modules is to mess around: introducing things in the
 proof context to later, in one go, remove it all. One need to be
 extremely careful with the removed objects: the risk of introducing
