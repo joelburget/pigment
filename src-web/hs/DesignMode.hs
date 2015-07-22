@@ -1,5 +1,5 @@
 {-# LANGUAGE RebindableSyntax, OverloadedStrings #-}
-module DesignMode (main) where
+module Main (main) where
 
 import Prelude hiding ((>>), return)
 
@@ -10,21 +10,24 @@ import React.DOM
 import React.GHCJS
 import React.Rebindable
 
+import Cochon.Imports
 import Cochon.Model
 import Cochon.Reactify
 import DisplayLang.DisplayTm
 import Evidences.Tm
+
 
 page_ :: () -> ReactNode Void
 page_ = classLeaf $ smartClass
     { React.name = "page"
     , transition = \(state, sig) -> (state, Nothing)
     , renderFn = \_ _ -> div_ [] $ do
-          h1_ [] "hello world!"
+          h1_ [] "Design Mode!"
           pairs_
           sigmas_
           pis_
           scopes_
+          dataLayouts_
     }
 
 -- relnames_ = div_ [] $ do
@@ -42,6 +45,7 @@ pairs_ = div_ [ class_ "demo" ] $ do
     "DPAIR (DPAIR DUNIT DVOID) (DPAIR DUNIT DVOID)"
     pair_ $ DPAIR (DPAIR DUNIT DVOID) (DPAIR DUNIT DVOID)
 
+
 sigmas_ :: ReactNode TermTransition
 sigmas_ = div_ [ class_ "demo" ] $ do
     h2_ [] "sigmas"
@@ -58,6 +62,7 @@ sigmas_ = div_ [ class_ "demo" ] $ do
     "DSIGMA DUNIT DUNIT"
     sigma_ $ DSIGMA DUNIT DUNIT
 
+
 pis_ :: ReactNode TermTransition
 pis_ = div_ [ class_ "demo" ] $ do
     h2_ [] "pis"
@@ -70,6 +75,7 @@ pis_ = div_ [ class_ "demo" ] $ do
 
     "DPI DUNIT (DL (\"unit\" ::. DUNIT))"
     pi_ $ DPI DUNIT (DL ("unit" ::. DUNIT))
+
 
 scopes_ :: ReactNode TermTransition
 scopes_ = div_ [ class_ "demo" ] $ do
@@ -92,6 +98,11 @@ scopes_ = div_ [ class_ "demo" ] $ do
 --     dInTmRN_ SET
 --     dInTmRN_ ARR SET SET
 
+dataLayouts_ :: ReactNode TermTransition
+dataLayouts_ = div_ [ class_ "demo" ] $ do
+    h2_ [] "data"
+
+    locally dataLayout_
 
 
 main :: IO ()

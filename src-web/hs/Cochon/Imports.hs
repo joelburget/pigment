@@ -84,6 +84,8 @@ justPiLayout_ :: ReactNode TermTransition
               -> ReactNode TermTransition
 
 
+dataLayout_ :: ReactNode Void
+
 #ifdef __GHCJS__
 
 
@@ -276,8 +278,13 @@ dependentParamLayout_ name =
 foreign import javascript "window.PigmentView.JustPiLayout"
     justPiLayout :: ImportedClass NoProps TermTransition
 
-
 justPiLayout_ s t = importParentClass justPiLayout noProps (s <> t)
+
+
+foreign import javascript "window.PigmentView.DataLayout"
+    dataLayout :: ImportedClass NoProps Void
+
+dataLayout_ = importLeafClass dataLayout noProps
 
 
 #else
@@ -340,5 +347,7 @@ relnamePieceLayout_ = error "relnamePieceLayout_ not available from ghc"
 dependentParamLayout_ = error "dependentParamLayout_ not available from ghc"
 
 justPiLayout_ = error "justPiLayout_ not available from ghc"
+
+dataLayout_ = error "dataLayout_ not available from ghc"
 
 #endif
