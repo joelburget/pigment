@@ -7,6 +7,7 @@ import Control.Exception
 import Control.Monad.State
 import Text.PrettyPrint.HughesPJ
 
+import Cochon.PrettyProofState
 import Kit.BwdFwd
 import DisplayLang.DisplayTm
 import DisplayLang.Lexer
@@ -49,40 +50,46 @@ myPrint = putStrLn . HsColour.hscolour (HsColour.TTYg HsColour.XTerm256Compatibl
 --          -> ProofState (EXTM :=>: VAL)
 
 
-script :: ProofState ()
-script = do
-  elabLet ("S" :<: SchType DSET)
-  _ <- many goOut
-  return ()
+-- script :: ProofState ()
+-- script = do
+--   elabLet ("S" :<: SchType DSET)
+--   _ <- many goOut
+--   return ()
 
-script1 :: ProofState ()
-script1 = do
-    makeModule DevelopModule "Math"
-    goIn
-    makeModule DevelopModule "Algebra"
-    goIn
+-- script1 :: ProofState ()
+-- script1 = do
+--     makeModule DevelopModule "Math"
+--     goIn
+--     makeModule DevelopModule "Algebra"
+--     goIn
 
-    -- let scheme = SchExplicitPi ("x" :<: SchType DSET) (SchType DSET)
-    let scheme = SchType DSET
-    elabLet ("ring" :<: scheme)
-    optional problemSimplify
-    _ <- many goOut
-    return ()
+--     -- let scheme = SchExplicitPi ("x" :<: SchType DSET) (SchType DSET)
+--     let scheme = SchType DSET
+--     elabLet ("ring" :<: scheme)
+--     optional problemSimplify
+--     _ <- many goOut
+--     return ()
 
-
-script'' :: ProofState ()
-script'' = do
-
-    _ <- elabData "Foo" [] []
-    _ <- many goOut
-    return ()
 
 script' :: ProofState ()
 script' = do
+
+    _ <- emptyData "Foo"
+
+    withOpenDefinition $ do
+        _ <- addTypeParam ("x", DSET)
+        _ <- addTypeParam ("y", DUNIT)
+        return ()
+
+    _ <- many goOut
+    return ()
+
+script :: ProofState ()
+script = do
         -- result of `parse pDInTm [Identifier "Nat"]`
     let nat = DN (DP [("Nat", Rel 0)] ::$ [])
         -- result of `parse pDInTm [Identifier "Nat", Keyword KwArr, Identifier "Nat" ]`
-        natToNat = DC (Pi nat (DL (DK nat)))
+        natToNat = DARR nat nat
 
     -- data Nat := ('z : Nat) ; ('s : Nat -> Nat) ;
     _ <- elabData "Nat"
@@ -91,14 +98,20 @@ script' = do
              -- schemes
              [ ("z", nat), ("s", natToNat) ]
 
-    -- let plus (m : Nat)(n : Nat) : Nat ;
-    let plusScheme = SchExplicitPi
-                         ("m" :<: SchType nat)
-                         (SchExplicitPi
-                             ("n" :<: SchType nat)
-                             (SchType nat)
-                         )
-    _ <- elabLet ("plus" :<: plusScheme)
+    -- let lst = DLAV "x" (DN (DP [("Lst", Rel 0)] ::$ [A (]))
+    --     consTy = DPIV DARR (
+
+    -- data Lst x := ('nil : Lst x) ; ('cons : x -> Lst x -> Lst x) ;
+
+
+    -- -- let plus (m : Nat)(n : Nat) : Nat ;
+    -- let plusScheme = SchExplicitPi
+    --                      ("m" :<: SchType nat)
+    --                      (SchExplicitPi
+    --                          ("n" :<: SchType nat)
+    --                          (SchType nat)
+    --                      )
+    -- _ <- elabLet ("plus" :<: plusScheme)
 
     -- root
     _ <- many goOut
@@ -118,7 +131,7 @@ main = do
               myPrint ctx
               putStrLn "\n\n"
               putStrLn view
-    val `catch` \ (ex :: PiTyException) -> showPity ex
+    val `catch` \ (ex :: PiTyException) -> putStrLn (showPity ex)
 
 -- Given a proof state command and a context, we can run the command with
 -- `runProofState` to produce a message (either the response from the command

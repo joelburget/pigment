@@ -45,22 +45,59 @@ data ElabResult = ElabResult
     }
 
 elabCons :: String
+         -- ^ Name of the *type* constructor
          -> INTM
+         -- ^ The kind of this data type... Example (defining Either a b), this
+         -- is 'a -> b -> SET'
          -> [Elim VAL]
+         -- ^ The type parameters
          -> (String , DInTmRN)
+         -- ^ *This* constructor - the one we're defining
          -> ProofState ElabResult
-elabCons nom ty ps (s, t) = do
-    make ((AnchTy s) :<: ARR ty SET)
+elabCons dataTyName ty ps (ctorName, ctorScheme) = do
+    -- Making a description -- an arrow from the kind of this type to SET.
+    -- So...
+    --
+    -- * 'Either a b' - the data type we're constructing.
+    --
+    -- * `ty` = `a -> b -> SET`
+    --
+    -- * Descriptions (only build one per call):
+    --
+    --   - 'LEFT : (a -> b -> SET) -> SET'
+    --
+    --   - 'RIGHT : (a -> b -> SET) -> SET'
+    make (AnchTy ctorName :<: ARR ty SET)
     goIn
-    r <- lambdaParam nom
-    (tyi :=>: v) <- elabGive' t
-    (x, i, j, y) <- ty2desc r ps (v $$ A (NP r))
-    goOut
-    return $ ElabResult s tyi x i j y
+    r <- lambdaParam dataTyName
 
--- Build a "levitated" description of this type
-ty2desc :: REF -> [Elim VAL] -> VAL ->
-           ProofState (INTM, [String], [String], [REF] -> INTM)
+    -- I guess this constructor's scheme fills the hole we're looking at
+    (tyi :=>: v) <- elabGive' ctorScheme
+
+    -- Now actually build the description
+    (x, i, j, y) <- ty2desc r ps (v $$ A (NP r))
+
+    goOut
+    return $ ElabResult ctorName tyi x i j y
+
+
+-- | Build a "levitated" description of this type
+--
+-- Returns:
+--
+--   1. A description of the data type
+--
+--   2. The list of argument names
+--
+--   3. The list of rec (?) argument names
+--
+--   4. A constructor
+ty2desc :: REF
+        -- ^ Reference to *this* data type
+        -> [Elim VAL]
+        -- ^ ?
+        -> VAL
+        -> ProofState (INTM, [String], [String], [REF] -> INTM)
 ty2desc r ps (PI a b) = do
     -- Find something to call b.
     let anom = fortran b
@@ -98,6 +135,8 @@ ty2desc r ps x = do
     unless b $ throwDTmStr "C doesn't target T"
     return (CONSTD UNIT, [], [], \[] -> VOID)
 
+
+-- | Get a description
 ty2h :: REF -> [Elim VAL] -> VAL -> ProofState (INTM, Int)
 ty2h r ps (PI a b) = do
     if occurs r a
@@ -111,9 +150,11 @@ ty2h r ps (PI a b) = do
           _ -> (SIGMA a b', i + 1)
 ty2h r ps x = do
     b <- withNSupply $ equal (SET :>: (x, NP r $$$ ps))
-    unless b $ throwDTmStr "Not SP"
+    unless b $ throwDTmStr "Not strictly positive"
     return (UNIT, 0)
 
+
+-- | Find out whether any parameters match the given ref!
 occursM :: REF -> Mangle (Constant Any) REF REF
 occursM r = Mang
     {  mangP = \ x _ -> Constant (Any (r == x))
@@ -121,6 +162,8 @@ occursM r = Mang
     ,  mangB = \ _ -> occursM r
     }
 
+
+-- | Swap the occurrences of r and s. Why...
 swapM :: REF -> REF -> Mangle Identity REF REF
 swapM r s = Mang
     {  mangP = \ x xes ->
@@ -130,6 +173,8 @@ swapM r s = Mang
     ,  mangB = \ _ -> swapM r s
     }
 
+
+-- | Replace references to r with bound variable i
 capM :: REF -> Int -> Mangle Identity REF REF
 capM r i = Mang
     {  mangP = \ x xes ->
@@ -139,9 +184,12 @@ capM r i = Mang
     ,  mangB = \ _ -> capM r (i+1)
     }
 
+
+-- | Does the ref occur anywhere in the term?
 occurs :: REF -> INTM -> Bool
 occurs r i = getAny (getConstant (occursM r % i))
 
+-- | Uncurry v (with i remaining tuple pieces)
 uncur :: Int -> EXTM -> EXTM -> INTM
 uncur 1 v t = N (v :$ A (N t))
 uncur i v t = uncur (i - 1) (v :$ A (N (t :$ Fst))) (t :$ Snd)
@@ -157,18 +205,70 @@ makeCon e t (ElabResult s ty _ i _ body) = do
     giveOutBelow $ CON (PAIR (N c) (body rs))
     return ()
 
+
+-- Fold over all the type parameters, building up
 mkAllowed :: [(String, EXTM, REF)] -> (INTM, INTM)
 mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
     mkAllowedHelp (x, ty, r) (allowingTy, allowedTy) =
+
+            -- Turn allowingTy into a lambda taking x as a parameter
         let allowingTy' = L $ x :. (capM r 0 %% allowingTy)
+
+            -- Nevermind, we actually want 'Pi(ty, \n -> allowingTy)'
             allowingTy'' = PI (N ty) allowingTy'
+
+            --
             allowedBy = ALLOWEDCONS
                 (N ty)
                 allowingTy'
-                (N (P refl :$ A SET :$ A (PI (N ty) allowingTy')))
+                (N (P refl :$ A SET :$ A allowingTy''))
                 (NP r)
                 allowedTy
         in (allowingTy'', allowedBy)
+
+
+emptyData :: String
+          -> ProofState (EXTM :=>: VAL)
+emptyData name = do
+    makeModule DevelopData name
+    goIn
+    moduleToGoal SET
+
+
+-- XXX huge TODO:
+-- figure out how to handle changes when this thing is in use
+addTypeParam :: (String, DInTmRN) -> ProofState REF -- (EXTM :=>: VAL)
+addTypeParam (name, ty) = do
+    make $ AnchParTy name :<: SET
+    goIn
+    tyTm :=>: tyVal <- elabGive ty
+    assumeParam (name :<: (N tyTm :=>: tyVal))
+
+
+addConstructor :: String
+               -- ^ Name of the type constructor
+               --
+               -- TODO(joel) I'm sure this can be recovered reliably from the
+               -- context
+               -> (String, DInTmRN)
+               -- ^ Name and scheme of constructor to build
+               --
+               -- TODO(joel) curry?
+               -> ProofState ()
+addConstructor tyName (name, scheme) = do
+    CDefinition LETG ref@(n := (_ :<: ty)) _ _ anch meta <- getCurrentEntry
+
+    let elims =
+                   (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
+                          SET
+                          pars')
+
+    -- first build the description
+    elabCons tyName tyTyTODO elims
+
+
+    -- now build the actual constructor
+
 
 elabData :: String
          -- ^ Name of the data type
@@ -194,16 +294,23 @@ elabData nom pars scs = do
           goIn
           yt :=>: yv <- elabGive y
           r <- assumeParam (x :<: (N yt :=>: yv))
+
+          -- name, type, param ref
           return (x, yt, r)
 
       moduleToGoal SET
 
       -- we need to figure out the type of all the constructors
       cs <- for scs $
+
           elabCons nom
+
+                   -- type pointing from all the type parameters to SET
                    (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
                           SET
                           pars')
+
+                   -- apply to all the parameters
                    (map (\(_, _, r) -> A (NP r)) pars')
 
       -- and constructor names
@@ -238,26 +345,40 @@ elabData nom pars scs = do
       -- the label is assigned throughout, so the label will be preserved
       -- when eliminating by induction.
 
-      makeModule DevelopOther "Ind"
-      goIn
-      v <- assumeParam
-        (comprefold (concatMap recArgNames cs) :<: (N dty :=>: dtyv))
-      let indTm = P (lookupOpRef inductionOp) :$ A (N d) :$ A (NP v)
-      indV :<: indTy <- inferHere indTm
-      moduleToGoal (setLabel anchor indTy)
-      giveOutBelow (N indTm)
+--       makeModule DevelopOther "Ind"
+--       goIn
+--       v <- assumeParam
+--         (allCommonPrefix (concatMap recArgNames cs) :<: (N dty :=>: dtyv))
+--       let indTm = P (lookupOpRef inductionOp) :$ A (N d) :$ A (NP v)
+--       indV :<: indTy <- inferHere indTm
+--       moduleToGoal (setLabel anchor indTy)
+--       giveOutBelow (N indTm)
 
       giveOutBelow $ N dty
 
-compre :: Eq a => [a] -> [a] -> [a]
-compre [] _ = []
-compre _ [] = []
-compre (a : as) (b : bs) | a == b = a : compre as bs
-compre (a : as) (b : bs) = []
+-- | Find the prefix where the two lists match
+--
+-- >>> commonPrefix [1,2,3] [2,1,3]
+-- []
+--
+-- >>> commonPrefix [1,2,3] [1,2,4]
+-- [1,2]
+commonPrefix :: Eq a => [a] -> [a] -> [a]
+commonPrefix [] _ = []
+commonPrefix _ [] = []
+commonPrefix (a : as) (b : bs) | a == b = a : commonPrefix as bs
+commonPrefix (a : as) (b : bs) = []
 
-comprefold :: Eq a => [[a]] -> [a]
-comprefold [] = []
-comprefold (as : ass) = foldr compre as ass
+-- | Find the prefix where all the lists match
+--
+-- >>> allCommonPrefix [[1,2,3],[1,2,4],[1,2,5]]
+-- [1,2]
+--
+-- >>> allCommonPrefix [[1,2,3],[2,1,3]]
+-- []
+allCommonPrefix :: Eq a => [[a]] -> [a]
+allCommonPrefix [] = []
+allCommonPrefix (as : ass) = foldr commonPrefix as ass
 
 -- This is a hack, and should probably be replaced with a version that
 -- tests for equality, so it doesn't catch the wrong `MU`s.
