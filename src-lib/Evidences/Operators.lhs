@@ -429,7 +429,7 @@ any auxiliary code.
 >                         , PROP)
 >              opty _  _             = throwErrMsg "eqGreen: invalid arguments."
 
-> coe = Op { opName = "coe"
+> coe = Op { opName = "coe" -- "coerce" -- transport values between equal types
 >          , opArity = 4
 >          , opTyTel =  "S" :<: SET :-: \ sS -> "T" :<: SET :-: \ tT ->
 >                       "Q" :<: PRF (EQBLUE (SET :>: sS) (SET :>: tT)) :-: \ _ ->
@@ -452,7 +452,7 @@ any auxiliary code.
 >          oprun vs = error ("coe: undefined for arguments"
 >                                ++ unlines (map show vs))
 
-> coh = Op { opName = "coh"
+> coh = Op { opName = "coh" -- "coherence"
 >          , opArity = 4
 >          , opTyTel =
 >              "S" :<: SET :-: \ _S -> "T" :<: SET :-: \ _T ->

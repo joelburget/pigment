@@ -20,9 +20,9 @@ Observational Equality
 Let's have some observational equality, now!
 @altenkirch_mcbride_swierstra:obs_equality
 
-The `eqGreen` operator, defined in section [Features.Equality](#Features.Equality),
-computes the proposition that two values are equal if their containing
-sets are equal. We write `<->` for application of this operator.
+The `eqGreen` operator computes the proposition that two values are equal if
+their containing sets are equal. We write `<->` for application of this
+operator.
 
 > (<->) :: (TY :>: VAL) -> (TY :>: VAL) -> VAL
 > (y0 :>: t0) <-> (y1 :>: t1) = eqGreen @@ [y0,t0,y1,t1]
@@ -108,13 +108,14 @@ ignoring contravariance. Therefore, this requires a special case for
 The `coeh` function takes two types, a proof that they are equal and a
 value in the first type; it produces a value in the second type and a
 proof that it is equal to the original value. If the sets are
-definitinoally equal then this is easy, otherwise it applies `coe` to
+definitionally equal then this is easy, otherwise it applies `coe` to
 the value and uses the coherence axiom `coh` to produce the proof.
 
 > coeh :: TY -> TY -> VAL -> VAL -> (VAL, VAL)
 > coeh s t q v | partialEq s t q  = (v, pval refl $$ A s $$ A v)
 > coeh s t q v = (  coe @@ [s , t , q , v]
 >                ,  coh @@ [s , t , q , v])
+
 > coehin :: TY -> TY -> VAL -> INTM -> (INTM, INTM)
 > coehin s t q v | partialEq s t q  = (v, pval refl -$ [ s -$ [] , v ])
 > coehin s t q v = (  N $ coe :@ [s -$ [], t -$ [], q -$ [], v]
@@ -301,5 +302,5 @@ the types of references.
 Sadly we cannot do the following, because it is not safe to invent a
 name supply.
 
-\< partialEq s t \_ = bquote B0 s ns == bquote B0 t ns \< where ns = (B0
-:\< ("\_\_partialEq", 0), 0) :: NameSupply
+    partialEq s t _ = bquote B0 s ns == bquote B0 t ns
+    where ns = (B0 :< ("__partialEq", 0), 0) :: NameSupply

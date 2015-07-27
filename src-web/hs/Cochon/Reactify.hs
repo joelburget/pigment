@@ -69,7 +69,7 @@ canReactify (EnumT t)  = ("enumt", dInTmRN_ t)
 canReactify Ze         = ("ze", mempty)
 canReactify (Su t)     = ("su", "TODO Su") -- reactifyEnumIndex 1 t)
 
--- Equality
+-- Definitional Equality
 
 canReactify (EqBlue pp qq) = ("eqblue", dInTmRN_ (DEqBlue (foo pp) (foo qq)))
   where

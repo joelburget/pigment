@@ -222,6 +222,8 @@ Prob
 
 Prop
 
+Proofs whose inhabitants contain no data.
+
 Prop : Set
 Prf (p : Prop) : Set
 Trivial : Prop
@@ -346,6 +348,8 @@ typing telescope, a computation strategy, and a simplification method.
 
 > data Op = Op
 >   { opName  :: String
+>   -- TODO change arity to be more like jonPRL's - a list of ints, each
+>   -- representing the binding structure of that argument.
 >   , opArity :: Int
 >   , opTyTel :: TEL TY
 >   , opSimp  :: Alternative m => [VAL] -> NameSupply -> m NEU
@@ -518,7 +522,7 @@ Prop
 > pattern PROP        = C Prop
 > pattern PRF p       = C (Prf p)
 > pattern ALL p q     = C (All p q)
-> pattern IMP p q     = ALL (PRF p) (L (K q))
+> pattern IMP p q     = ALL (PRF p) (LK q)
 > pattern ALLV x s p  = ALL s (LAV x p)
 > pattern AND p q     = C (And p q)
 > pattern TRIVIAL     = C Trivial
