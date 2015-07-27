@@ -13,6 +13,7 @@ import qualified TacticParse as Parse
 import qualified Operators
 import qualified AlphaConversions
 import qualified Mangler
+import qualified Records
 
 canTyBasics :: Assertion
 canTyBasics = do
@@ -93,6 +94,7 @@ tests = testGroup "Tests"
     , Operators.tests
     , AlphaConversion.tests
     , Mangler.tests
+    , Records.tests
     ]
 
 main :: IO ()
