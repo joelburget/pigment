@@ -14,6 +14,7 @@ import qualified Operators
 import qualified AlphaConversions
 import qualified Mangler
 import qualified Records
+import qualified OTT
 
 canTyBasics :: Assertion
 canTyBasics = do
@@ -95,6 +96,7 @@ tests = testGroup "Tests"
     , AlphaConversion.tests
     , Mangler.tests
     , Records.tests
+    , OTT.tests
     ]
 
 main :: IO ()
