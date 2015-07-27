@@ -69,13 +69,9 @@ diagnostic str = do
 
 -- TODO non-elab version!
 -- XXX ref doesn't get updated with new defn... what do refs actually mean?
-elabAddRecordLabel :: Name
-                   -> (String, DInTmRN)
+elabAddRecordLabel :: (String, DInTmRN)
                    -> ProofState (VAL :<: TY)
-elabAddRecordLabel name (labelName, labelDTy) = do
-    -- XXX goTo should not be part of this. deal with current entry only.
-    goTo name
-
+elabAddRecordLabel (labelName, labelDTy) = do
     CDefinition _ ref lastN _ anch meta <- getCurrentEntry
 
     _ :=>: labelTy <- elaborate' (SET :>: labelDTy)
@@ -108,19 +104,15 @@ removeHelper (RCONS inner (TAG tagName) sigma) removeName
 removeHelper REMPTY removeName = Nothing -- error $ "couldn't remove " ++ removeName
 
 
-removeRecordLabel :: Name
-                  -> String
+removeRecordLabel :: String
                   -> ProofState (VAL :<: TY)
-removeRecordLabel name removeName = do
-    -- XXX remove
-    goTo name
-
+removeRecordLabel removeName = do
     CDefinition _ ref lastN _ anch meta <- getCurrentEntry
     let DEFN tm :<: RSIG = refBody ref
 
     case removeHelper tm removeName of
         Just newTm -> do
-            let newRef = name := DEFN newTm :<: RSIG
+            let newRef = (refName ref) := DEFN newTm :<: RSIG
 
             putCurrentEntry $ CDefinition LETG newRef lastN RSIG anch meta
             putDevTip $ Defined newTm (RSIG :=>: RSIG)

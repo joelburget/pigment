@@ -18,6 +18,7 @@ import DisplayLang.DisplayTm
 import ProofState.Edition.GetSet
 import ProofState.Interface.Name
 import ProofState.Interface.NameResolution
+import ProofState.Interface.Search
 import ProofState.Edition.ProofState
 
 
@@ -36,12 +37,6 @@ assertThrows :: String -> ProofState a -> IO ()
 assertThrows msg script = case runProofState script emptyContext of
     Left _ -> return ()
     Right _ -> assertFailure msg
-
-
-printProofState :: ProofState ()
-printProofState = do
-    s <- prettyProofState
-    elabTrace s
 
 
 emptyRecord :: Assertion
@@ -63,9 +58,9 @@ addLabel :: Assertion
 addLabel =
     let script = do
             recName <- makeEmptyRecord "foo"
-            _   <- elabAddRecordLabel recName ("x", DUNIT)
-            val <- elabAddRecordLabel recName ("y", DUNIT)
-            -- goRoot
+            goTo recName
+            _   <- elabAddRecordLabel ("x", DUNIT)
+            val <- elabAddRecordLabel ("y", DUNIT)
 
             return (val, recName)
 
@@ -90,13 +85,19 @@ removeLabel =
             bottomName  <- makeEmptyRecord "removeBottom"
 
             forM_ [topName, middleName, bottomName] $ \name -> do
-                elabAddRecordLabel name ("x", DUNIT)
-                elabAddRecordLabel name ("y", DUNIT)
-                elabAddRecordLabel name ("z", DUNIT)
+                goTo name
+                elabAddRecordLabel ("x", DUNIT)
+                elabAddRecordLabel ("y", DUNIT)
+                elabAddRecordLabel ("z", DUNIT)
 
-            top     :<: _ <- removeRecordLabel topName "z"
-            middle  :<: _ <- removeRecordLabel middleName "y"
-            bottom  :<: _ <- removeRecordLabel bottomName "x"
+            goTo topName
+            top     :<: _ <- removeRecordLabel "z"
+
+            goTo middleName
+            middle  :<: _ <- removeRecordLabel "y"
+
+            goTo bottomName
+            bottom  :<: _ <- removeRecordLabel "x"
 
             return (top, middle, bottom)
 
@@ -133,12 +134,13 @@ removeMissing :: Assertion
 removeMissing =
     let script = do
             missingName <- makeEmptyRecord "removeMissing"
+            goTo missingName
 
-            elabAddRecordLabel missingName ("x", DUNIT)
-            elabAddRecordLabel missingName ("y", DUNIT)
-            elabAddRecordLabel missingName ("z", DUNIT)
+            elabAddRecordLabel ("x", DUNIT)
+            elabAddRecordLabel ("y", DUNIT)
+            elabAddRecordLabel ("z", DUNIT)
 
-            removeRecordLabel missingName "w"
+            removeRecordLabel "w"
 
     in assertThrows "remove missing label" script
 
