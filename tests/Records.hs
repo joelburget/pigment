@@ -103,6 +103,9 @@ removeLabel =
 
         continue (top, middle, bottom) = do
 
+            -- Really, these tests are too specific. I don't think the order of
+            -- the tags should matter. We really just want to know which are
+            -- present.
             assertEqual "top"
                 (RCONS (RCONS REMPTY
                               (TAG "x")

@@ -54,6 +54,30 @@ makeEmptyRecord name = freshRef (name :<: RSIG) $ \ref -> do
 
 -- TODO non-elab version!
 -- XXX ref doesn't get updated with new defn... what do refs actually mean?
+--
+-- TODO when the definition of a record changes we need to invalidate some
+-- (maybe not all) uses. I'm picturing:
+--
+-- * consumers of the record will continue to execute without failure as they
+--   only depend on the subset of the new record's tags that were present in
+--   the old record. *However*, they may not want to say they accept the new
+--   record, since the old one was more precise. Example:
+--
+--       oldRec = { x, y }
+--       newRec = { x, y, z }
+--
+--       f { x, y } = ...
+--
+--   f, a consumer of the old record, likely doesn't want to advertise itself
+--   as a consumer of newRec, since that will work, but is not precise.
+--
+-- * producers of the record will certainly need to change.
+--
+-- * additionally, we need to think about subtyping.
+--
+-- * what happens when you try to add a tag that's already present? (I think
+--   the right answer here is probably in the interface -- you're simply not
+--   allowed to do that)
 elabAddRecordLabel :: (String, DInTmRN)
                    -> ProofState (VAL :<: TY)
 elabAddRecordLabel (labelName, labelDTy) = do
