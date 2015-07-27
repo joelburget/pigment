@@ -24,7 +24,6 @@ import ProofState.Edition.ProofState
 
 import Elaboration.Error
 import DisplayLang.PrettyPrint
-import Kit.Trace
 
 
 runScript :: ProofState a -> (a -> IO ()) -> IO ()
