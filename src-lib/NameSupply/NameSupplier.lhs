@@ -67,7 +67,9 @@ To illustrate the implementation of a `NameSupplier`, we implement the
 `NameSupply` Reader monad:
 
 > instance NameSupplier ((->) NameSupply) where
->     freshRef (x :<: ty) f r = f (mkName r x := DECL :<: ty) (freshName r)
+>     freshRef (x :<: ty) f r =
+>         let r' = freshName r
+>         in f (mkName r' x := DECL :<: ty) r'
 >     forkNSupply s child dad nsupply = (dad . child)
 >         (freshNSpace nsupply s)
 >         (freshName nsupply)
