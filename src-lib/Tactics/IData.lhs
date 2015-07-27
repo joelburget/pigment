@@ -165,7 +165,7 @@ principles (:
 >           _ <- makeModule DevelopOther "Case"
 >           goIn
 >           i <- assumeParam ("i" :<: (N indtye :=>: indtyv))
->           v <- assumeParam (comprefold (concatMap (\(_,_,_,c) -> c) cs)
+>           v <- assumeParam (allCommonPrefix (concatMap (\(_,_,_,c) -> c) cs)
 >                             :<: (N (dty :$ A (NP i)) :=>: dtyv $$ A (NP i)))
 >           let caseTm = P icase :$ A (N indtye)
 >                                :$ A (PAIR (N e) (PAIR (N cs') VOID))
@@ -183,7 +183,7 @@ principles (:
 >           _ <- makeModule DevelopOther "Ind"
 >           goIn
 >           i <- assumeParam ("i" :<: (N indtye :=>: indtyv))
->           v <- assumeParam (comprefold (concatMap (\(_,_,_,c) -> c) cs)
+>           v <- assumeParam (allCommonPrefix (concatMap (\(_,_,_,c) -> c) cs)
 >                             :<: (N (dty :$ A (NP i)) :=>: dtyv $$ A (NP i)))
 >           let dindT = P dind :$ A (N indtye)
 >                              :$ A (PAIR (N e) (PAIR (N cs') VOID))
