@@ -52,7 +52,7 @@ elabCons :: String
          -> [Elim VAL]
          -- ^ The type parameters
          -> (String , DInTmRN)
-         -- ^ *This* constructor - the one we're defining
+         -- ^ Scheme of *this* constructor - the one we're defining
          -> ProofState ElabResult
 elabCons dataTyName ty ps (ctorName, ctorScheme) = do
     -- Making a description -- an arrow from the kind of this type to SET.
@@ -105,7 +105,7 @@ ty2desc r ps (PI a b) = do
       then do
         (a'', i) <- ty2h r ps a
         (b', j, k, c) <- freshRef (fortran b :<: a) $ \s -> do
-            ret@(b', _, _, _) <- ty2desc r ps (b $$ A (N (P s)))
+            ret@(b', _, _, _) <- ty2desc r ps (b $$ A (NP s))
             when (occurs s b') $ throwDTmStr "Bad dependency"
             return ret
         case i of
@@ -155,6 +155,8 @@ ty2h r ps x = do
 
 
 -- | Find out whether any parameters match the given ref!
+--
+-- Used to implement the occurs check
 occursM :: REF -> Mangle (Constant Any) REF REF
 occursM r = Mang
     {  mangP = \ x _ -> Constant (Any (r == x))
@@ -194,6 +196,7 @@ uncur :: Int -> EXTM -> EXTM -> INTM
 uncur 1 v t = N (v :$ A (N t))
 uncur i v t = uncur (i - 1) (v :$ A (N (t :$ Fst))) (t :$ Snd)
 
+
 makeCon :: INTM -> INTM -> ElabResult -> ProofState ()
 makeCon e t (ElabResult s ty _ i _ body) = do
     make (AnchConName s :<: N (ty :$ A t))
@@ -207,12 +210,16 @@ makeCon e t (ElabResult s ty _ i _ body) = do
 
 
 -- Fold over all the type parameters, building up
-mkAllowed :: [(String, EXTM, REF)] -> (INTM, INTM)
+mkAllowed :: [Parameter] -> (INTM, INTM)
 mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
-    mkAllowedHelp (x, ty, r) (allowingTy, allowedTy) =
+    mkAllowedHelp p (allowingTy, allowedTy) =
+
+        let x = paramName p
+            ty = paramTy p
+            r = paramRef p
 
             -- Turn allowingTy into a lambda taking x as a parameter
-        let allowingTy' = L $ x :. (capM r 0 %% allowingTy)
+            allowingTy' = L $ x :. (capM r 0 %% allowingTy)
 
             -- Nevermind, we actually want 'Pi(ty, \n -> allowingTy)'
             allowingTy'' = PI (N ty) allowingTy'
@@ -258,16 +265,32 @@ addConstructor :: String
 addConstructor tyName (name, scheme) = do
     CDefinition LETG ref@(n := (_ :<: ty)) _ _ anch meta <- getCurrentEntry
 
-    let elims =
+    -- SCRATCH
+          elabCons nom
+
+                   -- type pointing from all the type parameters to SET
                    (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
                           SET
                           pars')
 
-    -- first build the description
-    elabCons tyName tyTyTODO elims
+                   -- apply to all the parameters
+                   (map (\(_, _, r) -> A (NP r)) pars')
+    -- END SCRATCH
 
+    let parameters = undefined
+        elims = map (A . NP . paramRef) parameters
+
+    -- first build the description
+    elabCons tyName tyTyTODO elims (name, scheme)
 
     -- now build the actual constructor
+
+
+data Parameter = Parameter
+    { paramName :: String
+    , paramTy   :: EXTM
+    , paramRef  :: REF
+    }
 
 
 elabData :: String
@@ -277,7 +300,7 @@ elabData :: String
          -> [ (String , DInTmRN) ]
          -- ^ Schemes (Name, Type)
          -> ProofState (EXTM :=>: VAL)
-elabData nom pars scs = do
+elabData nom pars schemes = do
       oldaus <- paramSpine <$> getInScope
 
       -- start by making a module named after the type of what we're
@@ -296,30 +319,34 @@ elabData nom pars scs = do
           r <- assumeParam (x :<: (N yt :=>: yv))
 
           -- name, type, param ref
-          return (x, yt, r)
+          return (Parameter x yt r)
 
       moduleToGoal SET
 
       -- we need to figure out the type of all the constructors
-      cs <- for scs $
+      cs <- for schemes $ elabCons
+          nom
 
-          elabCons nom
+          -- type pointing from all the type parameters to SET
+          (foldr
+              (\p tyAccum -> PI
+                  (N (paramTy p))
+                  (L $ (paramName p) :. (capM (paramRef p) 0 %% tyAccum))
+              )
+              SET
+              pars'
+          )
 
-                   -- type pointing from all the type parameters to SET
-                   (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
-                          SET
-                          pars')
-
-                   -- apply to all the parameters
-                   (map (\(_, _, r) -> A (NP r)) pars')
+          -- apply to all the parameters
+          (map (A . NP . paramRef) pars')
 
       -- and constructor names
       make (AnchConNames :<: NP enumREF)
       goIn
-      (e :=>: ev) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE scs)
+      (e :=>: ev) <- giveOutBelow (foldr (\(t,_) e -> CONSE (TAG t) e) NILE schemes)
 
       -- ... constructor descriptions?
-      make (AnchConDescs :<: N (branchesOp :@ [ N e, L $ K (NP descREF)])) -- ARR (ENUMT (N e)) (NP descREF)
+      make (AnchConDescs :<: N (branchesOp :@ [ N e, LK (NP descREF)])) -- ARR (ENUMT (N e)) (NP descREF)
       goIn
       (cs' :=>: _) <- giveOutBelow $ foldr PAIR VOID $ map conDesc cs
 

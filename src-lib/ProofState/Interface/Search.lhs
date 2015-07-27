@@ -21,6 +21,7 @@ Searching in the Proof Context
 > import Evidences.Tm
 > import DisplayLang.Name
 
+
 In Section [Proofstate.Edition.Navigation](#Proofstate.Edition.Navigation), we have developed
 several commands to navigate in the proof context. Here, we extend these
 to be able *search* in the proof context.
@@ -40,16 +41,17 @@ follow this itinerary to reach our destination.
 >   -- Eat the name as you move in the context
 >   goTo' name
 >   where
+>     couldNotFind x = stackItem
+>         [ errMsg "goTo: could not find "
+>         , errMsg x
+>         ] :: StackError DInTmRN
 >     goTo' :: Name -> ProofState ()
 >     goTo'  []          =  return () -- Reached the end of the journey
 >     goTo'  x@(xn:xns)  =  goIn >> seek xn >> goTo' xns
->                           `pushError`
->                           (stackItem
->                                [ errMsg "goTo: could not find "
->                                , errMsg (showName x)
->                                ] :: StackError DInTmRN
->                           )
+>                           `pushError` (couldNotFind (showName x))
 >     -- `seek` find the local short name on our itinerary
+>     -- go up while the guard fails, that is -- while the last name is not the
+>     -- one we're looking for
 >     seek :: (String, Int) -> ProofState ()
 >     seek xn = goUp `whileA` (guard . (== xn) . last =<< getCurrentName)
 

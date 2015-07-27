@@ -87,14 +87,16 @@ Now, let us give the semantics of each command in turn. First of all, we
 catch all commands that can only run on the current goal, and redirect
 them to the specially crafted `runElabNewGoal`.
 
-> runElab WorkElsewhere (ty :>: elab) | currentGoalOnly elab = runElabNewGoal (ty :>: elab)
+> runElab WorkElsewhere (ty :>: elab)
+>     | currentGoalOnly elab
+>     = runElabNewGoal (ty :>: elab)
 
 `EReturn` is the @return@ of the monad. It does nothing and always
 succeeds.
 
 > runElab _ (_ :>: EReturn x) = return (x, ElabSuccess)
 
-`ELambda` creates a $\lambda$-parameter, if this is allowed by the type
+`ELambda` creates a lambda-parameter, if this is allowed by the type
 we are elaborating to.
 
 > runElab WorkCurrentGoal (ty :>: ELambda x f) = case lambdable ty of

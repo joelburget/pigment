@@ -200,7 +200,7 @@ Labelled Types (chopping block)
 >     Label          :: t -> t -> Can t
 >     LRet           :: t -> Can t
 
-Nu
+Nu (coindinductive, infinite data)
 
 Nu (ml : [Set?] :?=: Id (x : desc?)) : Set
 Con (y : (descOp @@ [x, C t])) : t@(Nu (_ :?=: Id x))
@@ -256,7 +256,7 @@ Records
 
 RSig : Set
 REmpty : RSig
-RCons (sig : RSig) (id : UId) (ty : ?? -> Set) : RSig
+RCons (sig : RSig) (id : UId) (ty : Record sig -> Set) : RSig
 Record (ml : [Set?] :?=: Id (r : RSig)) : Set
 
 >     RSig           :: Can t
@@ -699,7 +699,7 @@ A `REF` can be of one of four kinds:
 >   |  DEFN VAL
 >   |  HOLE HKind
 >   |  FAKE
->   deriving Show
+>   deriving (Show, Eq)
 
 A hole will be in one of three "Buddy Holly" states:
 
@@ -716,7 +716,7 @@ Stealing documentation from http://www.e-pig.org/epilogue/?p=147 might
 be a good idea at this point.
 
 > data HKind = Crying String | Waiting | Hoping
->   deriving Show
+>   deriving (Show, Eq)
 
 We can already define some handy operators on `REF`s. First, we can turn
 a `REF` to a `VAL`ue by using `pval`. If the reference is already

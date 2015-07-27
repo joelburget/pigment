@@ -144,10 +144,12 @@ inductive data. This cannot apply in general because it leads to
 infinite loops when elaborating illegal values for some descriptions.
 Perhaps we should remove it for enumerations as well.
 
-> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID) | r == "EnumU" =
->     makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
-> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t) | r == "EnumU" =
->     makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DVOID)
+>     | r == "EnumU"
+>     = makeElab' loc (MU l d :>: DCON (DPAIR DZE DVOID))
+> makeElab' loc (MU l@(Just (ANCHOR (TAG r) _ _)) d :>: DPAIR s t)
+>     | r == "EnumU"
+>     = makeElab' loc (MU l d :>: DCON (DPAIR (DSU DZE) (DPAIR s (DPAIR t DVOID))))
 
 More usefully, we elaborate a tag with a bunch of arguments by
 converting it into the corresponding inductive data structure. This

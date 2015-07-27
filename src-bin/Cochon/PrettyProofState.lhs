@@ -30,7 +30,6 @@
 
 > import ProofState.Structure.Entries
 
-> import Kit.Trace
 > import DisplayLang.PrettyPrint
 > import Text.PrettyPrint.HughesPJ as Pretty
 > import Distillation.Distiller

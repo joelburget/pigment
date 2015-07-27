@@ -19,6 +19,7 @@
 > import Evidences.Operators
 > import NameSupply.NameSupplier
 
+
 Type-checking Canonicals and Eliminators
 ----------------------------------------
 

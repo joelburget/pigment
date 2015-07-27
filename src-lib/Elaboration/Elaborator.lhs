@@ -40,6 +40,7 @@
 > import Kit.BwdFwd
 > import Kit.MissingLibrary
 
+
 Elaborating terms
 -----------------
 
@@ -50,6 +51,7 @@ subsection [Evidences.TypeChecker.type-checking](#Evidences.TypeChecker.type-ch
 except that it operates in the `Elab` monad, so it can create subgoals and
 lambda-lift terms.
 
+> -- TODO(joel) - remove elaborate -- we don't need Loc
 > elaborate :: Loc -> (TY :>: DInTmRN) -> ProofState (INTM :=>: VAL)
 > elaborate loc (ty :>: tm) = runElab WorkElsewhere (ty :>: makeElab loc tm)
 >     >>= return . fst

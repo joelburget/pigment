@@ -216,7 +216,7 @@ ignore the attached `ElabHope` process.
 >      -- We have a Definition for it
 >      case prob of
 >       ElabHope  -> do
->         -- The elaboration strategy \emph{has to} be to `Hope`
+>         -- The elaboration strategy *has to* be to `Hope`
 >         tellEntry news (EDEF ref sn dkind (dev{devTip=Unknown tt}) ty anchor meta)
 >       _         -> do
 >         -- TODO(joel) Is that a `throwStack` or an `error`?
