@@ -52,21 +52,6 @@ makeEmptyRecord name = freshRef (name :<: RSIG) $ \ref -> do
     return $ refName ref
 
 
-diagnostic str = do
-    tip <- getDevTip
-    centry <- getCurrentEntry
-    elabTrace $ str ++ "\n\n"
-        ++ show tip
-        ++ "\n\n^devtip, current entry v\n\n"
-        ++ show centry
-        ++ "\n\n"
-
--- make empty := REmpty : RSig ;
--- make one := (RCons REmpty 'one (\ _ -> Sig ())) : RSig ;
--- make two := RCons (RCons REmpty 'two (\ _ -> Enum ['a 'b]))
---      	    	 'one (\ _ -> (Enum ['c 'd 'e])) : RSig ;
-
-
 -- TODO non-elab version!
 -- XXX ref doesn't get updated with new defn... what do refs actually mean?
 elabAddRecordLabel :: (String, DInTmRN)
