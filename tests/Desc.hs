@@ -28,8 +28,16 @@ import Elaboration.Error
 import DisplayLang.PrettyPrint
 
 
+makeConstructors :: [String] -> INTM
+makeConstructors [] = NILE
+makeConstructors (x:xs) = CONSE (TAG x) (makeConstructors xs)
+
+
+--
+
+
 unitConstructors :: INTM
-unitConstructors = CONSE (TAG "mkUnit") NILE
+unitConstructors = makeConstructors ["mkUnit"]
 
 
 unitBranches :: INTM
@@ -47,7 +55,7 @@ unit = MU (Just (ANCHOR (TAG "Unit") SET ALLOWEDEPSILON)) unitD
 
 
 natConstructors :: INTM
-natConstructors = CONSE (TAG "zero") (CONSE (TAG "suc") NILE)
+natConstructors = makeConstructors ["zero", "suc"]
 
 natBranches :: INTM
 natBranches = PAIR
