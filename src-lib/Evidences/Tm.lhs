@@ -171,11 +171,11 @@ binding complicates the definition.
 >     Pi             :: t -> t -> Can t                         -- functions
 >     Con            :: t -> Can t                              -- packing
 
-Desc
+Desc -- see Desc.agda
 
 >     Mu             :: Labelled Identity t -> Can t
 
-IDesc
+IDesc -- see IDesc.agda
 
 >     IMu            :: Labelled (Identity :*: Identity) t -> t -> Can t
 

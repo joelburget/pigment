@@ -93,7 +93,7 @@ mutual
 
   data Mu {G : Cx}{O : Set}(C : O -> CON (G / O))(X : Pay G)(o : O) : Set where
     con : [| C o |] ( X , Mu C X ) -> Mu C X o
-  codata Nu {G : Cx}{O : Set}(C : O -> CON (G / O))(X : Pay G)(o : O) : Set where
+  data Nu {G : Cx}{O : Set}(C : O -> CON (G / O))(X : Pay G)(o : O) : Set where
     con : [| C o |] ( X , Nu C X ) -> Nu C X o
 
 noc :  {G : Cx}{O : Set}{C : O -> CON (G / O)}{X : Pay G}{o : O} ->

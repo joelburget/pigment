@@ -47,9 +47,11 @@ cond t f ff = f
 _+_ : Set -> Set -> Set
 S + T = Sig Two (cond S T)
 
-[_,_] : {S T : Set}{P : S + T -> Set} ->
-        ((s : S) -> P (tt , s)) -> ((t : T) -> P (ff , t)) ->
-        (x : S + T) -> P x
+[_,_] : {S T : Set}{P : S + T -> Set}
+      -> ((s : S) -> P (tt , s))
+      -> ((t : T) -> P (ff , t))
+      -> (x : S + T)
+      -> P x
 [ f , g ] = sig (cond f g)
 
 data PROP : Set where
@@ -85,7 +87,7 @@ mutual
 
   data Mu {I O : Set}(C : O -> CON (I + O))(X : I -> Set)(o : O) : Set where
     con : [| C o |] [ X , Mu C X ] -> Mu C X o
-  codata Nu {I O : Set}(C : O -> CON (I + O))(X : I -> Set)(o : O) : Set where
+  data Nu {I O : Set} (C : O -> CON (I + O)) (X : I -> Set) (o : O) : Set where
     con : [| C o |] [ X , Nu C X ] -> Nu C X o
 
 noc :  {I O : Set}{C : O -> CON (I + O)}{X : I -> Set}{o : O} ->
@@ -100,7 +102,7 @@ mutual
   map (C *C D)     f = sig \ c d -> map C f c , map D f d
   map (PiC S C)    f = \ c s -> map (C s) f (c s)
   map (SiC S C)    f = sig \ s c -> s , map (C s) f c
-  map (MuC O C o)  f = fold C (Mu C _) (\ o xs -> con (map (C o) [ f , konst id ] xs)) o
+  map (MuC O C o)  f = {!!} -- fold C (Mu C _) (\ o xs -> con (map (C o) ( f , konst id ) xs)) o
   map (NuC O C o)  f = unfold C (Nu C _) (\ o ss -> map (C o) [ f , konst id ] (noc ss)) o
 
   fold :  {I O : Set}(C : O -> CON (I + O)){X : I -> Set}(Y : O -> Set) ->
@@ -118,8 +120,8 @@ induction : {I O : Set}(C : O -> CON (I + O)){X : I -> Set}
             ((o : O)(xyps : [| C o |] [ X , (\ o -> Sig (Mu C X o) (P o)) ]) ->
              P o (con (map (C o) [ konst id , konst fst ] xyps))) ->
             (o : O)(y : Mu C X o) -> P o y
-induction C P p o (con xys) =
-  p o (map (C o) [ konst id , (\ o y -> (y , induction C P p o y)) ] xys)
+induction C P p o (con xys) = {!!}
+  -- p o (map (C o) [ konst id , (\ o y -> (y , induction C P p o y)) ] xys)
 
 
 moo : {I O : Set}(C : O -> CON (I + O)){X : I -> Set}(o : O)
