@@ -440,8 +440,13 @@ CanLayout.tags = {
   ze: () => "ze",
   su: tm => tm,
 
-  // equality
-  eqblue: tm => tm,
+  // definitional equality
+  // TODO - hover / click behavior to describe what this means
+  eqblue: (pp, qq) => (
+    <div>
+      {pp} = {qq}
+    </div>
+  ),
 
   // free monad
   monad: (d, x) => <div>monad({d}, {x})</div>,
