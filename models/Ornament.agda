@@ -6,6 +6,7 @@ open import Data.Fin
 open import Data.Bool
 open import Data.Product
 open import Data.Unit
+open import Data.List
 
 infix 4 _≡_
 
@@ -15,6 +16,26 @@ data _≡_ {a} {A : Set a} (x : A) : A → Set a where
 --
 
 -- Modified from Conor's original HOAS presentation
+
+data IndexParam {n} (I : Set) (N : Fin n) : Set₁ where
+  -- read an indexed subnote; continue
+  rec : I -> IndexParam I N -> IndexParam I N
+
+  -- stop and return the node's index
+  ret : I -> IndexParam I N
+
+semantics : ∀{I} -> ∀{n : ℕ} -> IndexParam I (fromℕ n) -> (I -> Set) -> I -> Set
+semantics = {!!}
+  
+record EmbedDataConstr : Set₁ where
+  constructor embedDataConstr
+  field arityTyping : {!!}
+
+record EmbedDataTy (I A : Set) : Set₁ where
+  constructor embedDataTy
+  field indexes : List I
+  field parameters : List A
+  field constrs : List EmbedDataConstr
 
 data Desc (I : Set) : Set₁ where
   -- read field in A; continue, given its value
@@ -45,6 +66,19 @@ data Data {I}(D : Desc I)(i : I) : Set where
 -- TODO think about codata / greatest fixed point
 -- data CoData {I}(D : Desc I)(i : I) : Set where
 --   ⟩_⟨ : 
+
+--
+
+
+record DataConstr : Set where
+  constructor dataConstr
+  field arityTyping : {!!}
+
+record DataTy : Set where
+  constructor dataTy
+  field indexes : List ℕ
+  field parameters : List ℕ
+  field constrs : List {!!}
 
 --
 
