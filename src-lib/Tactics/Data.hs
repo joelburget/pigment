@@ -11,6 +11,8 @@ import Control.Monad.Identity
 import Data.Functor.Constant
 import Data.Monoid hiding (All)
 import Data.Traversable
+
+import Kit.BwdFwd
 import Kit.MissingLibrary
 import Evidences.Tm
 import Evidences.Mangler
@@ -18,12 +20,14 @@ import Evidences.Eval
 import Evidences.Operators
 import Evidences.DefinitionalEquality
 import NameSupply.NameSupplier
+import NameSupply.NameSupply
 import ProofState.Structure.Developments
 import ProofState.Edition.Scope
 import ProofState.Edition.ProofState
 import ProofState.Edition.GetSet
 import ProofState.Edition.Navigation
 import ProofState.Edition.FakeRef
+import ProofState.Edition.ProofContext
 import ProofState.Interface.ProofKit
 import ProofState.Interface.Module
 import ProofState.Interface.Definition
@@ -32,6 +36,13 @@ import ProofState.Interface.Solving
 import Elaboration.Elaborator
 import DisplayLang.DisplayTm
 import DisplayLang.Name
+
+
+-- on parameters vs indexes:
+--
+-- > If an argument to a type constructor does not change in the data
+-- > constructor declarations, Idris considers it a parameter, otherwise an
+-- > index.
 
 -- Elaborate constructor.
 
@@ -210,7 +221,7 @@ makeCon e t (ElabResult s ty _ i _ body) = do
 
 
 -- Fold over all the type parameters, building up
-mkAllowed :: [Parameter] -> (INTM, INTM)
+mkAllowed :: [ParamDesc] -> (INTM, INTM)
 mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
     mkAllowedHelp p (allowingTy, allowedTy) =
 
@@ -234,12 +245,30 @@ mkAllowed = foldr mkAllowedHelp (SET, ALLOWEDEPSILON) where
         in (allowingTy'', allowedBy)
 
 
-emptyData :: String
-          -> ProofState (EXTM :=>: VAL)
-emptyData name = do
-    makeModule DevelopData name
-    goIn
-    moduleToGoal SET
+-- emptyData :: String
+--           -> ProofState (EXTM :=>: VAL)
+-- emptyData name = do
+--     makeModule DevelopData name
+--     goIn
+--     moduleToGoal SET
+
+
+emptyData :: String -> ProofState Name
+emptyData name = freshRef (name :<: SET) $ \ref -> do
+    nsupply <- askNSupply
+
+    let (allowingTy, allowedBy) = mkAllowed []
+        anchor = ANCHOR (TAG name) allowingTy allowedBy
+        result = MU (Just anchor) IDD
+
+    let meta = Metadata False "" False
+        ref' = refName ref := DEFN result :<: SET
+        dev = Dev { devEntries       =  B0
+                  , devTip           =  Defined REMPTY (SET :=>: SET)
+                  , devNSupply       =  freshNSpace nsupply name
+                  , devSuspendState  =  SuspendNone }
+    putEntryAbove $ EDEF ref' (mkLastName ref') LETG dev SET AnchNo emptyMetadata
+    return $ refName ref
 
 
 -- XXX huge TODO:
@@ -266,27 +295,29 @@ addConstructor tyName (name, scheme) = do
     CDefinition LETG ref@(n := (_ :<: ty)) _ _ anch meta <- getCurrentEntry
 
     -- SCRATCH
-          elabCons nom
+          -- elabCons nom
 
-                   -- type pointing from all the type parameters to SET
-                   (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
-                          SET
-                          pars')
+          --          -- type pointing from all the type parameters to SET
+          --          (foldr (\(x,s,r) t -> PI (N s) (L $ x :. (capM r 0 %% t)))
+          --                 SET
+          --                 pars')
 
-                   -- apply to all the parameters
-                   (map (\(_, _, r) -> A (NP r)) pars')
+          --          -- apply to all the parameters
+          --          (map (\(_, _, r) -> A (NP r)) pars')
     -- END SCRATCH
 
     let parameters = undefined
+        tyTyTODO = undefined
         elims = map (A . NP . paramRef) parameters
 
     -- first build the description
     elabCons tyName tyTyTODO elims (name, scheme)
 
     -- now build the actual constructor
+    return undefined
 
 
-data Parameter = Parameter
+data ParamDesc = ParamDesc
     { paramName :: String
     , paramTy   :: EXTM
     , paramRef  :: REF
@@ -319,7 +350,7 @@ elabData nom pars schemes = do
           r <- assumeParam (x :<: (N yt :=>: yv))
 
           -- name, type, param ref
-          return (Parameter x yt r)
+          return (ParamDesc x yt r)
 
       moduleToGoal SET
 

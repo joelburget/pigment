@@ -46,13 +46,23 @@ emptyDataTest =
             return (dataName, val)
 
         continue (name, val) = do
-            assertEqual "" name [("foo", 1)]
-            assertEqual "" val SET -- not really!
+            assertEqual "" [("foo", 1)] name
+            assertEqual ""
+                (MU (Just (ANCHOR (TAG "foo") SET ALLOWEDEPSILON)) IDD)
+                val
 
     in runScript script continue
+
+
+addConstructorTest :: String -> ProofState a -> Assertion
+addConstructorTest
 
 
 tests :: TestTree
 tests = testGroup "data"
     [ testCase "empty data" emptyDataTest
+    , testCase "add constructor" $
+        addConstructorTest "unit data type" $ do
+            data <- emptyData "unit"
+            addConstructor "unit"
     ]
