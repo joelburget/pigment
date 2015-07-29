@@ -22,6 +22,7 @@ Tm
 
 > import Control.Error
 
+> import {-# SOURCE #-} Evidences.Ornament
 > import Kit.MissingLibrary
 > import Kit.BwdFwd
 > import NameSupply.NameSupply
@@ -302,6 +303,10 @@ AllowedCons
 >     AllowedBy      :: t -> Can t
 >     AllowedEpsilon :: Can t
 >     AllowedCons    :: t -> t -> t -> t -> t -> Can t
+
+Data types, take two -- ornamental version
+
+>     Ornament       :: TyDesc t -> Can t
 
 >   deriving (Show, Eq)
 

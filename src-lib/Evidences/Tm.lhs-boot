@@ -1,0 +1,5 @@
+> module Evidences.Tm where
+
+> data tm :<: ty
+> instance (Show tm, Show ty) => Show (tm :<: ty)
+> instance (Eq tm, Eq ty) => Eq (tm :<: ty)
