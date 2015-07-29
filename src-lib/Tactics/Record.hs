@@ -26,6 +26,8 @@ import Debug.Trace
 import Kit.Trace
 import Cochon.PrettyProofState
 
+-- This is modeled in Records.agda
+
 -- What things do we need:
 --
 -- create a label
