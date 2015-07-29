@@ -172,20 +172,6 @@ binding complicates the definition.
 >     Pi             :: t -> t -> Can t                         -- functions
 >     Con            :: t -> Can t                              -- packing
 
-Desc -- see Desc.agda
-
->     Mu             :: Labelled Identity t -> Can t
-
-IDesc -- see IDesc.agda
-
->     IMu            :: Labelled (Identity :*: Identity) t -> t -> Can t
-
-Enum
-
->     EnumT          :: t -> Can t
->     Ze             :: Can t
->     Su             :: t -> Can t
-
 Equality
 
 >     EqBlue         :: (t :>: t) -> (t :>: t) -> Can t
@@ -200,16 +186,6 @@ Labelled Types (chopping block)
 
 >     Label          :: t -> t -> Can t
 >     LRet           :: t -> Can t
-
-Nu (coindinductive, infinite data)
-
-Nu (ml : [Set?] :?=: Id (x : desc?)) : Set
-Con (y : (descOp @@ [x, C t])) : t@(Nu (_ :?=: Id x))
-CoIt (d : desc) (sty : Set) (f : sty -> descOp @@ [x, styv]) (s : sty)
-    : Nu (_ :?=: Id x)
-
->     Nu             :: Labelled Identity t -> Can t
->     CoIt           :: t -> t -> t -> t -> Can t
 
 Prob
 
@@ -283,26 +259,6 @@ UId
 
 >     UId            :: Can t
 >     Tag            :: String -> Can t
-
-Anchors
-
-Anchors : Set
-Anchor (u : UId) (t : Set) (ts : AllowedBy t) : Anchors
-AllowedBy (t : Set) : Set
-AllowedEpsilon : AllowedBy t
-AllowedCons
-    (S : Set)
-    (T : S -> Set)
-    (q : ty = Pi S T)
-    (s : S)
-    (ts : AllowedBy (T s))
-    : AllowedBy ty
-
->     Anchors        :: Can t
->     Anchor         :: t -> t -> t -> Can t
->     AllowedBy      :: t -> Can t
->     AllowedEpsilon :: Can t
->     AllowedCons    :: t -> t -> t -> t -> t -> Can t
 
 Data types, take two -- ornamental version
 
@@ -414,14 +370,6 @@ We have some pattern synonyms for common, er, patterns.
 > pattern LK t      = L (K t)              -- Lambda (with constant)
 > pattern PIV x s t = PI s (LAV x t)       -- Pi (with variable)
 
-Anchors
-
-> pattern ANCHORS        = C Anchors
-> pattern ANCHOR u t ts  = C (Anchor u t ts)
-> pattern ALLOWEDBY t    = C (AllowedBy t)
-> pattern ALLOWEDEPSILON = C AllowedEpsilon
-> pattern ALLOWEDCONS _S _T q s ts = C (AllowedCons _S _T q s ts)
-
 Equality
 
 > pattern EQBLUE p q = C (EqBlue p q)
@@ -440,77 +388,10 @@ UId
 > pattern UID    = C UId
 > pattern TAG s  = C (Tag s)
 
-Enum
-
-> pattern ZE         = C Ze
-> pattern SU n       = C (Su n)
-> pattern NILN       = ZE
-> pattern CONSN      = SU ZE
-> pattern ENUMT e    = C (EnumT e)
-> pattern NILE       = CON (PAIR NILN VOID)
-> pattern CONSE t e  = CON (PAIR CONSN (PAIR t (PAIR e VOID)))
-
-Desc
-
-> pattern MU l x        = C (Mu (l :?=: Identity x))
-
-Define a bunch of codes for the primitives of this universe:
-
-> pattern IDN     = ZE
-> pattern CONSTN  = SU ZE
-> pattern SUMN    = SU (SU ZE)
-> pattern PRODN   = SU (SU (SU ZE))
-> pattern SIGMAN  = SU (SU (SU (SU ZE)))
-> pattern PIN     = SU (SU (SU (SU (SU ZE))))
-
-... And their representation.
-
-> pattern IDD           = CON (PAIR IDN     VOID)
-> pattern CONSTD x      = CON (PAIR CONSTN  (PAIR x VOID))
-> pattern SUMD e b      = CON (PAIR SUMN    (PAIR e (PAIR b VOID)))
-> pattern PRODD u d d'  = CON (PAIR PRODN   (PAIR u (PAIR d (PAIR d' VOID))))
-> pattern SIGMAD s t    = CON (PAIR SIGMAN  (PAIR s (PAIR t VOID)))
-> pattern PID s t       = CON (PAIR PIN     (PAIR s (PAIR t VOID)))
-
-IDesc
-
-> pattern IMU l ii x i  = C (IMu (l :?=: (Identity ii :& Identity x)) i)
-
-Define a bunch of codes for the primitives of this universe:
-
-> pattern IVARN     = ZE
-> pattern ICONSTN   = SU ZE
-> pattern IPIN      = SU (SU ZE)
-> pattern IFPIN     = SU (SU (SU ZE))
-> pattern ISIGMAN   = SU (SU (SU (SU ZE)))
-> pattern IFSIGMAN  = SU (SU (SU (SU (SU ZE))))
-> pattern IPRODN    = SU (SU (SU (SU (SU (SU ZE)))))
-
-... And their representation
-
-> pattern IVAR i        = CON (PAIR IVARN     (PAIR i VOID))
-> pattern IPI s t       = CON (PAIR IPIN      (PAIR s (PAIR t VOID)))
-> pattern IFPI s t      = CON (PAIR IFPIN     (PAIR s (PAIR t VOID)))
-> pattern ISIGMA s t    = CON (PAIR ISIGMAN   (PAIR s (PAIR t VOID)))
-> pattern IFSIGMA s t   = CON (PAIR IFSIGMAN  (PAIR s (PAIR t VOID)))
-> pattern ICONST p      = CON (PAIR ICONSTN   (PAIR p VOID))
-> pattern IPROD u x y   = CON (PAIR IPRODN    (PAIR u (PAIR x (PAIR y VOID))))
-
-FreeMonad
-
-> pattern MONAD d x   = C (Monad d x)
-> pattern RETURN x    = C (Return x)
-> pattern COMPOSITE t = C (Composite t)
-
 Labelled Types (chopping block)
 
 > pattern LABEL l t = C (Label l t)
 > pattern LRET t    = C (LRet t)
-
-Nu
-
-> pattern NU l t = C (Nu (l :?=: Identity t))
-> pattern COIT d sty f s = C (CoIt d sty f s)
 
 Prob
 
@@ -984,16 +865,6 @@ throwErrTm = throwStack . StackError . pure . errTm
 >     traverse _ Set       = pure Set
 >     traverse f (Pi s t)  = Pi <$> f s <*> f t
 >     traverse f (Con t)   = Con <$> f t
->     traverse _ Anchors = pure Anchors
->     traverse f (Anchor u t ts) = Anchor <$> f u <*> f t <*> f ts
->     traverse f (AllowedBy t) = AllowedBy <$> f t
->     traverse f AllowedEpsilon = pure AllowedEpsilon
->     traverse f (AllowedCons _S _T q s ts) =
->         AllowedCons <$> f _S <*> f _T <*> f q <*> f s <*> f ts
->     traverse f (Mu l) = Mu <$> traverse f l
->     traverse f (EnumT e)    = EnumT <$> f e
->     traverse _ Ze           = pure Ze
->     traverse f (Su n)       = Su <$> f n
 >     traverse f (EqBlue (pty :>: p) (qty :>: q)) =
 >       let trav1 = (:>:) <$> f pty <*> f p
 >           trav2 = (:>:) <$> f qty <*> f q
@@ -1001,12 +872,9 @@ throwErrTm = throwStack . StackError . pure . errTm
 >     traverse f (Monad d x)   = Monad <$> f d <*> f x
 >     traverse f (Return x)    = Return <$> f x
 >     traverse f (Composite x) = Composite <$> f x
->     traverse f (IMu l i)     = IMu <$> traverse f l <*> f i
 >     traverse f (Label l t) = Label <$> f l <*> f t
 >     traverse f (LRet t)    = LRet <$> f t
->     traverse f (Nu t) = Nu <$> traverse f t
 >     traverse f (Record t) = Record <$> traverse f t
->     traverse f (CoIt d sty g s) = CoIt <$> f d <*> f sty <*> f g <*> f s
 >     traverse _ Prob = pure Prob
 >     traverse f (ProbLabel u s a) = ProbLabel <$> f u <*> f s <*> f a
 >     traverse f (PatPi u s p) = PatPi <$> f u <*> f s <*> f p
@@ -1047,40 +915,16 @@ throwErrTm = throwStack . StackError . pure . errTm
 >         Just $ Pi (s1,s2) (t1,t2)
 >     halfZip (Con t1) (Con t2) =
 >         Just $ Con (t1,t2)
->     halfZip Anchors Anchors =
->         Just Anchors
->     halfZip (Anchor u1 t1 ts1) (Anchor u2 t2 ts2) =
->         Just $ Anchor (u1, u2) (t1, t2) (ts1, ts2)
->     halfZip (AllowedBy t1) (AllowedBy t2) =
->         Just $ AllowedBy (t1, t2)
->     halfZip AllowedEpsilon AllowedEpsilon =
->         Just $ AllowedEpsilon
->     halfZip (AllowedCons _S1 _T1 q1 s1 ts1) (AllowedCons _S2 _T2 q2 s2 ts2) =
->         Just $ AllowedCons (_S1, _S2) (_T1, _T2) (q1, q2) (s1, s2) (ts1, ts2)
->     halfZip (Mu t0) (Mu t1) =
->         Mu <$> halfZip t0 t1
->     halfZip (EnumT t0) (EnumT t1) =
->         Just (EnumT (t0,t1))
->     halfZip Ze Ze =
->         Just Ze
->     halfZip (Su t0) (Su t1) =
->         Just (Su (t0,t1))
 >     halfZip (Monad d1 x1) (Monad d2 x2) =
 >         Just (Monad (d1, d2) (x1, x2))
 >     halfZip (Return x) (Return y) =
 >         Just (Return (x, y))
 >     halfZip (Composite x) (Composite y) =
 >         Just (Composite (x, y))
->     halfZip (IMu l0 i0) (IMu l1 i1) =
->         IMu <$> halfZip l0 l1 <*> pure (i0,i1)
 >     halfZip (Label l1 t1) (Label l2 t2) =
 >         Just (Label (l1,l2) (t1,t2))
 >     halfZip (LRet x) (LRet y)           =
 >         Just (LRet (x,y))
->     halfZip (Nu t0) (Nu t1)  =
->         Nu <$> halfZip t0 t1
->     halfZip (CoIt d0 sty0 g0 s0) (CoIt d1 sty1 g1 s1) =
->         Just (CoIt (d0,d1) (sty0,sty1) (g0,g1) (s0,s1))
 >     halfZip Prob Prob =
 >         Just Prob
 >     halfZip (ProbLabel u1 s1 a1) (ProbLabel u2 s2 a2) =

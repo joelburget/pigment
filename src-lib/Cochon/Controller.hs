@@ -55,9 +55,7 @@ import ProofState.Interface.Parameter
 import ProofState.Structure.Developments
 import ProofState.Structure.Entries
 
-import Tactics.Data
 import Tactics.Elimination
-import Tactics.IData
 import Tactics.Matching
 import Tactics.ProblemSimplify
 import Tactics.PropositionSimplify

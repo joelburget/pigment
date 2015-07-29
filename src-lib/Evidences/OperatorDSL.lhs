@@ -55,8 +55,9 @@ try this.
 > runOpTree (OPr f)   (v : xs)  = runOpTree f (v $$ Fst : v $$ Snd : xs)
 > runOpTree (OCase bs) (i : xs)   = ((bs !!) <$> (num i)) >>= \ b -> runOpTree b xs where
 >   num :: VAL -> Either NEU Int
->   num ZE      = Right 0
->   num (SU n)  = (1+) <$> (num n)
+>   -- XXX what does this do?
+>   -- num ZE      = Right 0
+>   -- num (SU n)  = (1+) <$> (num n)
 >   num (N e)   = Left e
 > runOpTree (OCon f) (CON t : xs)  = runOpTree f (t : xs)
 > runOpTree (OSet f) (C c :  xs)   = runOpTree (f c) xs

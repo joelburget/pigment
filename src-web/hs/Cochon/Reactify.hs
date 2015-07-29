@@ -52,23 +52,6 @@ canReactify Set       = ("set", mempty)
 canReactify (Pi s t)  = ("pi", pi_ (DPI s t))
 canReactify (Con x)   = ("con", dInTmRN_ x)
 
--- Desc
-
-canReactify (Mu (Just l   :?=: _)) = ("mujust", dInTmRN_ l)
-canReactify (Mu (Nothing  :?=: Identity t)) = ("munothing", dInTmRN_ t)
-
--- IDesc
-
-canReactify (IMu (Just l   :?=: _) i)  = ("imujust", dInTmRN_ l <> dInTmRN_ i)
-canReactify (IMu (Nothing  :?=: (Identity ii :& Identity d)) i)  =
-    ("imunothing", dInTmRN_ ii <> dInTmRN_ d <> dInTmRN_ i)
-
--- Enum
-
-canReactify (EnumT t)  = ("enumt", dInTmRN_ t)
-canReactify Ze         = ("ze", mempty)
-canReactify (Su t)     = ("su", "TODO Su") -- reactifyEnumIndex 1 t)
-
 -- Definitional Equality
 
 canReactify (EqBlue pp qq) = ("eqblue", dInTmRN_ (DEqBlue (foo pp) (foo qq)))
@@ -77,22 +60,10 @@ canReactify (EqBlue pp qq) = ("eqblue", dInTmRN_ (DEqBlue (foo pp) (foo qq)))
     foo (_    :>: DN x  ) = x
     foo (xty  :>: x     ) = DType xty ::$ [A x]
 
--- Free Monad
-
-canReactify (Monad d x)   = ("monad", dInTmRN_ d <> dInTmRN_ x)
-canReactify (Return x)    = ("return", dInTmRN_ x)
-canReactify (Composite x) = ("composite", dInTmRN_ x)
-
 -- Labelled Types
 
 canReactify (Label l t) = ("label", dInTmRN_ l <> dInTmRN_ t)
 canReactify (LRet x) = ("lret", dInTmRN_ x)
-
--- Nu
-
-canReactify (Nu (Just l :?=: _))  = ("nujust", dInTmRN_ l)
-canReactify (Nu (Nothing :?=: Identity t))  = ("nunothing", dInTmRN_ t)
-canReactify (CoIt d sty f s) = ("coit", forReact [d, sty, f, s] dInTmRN_)
 
 -- XXX Prob?
 
@@ -141,15 +112,6 @@ canReactify (Pair a b)   = ("pair", pair_ (DPAIR a b))
 
 canReactify UId      = ("uid", mempty)
 canReactify (Tag s)  = ("tag", fromString s)
-
--- Anchors
-
-canReactify (Anchor (DTAG u) t ts) =
-    ("anchor", fromString u <> dInTmRN_ t <> dInTmRN_ ts)
-canReactify AllowedEpsilon = ("allowedepsilon", mempty)
-canReactify (AllowedCons _ _ _ s ts) =
-    ("allowedcons", dInTmRN_ s <> dInTmRN_ ts)
--- XXX Anchors, AllowedBy
 
 -- canReactify can       = fromString $ "TODO(joel) - " ++ show can
 

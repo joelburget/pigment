@@ -65,9 +65,6 @@ This translates into the following code:
 > PAIR x y $$ Fst = x
 > PAIR x y $$ Snd = y
 > LRET t $$ Call l = t
-> COIT d sty f s $$ Out = mapOp @@ [d, sty, NU Nothing d,
->     L $ "s" :. (let s = 0 in COIT (d -$ []) (sty -$ []) (f -$ []) (NV s)),
->     f $$ A s]
 
 > f            $$ e    =  error $
 >     "Can't eliminate `" ++ show f ++ "` with eliminator `" ++ show e ++ "`"
@@ -212,16 +209,3 @@ its methods, if we're lucky and well prepared.
 >     mkMap (c : cs)  (c' : s)  rho  | c /= c'   = mkMap cs s ((c, [c']) : rho)
 >     mkMap (_ : cs)  (_ : s)   rho  = mkMap cs s rho
 > naming _ _ rho = rho
-
-Util
-----
-
-The `sumlike` function determines whether a value representing a
-description is a sum or a sigma from an enumerate. If so, it returns
-`Just` the enumeration and a function from the enumeration to
-descriptions.
-
-> sumlike :: VAL -> Maybe (VAL, VAL -> VAL)
-> sumlike (SUMD e b)            = Just (e, (b $$) . A)
-> sumlike (SIGMAD (ENUMT e) f)  = Just (e, (f $$) . A)
-> sumlike _                     = Nothing

@@ -124,20 +124,6 @@ components.
 >     let body = N (ex :$ A (N (V 0 :$ Fst)) :$ A (N (V 0 :$ Snd)))
 >     topWrap b $ L ("ps" :. body) :=>: L ("ps" :. body)
 
-Similarly, if we have a function from an enumeration, we can split it
-into its branches.
-
-> simplifyGoal b (PI (ENUMT e) t) | checkTags e = do
->     simpTrace "PI ENUMT"
->     x :=>: xv <- trySimplifyGoal False (branchesOp @@ [e, t])
->     let body = N (switchOp :@ [e, NV 0, t, x])
->     topWrap b $ L ("pe" :. body) :=>: L ("pe" :. body)
->   where
->     checkTags :: VAL -> Bool
->     checkTags NILE         = True
->     checkTags (CONSE _ e)  = checkTags e
->     checkTags _            = False
-
 If we have a function from a proof, we call on propositional
 simplification to help out. If the proposition is absurd we win, and if
 it simplifies into a conjunction we abstract over each conjunct

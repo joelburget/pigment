@@ -60,8 +60,6 @@ follows,
 >           ALL (sS1 -$ []) $ L $ "s1" :. (let { s1 = 0; s2 = 1 } in
 >            IMP  (EQBLUE ((sS2 -$ []) :>: NV s2) ((sS1 -$ []) :>: NV s1)) $
 >             (SET :>: (tT1 -$ [ NV s1 ])) <:-:> (SET :>: (tT2 -$ [ NV s2 ])) ) )
-> opRunEqGreen [SET, C (Mu (_ :?=: Identity t0)), SET, C (Mu (_ :?=: Identity t1))] =
->     opRunEqGreen [desc, t0, desc, t1]
 
 Unless overridden by a feature or preceding case, we determine equality
 of canonical values in canonical sets by labelling subterms of the
@@ -143,134 +141,9 @@ system, they should not inspect the proof, but may eliminate it with
 >          t1 = f1 -$ [ s1 ]
 >     in   coe :@ [  tT1 -$ [ s1 ], tT2 -$ [ NV s2 ]
 >                 ,  CON $ (q $$ Snd) -$ [ NV s2 , s1 , sq ] , t1 ] )
-> coerce (Mu (Just (l0,l1) :?=: Identity (d0,d1))) q (CON x) =
->   let typ = ARR desc (ARR ANCHORS SET)
->       vap = L $ "d" :. (let d = 0 :: Int in L $ "l" :. (let {l = 0; d = 1} in N $
->               descOp :@ [NV d,MU (Just $ NV l) (NV d)] ) )
->   in Right . CON $
->     coe @@ [ descOp @@ [ d0 , MU (Just l0) d0 ]
->            , descOp @@ [ d1 , MU (Just l1) d1 ]
->            , CON $ pval refl $$ A typ $$ A vap $$ Out
->                              $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
->                              $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
->            , x ]
-> coerce (Mu (Nothing :?=: Identity (d0,d1))) q (CON x) =
->   let typ = ARR desc SET
->       vap = L $ "d" :. (let d = 0 :: Int in N $
->               descOp :@ [NV d,MU Nothing (NV d)] )
->   in Right . CON $
->     coe @@ [ descOp @@ [ d0 , MU Nothing d0 ]
->            , descOp @@ [ d1 , MU Nothing d1 ]
->            , CON $ pval refl $$ A typ $$ A vap $$ Out
->                              $$ A d0 $$ A d1 $$ A (CON q)
->            , x ]
-> coerce (EnumT (CONSE _ _,   CONSE _ _))      _  ZE = Right ZE
-> coerce (EnumT (CONSE _ e1,  CONSE _ e2))     q  (SU x) = Right . SU $
->   coe @@ [ENUMT e1, ENUMT e2, CON $ q $$ Snd $$ Snd $$ Fst, x]  -- `CONSE` tails
-> coerce (EnumT (NILE,        NILE))           q  x = Right x
-> coerce (EnumT (NILE,        t@(CONSE _ _)))  q  x = Right $
->   nEOp @@ [q, ENUMT t]
-> coerce (EnumT (CONSE _ _,   NILE))           q  x = Right $
->   nEOp @@ [q, ENUMT NILE]
-> coerce (Monad (d1, d2) (x1, x2)) q (RETURN v) =
->   Right . RETURN $ coe @@ [x1, x2, CON (q $$ Snd), v]
-> coerce (Monad (d1, d2) (x1, x2)) q (COMPOSITE y) =
->   Right . COMPOSITE $ coe @@ [
->       descOp @@ [d1, MONAD d1 x1],
->       descOp @@ [d2, MONAD d2 x2],
->       error "FreeMonad.coerce: missing equality proof",
->       y
->     ]
-> -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
-> coerce (IMu (Just (l0,l1) :?=:
->             (Identity (iI0,iI1) :& Identity (d0,d1))) (i0,i1)) q (CON x) =
->   let ql  = CON $ q $$ Fst
->       qiI = CON $ q $$ Snd $$ Fst
->       qi  = CON $ q $$ Snd $$ Snd $$ Snd
->       qd = CON $ q $$ Snd $$ Snd $$ Fst
->       typ =
->         PI SET $ L $ "iI" :. (let { iI = 0 } in
->          ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
->           ARR (NV iI) $
->            ARR (ARR (NV iI) ANCHORS) SET )
->       vap =
->         L $ "iI" :. (let { iI = 0 :: Int } in
->          L $ "d" :. (let { d = 0; iI = 1 } in
->           L $ "i" :. (let { i = 0; d = 1; iI = 2} in
->            L $ "l" :. (let { l = 0; i = 1; d = 2; iI = 3 } in N $
->             idescOp :@ [ NV iI , N (V d :$ A (NV i))
->                        , L $ "j" :. (let { j = 0; l = 1; i = 2; d = 3; iI = 4 } in
->                           IMU (pure (NV l)) (NV iI) (NV d) (NV j))
->                        ] ) ) ) )
->   in Right . CON $
->     coe @@ [ idescOp @@ [  iI0, d0 $$ A i0
->                         ,  L $ "i" :. (let { i = 0 :: Int } in
->                             IMU (pure (l0 -$ [])) (iI0 -$ []) (d0 -$ []) (NV i)
->                            )
->                         ]
->            , idescOp @@ [  iI1, d1 $$ A i1
->                         ,  L $ "i" :. (let { i = 0 :: Int } in
->                             IMU (pure (l1 -$ [])) (iI1 -$ []) (d1 -$ []) (NV i)
->                            )
->                         ]
->            , CON $ pval refl $$ A typ $$ A vap $$ Out
->                              $$ A iI0 $$ A iI1 $$ A qiI
->                              $$ A d0 $$ A d1 $$ A qd
->                              $$ A i0 $$ A i1 $$ A qi
->                              $$ A l0 $$ A l1 $$ A ql
->            , x ]
-> coerce (IMu (Nothing :?=: (Identity (iI0,iI1) :& Identity (d0,d1))) (i0,i1)) q (CON x) =
->   let qiI = CON $ q $$ Fst
->       qi  = CON $ q $$ Snd $$ Snd
->       qd = CON $ q $$ Snd $$ Fst
->       typ =
->         PI SET $ L $ "iI" :. (let { iI = 0 :: Int } in
->          ARR (ARR (NV iI) (idesc -$ [ NV iI ])) $
->           ARR (NV iI) SET )
->       vap =
->         L $ "iI" :. (let { iI = 0 :: Int } in
->          L $ "d" :. (let { d = 0; iI = 1 } in
->           L $ "i" :. (let { i = 0; d = 1; iI = 2 } in N $
->             idescOp :@ [ NV iI , N (V d :$ A (NV i))
->                        , L $ "j" :. (let { j = 0; i = 1; d = 2; iI = 3 } in
->                           IMU Nothing (NV iI) (NV d) (NV j))
->                        ] ) ) )
->   in Right . CON $
->     coe @@ [ idescOp @@ [ iI0 , d0 $$ A i0
->                         , L $ "i" :. (let { i = 0 :: Int } in
->                             IMU Nothing (iI0 -$ []) (d0 -$ []) (NV i) ) ]
->            , idescOp @@ [ iI1 , d1 $$ A i1
->                         , L $ "i" :. (let { i = 0 :: Int } in
->                             IMU Nothing (iI1 -$ []) (d1 -$ []) (NV i) ) ]
->            , CON $ pval refl $$ A typ $$ A vap $$ Out
->                              $$ A iI0 $$ A iI1 $$ A qiI
->                              $$ A d0 $$ A d1 $$ A qd
->                              $$ A i0 $$ A i1 $$ A qi
->            , x ]
 > coerce (Label (l1, l2) (t1, t2)) q (LRET t) =
 >     Right $ LRET $ coe @@ [t1, t2, CON (q $$ Snd), t]
 > -- coerce :: (Can (VAL,VAL)) -> VAL -> VAL -> Either NEU VAL
-> coerce (Nu (Just (l0,l1) :?=: Identity (d0,d1))) q (CON x) =
->   let typ = ARR desc (ARR SET SET)
->       vap = L $ "d" :. (let { d = 0 :: Int } in L $ "l" :. (let { l = 0; d = 1 } in N $
->               descOp :@ [NV d,NU (Just $ NV l) (NV d)]))
->   in Right . CON $
->     coe @@ [ descOp @@ [ d0 , NU (Just l0) d0 ]
->            , descOp @@ [ d1 , NU (Just l1) d1 ]
->            , CON $ pval refl $$ A typ $$ A vap $$ Out
->                              $$ A d0 $$ A d1 $$ A (CON $ q $$ Snd)
->                              $$ A l0 $$ A l1 $$ A (CON $ q $$ Fst)
->            , x ]
-> coerce (Nu (Nothing :?=: Identity (d0,d1))) q (CON x) =
->   let typ = ARR desc SET
->       vap = L $ "d" :. (let { d = 0 :: Int } in N $
->               descOp :@ [NV d,NU Nothing (NV d)])
->   in Right . CON $
->     coe @@ [ descOp @@ [ d0 , NU Nothing d0 ]
->            , descOp @@ [ d1 , NU Nothing d1 ]
->            , CON $ pval refl $$ A typ $$ A vap $$ Out
->                              $$ A d0 $$ A d1 $$ A (CON q)
->            , x ]
 > coerce Prop              q pP  = Right pP
 > coerce (Prf (pP1, pP2))  q p   = Right $ q $$ Fst $$ A p
 > coerce (Quotient (_X, _Y) _ _) q (CLASS x) = Right $
@@ -296,7 +169,6 @@ the types of references.
 
 > partialEq :: VAL -> VAL -> VAL -> Bool
 > partialEq _ _ (N (P r :$ _ :$ _))    | r == refl                = True
-> partialEq (C (Mu t1)) (C (Mu t2)) _  | eqLabelIncomplete t1 t2  = True
 > partialEq _ _ _ = False
 
 Sadly we cannot do the following, because it is not safe to invent a

@@ -60,9 +60,7 @@ import ProofState.Interface.Solving
 import ProofState.Interface.Parameter
 import ProofState.Structure.Developments
 import ProofState.Structure.Entries
-import Tactics.Data
 import Tactics.Elimination
-import Tactics.IData
 import Tactics.Matching
 import Tactics.ProblemSimplify
 import Tactics.PropositionSimplify
@@ -101,14 +99,12 @@ cochonTactics = sort
     , jumpTac
     , undoTac
     , validateTac
-    , dataTac
     , eliminateTac
     , retTac
     , defineTac
     , byTac
     , refineTac
     , solveTac
-    -- , idataTac
     , elmTac
     , elaborateTac
     -- TODO(joel) - figure out a system for synonyms
@@ -707,71 +703,6 @@ solveTac = simpleCT
         ]
     )
 
-
-{-
-idataTac = CochonTactic
-    {  ctName = "idata"
-    ,  ctDesc = (
-        TfSequence
-            [ "idata"
-            , TfName "name"
-            , TfRepeatZero (
-                    -- TODO(joel) is this tfAscription? this is a thing.
-                    -- what is this?
-                    TfBracketed Round (TfSequence
-                        [ TfName "para"
-                        , TfKeyword KwAsc
-                        , TfInArg "ty" Nothing
-                        ])
-                    )
-            , TfKeyword KwAsc
-            , TfInArg "inx" Nothing -- TODO(joel) - better name
-            , TfKeyword KwArr
-            , TfKeyword KwSet
-            , TfKeyword KwDefn
-            , TfRepeatZero (
-                TfBracketed Round (TfRepeatZero
-                    (TfSep
-                        (TfSequence
-                            [ TfKeyword KwTag
-                            , TfName "con"
-                            , TfKeyword KwAsc
-                            , TfName "ty"
-                            ]
-                        )
-                        KwSemi
-                    )
-                )
-              )
-            ]
-        )
-    , ctxTrans = \(TrSequence
-        [ TrName nom
-        , TrRepeatZero pars
-        , TrKeyword
-        , indty
-        , TrKeyword
-        , TrKeyword
-        , TrKeyword
-        , cons
-        ]) -> simpleOutput Historic $ do
-            ielabData
-                nom
-                (argList (argPair argToStr argToIn) pars)
-                (argToIn indty)
-                (argList (argPair argToStr argToIn) cons)
-            return "Data'd."
-    , ctHelp = TacticHelp
-           "idata <name> [<para>]* : <inx> -> Set  := [(<con> : <ty>) ;]*"
-           "idata Vec (A : Set) : Nat -> Set := ('cons : (n : Nat) -> (a : A) -> (as : Vec A n) -> Vec A ('suc n)) ;"
-           "Create a new indexed data type"
-           [ ("<name>", "Choose the name of your datatype carefully")
-           , ("<para>", "Type parameters")
-           , ("<inx>", "??")
-           , ("<con : ty>", "Give each constructor a unique name and a type")
-           ]
-    }
--}
 
 
 {-

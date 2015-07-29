@@ -57,57 +57,6 @@ indeed, they are actually bound variables. Hence, we collect this *local
 scope* as a list of `Entries`.
 
 > distill :: Entries -> (TY :>: INTM) -> ProofStateT INTM (DInTmRN :=>: VAL)
-> distill es (ANCHORS :>: x@(ANCHOR (TAG u) t ts)) = do
->     (displayTs :=>: _) <- distill es (ALLOWEDBY (evTm t) :>: ts)
->     return (DANCHOR u displayTs :=>: evTm x)
-
-The following cases turn vaguely list-like data into actual lists. We
-don't want this in general, but it is useful in special cases (when the
-data type is really supposed to be a list, as in `EnumD`).
-
-> distill _ (MU (Just (ANCHOR (TAG r) _ _)) _ :>: CON (PAIR ZE VOID))
->     | r == "EnumU" = return (DVOID :=>: CON (PAIR ZE VOID))
-> distill es (C ty@(Mu (Just (ANCHOR (TAG r) _ _) :?=: _)) :>:
->     C c@(Con (PAIR (SU ZE) (PAIR _ (PAIR _ VOID)))))
->     | r == "EnumU" = do
->       Con (DPAIR _ (DPAIR s (DPAIR t _)) :=>: v) <- canTy  (distill es)
->                                                            (ty :>: c)
->       return (DPAIR s t :=>: CON v)
-
-If we have a canonical value in `MU s`, where `s` starts with a finite
-sum, then we can (probably) turn it into a tag applied to some
-arguments.
-
-> distill es (ty@(MU l s) :>: CON (PAIR t x)) | Just (e, f) <- sumlike s = do
->     m   :=>: tv  <- distill es (ENUMT e :>: t)
->     as  :=>: xv  <- distill es (descOp @@ [f tv, ty] :>: x)
->     case m of
->         DTAG s   -> return $ DTag s (unfold as)  :=>: CON (PAIR tv xv)
->         _        -> return $ DCON (DPAIR m as)   :=>: CON (PAIR tv xv)
->   where
->     unfold :: DInTmRN -> [DInTmRN]
->     unfold DU           = [] -- since DVOID gets turned into this first
->     unfold DVOID        = []
->     unfold (DPAIR s t)  = s : unfold t
->     unfold t            = [t]
-
-Conversely, we can distill an index to a tag as follows. Note that if
-the index contains a stuck term, we simply give up and let the normal
-distillation rules take over; the pretty-printer will then do the right
-thing.
-
-> distill _ (ENUMT t :>: tm) | Just r <- findIndex (t :>: tm) = return r
->     where
->       findIndex :: (VAL :>: INTM) -> Maybe (DInTmRN :=>: VAL)
->       findIndex (CONSE (TAG s)  _ :>: ZE)    = Just (DTAG s :=>: evTm tm)
->       findIndex (CONSE _        a :>: SU b)  = findIndex (a :>: b)
->       findIndex _                            = Nothing
-
-Since elaboration turns lists into functions from enumerated types, we
-can do the reverse when distilling. This is slightly dubious.
-
-> distill es (PI (ENUMT e) t :>: L (x :. N (op :@ [e', NV 0, t', b])))
->   | op == switchOp = distill es (branchesOp @@ [e, t] :>: b)
 > distill es (PROP :>: tm@(EQBLUE (tty :>: t) (uty :>: u))) = do
 >     t' <- toDExTm es (tty :>: t)
 >     u' <- toDExTm es (uty :>: u)
@@ -122,48 +71,7 @@ return refl instead.
 >     if equal (SET :>: (_S, _T)) r && equal (_S :>: (s, t)) r
 >         then return (DU :=>: N (P refl :$ A _S :$ A s))
 >         else distillBase es (p :>: q)
-> distill es (IMU l _I s i :>: CON (PAIR t x))
->   | Just (e, f) <- sumilike _I (s $$ A i) = do
->     m   :=>: tv  <- distill es (ENUMT e :>: t)
->     as  :=>: xv  <-
->       distill es (idescOp @@ [  _I,f tv
->                              ,  L $ "i" :. (let { i = 0 :: Int } in
->                                   IMU (fmap (-$ []) l)
->                                       (_I -$ []) (s -$ []) (NV i))
->                              ] :>: x)
->     case m of
->         DTAG s   -> return $ DTag s (unfold as)  :=>: CON (PAIR tv xv)
->         _        -> return $ DCON (DPAIR m as)   :=>: CON (PAIR tv xv)
->   where
->     unfold :: DInTmRN -> [DInTmRN]
->     unfold DVOID        = []
->     unfold DU        = []
->     unfold (DPAIR s t)  = s : unfold t
->     unfold t            = [t]
-> distill es (SET :>: tm@(C (IMu ltm@(Just l :?=: (Identity _I :& Identity s)) i))) = do
->     let lab = evTm ((l :? ARR _I ANCHORS) :$ A i)
->     (labDisplay :=>: _)  <- distill es (ANCHORS :>: lab)
->     _It :=>: _Iv         <- distill es (SET :>: _I)
->     st :=>: sv           <- distill es (ARR _Iv (idesc $$ A _Iv) :>: s)
->     it :=>: iv           <- distill es (_Iv :>: i)
->     return (DIMU (Just labDisplay) _It st it :=>: evTm tm)
 
-To avoid an infinite loop when distilling, we have to be a little
-cleverer and call canTy directly rather than letting distill do it for
-us.
-
-> distill _ (NU _ _ :>: CON (PAIR ZE VOID)) =
->     return (DVOID :=>: CON (PAIR ZE VOID))
-> distill es (C ty@(Nu _) :>: C c@(Con (PAIR (SU ZE) (PAIR _ (PAIR _ VOID))))) = do
->     Con (DPAIR _ (DPAIR s (DPAIR t _)) :=>: v) <- canTy (distill es) (ty :>: c)
->     return (DPAIR s t :=>: CON v)
-
-If a label is not in scope, we remove it, so the definition appears at
-the appropriate place when the proof state is printed.
-
-> distill es (SET :>: tm@(C (Nu ltm@(Just _ :?=: _)))) = do
->     cc <- canTy (distill es) (Set :>: Nu ltm)
->     return ((DC $ fmap termOf cc) :=>: evTm tm)
 > distill es (PRF TRIVIAL :>: _) = return (DU :=>: VOID)
 > distill es (UNIT :>: _) = return $ DVOID :=>: VOID
 > distill entries tt = distillBase entries tt

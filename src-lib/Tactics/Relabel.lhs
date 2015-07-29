@@ -190,35 +190,6 @@ pieces.
 >                             -> StateT x (ProofStateT t) a
 >     liftage = mapStateT . liftErrorState
 
-If it is a tag (possibly applied to arguments) and needs to be matched
-against an element of an inductive type, we match the tags and values.
-
-> relabelValue (ty@(MU l d) :>: (DTag s as, CON (PAIR t xs)))
->   | Just (e, f) <- sumlike d = do
->     ntm :=>: nv  <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
->     sameTag      <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->     unless sameTag $ throwState $ errMsgStack "relabel: mismatched tags!"
->     relabelValue (descOp @@ [f t, ty] :>: (foldr DPAIR DVOID as, xs))
-
-Similarly for indexed data types:
-
-> relabelValue (IMU l _I d i :>: (DTag s as, CON (PAIR t xs)))
->   | Just (e, f) <- sumilike _I (d $$ A i) = do
->     ntm :=>: nv  <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
->     sameTag      <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->     unless sameTag $ throwState $ errMsgStack "relabel: mismatched tags!"
->     relabelValue (idescOp @@ [_I, f t,
->         L $ "i" :. (let i = 0 in
->                     IMU (fmap (-$ []) l) (_I -$ []) (d -$ []) (NV i)) ]
->             :>: (foldr DPAIR DU as, xs))
-
-Lest we forget, tags may also belong to enumerations!
-
-> relabelValue (ENUMT e :>: (DTag s [], t)) = do
->   ntm :=>: nv <- lift $ elaborate (Loc 0) (ENUMT e :>: DTAG s)
->   sameTag <- lift $ withNSupply $ equal (ENUMT e :>: (nv, t))
->   unless sameTag $ lift $ throwDTmStr "relabel: mismatched tags!"
-
 Nothing else matches? We had better give up.
 
 > relabelValue (ty :>: (w, v)) = lift $ throwErrorS

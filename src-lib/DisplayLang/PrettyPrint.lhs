@@ -36,27 +36,9 @@ TODO this Keyword business doesn't belong here
 >     | KwCon
 >     | KwOut
 
-Desc
-
->     | KwMu
-
-EnumT
-
->     | KwEnum
->     | KwPlus
-
 Equality
 
 >     | KwEqBlue
-
-Free Monad
-
->     | KwMonad
->     | KwReturn
-
-IDesc
-
->     | KwIMu
 
 Labelled Types
 
@@ -64,11 +46,6 @@ Labelled Types
 >     | KwLabel
 >     | KwLabelEnd
 >     | KwRet
-
-Nu
-
->     | KwNu
->     | KwCoIt
 
 Prob
 
@@ -136,27 +113,9 @@ UId
 > key KwCon        = "con"
 > key KwOut        = "%"
 
-Desc
-
-> key KwMu         = "Mu"
-
-Enum
-
-> key KwEnum       = "Enum"
-> key KwPlus       = "+"
-
 Equality
 
 > key KwEqBlue     = "=="
-
-Free Monad
-
-> key KwMonad      = "Monad"
-> key KwReturn     = "`"  -- rename me
-
-IDesc
-
-> key KwIMu        = "IMu"
 
 Labelled Types
 
@@ -164,11 +123,6 @@ Labelled Types
 > key KwLabel      = "<"
 > key KwLabelEnd   = ">"
 > key KwRet        = "return"  -- rename me
-
-Nu
-
-> key KwNu         = "Nu"
-> key KwCoIt       = "CoIt"
 
 Prob
 
@@ -259,47 +213,15 @@ being with Pi types.
 >     pretty Set       = const (kword KwSet)
 >     pretty (Pi s t)  = prettyPi empty (DPI s t)
 >     pretty (Con x)   = wrapDoc (kword KwCon <> pretty x ArgSize) AppSize
->     pretty (Anchor (DTAG u) t ts) = wrapDoc (text u <> pretty ts ArgSize) ArgSize
->     pretty AllowedEpsilon = const empty
->     pretty (AllowedCons _ _ _ s ts) = wrapDoc (pretty s ArgSize <> pretty ts ArgSize) ArgSize
->     pretty (Mu (Just l   :?=: _)) = pretty l
->     pretty (Mu (Nothing  :?=: Identity t))  = wrapDoc
->         (kword KwMu <> pretty t ArgSize)
->         AppSize
->     pretty (EnumT t)  = wrapDoc (kword KwEnum <> pretty t ArgSize) AppSize
->     pretty Ze         = const (int 0)
->     pretty (Su t)     = prettyEnumIndex 1 t
 >     pretty (EqBlue pp qq) = pretty (DEqBlue (foo pp) (foo qq))
 >       where
 >         foo :: (DInTmRN :>: DInTmRN) -> DExTmRN
 >         foo (_    :>: DN x  ) = x
 >         foo (xty  :>: x     ) = DType xty ::$ [A x]
->     pretty (Monad d x)   = wrapDoc
->         (kword KwMonad <> pretty d ArgSize <> pretty x ArgSize)
->         ArgSize
->     pretty (Return x)    = wrapDoc
->         (kword KwReturn <> pretty x ArgSize)
->         ArgSize
->     pretty (Composite x) = wrapDoc
->         (kword KwCon <> pretty x ArgSize)
->         ArgSize
->     pretty (IMu (Just l   :?=: _) i)  = wrapDoc
->         (pretty l AppSize <> pretty i ArgSize)
->         AppSize
->     pretty (IMu (Nothing  :?=: (Identity ii :& Identity d)) i)  = wrapDoc
->         (kword KwIMu <> pretty ii ArgSize <> pretty d ArgSize <> pretty i ArgSize)
->         AppSize
 >     pretty (Label l t) = const (kword KwLabel <>
 >         pretty l maxBound <> kword KwAsc <> pretty t maxBound
 >         <> kword KwLabelEnd)
 >     pretty (LRet x) = wrapDoc (kword KwRet <> pretty x ArgSize) ArgSize
->     pretty (Nu (Just l :?=: _))  = pretty l
->     pretty (Nu (Nothing :?=: Identity t))  =
->       wrapDoc (kword KwNu <> pretty t ArgSize) ArgSize
->     pretty (CoIt d sty f s) = wrapDoc
->         (kword KwCoIt <> pretty sty ArgSize
->              <> pretty f ArgSize <> pretty s ArgSize)
->         ArgSize
 >     pretty Prop           = const (kword KwProp)
 >     pretty (Prf p)        = wrapDoc (kword KwPrf <> pretty p AndSize) AppSize
 >     pretty (All p q)      = prettyAll empty (DALL p q)
@@ -388,14 +310,9 @@ than a $\lambda$-term is reached.
 >     pretty (DN n)          = pretty n
 >     pretty (DQ x)          = const (char '?' <> text x)
 >     pretty DU              = const (kword KwUnderscore)
->     pretty (DANCHOR s args)  = wrapDoc (text s <> pretty args ArgSize) ArgSize
 >     pretty (DEqBlue t u) = wrapDoc
 >         (pretty t ArgSize <> kword KwEqBlue <> pretty u ArgSize)
 >         ArgSize
->     pretty (DIMu (Just s   :?=: _) _)  = pretty s
->     pretty (DIMu (Nothing  :?=: (Identity ii :& Identity d)) i)  = wrapDoc
->         (kword KwIMu <> pretty ii ArgSize <> pretty d ArgSize <> pretty i ArgSize)
->         AppSize
 >     pretty (DTAG s)     = const (kword KwTag <> text s)
 >     pretty (DTag s xs)  = wrapDoc (kword KwTag <> text s
 >         <> hsep (map (`pretty` ArgSize) xs)) AppSize
@@ -422,13 +339,6 @@ than a $\lambda$-term is reached.
 >         braces (text x <> kword KwAsc <> pretty s maxBound)
 >             <> pretty schT maxBound
 >         ) ArrSize
-
-> prettyEnumIndex :: Int -> DInTmRN -> Size -> Doc
-> prettyEnumIndex n DZE      = const (int n)
-> prettyEnumIndex n (DSU t)  = prettyEnumIndex (succ n) t
-> prettyEnumIndex n tm       = wrapDoc
->     (int n <> kword KwPlus <> pretty tm ArgSize)
->     AppSize
 
 > prettyAll :: Doc -> DInTmRN -> Size -> Doc
 > prettyAll bs (DALL (DPRF p) (DL (DK q))) = prettyAllMore bs

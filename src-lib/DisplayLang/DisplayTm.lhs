@@ -201,49 +201,11 @@ appropriate places.
 > pattern DTY ty tm   = DType ty ::$ [A tm]
 > pattern DANCHOR s args = DAnchor s args
 
-Desc
-
-> pattern DMU l x        = DC (Mu (l :?=: Identity x))
-> pattern DIDD           = DCON (DPAIR  DZE
->                                       DVOID)
-> pattern DCONSTD x      = DCON (DPAIR  (DSU DZE)
->                                       (DPAIR x DVOID))
-> pattern DSUMD e b      = DCON (DPAIR  (DSU (DSU DZE))
->                                       (DPAIR e (DPAIR b DVOID)))
-> pattern DPRODD u d d'  = DCON (DPAIR  (DSU (DSU (DSU DZE)))
->                                       (DPAIR u (DPAIR d (DPAIR d' DVOID))))
-> pattern DSIGMAD s t    = DCON (DPAIR  (DSU (DSU (DSU (DSU DZE))))
->                                       (DPAIR s (DPAIR t DVOID)))
-> pattern DPID s t       = DCON (DPAIR  (DSU (DSU (DSU (DSU (DSU DZE)))))
->                                       (DPAIR s (DPAIR t DVOID)))
-
-> pattern DENUMT e    = DC (EnumT e)
-> pattern DNILE       = DCON (DPAIR DZE DVOID)
-> pattern DCONSE t e  = DCON (DPAIR (DSU DZE) (DPAIR t (DPAIR e DVOID)))
-> pattern DZE         = DC Ze
-> pattern DSU n       = DC (Su n)
 > pattern DMONAD d x = DC (Monad d x)
 > pattern DRETURN x  = DC (Return x)
 > pattern DCOMPOSITE t = DC (Composite t)
-> pattern DIVARN     = DZE
-> pattern DICONSTN   = DSU DZE
-> pattern DIPIN      = DSU (DSU DZE)
-> pattern DIFPIN     = DSU (DSU (DSU DZE))
-> pattern DISIGMAN   = DSU (DSU (DSU (DSU DZE)))
-> pattern DIFSIGMAN  = DSU (DSU (DSU (DSU (DSU DZE))))
-> pattern DIPRODN    = DSU (DSU (DSU (DSU (DSU (DSU DZE)))))
-> pattern DIMU l ii x i  = DIMu (l :?=: (Identity ii :& Identity x)) i
-> pattern DIVAR i        = DCON (DPAIR DIVARN     (DPAIR i DVOID))
-> pattern DIPI s t       = DCON (DPAIR DIPIN      (DPAIR s (DPAIR t DVOID)))
-> pattern DIFPI s t      = DCON (DPAIR DIFPIN     (DPAIR s (DPAIR t DVOID)))
-> pattern DISIGMA s t    = DCON (DPAIR DISIGMAN   (DPAIR s (DPAIR t DVOID)))
-> pattern DIFSIGMA s t   = DCON (DPAIR DIFSIGMAN  (DPAIR s (DPAIR t DVOID)))
-> pattern DICONST p      = DCON (DPAIR DICONSTN   (DPAIR p DVOID))
-> pattern DIPROD u x y   = DCON (DPAIR DIPRODN    (DPAIR u (DPAIR x (DPAIR y DVOID))))
 > pattern DLABEL l t = DC (Label l t)
 > pattern DLRET t    = DC (LRet t)
-> pattern DNU l t = DC (Nu (l :?=: Identity t))
-> pattern DCOIT d sty f s = DC (CoIt d sty f s)
 > pattern DPROP        = DC Prop
 > pattern DPRF p       = DC (Prf p)
 > pattern DALL p q     = DC (All p q)
