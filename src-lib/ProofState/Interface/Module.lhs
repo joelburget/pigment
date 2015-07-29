@@ -22,6 +22,7 @@ Modules in Proof Context
 > import Evidences.Tm
 > import Evidences.Eval
 
+
 A module is a pretty dull thing: it is just a name and a development. As
 far as I know, there are three usages of modules. The first one is the
 one we are used to: introducing namespaces and avoiding name clashes.
@@ -66,15 +67,34 @@ Section [Tactics.Elimination.analysis](#Tactics.Elimination.analysis).
 >     return $ applySpine ref inScope
 
 
-> withOpenDefinition :: ProofState a -> ProofState a
+> withOpenDefinition :: (CurrentEntry -> ProofState (CurrentEntry, a)) -> ProofState a
 > withOpenDefinition run = do
->     CDefinition LETG ref@(n := defn) _ ty anch meta <- getCurrentEntry
->     Unknown (_ :=>: tyv) <- getDevTip
+>     devTip <- getDevTip
+>     tyv <- case devTip of
+>             Module -> throwDTmStr "cannot open definition: found module"
+>             Unknown   (_ :=>: tyv)   -> return tyv
+>             Suspended (_ :=>: tyv) _ -> return tyv
+>             Defined _ (_ :=>: tyv)   -> return tyv
+>
+>     cd@(CDefinition LETG ref@(n := defn) _ ty anch meta) <- getCurrentEntry
+>
 >     putCurrentEntry (CModule n DevelopData meta)
 >     putDevTip Module
->     x <- run
->     putCurrentEntry $ CDefinition LETG ref (last n) ty anch meta
->     putDevTip $ Unknown (ty :=>: tyv)
+>
+>     -- TODO this requires you to leave off in the same spot -- loosen that
+>     -- restriction
+>     (ce, x) <- run cd
+>
+>     putCurrentEntry ce
+>
+>     let tyTyv = ty :=>: tyv
+>     putDevTip $ case devTip of
+>         Module -> error "panic! withOpenDefinition"
+>         Unknown _ -> Unknown tyTyv
+>         -- TODO this is probably wrong -- should change to ElabDone?
+>         Suspended _ prob -> Suspended tyTyv prob
+>         Defined tm _ -> Defined tm tyTyv
+>
 >     return x
 
 
