@@ -243,13 +243,15 @@ any auxiliary code.
 >              PI (ARR (NV _X) SET) $ L $ "P" :. (let _P = 0; q = 1; y = 2; x = 3; _X = 4 in
 >              ARR (N (V _P :$ A (NV x))) (N (V _P :$ A (NV y)))
 >              )))))
->   seDef = L $ "X" :. (let _X = 0 :: Int in
->             L $ "x" :. (let x = 0; _X = 1 in
->             L $ "y" :. (let y = 0; x = 1; _X = 2 in
->             L $ "q" :. (let q = 0; y = 1; x = 2; _X = 3 in
->             L $ "P" :. (let _P = 0; q = 1; y = 2; x = 3; _X = 4 in
->             L $ "px" :. (let px = 0; _P = 1; q = 2; y = 3; x = 4; _X = 5 in
->             N (coe :@ [N (V _P :$ A (NV x)), N (V _P :$ A (NV y)),
+>   seDef = L $ "X" :. (
+>             L $ "x" :. (
+>             L $ "y" :. (
+>             L $ "q" :. (
+>             L $ "P" :. (
+>             L $ "px" :. (
+>
+>             let px = 0; _P = 1; q = 2; y = 3; x = 4; _X = 5
+>             in N (coe :@ [N (V _P :$ A (NV x)), N (V _P :$ A (NV y)),
 >                 CON (N (P refl :$ A (ARR (NV _X) SET) :$ A (NV _P) :$ Out
 >                           :$ A (NV x) :$ A (NV y) :$ A (NV q))),
 >                 NV px])

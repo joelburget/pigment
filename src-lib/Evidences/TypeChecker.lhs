@@ -83,6 +83,7 @@ Extensions:
 > canTy chev (Prf (EQBLUE (y0 :>: t0) (y1 :>: t1)) :>: Con p) = do
 >     ppv@(p :=>: pv) <- chev (PRF (eqGreen @@ [y0, t0, y1, t1]) :>: p)
 >     return $ Con ppv
+
 > canTy chev (Set :>: Label l t) = do
 >     ttv@(t :=>: tv) <- chev (SET :>: t)
 >     llv@(l :=>: lv) <- chev (tv :>: l)
@@ -90,6 +91,7 @@ Extensions:
 > canTy chev (Label l ty :>: LRet t) = do
 >     ttv@(t :=>: tv) <- chev (ty :>: t)
 >     return (LRet ttv)
+
 > canTy chev (Set :>: Prob) = return Prob
 > canTy chev (Prob :>: ProbLabel u s a) = do
 >     uuv <- chev (UID :>: u)
@@ -101,6 +103,7 @@ Extensions:
 >     ssv <- chev (SET :>: s)
 >     ppv <- chev (PROB :>: p)
 >     return $ PatPi uuv ssv ppv
+
 > canTy chev (Set :>: Sch) = return Sch
 > canTy chev (Sch :>: SchTy s) = do
 >     ssv <- chev (SET :>: s)
@@ -113,6 +116,7 @@ Extensions:
 >     ssv@(_ :=>: sv) <- chev (SET :>: s)
 >     ttv <- chev (ARR sv SCH :>: t)
 >     return $ SchImpPi ssv ttv
+
 > canTy _   (Set :>: Prop) = return Prop
 > canTy chev  (Set :>: Prf p) = Prf <$> chev (PROP :>: p)
 > canTy chev  (Prop :>: All s p) = do
@@ -129,6 +133,7 @@ Extensions:
 > canTy _   (Prf TRIVIAL :>: Void) = return Void
 > canTy chev (Prop :>: Inh ty) = Inh <$> chev (SET :>: ty)
 > canTy chev (Prf (INH ty) :>: Wit t) = Wit <$> chev (ty :>: t)
+
 > canTy chev (Set :>: Quotient x r p) = do
 >     x@(_ :=>: xv) <- chev (SET :>: x)
 >     r@(_ :=>: rv) <- chev (ARR xv (ARR xv PROP) :>: r)
@@ -137,8 +142,9 @@ Extensions:
 > canTy chev (Quotient a r p :>: Con x) = do
 >     x <- chev (a :>: x)
 >     return $ Con x
-> canTy chev (Set :>: RSig)  = return $ RSig
-> canTy chev (RSig :>: REmpty) = return $ REmpty
+
+> canTy chev (Set :>: RSig)  = return RSig
+> canTy chev (RSig :>: REmpty) = return REmpty
 > canTy chev (RSig :>: RCons sig id ty) = do
 >     ssv@(s :=>: sv) <- chev (RSIG :>: sig)
 >     iiv@(i :=>: iv) <- chev (UID :>: id)
@@ -151,6 +157,7 @@ Extensions:
 > canTy chev (tv@(Record (_ :?=: Identity x)) :>: Con y) = do
 >     yyv@(y :=>: yv) <- chev (recordOp @@ [x] :>: y)
 >     return $ Con yyv
+
 > canTy _   (Set :>: Unit) = return Unit
 > canTy chev  (Set :>: Sigma s t) = do
 >     ssv@(s :=>: sv) <- chev (SET :>: s)
@@ -161,6 +168,7 @@ Extensions:
 >     xxv@(x :=>: xv) <- chev (s :>: x)
 >     yyv@(y :=>: yv) <- chev ((t $$ A xv) :>: y)
 >     return $ Pair xxv yyv
+
 > canTy _  (Set :>: UId)    = return UId
 > canTy _  (UId :>: Tag s)  = return (Tag s)
 
