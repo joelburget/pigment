@@ -158,10 +158,6 @@ dInTmRN_ = classLeaf $ dumbClass
                 DU     -> ("du", mempty)
                 (DT (InTmWrap tm)) -> ("dt", "TODO DT")
                 (DEqBlue t u) -> ("deqblue", dExTmRN_ t <> dExTmRN_ u)
-                (DIMu (Just s   :?=: _) _) -> ("dimujust", dInTmRN_ s)
-                (DIMu (Nothing  :?=: (Identity ii :& Identity d)) i) ->
-                    ("dimunothing", forReact [ii, d, i] dInTmRN_)
-                (DAnchor name _) -> ("danchor", fromString name)
                 (DTAG name) -> ("dtag1", fromString name)
                 (DTag name tms) ->
                     ("dtag2", fromString name <> forReact tms dInTmRN_)

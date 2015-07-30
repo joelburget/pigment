@@ -50,7 +50,7 @@ makeEmptyRecord name = freshRef (name :<: RSIG) $ \ref -> do
                   , devTip           =  Defined REMPTY (RSIG :=>: RSIG)
                   , devNSupply       =  freshNSpace nsupply name
                   , devSuspendState  =  SuspendNone }
-    putEntryAbove $ EDEF ref' (mkLastName ref') LETG dev RSIG AnchNo emptyMetadata
+    putEntryAbove $ EDEF ref' (mkLastName ref') LETG dev RSIG emptyMetadata
     return $ refName ref
 
 
@@ -83,7 +83,7 @@ makeEmptyRecord name = freshRef (name :<: RSIG) $ \ref -> do
 elabAddRecordLabel :: (String, DInTmRN)
                    -> ProofState (VAL :<: TY)
 elabAddRecordLabel (labelName, labelDTy) = do
-    CDefinition _ ref lastN _ anch meta <- getCurrentEntry
+    CDefinition _ ref lastN _ meta <- getCurrentEntry
 
     _ :=>: labelTy <- elaborate' (SET :>: labelDTy)
 
@@ -98,7 +98,7 @@ elabAddRecordLabel (labelName, labelDTy) = do
             (LK labelTy)
         newRef = name := DEFN recTm :<: RSIG
 
-    putCurrentEntry $ CDefinition LETG newRef lastN RSIG anch meta
+    putCurrentEntry $ CDefinition LETG newRef lastN RSIG meta
     putDevTip $ Defined recTm (RSIG :=>: RSIG)
 
     return (recTm :<: RSIG)
@@ -118,14 +118,14 @@ removeHelper REMPTY removeName = Nothing -- error $ "couldn't remove " ++ remove
 removeRecordLabel :: String
                   -> ProofState (VAL :<: TY)
 removeRecordLabel removeName = do
-    CDefinition _ ref lastN _ anch meta <- getCurrentEntry
+    CDefinition _ ref lastN _ meta <- getCurrentEntry
     let DEFN tm :<: RSIG = refBody ref
 
     case removeHelper tm removeName of
         Just newTm -> do
             let newRef = (refName ref) := DEFN newTm :<: RSIG
 
-            putCurrentEntry $ CDefinition LETG newRef lastN RSIG anch meta
+            putCurrentEntry $ CDefinition LETG newRef lastN RSIG meta
             putDevTip $ Defined newTm (RSIG :=>: RSIG)
             return (newTm :<: RSIG)
         Nothing -> throwDTmStr $ "cannot remove label " ++ removeName

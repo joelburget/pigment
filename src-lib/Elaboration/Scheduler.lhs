@@ -73,7 +73,7 @@ search its children from the top.
 >     cs <- getBelowCursor
 >     case cs of
 >         F0                        -> schedulerDone n
->         EPARAM _ _ _ _ _ _ :> _ -> cursorDown >> schedulerContinue n
+>         EPARAM _ _ _ _ _ :> _ -> cursorDown >> schedulerContinue n
 >         _ :> _                    -> do
 >             cursorDown
 >             goIn

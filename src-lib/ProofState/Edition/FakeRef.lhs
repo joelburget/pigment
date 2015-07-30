@@ -21,7 +21,7 @@ applied to them (as shared parameters).
 
 > getFakeRef :: ProofState REF
 > getFakeRef = do
->    CDefinition _  (cEntryName := HOLE _ :<: ty) _ _ _ _ <- getCurrentEntry
+>    CDefinition _  (cEntryName := HOLE _ :<: ty) _ _ _ <- getCurrentEntry
 >    return $ cEntryName := FAKE :<: ty
 
 

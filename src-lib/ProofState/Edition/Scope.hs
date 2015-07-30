@@ -37,10 +37,10 @@ definitionsToImpl pc@PC{pcAboveCursor=Dev{devEntries=es}} =
   where
     help :: Bwd Layer -> [REF :<: INTM] -> [REF :<: INTM]
     help B0 xs = xs
-    help (ls :< Layer{currentEntry=CDefinition _ _ _ _ AnchImpl _}) xs = xs
+    help (ls :< Layer{currentEntry=CDefinition _ _ _ _ _}) xs = xs
     help (ls :< l) xs = help ls (params (aboveEntries l) ++ xs)
     params = foldMap param
-    param (EPARAM r _ _ t _ _) = [r :<: t]
+    param (EPARAM r _ _ t _) = [r :<: t]
     param _                    = []
 
 
@@ -52,7 +52,7 @@ definitionsToImpl pc@PC{pcAboveCursor=Dev{devEntries=es}} =
 paramREFs :: Entries -> [REF]
 paramREFs = foldMap param where
   param :: Entry Bwd -> [REF]
-  param  (EPARAM r _ _ _ _ _) = [r]
+  param  (EPARAM r _ _ _ _) = [r]
   param  _                    = []
 
 paramSpine :: Entries -> Spine REF

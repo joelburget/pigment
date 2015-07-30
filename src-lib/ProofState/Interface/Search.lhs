@@ -70,8 +70,8 @@ follow this itinerary to reach our destination.
 > toggleEntryVisibility :: Name -> ProofState ()
 > toggleEntryVisibility name = withEntry name $ \case
 >     CModule name p meta -> CModule name p (meta & expanded %~ not)
->     CDefinition kind ref lastName tm anchor meta ->
->         CDefinition kind ref lastName tm anchor (meta & expanded %~ not)
+>     CDefinition kind ref lastName tm meta ->
+>         CDefinition kind ref lastName tm (meta & expanded %~ not)
 
 
 > -- TODO(joel) - just lensify CurrentEntry
@@ -79,8 +79,8 @@ follow this itinerary to reach our destination.
 > toggleEntryAnnotate :: Name -> ProofState ()
 > toggleEntryAnnotate name = withEntry name $ \case
 >     CModule name p meta -> CModule name p (meta & annotationExpanded %~ not)
->     CDefinition kind ref lastName tm anchor meta ->
->         CDefinition kind ref lastName tm anchor (meta & annotationExpanded %~ not)
+>     CDefinition kind ref lastName tm meta ->
+>         CDefinition kind ref lastName tm (meta & annotationExpanded %~ not)
 
 
 Searching for a goal

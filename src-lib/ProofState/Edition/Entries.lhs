@@ -20,15 +20,15 @@ some kit operating on any kind of `CurrentEntry`. So far, this is
 restricted to getting its name:
 
 > currentEntryName :: CurrentEntry -> Name
-> currentEntryName  (CDefinition _ (n := _) _ _ _ _) = n
+> currentEntryName  (CDefinition _ (n := _) _ _ _) = n
 > currentEntryName  (CModule n _ _)                  = n
 
 There is an obvious (forgetful) map from entry (Definition or Module) to
 a current entry:
 
 > mkCurrentEntry :: Traversable f => Entry f -> CurrentEntry
-> mkCurrentEntry (EDEF ref xn dkind _ ty a meta)
->     = CDefinition dkind ref xn ty a meta
+> mkCurrentEntry (EDEF ref xn dkind _ ty meta)
+>     = CDefinition dkind ref xn ty meta
 > mkCurrentEntry (EModule n _ p meta)
 >     = CModule n p meta
 
@@ -44,10 +44,10 @@ and `Dev f`:
 
 > rearrangeEntry ::  (Traversable f, Traversable g) =>
 >                    (forall a. f a -> g a) -> Entry f -> Entry g
-> rearrangeEntry h (EPARAM ref xn k ty a meta)
->     = EPARAM ref xn k ty a meta
-> rearrangeEntry h (EDEF ref xn k dev ty a meta)
->     = EDEF ref xn k (rearrangeDev h dev) ty a meta
+> rearrangeEntry h (EPARAM ref xn k ty meta)
+>     = EPARAM ref xn k ty meta
+> rearrangeEntry h (EDEF ref xn k dev ty meta)
+>     = EDEF ref xn k (rearrangeDev h dev) ty meta
 > rearrangeEntry h (EModule n d p meta)
 >     = EModule n (rearrangeDev h d) p meta
 

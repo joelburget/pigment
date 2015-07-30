@@ -89,64 +89,6 @@ either be:
 -   a module, ie. a `Name` associated with a `Dev` that has no type or
     value
 
-> data EntityAnchor
->     = AnchConc
->     | AnchConNames
->     | AnchConName String
->     | AnchConDescs
->     | AnchDataDesc
->     | AnchDataTy String
->     | AnchInd
->     | AnchIndTy
->     | AnchTy String
->     | AnchParTy String
->     | AnchRefine
->     | AnchMotive
->     | AnchMethod
->     | AnchSig
->     | AnchHope
->     | AnchElabInferFully
->     | AnchTau
->     | AnchDataDef
->     | AnchImpl
->     | AnchScheme String
->     -- Anchors with cryptic names I don't understand
->     | AnchStr String
->     -- "Nothing"
->     | AnchNo
->     deriving Eq
-
-> instance Show EntityAnchor where
->     showsPrec p anch = showParen (p > 10) $ showString (anchShow anch)
-
-> anchShow AnchConc = "conc"
-> anchShow AnchConNames = "constructor names"
-> -- anchShow (AnchConName str) = "(AnchConName " ++ str ++ ")"
-> anchShow (AnchConName str) = str
-> anchShow AnchConDescs = "constructor descriptions"
-> anchShow AnchDataDesc = "data description"
-> -- anchShow (AnchDataTy str) = "(AnchDataTy " ++ str ++ ")"
-> anchShow (AnchDataTy str) = str
-> anchShow AnchInd = "ind"
-> anchShow AnchIndTy = "ind type"
-> -- anchShow (AnchTy str) = "(AnchTy " ++ str ++ ")"
-> anchShow (AnchTy str) = str
-> -- anchShow (AnchParTy str) = "(AnchParTy " ++ str ++ ")"
-> anchShow (AnchParTy str) = str
-> anchShow AnchRefine = "refine"
-> anchShow AnchMotive = "motive"
-> anchShow AnchMethod = "method"
-> anchShow AnchSig = "sig"
-> anchShow AnchHope = "hope"
-> anchShow AnchElabInferFully = "elab infer fully"
-> anchShow AnchTau = "tau"
-> anchShow AnchDataDef = "data definition"
-> -- anchShow (AnchStr str) = "(AnchStr " ++ str ++ ")"
-> anchShow AnchImpl = "implementation"
-> anchShow (AnchScheme str) = str
-> anchShow (AnchStr str) = str
-> anchShow AnchNo = "(no anchor)"
-
 > data ModulePurpose
 >     -- using a module to hold development
 >     = DevelopData
@@ -171,17 +113,13 @@ either be:
 > showPurpose ToGoal = "to goal (whatever that is)"
 > showPurpose Draft = "draft"
 
-> modulePurposeToAnchor :: ModulePurpose -> EntityAnchor
-> modulePurposeToAnchor DevelopData = AnchDataDef
-> modulePurposeToAnchor _           = AnchNo
-
 > data Entry f
 >   = EEntity
 >   { ref      :: REF
 >   , lastName :: (String, Int)
 >   , entity   :: Entity f
 >   , term     :: INTM
->   , anchor   :: EntityAnchor
+>   -- TODO consider adding pseudo-anchors to metadata
 >   , metadata :: Metadata
 >   }
 >   | EModule
@@ -202,14 +140,14 @@ is `Bwd`:
 > type Entries = Bwd (Entry Bwd)
 
 > instance Show (Entry Bwd) where
->     show (EEntity ref xn e t a _) = intercalate " "
->         ["(E ", show ref, show xn, show e, show t, show a, ")"]
+>     show (EEntity ref xn e t _) = intercalate " "
+>         ["(E ", show ref, show xn, show e, show t, ")"]
 >     show (EModule n d p _) = intercalate " "
 >         ["(M ", show n, show d, show p, ")"]
 
 > instance Show (Entry Fwd) where
->     show (EEntity ref xn e t a _) = intercalate " "
->         ["(E ", show ref, show xn, show e, show t, show a, ")"]
+>     show (EEntity ref xn e t _) = intercalate " "
+>         ["(E ", show ref, show xn, show e, show t, ")"]
 >     show (EModule n d p _) = intercalate " "
 >         ["(M ", show n, show d, show p, ")"]
 
@@ -238,10 +176,10 @@ cannot.
 For readability, let us collapse the `Entity` into the `Entry` with
 these useful patterns:
 
-> pattern EPARAM ref name paramKind term anchor meta =
->     EEntity ref name (Parameter paramKind) term anchor meta
-> pattern EDEF ref name defKind dev term anchor meta =
->     EEntity ref name (Definition defKind dev) term anchor meta
+> pattern EPARAM ref name paramKind term meta =
+>     EEntity ref name (Parameter paramKind) term meta
+> pattern EDEF ref name defKind dev term meta =
+>     EEntity ref name (Definition defKind dev) term meta
 
 Kinds of Definitions:
 

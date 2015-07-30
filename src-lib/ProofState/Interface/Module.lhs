@@ -61,8 +61,7 @@ Section [Tactics.Elimination.analysis](#Tactics.Elimination.analysis).
 >     inScope <- getInScope
 >     let  ty' = liftType inScope ty
 >          ref = n := HOLE Waiting :<: evTm ty'
->     putCurrentEntry $ CDefinition LETG ref (last n) ty'
->         (modulePurposeToAnchor purpose) meta
+>     putCurrentEntry $ CDefinition LETG ref (last n) ty' meta
 >     putDevTip $ Unknown (ty :=>: tyv)
 >     return $ applySpine ref inScope
 
@@ -76,7 +75,7 @@ Section [Tactics.Elimination.analysis](#Tactics.Elimination.analysis).
 >             Suspended (_ :=>: tyv) _ -> return tyv
 >             Defined _ (_ :=>: tyv)   -> return tyv
 >
->     cd@(CDefinition LETG ref@(n := defn) _ ty anch meta) <- getCurrentEntry
+>     cd@(CDefinition LETG ref@(n := defn) _ ty meta) <- getCurrentEntry
 >
 >     putCurrentEntry (CModule n DevelopData meta)
 >     putDevTip Module

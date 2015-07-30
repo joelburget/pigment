@@ -59,7 +59,7 @@ Module data-types defined in
 Section [ProofState.Structure.Developments.entry](#ProofState.Structure.Developments.entry).
 
 > data CurrentEntry
->     = CDefinition DefKind REF (String, Int) INTM EntityAnchor Metadata
+>     = CDefinition DefKind REF (String, Int) INTM Metadata
 >     | CModule Name ModulePurpose Metadata
 >     deriving Show
 
@@ -88,8 +88,8 @@ piece of kit to deal with this global context.
 >     show (NF ls) = show ls
 
 > instance Show (Entry NewsyFwd) where
->     show (EEntity ref xn e t a _) = unwords
->         ["\"E", show ref, show xn, show e, show t, show a, "\""]
+>     show (EEntity ref xn e t _) = unwords
+>         ["\"E", show ref, show xn, show e, show t, "\""]
 >     show (EModule n d p _) = unwords
 >         ["M", show n, show d, show p]
 

@@ -57,7 +57,7 @@ old dependency holes with the new ones.
 >         _ :< e  -> pass e
 >   where
 >     pass :: Entry Bwd -> ProofState (EXTM :=>: VAL)
->     pass (EDEF def@(defName := _) _ _ _ _ _ _)
+>     pass (EDEF def@(defName := _) _ _ _ _ _)
 >       | name == defName && occurs def = throwDTmStr
 >           "solveHole: you can't define something in terms of itself!"
 >       | name == defName = do
@@ -73,7 +73,7 @@ old dependency holes with the new ones.
 >           ty :=>: _ <- getGoal "solveHole"
 >           solveHole' ref ((def, ty):deps) tm
 >       | otherwise = goIn >> solveHole' ref deps tm
->     pass (EPARAM param _ _ _ _ _)
+>     pass (EPARAM param _ _ _ _)
 >       | occurs param =
 >             let items :: [ErrorItem DInTmRN]
 >                 items =
@@ -92,8 +92,8 @@ old dependency holes with the new ones.
 >     makeDeps [] news = return news
 >     makeDeps ((name := HOLE k :<: tyv, ty) : deps) news = do
 >         let (ty', _) = tellNews news ty
->         makeKinded k (AnchStr (fst (last name)) :<: ty')
->         EDEF ref _ _ _ _ _ _ <- getEntryAbove
+>         makeKinded k (fst (last name) :<: ty')
+>         EDEF ref _ _ _ _ _ <- getEntryAbove
 >         makeDeps deps ((name := DEFN (NP ref) :<: tyv, GoodNews) : news)
 >     makeDeps _ _ = throwDInTmRN $ stackItem
 >         [ errMsg "makeDeps: bad reference kind! Perhaps "
@@ -109,9 +109,9 @@ old dependency holes with the new ones.
 >   where
 >     stripShared' :: NEU -> Entries -> ProofState REF
 >     stripShared' (P ref@(_ := HOLE Hoping :<: _)) B0 = return ref
->     stripShared' (n :$ A (NP r)) (es :< EPARAM paramRef _ _ _ _ _)
+>     stripShared' (n :$ A (NP r)) (es :< EPARAM paramRef _ _ _ _)
 >         | r == paramRef                        = stripShared' n es
->     stripShared' n (es :< EDEF _ _ _ _ _ _ _)  = stripShared' n es
+>     stripShared' n (es :< EDEF _ _ _ _ _ _)  = stripShared' n es
 >     stripShared' n (es :< EModule _ _ _ _)     = stripShared' n es
 >     stripShared' n es =
 >       throwDInTmRN $ stackItem

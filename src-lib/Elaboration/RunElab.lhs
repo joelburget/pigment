@@ -80,7 +80,6 @@ make a new subgoal when trying to execute them elsewhere.
 > currentGoalOnly (ELambda _ _)  =  True
 > currentGoalOnly (ECry _)       =  True
 > currentGoalOnly (EFake _)      =  True
-> currentGoalOnly (EAnchor _)    =  True
 > currentGoalOnly _              =  False
 
 Now, let us give the semantics of each command in turn. First of all, we
@@ -118,7 +117,7 @@ task.
 task.
 
 > runElab wrk (ty :>: EWait s tyWait f) = do
->     tt <- make (AnchStr s :<: tyWait)
+>     tt <- make (s :<: tyWait)
 >     runElab wrk (ty :>: f tt)
 
 `EElab` contains a syntactic representation of an elaboration problem.
@@ -153,12 +152,6 @@ fake reference. .
 >     inScope <- getInScope
 >     runElab WorkCurrentGoal . (ty :>:) $ f (r, paramSpine inScope)
 
-`EAnchor` extracts the name of the current entry.
-
-> runElab WorkCurrentGoal (ty :>: EAnchor f) = do
->     name <- getCurrentName
->     runElab WorkCurrentGoal . (ty :>:) $ f (fst (last name))
-
 `EResolve` provides a name-resolution service: given a relative name, it
 finds the term and potentially the scheme of the definition the name
 refers to. This is passed onto the next elaboration task.
@@ -192,8 +185,8 @@ elaboration task to `runElab`.
 > runElabNewGoal :: (TY :>: Elab (INTM :=>: VAL)) -> ProofState (INTM :=>: VAL, ElabStatus)
 > runElabNewGoal (ty :>: elab) = do
 >     -- Make a dummy definition
->     x <- pickName' "h"
->     make (AnchStr x :<: ty)
+>     goalName <- pickName "h" =<< getCurrentName
+>     make (goalName :<: ty)
 >     -- Enter its development
 >     goIn
 >     (tm :=>: tmv, status) <- runElab WorkCurrentGoal (ty :>: elab)
@@ -324,7 +317,7 @@ parameters and hands them to `seekIn`.
 >           proofTrace $ "Failed to resolve recursive call to "
 >                            ++ renderHouseStyle s
 >           empty
->       seekOn (es' :< EPARAM param _ ParamLam _ _ _) =
+>       seekOn (es' :< EPARAM param _ ParamLam _ _) =
 >           seekIn B0 (P param) (pty param) <|> seekOn es'
 >       seekOn (es' :< _)                            =    seekOn es'
 
@@ -494,7 +487,7 @@ but do not always spot them.
 >     putHoleKind Hoping
 >     return . (, ElabSuspended) =<< neutralise =<< getCurrentDefinition
 > lastHope WorkElsewhere ty = do
->     return . (, ElabSuccess) =<< neutralise =<< makeKinded Hoping (AnchHope :<: ty)
+>     return . (, ElabSuccess) =<< neutralise =<< makeKinded Hoping ("hope" :<: ty)
 
 <a name="Elaboration.RunElab.suspending">Suspending computation</a>
 ----------------------
@@ -507,10 +500,10 @@ will restart if it is unstable.
 > suspend :: (String :<: INTM :=>: TY) -> EProb -> ProofState (EXTM :=>: VAL)
 > suspend (x :<: tt) prob = do
 >     -- Make a hole
->     r <- make (AnchStr x :<: termOf tt)
+>     r <- make (x :<: termOf tt)
 >     -- Store the suspended problem
->     Just (EDEF ref xn dkind dev@(Dev {devTip=Unknown utt}) tm anchor meta) <- removeEntryAbove
->     putEntryAbove (EDEF ref xn dkind (dev{devTip=Suspended utt prob}) tm anchor meta)
+>     Just (EDEF ref xn dkind dev@(Dev {devTip=Unknown utt}) tm meta) <- removeEntryAbove
+>     putEntryAbove (EDEF ref xn dkind (dev{devTip=Suspended utt prob}) tm meta)
 >     -- Mark the Suspension state
 >     let ss = if isUnstable prob then SuspendUnstable else SuspendStable
 >     putDevSuspendState ss

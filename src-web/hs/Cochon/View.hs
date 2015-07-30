@@ -130,17 +130,12 @@ dev_ pc (Dev entries tip nSupply suspendState) =
       entriesLayout_ $ forReact entries (entry_ pc)
 
 entry_ :: ProofContext -> Entry Bwd -> ReactNode TermTransition
-entry_ pc (EEntity ref lastName entity ty anchor meta)
-    = let layout = entryEntityLayout_ $ do
-            entryHeaderLayout_ $ do
-                ref_ pc ref
-                metadata_ meta
-                intm_ pc (SET :>: ty)
-            entity_ pc entity
-      in case anchor of
-             -- AnchScheme _ -> detailedEntityLayout entity
-             -- XXX
-             _ -> layout
+entry_ pc (EEntity ref lastName entity ty meta) = entryEntityLayout_ $ do
+    entryHeaderLayout_ $ do
+        ref_ pc ref
+        metadata_ meta
+        intm_ pc (SET :>: ty)
+    entity_ pc entity
 
 entry_ pc (EModule name dev purpose meta)
     = entryModuleLayout_ $ do

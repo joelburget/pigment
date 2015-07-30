@@ -86,7 +86,7 @@ a new goal.
 > trySimplifyGoal False  g = simplifyGoal False g <|> (do
 >     es  <- getEntriesAbove
 >     cursorAboveLambdas
->     _ <- make (AnchStr "tsg" :<: liftType es g)
+>     _ <- make ("tsg" :<: liftType es g)
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -201,7 +201,7 @@ subgoal.
 >     simpTrace "PI not"
 >     es <- getEntriesAbove
 >     cursorAboveLambdas
->     _ <- make (AnchStr "pig" :<: liftType es g)
+>     _ <- make ("pig" :<: liftType es g)
 >     goIn
 >     let rs = paramREFs es
 >     traverse (lambdaParam . refNameAdvice) rs
@@ -224,7 +224,7 @@ we can just invoke propositional simplification...
 
 > simplifyGoal False g@(PRF _) = do
 >     simpTrace "PRF not"
->     _ <- make (AnchStr "prg" :<: g)
+>     _ <- make ("prg" :<: g)
 >     goIn
 >     x :=>: xv <- simplifyGoal True g
 >     goOut

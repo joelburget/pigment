@@ -57,7 +57,6 @@ monad.
 >     |  EElab Loc EProb
 >     |  ECompute (TY :>: Elab (INTM :=>: VAL)) (INTM :=>: VAL -> Elab x)
 >     |  EFake ((REF, Spine REF) -> Elab x)
->     |  EAnchor (String -> Elab x)
 >     |  EResolve RelName ((INTM :=>: VAL, Maybe (Scheme INTM)) -> Elab x)
 >     |  EAskNSupply (NameSupply -> Elab x)
 
@@ -70,7 +69,6 @@ Now we can define the instructions we wanted:
 > eElab loc p   = EElab loc p
 > eCompute      = flip ECompute EReturn
 > eFake         = EFake EReturn
-> eAnchor       = EAnchor EReturn
 > eResolve      = flip EResolve EReturn
 > eAskNSupply   = EAskNSupply EReturn
 
@@ -95,7 +93,6 @@ just ignored.
 >     show (EElab l tp)       = "EElab " ++ show l ++ " (" ++ show tp ++ ")"
 >     show (ECompute te _)    = "ECompute (" ++ show te ++ ") (...)"
 >     show (EFake _)          = "EFake " ++ " (...)"
->     show (EAnchor _)        = "EAnchor " ++ " (...)"
 >     show (EResolve rn _)    = "EResolve " ++ show rn ++ " (...)"
 >     show (EAskNSupply _)    = "EAskNSupply (...)"
 
@@ -125,7 +122,6 @@ TODO(joel) - implement monad in terms of these instead of the other way around?
 >     EElab l p        >>= k = error $ "EElab: cannot bind:\n" ++ show p
 >     ECompute te f    >>= k = ECompute te    ((k =<<) . f)
 >     EFake f          >>= k = EFake          ((k =<<) . f)
->     EAnchor f        >>= k = EAnchor        ((k =<<) . f)
 >     EResolve rn f    >>= k = EResolve rn    ((k =<<) . f)
 >     EAskNSupply f    >>= k = EAskNSupply    ((k =<<) . f)
 

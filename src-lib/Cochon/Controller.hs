@@ -103,10 +103,10 @@ infoContextual gals = do
               -> BScopeContext
               -> Entry f
               -> ProofState EntryInfo
-    entryHelp InfoHypotheses _ p@(EPARAM ref _ k _ _ _) = do
+    entryHelp InfoHypotheses _ p@(EPARAM ref _ k _ _) = do
         -- ty       <- mQuote (pty ref)
         return $ ParamEntry (entryName p) (pty ref)
-    entryHelp InfoContextual _ d@(EDEF ref _ _ _ _ _ _) = do
+    entryHelp InfoContextual _ d@(EDEF ref _ _ _ _ _) = do
         -- ty       <- mQuote $ removeShared (paramSpine es) (pty ref)
         return $ DefEntry (entryName d) (pty ref)
     entryHelp _ _ _ = return $ ErrEntryInfo

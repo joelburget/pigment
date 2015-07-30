@@ -22,7 +22,7 @@ Making Definitions
 The `make` command adds a named goal of the given type above the cursor.
 The meat is actually in `makeKinded`, below.
 
-> make :: EntityAnchor :<: INTM -> ProofState (EXTM :=>: VAL)
+> make :: String :<: INTM -> ProofState (EXTM :=>: VAL)
 > make = makeKinded Waiting
 
 When making a new definition, the reference to this definition bears a *hole
@@ -34,7 +34,7 @@ for instance (Section [Elaborator.Elaborator](#Elaborator.Elaborator)), the
 proof system will insert goals itself, with a somewhat changing mood such as
 `Hoping` or `Crying`.
 
-> makeKinded :: HKind -> (EntityAnchor :<: INTM) -> ProofState (EXTM :=>: VAL)
+> makeKinded :: HKind -> (String :<: INTM) -> ProofState (EXTM :=>: VAL)
 > makeKinded holeKind (name :<: ty) = do
 >     -- Check that the type is indeed a type
 >     _ :=>: tyv <- checkHere (SET :>: ty)
@@ -47,30 +47,28 @@ proof system will insert goals itself, with a somewhat changing mood such as
 
 >     -- Make a name for the goal, from `name`
 >     nsupply <- getDevNSupply
->     goalName <- pickName "" name
->     let n = mkName nsupply goalName
+>     -- TODO(joel) this is so weird. How should making a name work here?
+>     n <- pickName "" (mkName nsupply name)
+>     let goalName = mkName nsupply n
 
 >     -- Make a reference for the goal, with a lambda-lifted type
 >     inScope <- getInScope
 >     let  liftedTy  =  liftType inScope ty
->          ref       =  n := HOLE holeKind :<: evTm liftedTy
+>          ref       =  goalName := HOLE holeKind :<: evTm liftedTy
 
 >     -- Make an entry for the goal, with an empty development
 >     let dev = Dev { devEntries       =  B0
 >                   , devTip           =  Unknown (ty :=>: tyv)
->                   , devNSupply       =  freshNSpace nsupply goalName
+>                   , devNSupply       =  freshNSpace nsupply n
 >                   , devSuspendState  =  SuspendNone }
 
 >     -- Which kinds of things start out expanded? This is a very preliminary
 >     -- list!
->     let expanded = case name of
->             AnchParTy _ -> True
->             AnchConNames -> True
->             _ -> False
+>     let expanded = True
 
 >     -- Put the entry in the proof context
 >     putDevNSupply $ freshName nsupply
->     putEntryAbove $ EDEF ref (last n) LETG dev liftedTy name emptyMetadata
+>     putEntryAbove $ EDEF ref (last goalName) LETG dev liftedTy emptyMetadata
 
 >     -- Return a reference to the goal
 >     return $ applySpine ref inScope

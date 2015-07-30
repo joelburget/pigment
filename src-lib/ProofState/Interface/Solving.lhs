@@ -70,12 +70,11 @@ entries below the cursor are (lazily) notified of the good news.
 >             above <- getEntriesAbove
 >             let tmv = evTm $ parBind globalScope above tm
 >             -- Update the entry as Defined, together with its definition
->             CDefinition kind (name := _ :<: ty) xn tyTm anchor meta
+>             CDefinition kind (name := _ :<: ty) xn tyTm meta
 >                 <- getCurrentEntry
 >             let ref = name := DEFN tmv :<: ty
 >             putDevTip $ Defined tm $ tipTyTm :=>: tipTy
->             putCurrentEntry $
->                 CDefinition kind ref xn tyTm anchor meta
+>             putCurrentEntry $ CDefinition kind ref xn tyTm meta
 >             -- Propagate the good news
 >             updateRef ref
 >             -- Return the reference
@@ -108,7 +107,7 @@ are therefore left to `give` this definition. This is the role of the
 >   devEntry <- getEntryAbove
 >   case devEntry of
 >     -- The entry above is indeed a definition
->     EDEF ref _ _ _ _ _ _ -> giveOutBelow $ NP ref
+>     EDEF ref _ _ _ _ _ -> giveOutBelow $ NP ref
 >     -- The entry was not a definition
 >     _ -> throwDTmStr "done: entry above cursor must be a definition."
 
@@ -123,8 +122,8 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 
 
 > apply' :: Entry Bwd -> ProofState (EXTM :=>: VAL)
-> apply' (EDEF f@(_ := _ :<: pi@(PI _ _)) _ _ _ _ _ _) = apply'' f pi
-> apply' (EPARAM f@(_ := _ :<: pi@(PI _ _)) _ _ _ _ _) = apply'' f pi
+> apply' (EDEF f@(_ := _ :<: pi@(PI _ _)) _ _ _ _ _) = apply'' f pi
+> apply' (EPARAM f@(_ := _ :<: pi@(PI _ _)) _ _ _ _) = apply'' f pi
 > apply' _ = do
 >     elabTrace "elab' fail :("
 >     throwDTmStr $ "apply: last entry in the development" ++
@@ -140,10 +139,10 @@ the goal `S`. We have this tactic too and, guess what, it is `apply`.
 >     elabTrace $ "apply' success!"
 >     -- The entry above is a proof of `Pi S T`
 >     -- Ask for a proof of `S`
->     sTm :=>: s <- make $ AnchStr "s" :<: _S
+>     sTm :=>: s <- make $ "s" :<: _S
 >     -- Make a proof of `T`
 >     let _TTm = _T Evidences.Eval.$$ A s
->     make $ AnchStr "t" :<: _TTm
+>     make $ "t" :<: _TTm
 >     goIn
 >     -- give $ N $ (LRET (NP f) :? (C (Pi _S _TTm))) :$ A (N sTm)
 >     giveOutBelow $ N $ P f :$ A (N sTm)
@@ -188,8 +187,8 @@ tried.
 >     void done <|> (assumption <|> foldl (<|>) notFound subattempts)
 
 > typeof :: Entry Bwd -> Maybe TY
-> typeof (EDEF (_ := _ :<: ty) _ _ _ _ _ _) = Just ty
-> typeof (EPARAM (_ := _ :<: ty) _ _ _ _ _) = Just ty
+> typeof (EDEF (_ := _ :<: ty) _ _ _ _ _) = Just ty
+> typeof (EPARAM (_ := _ :<: ty) _ _ _ _) = Just ty
 > typeof _ = Nothing
 
 > auto' :: Int -> [Entry Bwd] -> ProofState ()
@@ -218,7 +217,7 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 
 
 > isParam :: Entry Bwd -> Bool
-> isParam (EPARAM _ _ _ _ _ _) = True
+> isParam (EPARAM _ _ _ _ _) = True
 > isParam _ = False
 
 
@@ -226,7 +225,7 @@ The `ungawa` command looks for a truly obvious thing to do, and does it.
 > assumption = do
 >     entries <- getInScope
 >     -- Try just returning the entry
->     let f (EPARAM ref _ _ term _ _) = void $
+>     let f (EPARAM ref _ _ term _) = void $
 >             let justTm :: INTM
 >                 justTm = NP ref
 >             in elabTrace ("giving " ++ show justTm) >> give (LRET justTm)
@@ -247,7 +246,7 @@ scope.
 > refineProofState :: INTM -> (EXTM -> INTM) -> ProofState ()
 > refineProofState ty realiser = do
 >     cursorTop
->     t :=>: _ <- make (AnchRefine :<: ty)
+>     t :=>: _ <- make ("refine" :<: ty)
 >     cursorBottom
 >     give (realiser t)
 >     cursorTop

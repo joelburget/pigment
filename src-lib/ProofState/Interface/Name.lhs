@@ -26,7 +26,7 @@ the spine of shared parameters.
 > lookupName name = do
 >     inScope <- getInScope
 >     case find ((name ==) . entryName) inScope of
->       Just (EEntity ref _ _ _ _ _) -> return $ Just $ applySpine ref inScope
+>       Just (EEntity ref _ _ _ _) -> return $ Just $ applySpine ref inScope
 >       Nothing ->
 >         case find ((name ==) . refName . snd) primitives of
 >           Just (_, ref)  -> return $ Just $ applySpine ref inScope
@@ -38,14 +38,8 @@ name if the name suggestion is empty.
 
 XXX(joel) - this picks poor names
 
-> pickName :: String -> EntityAnchor -> ProofState String
-> pickName prefix AnchNo = pickName' prefix
-> pickName prefix (AnchStr "") = pickName' prefix
-> pickName prefix s   = return $ prefix ++ show s
-
-> pickName' :: String -> ProofState String
-> pickName' prefix = do
->     m <- getCurrentName
+> pickName :: String -> Name -> ProofState String
+> pickName prefix m = do
 >     r <- getDevNSupply
 >     let suffix = getSum (foldMap (Sum . snd) m) + snd r
 >         prefix' = if prefix == "" then "x" else prefix

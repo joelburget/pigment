@@ -364,8 +364,8 @@ current entry.
 >     below <- getBelowCursor
 >     let dev = Dev (above <>< below) tip root state
 >     return $ case currentEntry of
->         CDefinition dkind ref xn ty a meta
->             -> EDEF ref xn dkind dev ty a meta
+>         CDefinition dkind ref xn ty meta
+>             -> EDEF ref xn dkind dev ty meta
 >         CModule n p meta
 >             -> EModule n dev p meta
 
@@ -373,9 +373,9 @@ Conversely, when entering a new development, the former entry needs to
 be *unzipped* to form the current development.
 
 > putEnterCurrent :: Entry Bwd -> ProofState ()
-> putEnterCurrent (EDEF ref xn dkind dev ty a meta) = do
+> putEnterCurrent (EDEF ref xn dkind dev ty meta) = do
 >     l <- getLayer
->     replaceLayer $ l { currentEntry = CDefinition dkind ref xn ty a meta}
+>     replaceLayer $ l { currentEntry = CDefinition dkind ref xn ty meta}
 >     putAboveCursor dev
 
 > putEnterCurrent (EModule [] dev _ _) = putAboveCursor dev

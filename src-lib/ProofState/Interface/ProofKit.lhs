@@ -91,7 +91,7 @@ location, which may be useful for paranoia purposes.
 > validateHere = do
 >     m <- getCurrentEntry
 >     case m of
->         CDefinition _ (_ := DEFN tm :<: ty) _ _ _ _ -> do
+>         CDefinition _ (_ := DEFN tm :<: ty) _ _ _ -> do
 >             checkHere (SET :>: ty)
 >                 `pushError` (stackItem
 >                     [ errMsg "validateHere: definition type failed to type-check: SET does not admit"
@@ -105,7 +105,7 @@ location, which may be useful for paranoia purposes.
 >                     , errTyVal (tm :<: ty)
 >                     ] :: StackError DInTmRN)
 >             return ()
->         CDefinition _ (_ := HOLE _ :<: ty) _ _ _ _ -> do
+>         CDefinition _ (_ := HOLE _ :<: ty) _ _ _ -> do
 >             checkHere (SET :>: ty)
 >                 `pushError` (stackItem
 >                     [ errMsg "validateHere: hole type failed to type-check: SET does not admit"

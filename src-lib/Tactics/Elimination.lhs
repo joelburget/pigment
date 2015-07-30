@@ -136,7 +136,7 @@ later:
 Make a goal for the motive:
 
 >     -- telTypeTm              <- mQuote telType
->     motive :=>: motiveVal  <- make $ AnchMotive :<: motiveType
+>     motive :=>: motiveVal  <- make $ "motive" :<: motiveType
 
 Make goals for the methods and find the return type:
 
@@ -171,7 +171,7 @@ consummed.
 
 > makeMethods :: Bwd INTM -> TY -> ProofState (Bwd INTM, INTM)
 > makeMethods ms (PI s t) = do
->     m :=>: mv  <- make $ AnchMethod :<: s
+>     m :=>: mv  <- make $ "method" :<: s
 >     makeMethods (ms :< N m) (t $$ A mv)
 > makeMethods ms target = return (ms, target)
 
@@ -542,7 +542,7 @@ variable, because if so we might be able to simplify its constraint.
 >   | not . isVar $ evTm x = do
 >     let mtFresh  = currySigma dFresh rFresh tFresh
 >     let mtTarg   = currySigma dTarg rTarg tTarg
->     b :=>: _  <- make (AnchSig :<: mtFresh)
+>     b :=>: _  <- make ("sig" :<: mtFresh)
 >     ref       <- lambdaParam (fortran tFresh)
 >     give (N (b :$ A (N (P ref :$ Fst)) :$ A (N (P ref :$ Snd))))
 >     goIn
@@ -727,7 +727,7 @@ methods:
 >     goOut  -- to makeE
 >     goOut  -- to the original goal
 >     cursorTop
->     liftedMethods <- traverse (make . (AnchStr "lm" :<:)) methodTypes
+>     liftedMethods <- traverse (make . ("lm" :<:)) methodTypes
 
 Then we return to the methods and solve them with the lifted versions:
 

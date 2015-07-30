@@ -107,7 +107,6 @@ not be necessary.)
 >                            (mkLastName ref)
 >                            kind
 >                            (error "distill: type undefined")
->                            AnchNo
 >                            emptyMetadata
 >         in distill (entries :< param) (cod (pval ref) :>: underScope sc ref)
 >     return $ DL (convScope sc x tm') :=>: evTm (L sc)

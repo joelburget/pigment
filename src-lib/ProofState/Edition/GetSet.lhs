@@ -115,7 +115,7 @@ Getting in the `CurrentEntry`
 
 > getCurrentDefinition :: ProofStateT e (EXTM :=>: VAL)
 > getCurrentDefinition = do
->     CDefinition _ ref _ _ _ _ <- getCurrentEntry
+>     CDefinition _ ref _ _ _ <- getCurrentEntry
 >     scope <- getGlobalScope
 >     return (applySpine ref scope)
 
@@ -125,15 +125,15 @@ Getting in the `HOLE`
 > getHoleGoal = do
 >     x <- getCurrentEntry
 >     case x of -- TODO(joel) do this properly with error machinery
->         CDefinition _ (_ := HOLE _ :<: _) _ _ _ _ -> getGoal "getHoleGoal"
+>         CDefinition _ (_ := HOLE _ :<: _) _ _ _ -> getGoal "getHoleGoal"
 >         CModule _ _ _ -> throwStack
 >             (errMsgStack "got a module" :: StackError e)
->         CDefinition _ _ _ _ _ _ -> throwStack
+>         CDefinition _ _ _ _ _ -> throwStack
 >             (errMsgStack "got a non-hole definition" :: StackError e)
 
 > getHoleKind :: ProofStateT e HKind
 > getHoleKind = do
->     CDefinition _ (_ := HOLE hk :<: _) _ _ _ _ <- getCurrentEntry
+>     CDefinition _ (_ := HOLE hk :<: _) _ _ _ <- getCurrentEntry
 >     return hk
 
 Getting the Scopes
@@ -235,15 +235,15 @@ Putting in the `PROG`
 
 > putCurrentScheme :: Scheme INTM -> ProofState ()
 > putCurrentScheme sch = do
->     CDefinition _ ref xn ty a meta <- getCurrentEntry
->     putCurrentEntry $ CDefinition (PROG sch) ref xn ty a meta
+>     CDefinition _ ref xn ty meta <- getCurrentEntry
+>     putCurrentEntry $ CDefinition (PROG sch) ref xn ty meta
 
 Putting in the `HOLE`
 
 > putHoleKind :: HKind -> ProofStateT e ()
 > putHoleKind hk = do
->     CDefinition kind (name := HOLE _ :<: ty) xn tm a meta <- getCurrentEntry
->     putCurrentEntry $ CDefinition kind (name := HOLE hk :<: ty) xn tm a meta
+>     CDefinition kind (name := HOLE _ :<: ty) xn tm meta <- getCurrentEntry
+>     putCurrentEntry $ CDefinition kind (name := HOLE hk :<: ty) xn tm meta
 
 Removers
 --------

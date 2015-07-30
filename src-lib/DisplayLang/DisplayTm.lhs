@@ -60,11 +60,7 @@ type of variable names in display terms.
 >     DQ     :: String           ->  DInTm p x -- hole
 >     DU     ::                      DInTm p x -- underscore
 >     DT     :: InTmWrap p x     ->  DInTm p x -- embedding
->     DAnchor :: String -> DInTm p x -> DInTm p x
 >     DEqBlue :: DExTm p x -> DExTm p x -> DInTm p x
->     DIMu :: Labelled (Identity :*: Identity) (DInTm p x)
->          -> DInTm p x
->          -> DInTm p x
 >     DTag :: String -> [DInTm p x] -> DInTm p x
 >  deriving (Functor, Foldable, Traversable, Show)
 
@@ -157,12 +153,8 @@ first argument, as well as its second.
 > traverseDTIN _ (DQ s) = pure (DQ s)
 > traverseDTIN _ DU     = pure DU
 > traverseDTIN f (DTIN tm) = DTIN <$> traverse f tm
-> traverseDTIN f (DAnchor s args) = DAnchor s <$> traverseDTIN f args
 > traverseDTIN f (DEqBlue t u) =
 >     DEqBlue <$> traverseDTEX f t <*> traverseDTEX f u
-> traverseDTIN f (DIMu s i) = DIMu
->     <$> traverse (traverseDTIN f) s
->     <*> traverseDTIN f i
 > traverseDTIN f (DTag s xs) = DTag s <$> traverse (traverseDTIN f) xs
 
 > traverseDTEX :: Applicative f => (p -> f q) -> DExTm p x -> f (DExTm q x)
@@ -199,11 +191,7 @@ appropriate places.
 > pattern DPIV x s t  = DPI s (DLAV x t)
 > pattern DLK t       = DL (DK t)
 > pattern DTY ty tm   = DType ty ::$ [A tm]
-> pattern DANCHOR s args = DAnchor s args
 
-> pattern DMONAD d x = DC (Monad d x)
-> pattern DRETURN x  = DC (Return x)
-> pattern DCOMPOSITE t = DC (Composite t)
 > pattern DLABEL l t = DC (Label l t)
 > pattern DLRET t    = DC (LRet t)
 > pattern DPROP        = DC Prop

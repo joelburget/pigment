@@ -38,7 +38,7 @@ working on a goal.
 >             freshRef (x :<: s) $ \ref -> do
 >               -- Insert the parameter above the cursor
 >               putEntryAbove $ EPARAM ref (mkLastName ref) paramKind s
->                                      AnchNo emptyMetadata
+>                                      emptyMetadata
 >               -- Update the Tip
 >               let tipTy = t $ pval ref
 >               putDevTip (Unknown (tipTy :=>: tipTy))
@@ -64,7 +64,7 @@ provided type under the given module.
 >         -- Working under a module
 >         freshRef (x :<: ty) $ \ref -> do
 >           -- Simply make the reference
->           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm AnchNo
+>           putEntryAbove $ EPARAM ref (mkLastName ref) ParamLam tyTm
 >                                  emptyMetadata
 >           return ref
 >       nonModule -> throwDTmStr (
@@ -93,7 +93,7 @@ indeed a type, so it requires further attention.
 >           -- Working on a goal of type `Set`
 >           freshRef (s :<: ty) $ \ref -> do
 >             -- Simply introduce the parameter
->             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm AnchNo
+>             putEntryAbove $ EPARAM ref (mkLastName ref) ParamPi tyTm
 >                                    emptyMetadata
 >             return ref
 >         Unknown _  -> throwDTmStr "piParam: goal is not of type SET."

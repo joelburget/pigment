@@ -26,23 +26,23 @@ of one field of the `E` or `M` cases, starting with a capital letter.
 Hence, we have:
 
 > entryRef :: Traversable f => Entry f -> Maybe REF
-> entryRef (EEntity r _ _ _ _ _) = Just r
+> entryRef (EEntity r _ _ _ _) = Just r
 > entryRef EModule{}             = Nothing
 
 > entryName :: Traversable f => Entry f -> Name
-> entryName (EEntity (n := _) _ _ _ _ _) = n
+> entryName (EEntity (n := _) _ _ _ _) = n
 > entryName (EModule n _ _ _)            = n
 
 > entryLastName :: Traversable f => Entry f -> (String, Int)
-> entryLastName (EEntity _ xn _ _ _ _) = xn
+> entryLastName (EEntity _ xn _ _ _) = xn
 > entryLastName (EModule n _ _ _)      = last n
 
 > entryScheme :: Traversable f => Entry f -> Maybe (Scheme INTM)
-> entryScheme (EDEF _ _ (PROG sch) _ _ _ _) = Just sch
+> entryScheme (EDEF _ _ (PROG sch) _ _ _) = Just sch
 > entryScheme _                             = Nothing
 
 > entryDev :: Traversable f => Entry f -> Maybe (Dev f)
-> entryDev (EDEF _ _ _ d _ _ _) = Just d
+> entryDev (EDEF _ _ _ d _ _) = Just d
 > entryDev (EModule _ d _ _)    = Just d
 > entryDev EPARAM{}             = Nothing
 
@@ -51,12 +51,8 @@ Hence, we have:
 >     Just dev  -> devSuspendState dev
 >     Nothing   -> SuspendNone
 
-> entryAnchor :: Traversable f => Entry f -> EntityAnchor
-> entryAnchor (EEntity _ _ _ _ anchor _)  = anchor
-> entryAnchor EModule{}                   = AnchNo
-
 > entryExpanded :: Traversable f => Entry f -> Bool
-> entryExpanded (EEntity _ _ _ _ _ meta) = meta^.expanded
+> entryExpanded (EEntity _ _ _ _ meta) = meta^.expanded
 > entryExpanded (EModule _ _ _ meta)     = meta^.expanded
 
 Entry equality
@@ -84,7 +80,7 @@ modules, in which case we return an unchanged `Left dev`.
 
 > entryCoerce ::  (Traversable f, Traversable g) =>
 >                 Entry f -> Either (Dev f) (Entry g)
-> entryCoerce param@(EPARAM ref xn k ty anchor meta) =
->     Right $ EPARAM ref xn k ty anchor meta
-> entryCoerce (EDEF _ _ _ dev _ _ _)     =  Left dev
+> entryCoerce param@(EPARAM ref xn k ty meta) =
+>     Right $ EPARAM ref xn k ty meta
+> entryCoerce (EDEF _ _ _ dev _ _)     =  Left dev
 > entryCoerce (EModule _ dev _ _)        =  Left dev
