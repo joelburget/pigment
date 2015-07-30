@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Tactics.Ornament where
 
 import Control.Applicative
@@ -5,6 +6,7 @@ import Control.Error
 import Control.Monad.Identity
 import Data.Functor.Constant
 import Data.Monoid hiding (All)
+import Data.Text (Text)
 import Data.Traversable
 
 import Kit.BwdFwd
@@ -13,6 +15,7 @@ import Evidences.Tm
 import Evidences.Mangler
 import Evidences.Eval
 import Evidences.Operators
+import Evidences.Ornament
 import Evidences.DefinitionalEquality
 import NameSupply.NameSupplier
 import NameSupply.NameSupply
@@ -40,13 +43,21 @@ import DisplayLang.Name
 -- > index.
 
 
+typeOfDesc :: TyDesc INTM -> INTM
+typeOfDesc (ITyDesc (_ :<: ix) args _) = ARR ix (foldr ARR SET (map sndEx args))
+typeOfDesc (TyDesc args _) = foldr ARR SET (map sndEx args)
+
+
+wrapDesc :: TyDesc INTM -> INTM
+wrapDesc = C . Ornament
+
 
 emptyData :: String -> ProofState Name
 emptyData name = freshRef (name :<: SET) $ \ref -> do
     nsupply <- askNSupply
 
-    let result :: TYDESC
-        result = TyDesc [] []
+    let result :: INTM
+        result = TYDESC [] []
 
     let meta = Metadata False "" False
         ref' = refName ref := DEFN result :<: SET -- XXX get right type
@@ -54,44 +65,51 @@ emptyData name = freshRef (name :<: SET) $ \ref -> do
                   , devTip           =  Defined REMPTY (SET :=>: SET)
                   , devNSupply       =  freshNSpace nsupply name
                   , devSuspendState  =  SuspendNone }
-    putEntryAbove $ EDEF ref' (mkLastName ref') LETG dev SET AnchNo emptyMetadata
+    putEntryAbove $ EDEF ref' (mkLastName ref') LETG dev SET emptyMetadata
     return $ refName ref
 
 
 -- XXX huge TODO:
 -- figure out how to handle changes when this thing is in use
-addTypeParam :: (String, DInTmRN) -> ProofState REF -- (EXTM :=>: VAL)
-addTypeParam (name, dTy) = do
-    CDefinition _ ref lastN _ anch meta <- getCurrentEntry
-
-    _ :=>: ty <- elaborate' (SET :>: dTy)
+addTypeParam :: Text :<: INTM -> ProofState () -- (EXTM :=>: VAL)
+addTypeParam param = do
+    CDefinition _ ref lastN _ meta <- getCurrentEntry
 
     let name = refName ref
-        newTm = undefind
+        DEFN defn :<: _ = refBody ref
+        newDesc = case defn of
+            TYDESC params cons -> TyDesc (param:params) cons
+            ITYDESC i params cons -> ITyDesc i (param:params) cons
+        defnTy = typeOfDesc newDesc
+        _NEWDESC = wrapDesc newDesc
+        newRef = name := DEFN _NEWDESC :<: defnTy
 
-    putCurrentEntry $ CDefinition LETG newRef lastN RSIG anch meta
-    putDevTip $ Defined newTm (RSIG :=>: RSIG)
+    nsupply <- askNSupply
+
+    putCurrentEntry $ CDefinition LETG newRef lastN defnTy meta
+    putDevTip $ Defined _NEWDESC (quote (SET :>: defnTy) nsupply :=>: defnTy)
 
 
-addConstructor :: String
-               -- ^ Name of the type constructor
-               --
-               -- TODO(joel) I'm sure this can be recovered reliably from the
-               -- context
-               -> (String, DInTmRN)
+addConstructor :: Text :<: ConDesc INTM INTM
                -- ^ Name and scheme of constructor to build
                --
                -- TODO(joel) curry?
                -> ProofState ()
-addConstructor tyName (name, scheme) = do
-    CDefinition LETG ref@(n := (_ :<: ty)) _ _ anch meta <- getCurrentEntry
+addConstructor con = do
+    CDefinition _ ref lastN _ meta <- getCurrentEntry
 
-    let parameters = undefined
-        tyTyTODO = undefined
-        elims = map (A . NP . paramRef) parameters
+    let name = refName ref
+        DEFN defn :<: _ = refBody ref
 
-    -- first build the description
-    elabCons tyName tyTyTODO elims (name, scheme)
+        -- XXX figure out unindexed story
+        newDesc = case defn of
+            -- TYDESC params cons -> TyDesc params (con:cons)
+            ITYDESC i params cons -> ITyDesc i params (con:cons)
+        defnTy = typeOfDesc newDesc
+        _NEWDESC = wrapDesc newDesc
+        newRef = name := DEFN _NEWDESC :<: defnTy
 
-    -- now build the actual constructor
-    return undefined
+    nsupply <- askNSupply
+
+    putCurrentEntry $ CDefinition LETG newRef lastN defnTy meta
+    putDevTip $ Defined _NEWDESC (quote (SET :>: defnTy) nsupply :=>: defnTy)

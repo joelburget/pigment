@@ -429,6 +429,11 @@ Records
 > pattern RCONS s i t  = C (RCons s i t)
 > pattern RECORD l s   = C (Record (l :?=: Identity s))
 
+Ornaments
+
+> pattern TYDESC a c = C (Ornament (TyDesc a c))
+> pattern ITYDESC i a c = C (Ornament (ITyDesc i a c))
+
 We have some type synonyms for commonly occurring instances of `Tm`.
 
 > type InTm   = Tm In
