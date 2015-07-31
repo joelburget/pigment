@@ -124,10 +124,10 @@ any auxiliary code.
 > argsOpRun (SCHTY _)       = Right UNIT
 > argsOpRun (SCHEXPPI s t)  =
 >   Right $ SIGMA (schTypeOp @@ [s])
->            (L ("x" :. (let x = 0 :: Int in N $ argsOp :@ [t -$ [ NV x ]])))
+>            (L ("x" :. (N $ argsOp :@ [t -$ [ NV 0 ]])))
 > argsOpRun (SCHIMPPI s t)  =
 >   Right $ SIGMA s
->            (L ("x" :. (let x = 0 :: Int in N $ argsOp :@ [t -$ [ NV x ]])))
+>            (L ("x" :. (N $ argsOp :@ [t -$ [ NV 0 ]])))
 > argsOpRun (N v)           = Left v
 
 
@@ -135,10 +135,10 @@ any auxiliary code.
 > schTypeOpRun (SCHTY s)       = Right s
 > schTypeOpRun (SCHEXPPI s t)  =
 >   Right $ PI (schTypeOp @@ [s])
->            (L ("x" :. (let x = 0 :: Int in N $ schTypeOp :@ [t -$ [ NV x ]])))
+>            (L ("x" :. (N $ schTypeOp :@ [t -$ [ NV 0 ]])))
 > schTypeOpRun (SCHIMPPI s t)  =
 >   Right $ PI s
->            (L ("x" :. (let x = 0 :: Int in N $ schTypeOp :@ [t -$ [ NV x ]])))
+>            (L ("x" :. (N $ schTypeOp :@ [t -$ [ NV 0 ]])))
 > schTypeOpRun (N v)           = Left v
 
 > nEOp = Op { opName = "naughtE"
@@ -154,8 +154,8 @@ any auxiliary code.
 >             , opTyTel = "S" :<: SET :-: \ ty ->
 >                         "p" :<: PRF (INH ty) :-: \ p ->
 >                         "P" :<: IMP (PRF (INH ty)) PROP :-: \ pred ->
->                         "m" :<: PI ty (L $ "s" :. (let t = 0 :: Int in
->                                          pred -$ [ WIT (NV t) ] )) :-: \ _ ->
+>                         "m" :<: PI ty (L $ "s" :. (
+>                                          pred -$ [ WIT (NV 0) ] )) :-: \ _ ->
 >                         Target (PRF (pred $$ A p))
 >             , opRun = \[_,p,_,m] -> case p of
 >                                       WIT t -> Right $ m $$ A t

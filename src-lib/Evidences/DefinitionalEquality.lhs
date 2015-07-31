@@ -32,9 +32,8 @@ by recursively evaluating the value `VAL` of type `TY`.
 
 > quote :: (TY :>: VAL) -> NameSupply -> INTM
 
-The normal form corresponds to a $\beta$-normal $\eta$-long form: there
-are no $\beta$-redexes present and all possible $\eta$-expansions have
-been performed.
+The normal form corresponds to a beta-normal, eta-long form: there are no
+beta-redexes present and all possible eta-expansions have been performed.
 
 This is achieved by two mutually recursive functions, `inQuote` and
 `exQuote`:
