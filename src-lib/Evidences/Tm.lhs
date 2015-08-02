@@ -431,8 +431,11 @@ Records
 
 Ornaments
 
-> pattern TYDESC a c = C (Ornament (TyDesc a c))
-> pattern ITYDESC i a c = C (Ornament (ITyDesc i a c))
+> type TYDESC = TyDesc INTM
+> type CONDESC = ConDesc INTM
+
+> pattern TYDESC name ordering ixed nonixed cons =
+>     C (Ornament (TyDesc name ordering ixed nonixed cons))
 
 We have some type synonyms for commonly occurring instances of `Tm`.
 

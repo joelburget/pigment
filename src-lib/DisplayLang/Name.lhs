@@ -7,6 +7,7 @@ Relative Names
 > import Data.List
 
 > import NameSupply.NameSupply
+> import Evidences.Ornament
 > import Evidences.Tm
 > import DisplayLang.DisplayTm
 
@@ -32,6 +33,8 @@ variables are relative names. So it goes:
 > type DSPINE = DSpine REF RelName
 > type DHEAD = DHead REF RelName
 > type DSCOPE = DScope REF RelName
+> type DTYDESC = TyDesc DInTmRN
+> type DCONDESC = ConDesc DInTmRN
 
 Names to strings
 ----------------

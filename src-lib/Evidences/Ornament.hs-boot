@@ -1,4 +1,4 @@
 module Evidences.Ornament where
 
-data ConDesc :: * -> * -> *
+data ConDesc t
 data TyDesc :: * -> *
