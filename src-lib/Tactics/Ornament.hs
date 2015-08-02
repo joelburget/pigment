@@ -137,6 +137,7 @@ emptyData name = freshRef (T.unpack name :<: SET) $ \ref -> do
                   , devNSupply       =  freshNSpace nsupply (T.unpack name)
                   , devSuspendState  =  SuspendNone }
     putEntryAbove $ EDEF ref' (mkLastName ref') LETG dev SET emptyMetadata
+    updateRef ref'
     return $ refName ref
 
 
@@ -157,6 +158,7 @@ modifyDesc f = do
     nsupply <- askNSupply
 
     putCurrentEntry $ CDefinition LETG newRef lastN defnTy meta
+    updateRef newRef
     putDevTip $ Defined _NEWDESC (quote (SET :>: defnTy) nsupply :=>: defnTy)
 
 

@@ -51,6 +51,7 @@ makeEmptyRecord name = freshRef (name :<: RSIG) $ \ref -> do
                   , devNSupply       =  freshNSpace nsupply name
                   , devSuspendState  =  SuspendNone }
     putEntryAbove $ EDEF ref' (mkLastName ref') LETG dev RSIG emptyMetadata
+    updateRef ref'
     return $ refName ref
 
 
@@ -100,6 +101,7 @@ elabAddRecordLabel (labelName, labelDTy) = do
 
     putCurrentEntry $ CDefinition LETG newRef lastN RSIG meta
     putDevTip $ Defined recTm (RSIG :=>: RSIG)
+    updateRef newRef
 
     return (recTm :<: RSIG)
 
@@ -127,5 +129,6 @@ removeRecordLabel removeName = do
 
             putCurrentEntry $ CDefinition LETG newRef lastN RSIG meta
             putDevTip $ Defined newTm (RSIG :=>: RSIG)
+            updateRef newRef
             return (newTm :<: RSIG)
         Nothing -> throwDTmStr $ "cannot remove label " ++ removeName
