@@ -24,6 +24,18 @@ import NameSupply.NameSupplier        as X
 import NameSupply.NameSupply          as X
 
 
+assertThrows :: String -> ProofState a -> IO ()
+assertThrows msg script = case runProofState script emptyContext of
+    Left _ -> return ()
+    Right _ -> assertFailure msg
+
+
+runScript :: ProofState a -> (a -> IO ()) -> IO ()
+runScript script continue = case runProofState script emptyContext of
+    Left e -> assertFailure (renderHouseStyle (prettyStackError e))
+    Right (a, _) -> continue a
+
+
 ev :: (TY :>: VAL) -> Either (StackError VAL) ((TY :>: VAL) :=>: VAL)
 ev tx@(_ :>: x) = Right (tx :=>: x)
 

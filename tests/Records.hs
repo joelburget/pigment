@@ -26,16 +26,7 @@ import Elaboration.Error
 import DisplayLang.PrettyPrint
 
 
-runScript :: ProofState a -> (a -> IO ()) -> IO ()
-runScript script continue = case runProofState script emptyContext of
-    Left e -> assertFailure (renderHouseStyle (prettyStackError e))
-    Right (a, _) -> continue a
-
-
-assertThrows :: String -> ProofState a -> IO ()
-assertThrows msg script = case runProofState script emptyContext of
-    Left _ -> return ()
-    Right _ -> assertFailure msg
+import PigmentPrelude
 
 
 emptyRecord :: Assertion
