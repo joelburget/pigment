@@ -84,13 +84,11 @@ export class Tm<A: Ast> extends AbtBase<A> {
   }
 
   rename(oldName: string, newName: string): Tm<A> {
-    const children = this.value.children.map(v => v.rename(oldName, newName));
-    return new Tm({ ...this.value, children });
+    return this.value.map(v => v.rename(oldName, newName));
   }
 
   subst(t: A, x: string): Tm<A> {
-    const children = this.value.children.map(v => v.subst(t, x));
-    return new Tm({ ...this.value, children });
+    return this.value.map(v => v.subst(t, x));
   }
 }
 

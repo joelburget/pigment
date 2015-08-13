@@ -1,25 +1,33 @@
 import expect from 'expect';
 import { Var, Abs, Tm } from '../src/theory/abt';
-import { mkType, mkVar, mkLam, mkPi, mkSigma, mkPair, mkHole, mkApp } from '../src/theory/tm';
+import { Type, EVar, Hole } from '../src/theory/tm';
+import { Lam, Pi, App } from '../src/theory/lambda';
+import { Sigma, Tuple } from '../src/theory/tuple';
 import { Map } from 'immutable';
 import { empty as emptyCtx } from '../src/theory/context';
 import { evaluate, mkSuccess, mkStuck } from '../src/theory/eval';
 
 describe('eval', () => {
-  it('knows these', () => {
+  it('evaluates the basics', () => {
     // start with an empty context;
-    expect(evaluate(emptyCtx, mkType))
-      .toEqual(mkSuccess(mkType));
+    expect(Type.singleton.evaluate(emptyCtx))
+      .toEqual(mkSuccess(Type.singleton));
 
-    const hole = mkHole('hole');
-    expect(evaluate(emptyCtx, hole))
+    const hole = new Hole('hole');
+    expect(hole.evaluate(emptyCtx))
       .toEqual(mkStuck(hole));
+  });
 
-    const lam = mkLam('x', mkVar('x'));
-    expect(evaluate(emptyCtx, lam))
+  it('evaluates functions', () => {
+    const lam = new Lam('x', new EVar('x'));
+    expect(lam.evaluate(emptyCtx))
       .toEqual(mkStuck(lam));
 
-    expect(evaluate(emptyCtx, mkApp(lam, mkType)))
-      .toBe(mkType);
+    expect(new App(lam, Type.singleton).evaluate(emptyCtx))
+      .toEqual(mkSuccess(Type.singleton));
+  });
+
+  it('evaluates tuples', () => {
+    // TODO
   });
 });

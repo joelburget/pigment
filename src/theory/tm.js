@@ -1,133 +1,92 @@
 // TODO:
-// * revolutionize type inference
-// * sigma types
 // * user-defined types
-// * organize
 // * source positions? how does this relate to names?
-import Immutable from 'immutable';
-const { Record, Map, List } = Immutable;
 import { Var, Abs, Tm, Abt } from './abt';
 
 
-type ExpressionDesc = {
-  type: string,
-  arity: [number],
-}
+type EvaluationResult<A>
+  = { type: 'success', value: A }
+  | { type: 'stuck', value: A }
 
 
-type Expression = {
-  type: string,
-  children: [Abt<Expression>],
-}
-
-
-export const EVar = {
-  type: "var",
-  arity: [],
-  // inferred: true,
-};
-
-export function mkVar(v: string): Expression {
+export function mkSuccess(e) {
   return {
-    type: "var",
-    children: [ new Var(v) ],
+    type: 'success',
+    value: e,
   };
 }
 
 
-export const Type = {
-  type: "type",
-  arity: [],
-  // inferred: false,
-};
-
-export const mkType = {
-  type: "type",
-  children: [],
-};
-
-
-export const Hole = {
-  type: "hole",
-  arity: [],
-};
-
-export function mkHole(name: ?string): Expression {
+export function mkStuck(e) {
   return {
-    type: "hole",
-    children: [],
-    name,
+    type: 'stuck',
+    value: e,
   };
 }
 
 
-export const Lam = {
-  type: "lam",
-  arity: [1],
-  // inferred: false,
-};
-
-export function mkLam(name: string, body: Expression): Expression {
-  return {
-    type: "lam",
-    // TODO perhaps name should have a type
-    children: [ new Abs(name, new Tm(body)) ],
-  };
+export class Expression {
+  arity: [number];
+  children: [ Abt<Expression> ];
+  // map: (Abt<Expression> => Abt<Expression>) => Expression;
+  // evaluate: Context => EvaluationResult<Expression>;
 }
 
 
-export const App = {
-  type: "app",
-  arity: [0, 0],
-  // inferred: true,
-};
+export class EVar extends Expression {
+  static arity = [];
 
-export function mkApp(f: Expression, x: Expression): Expression {
-  return {
-    type: "app",
-    children: [ new Tm(f), new Tm(x) ],
-  };
+  constructor(name: string) {
+    super(arguments);
+    this.children = [ new Var(name) ];
+  }
+
+  map(f) {
+    let v = new EVar(this.children[0].name);
+    v.children = v.children.map(f);
+    return v;
+  }
+
+  evaluate(ctx: Context) {
+    return lookupValue(ctx, this.children[0].name).evaluate();
+  }
 }
 
 
-export const Pi = {
-  type: "pi",
-  arity: [0, 1],
-  // inferred: false,
-};
+export class Type extends Expression {
+  static arity = [];
+  static singleton = new Type();
 
-export function mkPi(domain: Expression, codomain: Expression) {
-  return {
-    type: "pi",
-    children: [ new Tm(domain), new Tm(codomain) ],
-  };
-}
+  constructor() {
+    super(arguments);
+    this.children = [];
+  }
 
-export const Sigma = {
-  type: "sigma",
-  arity: [0, 1],
-  // inferred: false,
-};
+  map(f) {
+    return this;
+  }
 
-export function mkSigma(domain: Expression, codomain: Expression) {
-  return {
-    type: "sigma",
-    children: [ new Tm(domain), new Tm(codomain) ],
-  };
+  evaluate(ctx: Context) {
+    return mkSuccess(this);
+  }
 }
 
 
-// TODO - how do we telescopify the arity (also for sigma)?
-export const Tuple = {
-  type: "tuple",
-  arity: [0, 1],
-  // inferred: false,
-};
+export class Hole extends Expression {
+  static arity = [];
+  name: ?string;
 
-// TODO - second param is binding according to above
-export function mkTuple(inl: Expression, inr: Expression) {
-  return {
-    type: "tuple",
-    children: [ new Tm(inl), new Tm(inr) ],
-  };
+  constructor(name: ?string): void {
+    super(arguments);
+    this.children = [];
+    this.name = name;
+  }
+
+  map(f) {
+    return this;
+  }
+
+  evaluate(ctx: Context) {
+    return mkStuck(this);
+  }
 }
