@@ -94,7 +94,7 @@ class Definition extends Component {
 class Workspace extends Component {
   static propTypes = {
     goal: PropTypes.object.isRequired,
-    definitions: PropTypes.object.isRequired,
+    definitions: PropTypes.array.isRequired,
     renameDefinition: PropTypes.func.isRequired,
   };
 
