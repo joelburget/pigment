@@ -63,7 +63,7 @@ class Definition extends Component {
   };
 
   render() {
-    const { name, defn, index } = this.props;
+    const { name, defn } = this.props;
     const nameCell = this.state.editing ?
       <input defaultValue={name}
              onKeyPress={::this.handleKeyPress}

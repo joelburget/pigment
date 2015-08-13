@@ -1,5 +1,5 @@
 import { mkStuck, mkSuccess, Expression, Type } from './tm';
-import { Var, Abs, Tm } from './abt';
+import { Abs, Tm } from './abt';
 import { lookup, lookupType } from './context';
 
 
@@ -7,7 +7,7 @@ export class Lam extends Expression {
   static arity = [1];
 
   constructor(name: string, body: Expression): void {
-    super([ new Abs(name, new Tm(body)) ])
+    super([ new Abs(name, new Tm(body)) ]);
   }
 
   map(f): Expression {

@@ -1,7 +1,8 @@
 // TODO:
 // * user-defined types
 // * source positions? how does this relate to names?
-import { Var, Abs, Tm, Abt } from './abt';
+import { Var } from './abt';
+import type { Abt } from './abt';
 
 
 type EvaluationResult<A>
@@ -56,7 +57,7 @@ export class EVar extends Expression {
     return lookupValue(ctx, this.children[0].name).evaluate();
   }
 
-  getType(ctx: Context) {
+  getType() {
     return this.type;
   }
 }
@@ -70,15 +71,15 @@ export class Type extends Expression {
     super([]);
   }
 
-  map(f): Type {
+  map(): Type {
     return this;
   }
 
-  evaluate(ctx: Context): EvaluationResult<Expression> {
+  evaluate(): EvaluationResult<Expression> {
     return mkSuccess(this);
   }
 
-  getType(ctx: Context) {
+  getType() {
     return Type.singleton;
   }
 }
@@ -94,15 +95,15 @@ export class Hole extends Expression {
     this.type = type;
   }
 
-  map(f): Expression {
+  map(): Expression {
     return this;
   }
 
-  evaluate(ctx: Context): EvaluationResult<Expression> {
+  evaluate(): EvaluationResult<Expression> {
     return mkStuck(this);
   }
 
-  getType(ctx: Context) {
+  getType() {
     return this.type;
   }
 }

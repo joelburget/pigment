@@ -1,7 +1,7 @@
 import expect from 'expect';
 import { Type, EVar } from '../src/theory/tm';
 import { Lam, Pi } from '../src/theory/lambda';
-import { Sigma, Pair } from '../src/theory/tuple';
+import { Sigma } from '../src/theory/tuple';
 import { empty as emptyCtx } from '../src/theory/context';
 
 describe('typelevels', () => {

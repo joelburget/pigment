@@ -1,5 +1,5 @@
 import { mkStuck, mkSuccess, Expression, Type } from './tm';
-import { Var, Abs, Tm, Abt } from './abt';
+import { Tm } from './abt';
 import { add } from './context';
 
 
@@ -19,10 +19,10 @@ export class Sigma extends Expression {
   }
 
   evaluate(ctx: Context): EvaluationResult<Expression> {
-    throw new Error("TODO - Sigma.evaluate");
+    throw new Error('TODO - Sigma.evaluate');
   }
 
-  getType(ctx: Context) {
+  getType() {
     return Type.singleton;
   }
 }
