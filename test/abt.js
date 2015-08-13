@@ -6,10 +6,10 @@ import Immutable from 'immutable';
 
 
 type Ast<Abt> =
-  { type: "lam", body: Abt } |
-  { type: "app", e1: Abt, e2: Abt } |
-  { type: "let", e1: Abt, e2: Abt } |
-  { type: "unit" }
+  { type: "lam", children: [ Abt ] } |
+  { type: "app", children: [ Abt, Abt ] } |
+  { type: "let", children: [ Abt, Abt ] } |
+  { type: "unit", children: [] }
 
 // value : pi, type, lambda
 // neutral: var, app
@@ -17,17 +17,11 @@ type Ast<Abt> =
 
 class Ast {
   type: string;
-  obj: Object;
+  children: [ Abt ];
 
-  constructor(type: string, obj: ?Object) {
+  constructor(type: string, children: [ Abt ]) {
     this.type = type;
-    this.obj = obj || {};
-  }
-
-  // XXX fix
-  abtNodes() {
-    const names = Object.getOwnPropertyNames(this.obj);
-    return names.map(name => this.obj[name]);
+    this.children = children;
   }
 }
 
@@ -38,14 +32,14 @@ function expectImmutableIs(x, y) {
 
 describe('abt', () => {
   const xVar = new Var("x");
-  const unit = new Tm(new Ast("unit"));
+  const unit = new Tm(new Ast("unit", []));
   // let y = () in y
-  const let1 = new Tm(new Ast("let", {
-    e: new Abs("y", unit),
-  }));
-  const let2 = new Tm(new Ast("let", {
-    e: new Abs("x", new Var("y")),
-  }));
+  const let1 = new Tm(new Ast("let", [
+    new Abs("y", unit),
+  ]));
+  const let2 = new Tm(new Ast("let", [
+    new Abs("x", new Var("y")),
+  ]));
   const lambda1 = new Abs("x", new Var("x"));
   const lambda2 = new Abs("x", new Var("y"));
 

@@ -19,7 +19,7 @@ import { mkPi, mkSigma, mkApp, mkType } from './tm';
 export function getType(ctx: Context, e: Expression) {
   switch (e.type) {
     case "var":
-      return lookupType(ctx, e.children[0].name);
+
 
     // * : *
     case "type":

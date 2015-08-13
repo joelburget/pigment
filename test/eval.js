@@ -1,11 +1,10 @@
 import expect from 'expect';
 import { Var, Abs, Tm } from '../src/theory/abt';
-import { Type, EVar, Hole } from '../src/theory/tm';
+import { Type, EVar, Hole, mkSuccess, mkStuck } from '../src/theory/tm';
 import { Lam, Pi, App } from '../src/theory/lambda';
 import { Sigma, Tuple } from '../src/theory/tuple';
 import { Map } from 'immutable';
 import { empty as emptyCtx } from '../src/theory/context';
-import { evaluate, mkSuccess, mkStuck } from '../src/theory/eval';
 
 describe('eval', () => {
   it('evaluates the basics', () => {
