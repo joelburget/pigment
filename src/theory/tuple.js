@@ -1,21 +1,29 @@
-import { mkStuck, mkSuccess, Expression } from './tm';
+import { mkStuck, mkSuccess, Expression, Type } from './tm';
 import { Var, Abs, Tm, Abt } from './abt';
+import { add } from './context';
 
 
 export class Sigma extends Expression {
   static arity = [0, 1];
 
   constructor(domain: Expression, codomain: Expression): void {
-    super(arguments);
-    this.children = [ new Tm(domain), new Tm(codomain) ];
+    super([ new Tm(domain), new Tm(codomain) ]);
   }
 
-  map(f) {
+  map(f): Expression {
     const domain = this.children[0].value;
     const codomain = this.children[1].value;
     let v = new Lam(domain, codomain);
     v.children = v.children.map(f);
     return v;
+  }
+
+  evaluate(ctx: Context): EvaluationResult<Expression> {
+    throw new Error("TODO - Sigma.evaluate");
+  }
+
+  getType(ctx: Context) {
+    return Type.singleton;
   }
 }
 
@@ -24,11 +32,10 @@ export class Tuple extends Expression {
   static arity = [0, 1];
 
   constructor(inl: Expression, inr: Expression): void {
-    super(arguments);
-    this.children = [ new Tm(inl), new Tm(inr) ];
+    super([ new Tm(inl), new Tm(inr) ]);
   }
 
-  map(f) {
+  map(f): Expression {
     const inl = this.children[0].value;
     const inr = this.children[1].value;
     let v = new Lam(inl, inr);
@@ -36,7 +43,7 @@ export class Tuple extends Expression {
     return v;
   }
 
-  evaluate(ctx: Context) {
+  evaluate(ctx: Context): EvaluationResult<Expression> {
     const [ inl, inr ] = this.children;
     const lval = inl.evaluate(ctx);
     if (lval.type === 'success') {
@@ -51,6 +58,15 @@ export class Tuple extends Expression {
     } else {
       // XXX
     }
+  }
+
+  getType(ctx: Context) {
+    const [ inl, inr ] = this.children;
+    const lty = inl.getType(ctx);
+    const newCtx = add(ctx, inr.name, [inl, lty]);
+    const rty = inr.body.getType(newCtx);
+
+    return new Sigma(lty, rty);
   }
 }
 

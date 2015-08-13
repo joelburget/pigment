@@ -1,24 +1,28 @@
 import expect from 'expect';
-import { Var, Abs, Tm } from '../src/theory/abt';
-import { mkType, mkVar, mkLam, mkPi, mkSigma, mkPair } from '../src/theory/tm';
-import { getType } from '../src/theory/typelevels';
-import { Map } from 'immutable';
+import { Type, EVar } from '../src/theory/tm';
+import { Lam, Pi } from '../src/theory/lambda';
+import { Sigma, Pair } from '../src/theory/tuple';
 import { empty as emptyCtx } from '../src/theory/context';
 
 describe('typelevels', () => {
-  it('knows these', () => {
-    // start with an empty context;
-    expect(getType(emptyCtx, mkType))
-      .toBe(mkType);
+  const type = Type.singleton;
 
-    expect(getType(emptyCtx.set('x', [mkType, mkType]), mkVar('x')))
-      .toBe(mkType);
+  it('knows the types of basics', () => {
+    expect(type.getType(emptyCtx))
+      .toBe(type);
 
-    expect(getType(emptyCtx, mkPi(mkType, mkLam('_', mkType))))
-      .toBe(mkType);
+    expect(new EVar('x', type).getType(emptyCtx))
+      .toBe(type);
+  });
 
+  it('knows pis', () => {
+    expect(new Pi(type, new Lam('x', type)).getType(emptyCtx))
+      .toBe(type);
+  });
+
+  it('knows sigmas', () => {
     // XXX what should the second part of a sigma be? is it a lambda?
-    expect(getType(emptyCtx, mkSigma(mkType, mkLam('_', mkType))))
-      .toBe(mkType);
+    expect(new Sigma(type, new Lam('x', type)).getType(emptyCtx))
+      .toBe(type);
   });
 });

@@ -9,7 +9,7 @@ type EvaluationResult<A>
   | { type: 'stuck', value: A }
 
 
-export function mkSuccess(e) {
+export function mkSuccess(e: A): EvaluationResult<A> {
   return {
     type: 'success',
     value: e,
@@ -17,7 +17,7 @@ export function mkSuccess(e) {
 }
 
 
-export function mkStuck(e) {
+export function mkStuck(e: A): EvaluationResult<A> {
   return {
     type: 'stuck',
     value: e,
@@ -30,25 +30,34 @@ export class Expression {
   children: [ Abt<Expression> ];
   // map: (Abt<Expression> => Abt<Expression>) => Expression;
   // evaluate: Context => EvaluationResult<Expression>;
+  // getType: Context => Expression
+
+  constructor(children: [ Abt<Expression> ]): void {
+    this.children = children;
+  }
 }
 
 
 export class EVar extends Expression {
   static arity = [];
 
-  constructor(name: string) {
-    super(arguments);
-    this.children = [ new Var(name) ];
+  constructor(name: string, type: Expression): void {
+    super([ new Var(name) ]);
+    this.type = type;
   }
 
-  map(f) {
+  map(f): Expression {
     let v = new EVar(this.children[0].name);
     v.children = v.children.map(f);
     return v;
   }
 
-  evaluate(ctx: Context) {
+  evaluate(ctx: Context): EvaluationResult<Expression> {
     return lookupValue(ctx, this.children[0].name).evaluate();
+  }
+
+  getType(ctx: Context) {
+    return this.type;
   }
 }
 
@@ -57,17 +66,20 @@ export class Type extends Expression {
   static arity = [];
   static singleton = new Type();
 
-  constructor() {
-    super(arguments);
-    this.children = [];
+  constructor(): void {
+    super([]);
   }
 
-  map(f) {
+  map(f): Type {
     return this;
   }
 
-  evaluate(ctx: Context) {
+  evaluate(ctx: Context): EvaluationResult<Expression> {
     return mkSuccess(this);
+  }
+
+  getType(ctx: Context) {
+    return Type.singleton;
   }
 }
 
@@ -76,17 +88,21 @@ export class Hole extends Expression {
   static arity = [];
   name: ?string;
 
-  constructor(name: ?string): void {
-    super(arguments);
-    this.children = [];
+  constructor(name: ?string, type: Expression): void {
+    super([]);
     this.name = name;
+    this.type = type;
   }
 
-  map(f) {
+  map(f): Expression {
     return this;
   }
 
-  evaluate(ctx: Context) {
+  evaluate(ctx: Context): EvaluationResult<Expression> {
     return mkStuck(this);
+  }
+
+  getType(ctx: Context) {
+    return this.type;
   }
 }

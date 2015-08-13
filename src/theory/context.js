@@ -17,6 +17,11 @@ export function lookupType(c: Context, v: string): Expression {
 }
 
 
+export function lookup(c: Context, v: string): Expression {
+  return c.get(v);
+}
+
+
 export function add(c: Context,
                     v: string,
                     e: [Expression, Expression]): Context {
