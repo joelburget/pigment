@@ -103,20 +103,14 @@ class Workspace extends Component {
   definitionDispatch({ name, defn, type }, index) {
     const { renameDefinition } = this.props;
     const props = { renameDefinition, name, defn, index };
+    const dispatch = {
+      definition: Definition,
+      example: Example,
+      property: Property,
+      note: Note,
+    };
 
-    switch (type) {
-      case "definition":
-        return <Definition {...props} />;
-
-      case "example":
-        return <Example {...props} />;
-
-      case "property":
-        return <Property {...props} />;
-
-      case "note":
-        return <Note {...props} />;
-    }
+    return React.createElement(dispatch[type], props);
   }
 
   render() {
