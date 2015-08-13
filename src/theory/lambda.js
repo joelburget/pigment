@@ -5,6 +5,7 @@ import { lookup, lookupType } from './context';
 
 export class Lam extends Expression {
   static arity = [1];
+  static renderName = "lam";
 
   constructor(name: string, body: Expression): void {
     super([ new Abs(name, new Tm(body)) ]);
@@ -34,6 +35,7 @@ export class Lam extends Expression {
 
 export class Pi extends Expression {
   static arity = [0, 1];
+  static renderName = "pi";
 
   constructor(domain: Expression, codomain: Expression): void {
     super([ new Tm(domain), new Tm(codomain) ]);
@@ -59,6 +61,7 @@ export class Pi extends Expression {
 
 export class App extends Expression {
   static arity = [0, 0];
+  static renderName = "app";
 
   constructor(f: Expression, x: Expression): void {
     super([ new Tm(f), new Tm(x) ]);

@@ -5,6 +5,7 @@ import { add } from './context';
 
 export class Sigma extends Expression {
   static arity = [0, 1];
+  static renderName = "sigma";
 
   constructor(domain: Expression, codomain: Expression): void {
     super([ new Tm(domain), new Tm(codomain) ]);
@@ -30,6 +31,7 @@ export class Sigma extends Expression {
 
 export class Tuple extends Expression {
   static arity = [0, 1];
+  static renderName = "tuple";
 
   constructor(inl: Expression, inr: Expression): void {
     super([ new Tm(inl), new Tm(inr) ]);

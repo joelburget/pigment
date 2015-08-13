@@ -29,6 +29,8 @@ export function mkStuck(e: A): EvaluationResult<A> {
 export class Expression {
   arity: [number];
   children: [ Abt<Expression> ];
+  renderName: string;
+
   // map: (Abt<Expression> => Abt<Expression>) => Expression;
   // evaluate: Context => EvaluationResult<Expression>;
   // getType: Context => Expression
@@ -41,6 +43,7 @@ export class Expression {
 
 export class EVar extends Expression {
   static arity = [];
+  static renderName = "var";
 
   constructor(name: string, type: Expression): void {
     super([ new Var(name) ]);
@@ -65,6 +68,7 @@ export class EVar extends Expression {
 
 export class Type extends Expression {
   static arity = [];
+  static renderName = "type";
   static singleton = new Type();
 
   constructor(): void {
@@ -87,6 +91,7 @@ export class Type extends Expression {
 
 export class Hole extends Expression {
   static arity = [];
+  static renderName = "hole";
   name: ?string;
 
   constructor(name: ?string, type: Expression): void {

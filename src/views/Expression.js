@@ -48,14 +48,16 @@ export default class Expression extends Component {
 
   render() {
     const dispatch = {
-      app: App,
       type: Type,
       "var": Name,
+      hole: Hole,
+
+      app: App,
       lam: Lambda,
       pi: Pi,
-      tuple: Pair, // TODO fix naming
+
       sigma: Sigma,
-      hole: Hole,
+      tuple: Pair, // TODO fix naming
     };
 
     // kind of tricky destructuring here -- this.props.children looks like:
@@ -68,12 +70,12 @@ export default class Expression extends Component {
     // yep, children has children. also we pass type in as props (not
     // important). also we pass in whatever other stuff is in
     // this.props.children.
-    const { type } = this.props.children;
 
+    const renderName = this.props.children.constructor.renderName;
 
     return (
       <div className={styles.expression}>
-        {React.createElement(dispatch[type], this.props.children)}
+        {React.createElement(dispatch[renderName], this.props.children)}
       </div>
     );
   }

@@ -5,7 +5,7 @@ import childJoin from '../childJoin';
 import {requireServerCss} from '../../util';
 import Name from './Name';
 import Expression from '../Expression';
-import { mkVar } from '../../theory/tm';
+import { EVar } from '../../theory/tm';
 
 const styles = __CLIENT__ ?
   require('./Lambda.scss') :
@@ -27,7 +27,7 @@ export class Lambda extends Component {
     // XXX gross making this var here
     return (
       <div className={styles.lambda}>
-        {names.map(name => <Name>{mkVar(name).children}</Name>)}
+        {names.map(name => <Name>{new EVar(name).children}</Name>)}
         <div>
           <span className={styles.arr}>&#8614;</span>
         </div>

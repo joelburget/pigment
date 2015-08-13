@@ -7,14 +7,23 @@ import {
   DEFINITION_RENAME,
 } from '../actions/actionTypes';
 
-import { mkLam, mkTuple, mkVar, mkPi, mkSigma, mkHole } from '../theory/tm';
+import { EVar, Hole } from '../theory/tm';
+import { Lam, Pi, } from '../theory/lambda';
+import { Tuple, Sigma } from '../theory/tuple';
 
-const goal = mkPi(mkVar('A'), mkPi(mkVar('B'), mkSigma(mkVar('A'), mkVar('B'))));
+const goal = new Pi(
+  new EVar('A'),
+  new Pi(new EVar('B'),
+       new Sigma(new EVar('A'),
+               new EVar('B'))));
 
 const definitions = [
   {
     name: "pairer",
-    defn: mkLam('x', mkLam('y', mkTuple(mkVar('x'), mkVar('y')))),
+    defn: new Lam('x',
+                  new Lam('y',
+                          new Tuple(new EVar('x'),
+                                    new EVar('y')))),
     type: "definition",
   },
   {
@@ -24,17 +33,17 @@ const definitions = [
   },
   {
     name: "pairer example",
-    defn: mkTuple(mkVar('x'), mkVar('y')),
+    defn: new Tuple(new EVar('x'), new EVar('y')),
     type: "example",
   },
   {
     name: "pairer property",
-    defn: mkVar('TODO'),
+    defn: new EVar('TODO'),
     type: "property",
   },
   {
     name: "has hole",
-    defn: mkLam('x', mkHole('hole')),
+    defn: new Lam('x', new Hole('hole')),
     type: "definition",
   },
 ];
