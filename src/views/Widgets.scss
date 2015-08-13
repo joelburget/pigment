@@ -1,5 +1,32 @@
+.arr {
+    // font-size: 150%;
+    // vertical-align: center;
+}
+
 .widgets {
   .refreshBtn {
     margin-left: 20px;
   }
+}
+
+.workspace {
+  margin-left: 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  table {
+    margin-left: 10px;
+  }
+}
+
+.definitionRow {
+  td {
+    padding: 5px 5px 5px 0;
+  }
+}
+
+.definitionType {
+  font-size: 10px;
+  font-weight: bold;
 }

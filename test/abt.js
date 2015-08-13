@@ -11,43 +11,8 @@ type Ast<Abt> =
   { type: "let", e1: Abt, e2: Abt } |
   { type: "unit" }
 
-
-function map(f, ast) {
-  switch (ast.type) {
-    case "lam":
-      return {
-        type: "lam",
-        body: f(ast.body),
-      };
-
-    case "app":
-    case "let":
-      return {
-        type: ast.type,
-        e1: f(ast.e1),
-        e2: f(ast.e2),
-      };
-
-    case "unit":
-      return ast;
-  }
-}
-
-
-function join(m, ast) {
-  switch (ast.type) {
-    case "lam":
-      return ast.body
-
-    case "app":
-    case "let":
-      return m.join(ast.e1, ast.e2);
-
-    case "unit":
-      return m.unit;
-
-  }
-}
+// value : pi, type, lambda
+// neutral: var, app
 
 
 class Ast {
@@ -59,6 +24,7 @@ class Ast {
     this.obj = obj || {};
   }
 
+  // XXX fix
   abtNodes() {
     const names = Object.getOwnPropertyNames(this.obj);
     return names.map(name => this.obj[name]);

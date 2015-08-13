@@ -45,6 +45,7 @@ export class Var<A: Ast> extends AbtBase<A> {
   }
 }
 
+
 export class Abs<A: Ast> extends AbtBase<A> {
   name: string;
   body: AbtBase<A>;
@@ -72,23 +73,24 @@ export class Abs<A: Ast> extends AbtBase<A> {
   }
 }
 
+
 export class Tm<A: Ast> extends AbtBase<A> {
   value: A;
 
   constructor(value: A): void {
     super(arguments);
-    this.freevars = Set(value.abtNodes().map(node => node.freevars)).flatten();
-    // console.log(value.abtNodes().map(node => node.freevars));
-    // console.log(this.freevars);
+    this.freevars = Set(value.children.map(node => node.freevars)).flatten();
     this.value = value;
   }
 
   rename(oldName: string, newName: string): Tm<A> {
-    return new Tm(this.value.map(v => v.rename(oldName, newName)))
+    const children = this.value.children.map(v => v.rename(oldName, newName));
+    return new Tm({ ...this.value, children });
   }
 
   subst(t: A, x: string): Tm<A> {
-    return new Tm(this.value.map(v => v.subst(t, x)));
+    const children = this.value.children.map(v => v.subst(t, x));
+    return new Tm({ ...this.value, children });
   }
 }
 

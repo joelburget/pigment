@@ -6,77 +6,151 @@ import * as widgetActions from '../actions/widgetActions';
 import {load as loadWidgets} from '../actions/widgetActions';
 import {requireServerCss} from '../util';
 
-const styles = __CLIENT__ ? require('./Widgets.scss') : requireServerCss(require.resolve('./Widgets.scss'));
+import Expression from './Expression';
 
-class Widgets extends Component {
+
+const styles = __CLIENT__ ?
+  require('./Widgets.scss') :
+  requireServerCss(require.resolve('./Widgets.scss'));
+
+
+// give an example of the thing in use -- what is the return type of this?
+class Example extends Component {
+  render() {
+    return (
+      <tr className={styles.definitionRow}>
+        <td className={styles.definitionType}>EXAMPLE</td>
+        <td>(example title)</td>
+        <td>(this is an example)</td>
+      </tr>
+    );
+  }
+}
+
+
+// a law that must hold. ie a test.
+class Property extends Component {
+  render() {
+    return (
+      <tr className={styles.definitionRow}>
+        <td className={styles.definitionType}>PROPERTY</td>
+        <td>(property title)</td>
+        <td>(this is a property)</td>
+      </tr>
+    );
+  }
+}
+
+
+class Note extends Component {
+  render() {
+    const { name, defn } = this.props;
+
+    return (
+      <tr className={styles.definitionRow}>
+        <td className={styles.definitionType}>NOTE</td>
+        <td>{name}</td>
+        <td>{defn}</td>
+      </tr>
+    );
+  }
+}
+
+
+class Definition extends Component {
+  state = {
+    editing: false,
+  };
+
+  render() {
+    const { name, defn, index } = this.props;
+    const nameCell = this.state.editing ?
+      <input defaultValue={name}
+             onKeyPress={::this.handleKeyPress}
+             ref="input" /> :
+      <span onClick={::this.toggleEditing}>{name}</span>;
+
+    return (
+      <tr className={styles.definitionRow}>
+        <td className={styles.definitionType}>DEFINITION</td>
+        <td>{nameCell}</td>
+        <td><Expression>{defn}</Expression></td>
+      </tr>
+    );
+  }
+
+  toggleEditing() {
+    this.setState({ editing: !this.state.editing });
+  }
+
+  handleKeyPress(event) {
+    if (event.key === "Enter") {
+      this.props.renameDefinition(this.props.index, this.refs.input.getDOMNode().value);
+      this.toggleEditing();
+    }
+  }
+}
+
+class Workspace extends Component {
   static propTypes = {
-    widgets: PropTypes.array,
-    error: PropTypes.string,
-    loading: PropTypes.bool,
-    load: PropTypes.func.isRequired
+    goal: PropTypes.object.isRequired,
+    definitions: PropTypes.object.isRequired,
+    renameDefinition: PropTypes.func.isRequired,
+  };
+
+  // TODO rename away from definitions.
+  // items? too generic
+  definitionDispatch({ name, defn, type }, index) {
+    const { renameDefinition } = this.props;
+    const props = { renameDefinition, name, defn, index };
+
+    switch (type) {
+      case "definition":
+        return <Definition {...props} />;
+
+      case "example":
+        return <Example {...props} />;
+
+      case "property":
+        return <Property {...props} />;
+
+      case "note":
+        return <Note {...props} />;
+    }
   }
 
   render() {
-    const {widgets, error, loading, load} = this.props;
-    let refreshClassName = 'fa fa-refresh';
-    if (loading) {
-      refreshClassName += ' fa-spin';
-    }
+    const { goal, definitions, renameDefinition } = this.props;
+
     return (
-      <div className={styles.widgets + ' container'}>
-        <h1>
-          Widgets
-          <button className={styles.refreshBtn + ' btn btn-success'} onClick={load}><i className={refreshClassName}/> {' '} Reload Widgets</button>
-        </h1>
-        <p>
-          This data was loaded from the server before this route was rendered. If you hit refresh on your browser, the
-          data loading will take place on the server before the page is returned. If you navigated here from another
-          page, the data was fetched from the client.
-        </p>
-        {error &&
-        <div className="alert alert-danger" role="alert">
-          <span className="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-          {' '}
-          {error}
-        </div>}
-        {widgets && widgets.length &&
-        <table className="table table-striped">
-          <thead>
-          <tr>
-            <th>ID</th>
-            <th>Color</th>
-            <th>Sprockets</th>
-            <th>Owner</th>
-          </tr>
-          </thead>
-          <tbody>
-          {
-            widgets.map((widget) => <tr key={widget.id}>
-              <td>{widget.id}</td>
-              <td>{widget.color}</td>
-              <td>{widget.sprocketCount}</td>
-              <td>{widget.owner}</td>
-            </tr>)
-          }
-          </tbody>
-        </table>}
+      <div className={styles.workspace}>
+
+        <div>
+          <h6>GOAL</h6>
+          <Expression>{goal}</Expression>
+        </div>
+
+        <div>
+          <h6>WORKSPACE</h6>
+          <table>
+            { definitions.map(::this.definitionDispatch) }
+          </table>
+        </div>
+
       </div>
     );
   }
 }
 
+
 @connect(state => ({
-  widgets: state.widgets.data,
-  error: state.widgets.error,
-  loading: state.widgets.loading
+  goal: state.widgets.goal,
+  definitions: state.widgets.definitions,
 }))
 export default class WidgetsContainer {
   static propTypes = {
-    widgets: PropTypes.array,
-    error: PropTypes.string,
-    loading: PropTypes.bool,
     dispatch: PropTypes.func.isRequired
-  }
+  };
 
   static fetchData(store) {
     if (!isLoaded(store.getState())) {
@@ -85,8 +159,8 @@ export default class WidgetsContainer {
   }
 
   render() {
-    const { widgets, error, loading, dispatch } = this.props;
-    return <Widgets widgets={widgets} error={error}
-                    loading={loading} {...bindActionCreators(widgetActions, dispatch)}/>;
+    const { dispatch, goal, definitions } = this.props;
+    return <Workspace {...bindActionCreators(widgetActions, dispatch)}
+                      {...{ goal, definitions }} />;
   }
 }

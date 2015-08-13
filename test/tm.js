@@ -1,60 +1,49 @@
 import expect from 'expect';
-import { varString, gensym, dummy, Var, Pi, Type, Lambda, App, Abstraction, inferType, equal } from '../src/theory/tm';
+import { Var, Abs, Tm } from '../src/theory/abt';
+import { Lam, App, Pi, Sigma, Type } from '../src/theory/tm';
+import { inferType, checkType } from '../src/theory/typecheck';
 import { Map } from 'immutable';
 import Immutable from 'immutable';
 
 describe('evalutation', () => {
-  it('compares variables', () => {
-    const free = varString("free");
-    const free2 = varString("free2");
-    const gensym1 = gensym("gensym", 1);
-    const gensym2 = gensym("gensym", 2);
+  // it('compares expressions', () => {
+  //   const emptyContext = Map();
 
-    expect(Immutable.is(free, free)).toBe(true);
-    expect(Immutable.is(free, free2)).toBe(false);
+  //   expect(equal(emptyContext, Type.singleton, Type.singleton)).toBe(true);
 
-    expect(Immutable.is(gensym1, gensym1)).toBe(true);
-    expect(Immutable.is(gensym1, gensym2)).toBe(false);
-    expect(Immutable.is(gensym1, free)).toBe(false);
+  //   const smallContext = Map([
+  //     [varString("x"), [Type.singleton]],
+  //     [gensym("x", 1), [Type.singleton]],
+  //   ]);
 
-    // XXX does a dummy equal other stuff?
-    expect(Immutable.is(dummy(), dummy())).toBe(true);
-  });
+  //   expect(equal(smallContext,
+  //                new Var(varString("x")),
+  //                new Var(varString("x")))
+  //         ).toBe(true);
 
-  it('compares expressions', () => {
-    const emptyContext = Map();
-
-    expect(equal(emptyContext, Type.singleton, Type.singleton)).toBe(true);
-
-    const smallContext = Map([
-      [varString("x"), [Type.singleton]],
-      [gensym("x", 1), [Type.singleton]],
-    ]);
-
-    expect(equal(smallContext,
-                 new Var(varString("x")),
-                 new Var(varString("x")))
-          ).toBe(true);
-
-    expect(equal(smallContext,
-                 new Var(varString("x")),
-                 new Var(gensym("x", 1)))
-          ).toBe(false);
-  });
+  //   expect(equal(smallContext,
+  //                new Var(varString("x")),
+  //                new Var(gensym("x", 1)))
+  //         ).toBe(false);
+  // });
 
   it('infers types', () => {
+    const l = {
+      ...Lam,
+      children: [
+        new Abs("x", new Var("x"))
+      ]
+    };
+
     const ctx = Map([
-      [varString("x"), [Type.singleton]],
-      [gensym("x", 1), [new Lambda(new Abstraction(varString("x"), Type.singleton, new Var(varString("x"))))]]
+      [new Var("x"), [Type]],
+      [new Var("y"), [l]]
     ]);
 
-    expect(inferType(ctx, new Var(varString("x")))).toBe(Type.singleton);
+    expect(inferType(ctx, new Var("x"))).toBe(Type);
 
-    const ty = inferType(ctx, new Var(gensym("x", 1)));
-    const expected = new Lambda(
-      new Abstraction(varString("x"), Type.singleton, new Var(varString("x")))
-    );
-    expect(equal(ctx, ty, expected)).toBe(true);
+    const ty = inferType(ctx, new Var("x"));
+    expect(equal(ctx, ty, l)).toBe(true);
 
   });
 });

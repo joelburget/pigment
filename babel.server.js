@@ -1,6 +1,6 @@
 require('babel/register')({
   stage: 0,
-  plugins: ['typecheck']
+  // plugins: ['typecheck']
 });
 
 /**
