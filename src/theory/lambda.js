@@ -1,60 +1,64 @@
-import { mkStuck, mkSuccess, Expression, Type } from './tm';
-import { Abs, Tm } from './abt';
-import { lookup, lookupType } from './context';
+import { Expression, Type } from './tm';
+import { mkStuck, mkSuccess, bind } from './evaluation';
+import { Var, Abs, Tm } from './abt';
+import { lookup, lookupType, add } from './context';
 
 
 export class Lam extends Expression {
   static arity = [1];
   static renderName = "lam";
 
-  constructor(name: string, body: Expression): void {
-    super([ new Abs(name, new Tm(body)) ]);
+  constructor(abt: Abt, type: Expression): void {
+    // we can analyze the abt:
+    // * Abs - indicates the lambda is binding
+    // * Var, Tm - the lambda is constant
+    super([ abt ], type);
   }
 
   map(f): Expression {
-    const name = this.children[0].name;
-    const body = this.children[1].value;
-    let v = new Lam(name, body);
-    v.children = v.children.map(f);
-    return v;
+    return new Lam(f(this.children[0]));
   }
 
-  evaluate(): EvaluationResult<Expression> {
-    return mkStuck(this);
-  }
+  evaluate(ctx, x: Expression): EvaluationResult<Expression> {
+    const [ child ] = this.children;
 
-  getType(ctx: Context) {
-    const [ abs ] = this.children;
-    const newCtx = add(ctx, abs.name, lookup(ctx, abs.name));
-    const codomainTy = abs.body.getType(newCtx);
+    if (child instanceof Var) {
+      return mkSuccess(lookup(ctx, child.name));
 
-    return new Pi(lookupType(ctx, abs.name), codomainTy);
+    } else if (child instanceof Abs) {
+      return child
+        .subst(new Tm(x), child.name)
+        .evaluate(ctx);
+
+    } else { // child instanceof Tm
+      return child.value.evaluate(ctx);
+    }
   }
 }
 
 
-export class Pi extends Expression {
-  static arity = [0, 1];
-  static renderName = "pi";
+export class Arr extends Expression {
+  static arity = [0, 0];
+  static renderName = "arr";
 
   constructor(domain: Expression, codomain: Expression): void {
-    super([ new Tm(domain), new Tm(codomain) ]);
+    super([ new Tm(domain), new Tm(codomain) ], Type.singleton);
+  }
+
+  domain(): Expression {
+    return this.children[0].value;
+  }
+
+  codomain(): Expression {
+    return this.children[1].value;
   }
 
   map(f): Expression {
-    const domain = this.children[0].value;
-    const codomain = this.children[1].value;
-    let v = new Lam(domain, codomain);
-    v.children = v.children.map(f);
-    return v;
+    return new Arr(f(this.domain()), f(this.codomain()));
   }
 
   evaluate(ctx: Context): EvaluationResult<Expression> {
-    throw new Error("TODO - Pi.evaluate");
-  }
-
-  getType(ctx: Context) {
-    return Type.singleton;
+    throw new Error("TODO - Arr.evaluate");
   }
 }
 
@@ -63,38 +67,27 @@ export class App extends Expression {
   static arity = [0, 0];
   static renderName = "app";
 
-  constructor(f: Expression, x: Expression): void {
-    super([ new Tm(f), new Tm(x) ]);
+  constructor(f: Lam, x: Expression): void {
+    const codomain = f.type.codomain();
+    super([ new Tm(f), new Tm(x) ], codomain);
+  }
+
+  func(): Lam {
+    return this.children[0];
+  }
+
+  arg(): Expression {
+    return this.children[1];
   }
 
   map(f): Expression {
-    const e1 = this.children[0].value;
-    const e2 = this.children[1].value;
-    let v = new Lam(e1, e2);
-    v.children = v.children.map(f);
-    return v;
+    return new App(f(this.func()), f(this.arg()));
   }
 
   evaluate(ctx: Context): EvaluationResult<Expression> {
-    const [ e1, e2 ] = this.children;
-    const val = e2.value.evaluate(ctx);
-    if (val.type === 'success') {
-      // TODO subst
-      // XXX why does subst not always use .name?
-      const body = e2.subst(val, e2.name);
-      return body.evaluate(ctx);
-    } else { // stuck
-      // TODO
-    }
-  }
-
-  getType(ctx: Context) {
-    const [ f, x ] = this.children;
-    const fTy = f.getType(ctx); // Pi(X; \x -> ?)
-    const xTy = x.getType(ctx);
-
-    // TODO no way this is right...
-    const app = new App(new App(fTy, xTy), x);
-    return app.getType(ctx);
+    return bind(
+      this.arg().value.evaluate(ctx),
+      arg => this.func().value.evaluate(ctx, arg)
+    );
   }
 }

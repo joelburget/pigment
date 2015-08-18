@@ -4,6 +4,7 @@ import {requireServerCss} from '../util';
 import { Pair, Sigma } from './Expression/Pair';
 import { Lambda, Pi } from './Expression/Lambda';
 import Name from './Expression/Name';
+import Hole from './Expression/Hole';
 
 const styles = __CLIENT__ ?
   require('./Expression.scss') :
@@ -24,19 +25,6 @@ class App extends Component {
 class Type extends Component {
   render() {
     return '*';
-  }
-}
-
-
-class Hole extends Component {
-  render() {
-    const name = this.props.name || '_';
-
-    return (
-      <span className={styles.hole}>
-        {name}
-      </span>
-    );
   }
 }
 
@@ -62,21 +50,30 @@ export default class Expression extends Component {
 
     // kind of tricky destructuring here -- this.props.children looks like:
     // {
-    //   type: ...
-    //   children: ...
+    //   constructor: { renderName },
+    //   children: ...,
     //   [other stuff]
     // }
     //
-    // yep, children has children. also we pass type in as props (not
-    // important). also we pass in whatever other stuff is in
-    // this.props.children.
-
-    const renderName = this.props.children.constructor.renderName;
+    // yep, children has children (it's an Expression (the class)). also we
+    // pass in whatever other stuff is in this.props.children.
+    const { renderName } = this.props.children.constructor;
 
     return (
-      <div className={styles.expression}>
+      <div className={styles.expression}
+           onMouseDown={::this.handleMouseDown}
+           onMouseOver={::this.handleMouseOver}>
         {React.createElement(dispatch[renderName], this.props.children)}
       </div>
     );
+  }
+
+  handleMouseDown() {
+    // TODO figure out how to find path to this expression (same with enter)
+    this.props.expressionMouseDepress(this);
+  }
+
+  handleMouseOver() {
+    this.props.expressionMouseEnter(this);
   }
 }

@@ -15,6 +15,7 @@
 import { Set } from 'immutable';
 
 
+// TODO would be cool to build in alpha-equivalence
 type Ast = {
   rename: Function,
   map: Function
@@ -68,6 +69,8 @@ export class Abs<A: Ast> extends AbtBase<A> {
     var freevars: Set<string> = t.freevars.union(this.body.freevars);
     var x_: string = fresh(freevars, this.name);
     var e /*: AbtBase<A>*/ = this.body.rename(this.name, x_).subst(t, x);
+    console.log('x_', x_);
+    console.log('e', e);
 
     return new Abs(x_, e);
   }

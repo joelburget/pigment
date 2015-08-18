@@ -2,29 +2,23 @@
 
 import { Map } from 'immutable';
 import type { Expression } from './tm';
+import { mkSuccess, mkStuck } from './evaluation';
+import type EvaluationResult from './evaluation';
 
 
-type Context = Map<string, [Expression, Expression]>;
+export type Context = Map<string, Expression>
 
 
-export function lookupValue(c: Context, v: string): Expression {
-  return c.get(v)[0];
-}
-
-
-export function lookupType(c: Context, v: string): Expression {
-  return c.get(v)[1];
-}
-
-
-export function lookup(c: Context, v: string): Expression {
-  return c.get(v);
+export function lookup(ctx: Context,
+                       name: string):
+                         Expression {
+  return ctx.get(name);
 }
 
 
 export function add(c: Context,
                     v: string,
-                    e: [Expression, Expression]): Context {
+                    e: Expression): Context {
   return c.set(v, e);
 }
 

@@ -42,6 +42,6 @@ export default class Name extends Component {
   }
 
   handleClick = () => {
-    this.setState({ expanded: !this.state.expanded });
+    // this.setState({ expanded: !this.state.expanded });
   };
 }

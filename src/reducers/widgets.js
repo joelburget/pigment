@@ -1,10 +1,8 @@
 import { List } from 'immutable';
 
 import {
-  WIDGET_LOAD,
-  WIDGET_LOAD_SUCCESS,
-  WIDGET_LOAD_FAIL,
   DEFINITION_RENAME,
+
 } from '../actions/actionTypes';
 
 import { EVar, Hole } from '../theory/tm';
@@ -57,7 +55,6 @@ const initialState = {
 export default function widgets(state = initialState, action = {}) {
   switch (action.type) {
     case DEFINITION_RENAME:
-      console.log("reducer", action);
       const { index, newName } = action;
 
       const newArr = state.definitions.slice();
@@ -70,6 +67,7 @@ export default function widgets(state = initialState, action = {}) {
         ...state,
         definitions: newArr,
       };
+
     default:
       return state;
   }

@@ -152,6 +152,18 @@ export default class WidgetsContainer {
     }
   }
 
+  listener() {
+    this.props.dispatch(widgetActions.mouseup());
+  }
+
+  componentDidMount() {
+    window.addEventListener('mouseup', this.listener);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('mouseup', this.listener);
+  }
+
   render() {
     const { dispatch, goal, definitions } = this.props;
     return <Workspace {...bindActionCreators(widgetActions, dispatch)}

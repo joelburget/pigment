@@ -1,7 +1,7 @@
 import expect from 'expect';
 // import { varString, gensym, dummy, Var, Pi, Type, Lambda, App, Abstraction, inferType, equal } from '../src/theory/tm';
 import { Var, Abs, Tm } from '../src/theory/abt';
-import { Map, Set } from 'immutable';
+import { Set } from 'immutable';
 import Immutable from 'immutable';
 
 

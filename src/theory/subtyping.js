@@ -1,44 +1,12 @@
-// Define two subtyping relations -- leq+, leq- -- as well as leq+- for when
-// both types are neither positive nor negative.
-//
-// functions and guarded types are negative
-// sums, products, and assertions are positive
+// record subtyping
 
-const plus = {};
-const minus = {};
-const plusminus = {};
+// r1 <=? r2
+export function isSubtype(r1: Row, r2: Row) {
+  const d1 = r1.description;
+  const d2 = r2.description;
 
-function nonneg(t) {
+  return d1.every((tagTy, tag) => {
+    // XXX equals doesn't exist
+    return d2.has(k) && d2.get(k).equals(tagTy);
+  });
 }
-
-function nonpos(t) {
-}
-
-const Subtype = Record({ type: null, l: null, r: null });
-
-// leq Refl +-
-function leqReflIntro(A, pf1, pf2, pf3) {
-  return new Subtype({ type: "+-", l: A, r: A });
-}
-
-// leq -+
-function leqMPIntro(A, B, pf1, pf2, pf3) {
-  return new Subtype({ type: "+", l: A, r: B });
-}
-
-// leq +-
-function leqPMIntro(A, B, pf1, pf2, pf3) {
-  return new Subtype({ type: "-", l: A, r: B });
-}
-
-// leq forall L
-// function leqForallLIntro(A, B, tau, pf) {
-//   return new Subtype({ type: "-", forall(
-// }
-
-// leq forall R
-
-// leq exists L
-
-// leq exists R
-

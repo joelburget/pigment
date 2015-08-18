@@ -3,67 +3,44 @@
 // * source positions? how does this relate to names?
 import { Var } from './abt';
 import type { Abt } from './abt';
-
-
-type EvaluationResult<A>
-  = { type: 'success', value: A }
-  | { type: 'stuck', value: A }
-
-
-export function mkSuccess(e: A): EvaluationResult<A> {
-  return {
-    type: 'success',
-    value: e,
-  };
-}
-
-
-export function mkStuck(e: A): EvaluationResult<A> {
-  return {
-    type: 'stuck',
-    value: e,
-  };
-}
+import { lookup } from './context';
+import { mkStuck, mkSuccess } from './evaluation';
 
 
 export class Expression {
   arity: [number];
   children: [ Abt<Expression> ];
+  type: Expression;
   renderName: string;
 
   // map: (Abt<Expression> => Abt<Expression>) => Expression;
   // evaluate: Context => EvaluationResult<Expression>;
-  // getType: Context => Expression
 
-  constructor(children: [ Abt<Expression> ]): void {
+  constructor(children: [ Abt<Expression> ], type: Expression): void {
     this.children = children;
-  }
-}
-
-
-export class EVar extends Expression {
-  static arity = [];
-  static renderName = "var";
-
-  constructor(name: string, type: Expression): void {
-    super([ new Var(name) ]);
     this.type = type;
   }
-
-  map(f): Expression {
-    let v = new EVar(this.children[0].name);
-    v.children = v.children.map(f);
-    return v;
-  }
-
-  evaluate(ctx: Context): EvaluationResult<Expression> {
-    return lookupValue(ctx, this.children[0].name).evaluate();
-  }
-
-  getType() {
-    return this.type;
-  }
 }
+
+
+// export class EVar extends Expression {
+//   static arity = [];
+//   static renderName = 'var';
+
+//   constructor(name: string, type: Expression): void {
+//     super([ new Var(name) ], type);
+//   }
+
+//   map(f): Expression {
+//     let v = new EVar(this.children[0].name);
+//     v.children = v.children.map(f);
+//     return v;
+//   }
+
+//   evaluate(ctx: Context): EvaluationResult<Expression> {
+//     return lookup(ctx, this.children[0].name).evaluate(ctx);
+//   }
+// }
 
 
 export class Type extends Expression {
@@ -72,7 +49,9 @@ export class Type extends Expression {
   static singleton = new Type();
 
   constructor(): void {
-    super([]);
+    super([], null);
+    // circular json PITA
+    // this.type = this;
   }
 
   map(): Type {
@@ -81,10 +60,6 @@ export class Type extends Expression {
 
   evaluate(): EvaluationResult<Expression> {
     return mkSuccess(this);
-  }
-
-  getType() {
-    return Type.singleton;
   }
 }
 
@@ -95,9 +70,8 @@ export class Hole extends Expression {
   name: ?string;
 
   constructor(name: ?string, type: Expression): void {
-    super([]);
+    super([], type);
     this.name = name;
-    this.type = type;
   }
 
   map(): Expression {
@@ -106,9 +80,5 @@ export class Hole extends Expression {
 
   evaluate(): EvaluationResult<Expression> {
     return mkStuck(this);
-  }
-
-  getType() {
-    return this.type;
   }
 }
