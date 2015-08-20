@@ -3,31 +3,29 @@
 // TODO:
 // * user-defined types
 // * source positions? how does this relate to names?
-import { Var } from './abt';
-import type { AbtBase as Abt } from './abt';
+import Abt from './abt';
 import { lookup } from './context';
 import type { Context } from './context';
 import { mkStuck, mkSuccess } from './evaluation';
 import type { EvaluationResult } from './evaluation';
 
 
-export class Expression {
-  static arity: [number];
+export class Expression extends Abt {
   static renderName: string;
 
-  children: [ Abt ];
   type: Expression;
-
-  map: (f: (x: Abt) => Abt) => Expression;
 
   // bleh. making an exception here since Lam.evaluate uses an extra parameter.
   // TODO figure out a better way.
   //
   // $flow-exception
-  evaluate: (ctx: Context) => EvaluationResult<Expression>;
+  evaluate: ((ctx: Context) => EvaluationResult<Expression>) &
+            ((ctx: Context, x: Expression) => EvaluationResult<Expression>);
 
-  constructor(children: [ Abt ], type: Expression): void {
-    this.children = children;
+  constructor(children: Array<Abt>,
+              binders: Array<Array<?string>>,
+              type: Expression): void {
+    super(children, binders);
     this.type = type;
   }
 }
@@ -47,12 +45,16 @@ export class Type extends Expression {
     // (involving JSON serialization).
     //
     // $flow-type-in-type
-    super([], null);
+    super([], [], null);
     // circular json PITA
     // this.type = this;
   }
 
-  map(): Type {
+  rename(oldName: string, newName: string): Type {
+    return this;
+  }
+
+  subst(t: Abt, x: string): Type {
     return this;
   }
 
@@ -70,12 +72,42 @@ export class Hole extends Expression {
   name: ?string;
 
   constructor(name: ?string, type: Expression): void {
-    super([], type);
+    super([], [], type);
     this.name = name;
   }
 
-  map(): Expression {
+  rename(oldName: string, newName: string): Hole {
     return this;
+  }
+
+  subst(t: Abt, x: string): Hole {
+    return this;
+  }
+
+  evaluate(): EvaluationResult<Expression> {
+    return mkStuck(this);
+  }
+}
+
+
+export class Var extends Expression {
+  // $flowstatic
+  static arity = [];
+  // $flowstatic
+  static renderName = "hole";
+  name: ?string;
+
+  constructor(name: ?string, type: Expression): void {
+    super([], [], type);
+    this.name = name;
+  }
+
+  rename(oldName: string, newName: string): Var {
+    return oldName === this.name ? new Var(newName, this.type) : this;
+  }
+
+  subst(t: Abt, x: string): Abt {
+    return x === this.name ? t : this;
   }
 
   evaluate(): EvaluationResult<Expression> {

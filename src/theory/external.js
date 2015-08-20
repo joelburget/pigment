@@ -1,6 +1,5 @@
 import { Expression, Type } from './tm';
 import { mkSuccess } from './evaluation';
-import { Tm } from './abt';
 import { Arr, App } from './lambda';
 
 export class External extends Expression {
@@ -8,7 +7,7 @@ export class External extends Expression {
   static arity = [];
 
   constructor(e: any, type: Expression): void {
-    super([], type);
+    super([], [], type);
     this.external = e;
   };
 
@@ -40,7 +39,7 @@ export class JsExternalType extends Expression {
   typeName: string;
 
   constructor(typeName: string): void {
-    super([], Type.singleton);
+    super([], [], Type.singleton);
     this.typeName = typeName;
   }
 }
@@ -51,8 +50,7 @@ export class JsBoolean extends External {
   static type = new JsExternalType('boolean');
 
   constructor(b: boolean): void {
-    super([], JsBoolean.type);
-    this.external = b;
+    super(b, JsBoolean.type);
   }
 }
 
@@ -61,7 +59,7 @@ export class JsExternalArr extends Expression {
   ty: Arr;
 
   constructor(ty: Arr): void {
-    super([], Type.singleton);
+    super([], [], Type.singleton);
     this.ty = ty;
   }
 }
@@ -72,8 +70,7 @@ export class JsNumber extends External {
   static type = new JsExternalType('number');
 
   constructor(n: number): void {
-    super([], JsNumber.type);
-    this.external = n;
+    super(n, JsNumber.type);
   }
 }
 
@@ -82,8 +79,7 @@ export class JsFunction extends External {
   external: Function;
 
   constructor(f: Function, ty: Arr) {
-    super([], new JsExternalArr(ty));
-    this.external = f;
+    super(f, new JsExternalArr(ty));
   }
 
   getResultType(): Expression {
@@ -97,7 +93,7 @@ export class JsApp extends External {
   static renderName = "jsapp";
 
   constructor(f: JsFunction, x: External): void {
-    super([ new Tm(f), new Tm(x) ], undefined);
+    super([ f, x ], undefined);
   }
 
   func(): Lam {

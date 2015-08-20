@@ -9,7 +9,7 @@ export class Label extends Expression {
   name: string;
 
   constructor(name: string): void {
-    super([], Type.singleton); // XXX LabelType?
+    super([], [], Type.singleton); // XXX LabelType?
     this.name = name;
   }
 
@@ -30,7 +30,7 @@ export class Record extends Expression {
   row: Row;
 
   constructor(values: OrderedMap<string, Expression>, row: Row) {
-    super([], row);
+    super([], [], row);
     this.values = values;
     this.row = row;
   }
@@ -52,7 +52,7 @@ export class RowKind extends Expression {
   static singleton = new RowKind();
 
   constructor(): void {
-    super([], Type.singleton);
+    super([], [], Type.singleton);
   }
 
   map(): RowKind {
@@ -77,7 +77,7 @@ export class Row extends Expression {
   // }
   constructor(description: OrderedMap<string, Expression>): void {
     // XXX children
-    super([], RowKind.singleton);
+    super([], [], RowKind.singleton);
     this.description = description;
   }
 
@@ -102,7 +102,7 @@ export class SelectRow extends Expression {
 
   constructor(label: Label, type: Expression, record: Record): void {
     // XXX children
-    super([], type);
+    super([], [], type);
     this.label = label;
     this.type = type;
     this.record = record;
@@ -131,7 +131,7 @@ export class ExtendRow extends Expression {
   value: Expression;
 
   constructor(record: Record, label: Label, value: Expression) {
-    super([]);
+    super([], []);
     this.record = record;
     this.label = label;
     this.value = value;
@@ -158,7 +158,7 @@ export class RestrictRow extends Expression {
   static renderName = 'restrictrow';
 
   constructor(record, label) {
-    super([]);
+    super([], []);
     this.record = record;
     this.label = label;
   }

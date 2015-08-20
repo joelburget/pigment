@@ -1,67 +1,91 @@
 import expect from 'expect';
-// import { varString, gensym, dummy, Var, Pi, Type, Lambda, App, Abstraction, inferType, equal } from '../src/theory/tm';
-import { Var, Abs, Tm } from '../src/theory/abt';
+import Abt from '../src/theory/abt';
 import { Set } from 'immutable';
 import Immutable from 'immutable';
 
 
-type Ast<Abt> =
-  { type: "lam", children: [ Abt ] } |
-  { type: "app", children: [ Abt, Abt ] } |
-  { type: "let", children: [ Abt, Abt ] } |
-  { type: "unit", children: [] }
-
-// value : pi, type, lambda
-// neutral: var, app
-
-
-class Ast {
+class Ast extends Abt {
   type: string;
-  children: [ Abt ];
+  children: Array<Abt>;
+  binders: Array<Array<?string>>;
 
-  constructor(type: string, children: [ Abt ]) {
-    this.type = type;
+  constructor(type: string,
+              children: Array<Abt | string>,
+              binders: Array<Array<?string>>) {
+    super(children, binders);
     this.children = children;
   }
 
   rename(oldName: string, newName: string): Ast {
-    const children = this.children.map(node => node.rename(oldName, newName));
-    return {...this, children};
+    function nodeRename(node: Abt | string): Abt | string {
+
+      return typeof node === 'string' ?
+        (node === oldName ? newName : node) :
+        node.rename(oldName, newName);
+    }
+    const children = this.children.map(nodeRename);
+
+    const binders = this.binders.map(position => position.map(name => {
+      return name === oldName ? newName : name;
+    }));
+
+    return new this.constructor(
+      this.type,
+      children,
+      binders
+    );
   }
 
   subst(t: Ast, x: string): Ast {
     const children = this.children.map(node => node.subst(t, x));
-    return {...this, children};
-  }
-
-  map<A>(f: (x: Ast) => A): A {
+    return new this.constructor(
+      this.type,
+      children,
+      binders
+    );
   }
 }
+
+
+function var_(name: string) {
+  return new Ast('var', [ body ], [[ name ]]);
+}
+
+function lam(name: ?string, body: Ast) {
+  return new Ast('lam', [ body ], [[ name ]]);
+}
+
+function app(f: Ast, x: Ast) {
+  return new Ast('app', [ f, x ], [ [ null ], [ null ] ]);
+}
+
+function let_(name: string, here: Ast, there: Ast) {
+  return new Ast('lam', [ here, there ], [ [ null ], [ name ] ]);
+}
+
+const unit = new Ast('unit', [], []);
 
 
 function expectImmutableIs(x, y) {
   expect(Immutable.is(x, y)).toBe(true, "`" + x + "` is not `" + y + "`");
 }
 
+
+function expectAbtEquals(x, y) {
+  expect(x.type).toBe(y.type, 'type differs');
+  expectImmutableIs(Immutable.fromJS(x.children), Immutable.fromJS(y.children));
+  expectImmutableIs(
+    Immutable.fromJS(x.binders),
+    Immutable.fromJS(y.binders)
+  );
+}
+
+
 describe('abt', () => {
-  const xVar = new Var("x");
-  const unit = new Tm(new Ast("unit", []));
-  // let y = () in y
-  const let1 = new Tm(new Ast("let", [
-    new Abs("y", unit),
-  ]));
-  const let2 = new Tm(new Ast("let", [
-    new Abs("x", new Var("y")),
-  ]));
-  const lambda1 = new Abs("x", new Var("x"));
-  const lambda2 = new Abs("x", new Var("y"));
+  const lambda1 = lam('x', 'x');
+  const lambda2 = lam('x', 'y');
 
   it('knows free variables', () => {
-    expectImmutableIs(
-      xVar.freevars,
-      Set(["x"])
-    );
-
     expectImmutableIs(
       lambda1.freevars,
       Set([])
@@ -69,20 +93,43 @@ describe('abt', () => {
 
     expectImmutableIs(
       lambda2.freevars,
-      Set(["y"])
-    );
-
-    expectImmutableIs(
-      let1.freevars,
-      Set([])
-    );
-
-    expectImmutableIs(
-      let2.freevars,
-      Set(["y"])
+      Set(['y'])
     );
   });
 
-  it('renames', () => {
+  // x -> x
+  it('renames id', () => {
+    expectAbtEquals(
+      lambda1.rename('x', 'y'),
+      lam('y', 'y')
+    );
+
+    expectAbtEquals(
+      lambda1.rename('x', 'x'),
+      lam('x', 'x')
+    );
+
+    expectAbtEquals(
+      lambda1.rename('y', 'y'),
+      lam('x', 'x')
+    );
+  });
+
+  // x -> y
+  it('renames the other lambda', () => {
+    expectAbtEquals(
+      lambda2.rename('x', 'y'),
+      lam('y', 'y')
+    );
+
+    expectAbtEquals(
+      lambda2.rename('x', 'x'),
+      lam('x', 'y')
+    );
+
+    expectAbtEquals(
+      lambda2.rename('y', 'y'),
+      lam('x', 'y')
+    );
   });
 });

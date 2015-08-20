@@ -2,9 +2,18 @@
 import { Expression, Type } from './tm';
 import { mkStuck, mkSuccess, bind } from './evaluation';
 import type { EvaluationResult } from './evaluation';
-import { Var, Abs, Tm, AbtBase } from './abt';
+import Abt from './abt';
 import { lookup, add } from './context';
 import type { Context } from './context';
+
+
+function upcast(x, cls) {
+  if (x instanceof cls) {
+    return (x: cls);
+  } else {
+    throw new Error('failed upcast!');
+  }
+}
 
 
 export class Lam extends Expression {
@@ -13,33 +22,32 @@ export class Lam extends Expression {
   // $flowstatic
   static renderName = "lam";
 
-  constructor(abt: AbtBase, type: Expression): void {
-    // we can analyze the abt:
-    // * Abs - indicates the lambda is binding
-    // * Var, Tm - the lambda is constant
-    super([ abt ], type);
+  constructor(binder: ?string, body: Abt, type: Expression): void {
+    super(
+      [ body ],
+      [ [ binder ] ],
+      type
+    );
   }
 
-  map1(f: (x: AbtBase) => AbtBase): Lam {
-    // XXX we don't know the type here!
-    return new Lam(f(this.children[0]), this.type);
-  }
+  // map1(f: (x: AbtBase) => AbtBase): Lam {
+  //   // XXX we don't know the type here!
+  //   return new Lam(f(this.children[0]), this.type);
+  // }
 
   evaluate(ctx: Context, x: Expression): EvaluationResult<Expression> {
+    var [[ binder ]] = this.binders;
     var [ child ] = this.children;
 
-    if (child instanceof Var) {
-      return mkSuccess(lookup(ctx, child.name));
+    this.subst
 
-    } else if (child instanceof Abs) {
-      return child
-        .subst(new Tm(x), child.name)
-        .body
-        .evaluate(ctx);
-
-    } else if (child instanceof Tm) {
-      return child.value.evaluate(ctx);
+    // TODO - move instantiation to ABT
+    var newCtx = ctx;
+    if (binder != null) {
+      newCtx = add(ctx, binder, x);
     }
+
+    return upcast(child, Expression).evaluate(newCtx);
   }
 }
 
@@ -51,30 +59,23 @@ export class Arr extends Expression {
   static renderName = "arr";
 
   constructor(domain: Expression, codomain: Expression): void {
-    super([ new Tm(domain), new Tm(codomain) ], Type.singleton);
+    super([ domain,   codomain ],
+          [ [ null ], [ null ] ],
+          Type.singleton
+    );
   }
 
   domain(): Expression {
-    var domain = this.children[0];
-    if (domain instanceof Tm) {
-      return domain.value;
-    } else {
-      throw new Error('TODO - non-Tm domain');
-    }
+    return upcast(this.children[0], Expression);
   }
 
   codomain(): Expression {
-    var codomain = this.children[1];
-    if (codomain instanceof Tm) {
-      return codomain.value;
-    } else {
-      throw new Error('TODO - non-Tm codomain');
-    }
+    return upcast(this.children[1], Expression);
   }
 
-  map(f: (x: AbtBase) => AbtBase): Arr {
-    return new Arr(f(this.domain()), f(this.codomain()));
-  }
+//   map(f: (x: AbtBase) => AbtBase): Arr {
+//     return new Arr(f(this.domain()), f(this.codomain()));
+//   }
 
   evaluate(ctx: Context): EvaluationResult<Expression> {
     throw new Error("TODO - Arr.evaluate");
@@ -92,23 +93,26 @@ export class App extends Expression {
     var fType = f.type;
     if (fType instanceof Arr) {
       var codomain = fType.codomain();
-      super([ new Tm(f), new Tm(x) ], codomain);
+      super([ f,        x ],
+            [ [ null ], [ null ] ],
+            codomain
+      );
     } else {
       throw new Error('runtime error in App constructor');
     }
   }
 
   func(): Expression {
-    return this.children[0];
+    return upcast(this.children[0], Expression);
   }
 
   arg(): Expression {
-    return this.children[1];
+    return upcast(this.children[1], Expression);
   }
 
-  map(f: (x: AbtBase) => AbtBase): App {
-    return new App(f(this.func()), f(this.arg()));
-  }
+  // map(f: (x: AbtBase) => AbtBase): App {
+  //   return new App(f(this.func()), f(this.arg()));
+  // }
 
   evaluate(ctx: Context): EvaluationResult<Expression> {
     return bind(

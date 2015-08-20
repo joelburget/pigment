@@ -1,6 +1,5 @@
 import expect from 'expect';
-import { Var, Abs, Tm } from '../src/theory/abt';
-import { Type, EVar, Hole } from '../src/theory/tm';
+import { Type, Var, Hole } from '../src/theory/tm';
 import { mkSuccess, mkStuck, evalLookup } from '../src/theory/evaluation';
 import { Lam, Arr, App } from '../src/theory/lambda';
 import { Map } from 'immutable';
@@ -22,7 +21,7 @@ describe('eval', () => {
     const lamTy = new Arr(Type.singleton, Type.singleton);
 
     const returningHole = new App(
-      new Lam(new Tm(hole), lamTy),
+      new Lam(null, hole, lamTy),
       Type.singleton
     );
     expect(returningHole.evaluate(emptyCtx))
@@ -44,7 +43,7 @@ describe('eval', () => {
 
     it('works with var', () => {
       const tm = new App(
-        new Lam(new Var('x'), lamTy),
+        new Lam('x', new Var('x'), lamTy),
         ty
       );
 
@@ -52,19 +51,9 @@ describe('eval', () => {
         .toEqual(mkSuccess(ty))
     });
 
-    it('works with tm', () => {
+    it('works with wildcards', () => {
       const tm = new App(
-        new Lam(new Tm(ty), lamTy),
-        ty
-      );
-
-      expect(tm.evaluate(ctx))
-        .toEqual(mkSuccess(ty))
-    });
-
-    it('works with abs', () => {
-      const tm = new App(
-        new Lam(new Abs('x', new Tm(ty)), lamTy),
+        new Lam(null, ty, lamTy),
         ty
       );
 

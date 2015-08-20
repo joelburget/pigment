@@ -1,59 +1,52 @@
 import expect from 'expect';
-import { Type } from '../src/theory/tm';
-import { mkSuccess, bind } from '../src/theory/evaluation';
-import { Var, Abs, Tm } from '../src/theory/abt';
+import { Type, Var } from '../src/theory/tm';
+import { mkSuccess, mkStuck, bind } from '../src/theory/evaluation';
+import Abt from '../src/theory/abt';
 import { Lam, App, Arr } from '../src/theory/lambda';
 import { empty as emptyCtx } from '../src/theory/context';
-// import { Map, Set } from 'immutable';
-// import Immutable from 'immutable';
 
 
 describe('lambda', () => {
-  const id = new Lam(
-    new Abs('x', new Var('x')),
-    new Arr(Type.singleton, Type.singleton)
-  );
-
   const type = Type.singleton;
 
-  /*
   const id = new Lam(
     'x',
-    // XXX this is ALL broken
-    // the variable right here doesn't know its type in a satisfactory way --
-    // should maybe come from context?
-    new EVar('x', EVar('X', Type.singleton)),
-    // the Pi should use the structure of its bound variable ^ to generate its
-    // type!
-    ([ domain, codomain ]) => new Pi(Type.singleton, new Lam('X', new Arr(new EVar('X', new EVar('X')))))
+    new Var('x'),
+    new Arr(type, type)
   );
 
-  const k = new Lam(
-    'x',
-    new Lam(
-      'y',
-      new EVar('x'),
-      new Pi(Type.singleton, new Lam('Y', new Arr(new EVar('Y'), new EVar('X))))
-    ),
-    new Pi(Type.singleton, new Lam('X',
-  );
+//   const k = new Lam(
+//     'x',
+//     new Lam(
+//       'y',
+//       new Var('x'),
+//       new Arr(
+//         type,
+//         new Lam(
+//           'Y',
+//           new Var('x'),
+//           new Arr(new Var('Y', new Var('X')))
+//         )
+//       )
+//     ),
+//     new Arr(
+//   );
 
   it('evaluates id', () => {
-    expect(new App(id, Type.singleton).evaluate(emptyCtx))
-      .toEqual(mkSuccess(Type.singleton));
+    expect(new App(id, type).evaluate(emptyCtx))
+      .toEqual(mkSuccess(type));
   });
 
-  it('evaluates k', () => {
-    expect(new App(new App(k, Type.singleton), id).evaluate(emptyCtx))
-      .toEqual(mkSuccess(Type.singleton));
-  });
-  */
+//   it('evaluates k', () => {
+//     expect(new App(new App(k, type), id).evaluate(emptyCtx))
+//       .toEqual(mkSuccess(type));
+//   });
 
   it('evaluates functions', () => {
     expect(id.evaluate(emptyCtx, type))
       .toEqual(mkStuck(id));
 
-    expect(new App(id, Type.singleton).evaluate(emptyCtx))
-      .toEqual(mkSuccess(Type.singleton));
+    expect(new App(id, type).evaluate(emptyCtx))
+      .toEqual(mkSuccess(type));
   });
 });

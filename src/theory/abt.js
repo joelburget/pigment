@@ -1,119 +1,61 @@
 // @flow
 //
 // The fundamental idea of an ABT is to separate binding into its own
-// structure. Instead of a traditional AST holding both binding and content
-// nodes, we have two corecursive structures:
-//
-// * AST (describes the structure, ignores binding)
-// * ABT (handles only binding)
-//   - Var
-//   - Abs
-//   - Tm (embedded AST node)
-//
-// You need to provide
+// structure.
 
 import { Set } from 'immutable';
-import { Expression as Ast } from './tm';
 
 
-// TODO why did I have to use Expression instead of this subtype?
-//
-// // TODO would be cool to build in alpha-equivalence
-// export type Ast = {
-//   // rename(oldName: string, newName: string): Ast,
-//   // subst(t: Ast, x: string): Ast,
-//   map<A>(f: (x: AbtBase) => A): A
-// };
+type Info =
+  { type: 'var', name: string } |
+  { type: 'abs', name: ?string, value: Abt } |
+  { type: 'tm',
 
 
 // ABTs extend asts with variables and abstractions
-export class AbtBase {
+export default class Abt {
+  // we look at the arity to figure out how many variables to bind!
+  static arity: Array<number>;
+  static updateBinders(
+    tm: Abt,
+    children: Array<Abt>,
+    binders: Array<Array<?string>>
+  ): Abt;
+
   freevars: Set<string>;
-  rename: (oldName: string, newName: string) => AbtBase;
-  subst: (t: AbtBase, x: string) => AbtBase;
-}
 
+  children: Array<Abt>;
+  binders: Array<Array<?string>>;
 
-function fresh(vs: Set<string>, v: string): string {
-  return vs.includes(v) ? fresh(vs, v + "'") : v;
-}
+  function rename(oldName: string, newName: string): Abt {
+    var children = this.children.map(child => child.rename(oldName, newName));
+    var binders = this.binders.map(names => names.map(name => {
+      return name === oldName ? newName : name;
+    }));
 
-
-function map<A>(x: Ast, f: (x: Abt) => A): Array<A> {
-  return x.children.map(f);
-}
-
-
-export class Var<A: Ast> extends AbtBase {
-  name: string;
-
-  constructor(name: string): void {
-    super();
-    this.freevars = Set([name]);
-    this.name = name;
+    return updateBinders(this, children, binders);
   }
 
-  rename(oldName: string, newName: string): Var<A> {
-    return oldName === this.name ? new Var(newName) : this;
+  function subst(t: Abt, x: string): Abt {
+    var children =
   }
 
-  subst(t: AbtBase, x: string): AbtBase {
-    return x === this.name ? t : this;
-  }
-}
+  constructor(children: Array<Abt>, binders: Array<Array<?string>>): void {
+    function nodeFreevars(node: Abt | string): Set<string> {
+      return node instanceof Abt ?
+        node.freevars :
+        Set.of(node);
+    }
 
+    var empty = Set();
+    var internalFreevars = empty.union.apply(empty, children.map(nodeFreevars));
+    var bound = empty.union.apply(
+      empty,
+      binders.map(arr => Set.of.apply(Set, arr))
+    );
 
-export class Abs<A: Ast> extends AbtBase {
-  name: string;
-  body: Ast;
-
-  constructor(name: string, body: AbtBase): void {
-    super();
-    this.freevars = body.freevars.delete(name);
-    this.name = name;
-    this.body = body;
-  }
-
-  rename(oldName: string, newName: string): Abs<A> {
-    var body = this.body;
-
-    var f: ((node: Ast) => Ast) = node => node.rename(oldName, newName);
-
-    return oldName === this.name ?
-      new Abs(newName,   body) :
-      new Abs(this.name, body.map(f));
-  }
-
-  // substitute `t` for `x` in `this.body`
-  subst(t: AbtBase, x: string): Abs<A> {
-
-    var freevars: Set<string> = t.freevars.union(this.freevars);
-    var x_: string = fresh(freevars, this.name);
-    var f: ((node: Ast) => Ast) = node =>
-      node.rename(this.name, x_).subst(t, x);
-    var e: Ast = this.body.map(f);
-
-    return new Abs(x_, e);
-  }
-}
-
-
-export class Tm<A: Ast> extends AbtBase {
-  value: Ast;
-
-  constructor(values: Array<Abt>): void {
-    super();
-    this.freevars = Set.of(values.map(node => node.freevars)).flatten();
-    this.value = value;
-  }
-
-  rename(oldName: string, newName: string): Tm<A> {
-    var f: ((node: Ast) => Ast) = node => node.rename(oldName, newName);
-    return new Tm(this.value.map(node => node.rename(oldName, newName)));
-  }
-
-  subst(t: Ast, x: string): Tm<A> {
-    var f: ((node: AbtBase) => AbtBase) = node => node.subst(t, x);
-    return new Tm(this.value.map(f));
+    this.freevars = internalFreevars.subtract(bound);
+    this.children = children;
+    this.binders = binders;
   }
 }
