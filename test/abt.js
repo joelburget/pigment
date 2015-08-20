@@ -23,6 +23,19 @@ class Ast {
     this.type = type;
     this.children = children;
   }
+
+  rename(oldName: string, newName: string): Ast {
+    const children = this.children.map(node => node.rename(oldName, newName));
+    return {...this, children};
+  }
+
+  subst(t: Ast, x: string): Ast {
+    const children = this.children.map(node => node.subst(t, x));
+    return {...this, children};
+  }
+
+  map<A>(f: (x: Ast) => A): A {
+  }
 }
 
 

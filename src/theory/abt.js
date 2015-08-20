@@ -13,26 +13,42 @@
 // You need to provide
 
 import { Set } from 'immutable';
+import { Expression as Ast } from './tm';
 
 
-// TODO would be cool to build in alpha-equivalence
-type Ast = {
-  rename: Function,
-  map: Function
-}
+// TODO why did I have to use Expression instead of this subtype?
+//
+// // TODO would be cool to build in alpha-equivalence
+// export type Ast = {
+//   // rename(oldName: string, newName: string): Ast,
+//   // subst(t: Ast, x: string): Ast,
+//   map<A>(f: (x: AbtBase) => A): A
+// };
 
 
 // ABTs extend asts with variables and abstractions
-class AbtBase<A: Ast> {
+export class AbtBase {
   freevars: Set<string>;
+  rename: (oldName: string, newName: string) => AbtBase;
+  subst: (t: AbtBase, x: string) => AbtBase;
 }
 
 
-export class Var<A: Ast> extends AbtBase<A> {
+function fresh(vs: Set<string>, v: string): string {
+  return vs.includes(v) ? fresh(vs, v + "'") : v;
+}
+
+
+function map<A>(x: Ast, f: (x: Abt) => A): Array<A> {
+  return x.children.map(f);
+}
+
+
+export class Var<A: Ast> extends AbtBase {
   name: string;
 
   constructor(name: string): void {
-    super(arguments);
+    super();
     this.freevars = Set([name]);
     this.name = name;
   }
@@ -41,61 +57,63 @@ export class Var<A: Ast> extends AbtBase<A> {
     return oldName === this.name ? new Var(newName) : this;
   }
 
-  subst(t: A, x: string): Var<A> {
+  subst(t: AbtBase, x: string): AbtBase {
     return x === this.name ? t : this;
   }
 }
 
 
-export class Abs<A: Ast> extends AbtBase<A> {
+export class Abs<A: Ast> extends AbtBase {
   name: string;
-  body: AbtBase<A>;
+  body: Ast;
 
-  constructor(name: string, body: AbtBase<A>): void {
-    super(arguments);
-    this.freevars = body.freevars.remove(name);
+  constructor(name: string, body: AbtBase): void {
+    super();
+    this.freevars = body.freevars.delete(name);
     this.name = name;
     this.body = body;
   }
 
   rename(oldName: string, newName: string): Abs<A> {
+    var body = this.body;
+
+    var f: ((node: Ast) => Ast) = node => node.rename(oldName, newName);
+
     return oldName === this.name ?
-      new Abs(newName,   this.body) :
-      new Abs(this.name, this.body.rename(oldName, newName));
+      new Abs(newName,   body) :
+      new Abs(this.name, body.map(f));
   }
 
   // substitute `t` for `x` in `this.body`
-  subst(t: A, x: string): Abs<A> {
-    var freevars: Set<string> = t.freevars.union(this.body.freevars);
+  subst(t: AbtBase, x: string): Abs<A> {
+
+    var freevars: Set<string> = t.freevars.union(this.freevars);
     var x_: string = fresh(freevars, this.name);
-    var e /*: AbtBase<A>*/ = this.body.rename(this.name, x_).subst(t, x);
-    console.log('x_', x_);
-    console.log('e', e);
+    var f: ((node: Ast) => Ast) = node =>
+      node.rename(this.name, x_).subst(t, x);
+    var e: Ast = this.body.map(f);
 
     return new Abs(x_, e);
   }
 }
 
 
-export class Tm<A: Ast> extends AbtBase<A> {
-  value: A;
+export class Tm<A: Ast> extends AbtBase {
+  value: Ast;
 
-  constructor(value: A): void {
-    super(arguments);
-    this.freevars = Set(value.children.map(node => node.freevars)).flatten();
+  constructor(values: Array<Abt>): void {
+    super();
+    this.freevars = Set.of(values.map(node => node.freevars)).flatten();
     this.value = value;
   }
 
   rename(oldName: string, newName: string): Tm<A> {
-    return this.value.map(v => v.rename(oldName, newName));
+    var f: ((node: Ast) => Ast) = node => node.rename(oldName, newName);
+    return new Tm(this.value.map(node => node.rename(oldName, newName)));
   }
 
-  subst(t: A, x: string): Tm<A> {
-    return this.value.map(v => v.subst(t, x));
+  subst(t: Ast, x: string): Tm<A> {
+    var f: ((node: AbtBase) => AbtBase) = node => node.subst(t, x);
+    return new Tm(this.value.map(f));
   }
-}
-
-
-function fresh(vs: Set<string>, v: string): string {
-  return vs.includes(v) ? fresh(vs, v + "'") : v;
 }

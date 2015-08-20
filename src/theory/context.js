@@ -1,3 +1,4 @@
+// @flow
 // A context holds the value (and type) of all the variables in scope
 
 import { Map } from 'immutable';
@@ -6,7 +7,7 @@ import { mkSuccess, mkStuck } from './evaluation';
 import type EvaluationResult from './evaluation';
 
 
-export type Context = Map<string, Expression>
+export type Context = Map<string, Expression>;
 
 
 export function lookup(ctx: Context,
@@ -23,4 +24,4 @@ export function add(c: Context,
 }
 
 
-export const empty = Map();
+export var empty = Map();

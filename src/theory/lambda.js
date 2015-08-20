@@ -1,26 +1,32 @@
+// @flow
 import { Expression, Type } from './tm';
 import { mkStuck, mkSuccess, bind } from './evaluation';
-import { Var, Abs, Tm } from './abt';
-import { lookup, lookupType, add } from './context';
+import type { EvaluationResult } from './evaluation';
+import { Var, Abs, Tm, AbtBase } from './abt';
+import { lookup, add } from './context';
+import type { Context } from './context';
 
 
 export class Lam extends Expression {
+  // $flowstatic
   static arity = [1];
+  // $flowstatic
   static renderName = "lam";
 
-  constructor(abt: Abt, type: Expression): void {
+  constructor(abt: AbtBase, type: Expression): void {
     // we can analyze the abt:
     // * Abs - indicates the lambda is binding
     // * Var, Tm - the lambda is constant
     super([ abt ], type);
   }
 
-  map(f): Expression {
-    return new Lam(f(this.children[0]));
+  map1(f: (x: AbtBase) => AbtBase): Lam {
+    // XXX we don't know the type here!
+    return new Lam(f(this.children[0]), this.type);
   }
 
-  evaluate(ctx, x: Expression): EvaluationResult<Expression> {
-    const [ child ] = this.children;
+  evaluate(ctx: Context, x: Expression): EvaluationResult<Expression> {
+    var [ child ] = this.children;
 
     if (child instanceof Var) {
       return mkSuccess(lookup(ctx, child.name));
@@ -28,9 +34,10 @@ export class Lam extends Expression {
     } else if (child instanceof Abs) {
       return child
         .subst(new Tm(x), child.name)
+        .body
         .evaluate(ctx);
 
-    } else { // child instanceof Tm
+    } else if (child instanceof Tm) {
       return child.value.evaluate(ctx);
     }
   }
@@ -38,7 +45,9 @@ export class Lam extends Expression {
 
 
 export class Arr extends Expression {
+  // $flowstatic
   static arity = [0, 0];
+  // $flowstatic
   static renderName = "arr";
 
   constructor(domain: Expression, codomain: Expression): void {
@@ -46,14 +55,24 @@ export class Arr extends Expression {
   }
 
   domain(): Expression {
-    return this.children[0].value;
+    var domain = this.children[0];
+    if (domain instanceof Tm) {
+      return domain.value;
+    } else {
+      throw new Error('TODO - non-Tm domain');
+    }
   }
 
   codomain(): Expression {
-    return this.children[1].value;
+    var codomain = this.children[1];
+    if (codomain instanceof Tm) {
+      return codomain.value;
+    } else {
+      throw new Error('TODO - non-Tm codomain');
+    }
   }
 
-  map(f): Expression {
+  map(f: (x: AbtBase) => AbtBase): Arr {
     return new Arr(f(this.domain()), f(this.codomain()));
   }
 
@@ -64,15 +83,22 @@ export class Arr extends Expression {
 
 
 export class App extends Expression {
+  // $flowstatic
   static arity = [0, 0];
+  // $flowstatic
   static renderName = "app";
 
-  constructor(f: Lam, x: Expression): void {
-    const codomain = f.type.codomain();
-    super([ new Tm(f), new Tm(x) ], codomain);
+  constructor(f: Expression, x: Expression): void {
+    var fType = f.type;
+    if (fType instanceof Arr) {
+      var codomain = fType.codomain();
+      super([ new Tm(f), new Tm(x) ], codomain);
+    } else {
+      throw new Error('runtime error in App constructor');
+    }
   }
 
-  func(): Lam {
+  func(): Expression {
     return this.children[0];
   }
 
@@ -80,14 +106,14 @@ export class App extends Expression {
     return this.children[1];
   }
 
-  map(f): Expression {
+  map(f: (x: AbtBase) => AbtBase): App {
     return new App(f(this.func()), f(this.arg()));
   }
 
   evaluate(ctx: Context): EvaluationResult<Expression> {
     return bind(
-      this.arg().value.evaluate(ctx),
-      arg => this.func().value.evaluate(ctx, arg)
+      this.arg().evaluate(ctx),
+      arg => this.func().evaluate(ctx, arg)
     );
   }
 }
