@@ -29,7 +29,7 @@ export class Abs {
     this.value = value;
   }
 
-  instantiate(values: Array<Abt>): Tm {
+  instantiate(values: Array<Abt>): Abt {
     var result = this.value;
     this.names.forEach((name, i) => {
       if (name != null) {
@@ -102,7 +102,7 @@ export class Tm {
 }
 
 
-type AbtChild = Var | Abs | Tm;
+type AbtChild = Var | Tm | Abs;
 
 
 // ABTs extend asts with variables and abstractions
@@ -136,51 +136,51 @@ export class Abt {
 }
 
 
-// export function mkTm(
-//   children: Array<Abt>,
-//   binders: Array<Array<?string>>): Abt {
+export function mkTm(
+  children: Array<Abt>,
+  binders: Array<Array<?string>>): Abt {
 
-//   // for each thing in arity... build an Abs (if necessary)
-//   // or a tm / var
-//   var thisChildren = children.map((child, i) => {
-//     // which names are we being instructed to bind?
-//     var names = binders[i];
+  // for each thing in arity... build an Abs (if necessary)
+  // or a tm / var
+  var thisChildren = children.map((child, i) => {
+    // which names are we being instructed to bind?
+    var names = binders[i];
 
-//     // how many variables we need to bind
-//     var thisArity = names.length;
+    // how many variables we need to bind
+    var thisArity = names.length;
 
-//     // hm... maybe it's not even useful to distinguish between Abs and Tm.
-//     // would it be clearer to just use Abs as a generalization of Tm?
-//     if (thisArity > 0) {
-//       return new Abs(names, child);
-//     } else {
-//       return new Tm(child);
-//     }
-//   });
+    // hm... maybe it's not even useful to distinguish between Abs and Tm.
+    // would it be clearer to just use Abs as a generalization of Tm?
+    if (thisArity > 0) {
+      return new Abs(names, child);
+    } else {
+      return new Tm(child);
+    }
+  });
 
-//   function nodeFreevars(node: Abt | string): Set<string> {
-//     return node instanceof Abt ?
-//       node.freevars :
-//       Set.of(node);
-//   }
+  function nodeFreevars(node: Abt | string): Set<string> {
+    return node instanceof Abt ?
+      node.freevars :
+      Set.of(node);
+  }
 
-//   var empty = Set();
-//   // XXX look at this.children or children?
-//   var internalFreevars = empty.union.apply(empty, children.map(nodeFreevars));
-//   var bound = empty.union.apply(
-//     empty,
-//     binders.map(arr => Set.of.apply(Set, arr))
-//   );
+  var empty = Set();
+  // XXX look at this.children or children?
+  var internalFreevars = empty.union.apply(empty, children.map(nodeFreevars));
+  var bound = empty.union.apply(
+    empty,
+    binders.map(arr => Set.of.apply(Set, arr))
+  );
 
-//   var thisFreevars = internalFreevars.subtract(bound);
+  var thisFreevars = internalFreevars.subtract(bound);
 
-//   return new Abt(thisFreevars, thisChildren);
-// }
+  return new Abt(thisFreevars, thisChildren);
+}
 
 
-// export function mkVar(name: string): Abt {
-//   return new Abt(
-//     Set([ name ]),
-//     [ new Var(name) ]
-//   );
-// }
+export function mkVar(name: string): Abt {
+  return new Abt(
+    Set([ name ]),
+    [ new Var(name) ]
+  );
+}

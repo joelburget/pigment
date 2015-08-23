@@ -1,14 +1,16 @@
+// @flow
 //
 // TODO:
 // * user-defined types
 // * source positions? how does this relate to names?
 import { Set } from 'immutable';
 
-import { Abt, mkTm } from './abt';
+import { Abt, mkTm, Tm, Abs } from './abt';
 import { lookup } from './context';
 import type { Context } from './context';
 import { mkStuck, mkSuccess } from './evaluation';
 import type { EvaluationResult } from './evaluation';
+import upcast from './upcast';
 
 
 export class Expression extends Abt {
@@ -36,6 +38,20 @@ export class Expression extends Abt {
     this.freevars = abt.freevars;
     this.children = abt.children;
     this.type = type;
+  }
+
+  getChildTm(i: number): Expression {
+    var child: Tm = upcast(this.children[i], Tm);
+    var value: Abt = child.value;
+    return upcast(value, Expression);
+  }
+
+  getChildAbs(i: number, xs: Array<Expression>): Expression {
+    var child: Abs = upcast(this.children[i], Abs);
+    var tm: Tm = child.instantiate((xs: Array<Abt>));
+    var value: Abt = tm.value;
+    // XXX this upcast really won't work -- instantiate builds a plain ABT
+    return upcast(value, Expression);
   }
 }
 
