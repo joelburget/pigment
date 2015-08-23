@@ -1,9 +1,10 @@
-// @flow
 //
 // TODO:
 // * user-defined types
 // * source positions? how does this relate to names?
-import Abt from './abt';
+import { Set } from 'immutable';
+
+import { Abt, mkTm } from './abt';
 import { lookup } from './context';
 import type { Context } from './context';
 import { mkStuck, mkSuccess } from './evaluation';
@@ -25,7 +26,15 @@ export class Expression extends Abt {
   constructor(children: Array<Abt>,
               binders: Array<Array<?string>>,
               type: Expression): void {
-    super(children, binders);
+
+    // fill in freevars and children with meaningless values, since we're
+    // required to call super before touching this.
+    super(Set(), []);
+
+    var abt: Abt = mkTm(children, binders);
+
+    this.freevars = abt.freevars;
+    this.children = abt.children;
     this.type = type;
   }
 }
@@ -50,18 +59,11 @@ export class Type extends Expression {
     // this.type = this;
   }
 
-  rename(oldName: string, newName: string): Type {
-    return this;
-  }
-
-  subst(t: Abt, x: string): Type {
-    return this;
-  }
-
   evaluate(): EvaluationResult<Expression> {
     return mkSuccess(this);
   }
 }
+Type.arity = [];
 
 
 export class Hole extends Expression {
@@ -74,40 +76,6 @@ export class Hole extends Expression {
   constructor(name: ?string, type: Expression): void {
     super([], [], type);
     this.name = name;
-  }
-
-  rename(oldName: string, newName: string): Hole {
-    return this;
-  }
-
-  subst(t: Abt, x: string): Hole {
-    return this;
-  }
-
-  evaluate(): EvaluationResult<Expression> {
-    return mkStuck(this);
-  }
-}
-
-
-export class Var extends Expression {
-  // $flowstatic
-  static arity = [];
-  // $flowstatic
-  static renderName = "hole";
-  name: ?string;
-
-  constructor(name: ?string, type: Expression): void {
-    super([], [], type);
-    this.name = name;
-  }
-
-  rename(oldName: string, newName: string): Var {
-    return oldName === this.name ? new Var(newName, this.type) : this;
-  }
-
-  subst(t: Abt, x: string): Abt {
-    return x === this.name ? t : this;
   }
 
   evaluate(): EvaluationResult<Expression> {

@@ -1,9 +1,11 @@
 import expect from 'expect';
-import { Type, Var, Hole } from '../src/theory/tm';
+import { Map } from 'immutable';
+
+import { Type, Hole } from '../src/theory/tm';
 import { mkSuccess, mkStuck, evalLookup } from '../src/theory/evaluation';
 import { Lam, Arr, App } from '../src/theory/lambda';
-import { Map } from 'immutable';
 import { empty as emptyCtx } from '../src/theory/context';
+import { mkVar } from '../src/theory/abt';
 
 describe('eval', () => {
   it('evaluates type', () => {
@@ -43,7 +45,7 @@ describe('eval', () => {
 
     it('works with var', () => {
       const tm = new App(
-        new Lam('x', new Var('x'), lamTy),
+        new Lam('x', mkVar('x'), lamTy),
         ty
       );
 
