@@ -88,17 +88,17 @@ describe('abt', () => {
   it('renames id', () => {
     console.log(lambda1.rename('x', 'y'));
     console.log(lam('y', mkVar('y')));
-    expectAbtEquals(
+    expectImmutableIs(
       lambda1.rename('x', 'y'),
       lam('y', mkVar('y'))
     );
 
-    expectAbtEquals(
+    expectImmutableIs(
       lambda1.rename('x', 'x'),
       lam('x', mkVar('x'))
     );
 
-    expectAbtEquals(
+    expectImmutableIs(
       lambda1.rename('y', 'y'),
       lam('x', mkVar('x'))
     );
@@ -106,20 +106,24 @@ describe('abt', () => {
 
   // x -> y
   it('renames the other lambda', () => {
-    expectAbtEquals(
+    expectImmutableIs(
       lambda2.rename('x', 'y'),
       // this is rather implementation-dependent, eh
       lam('y_', mkVar('y'))
     );
 
-    expectAbtEquals(
+    expectImmutableIs(
       lambda2.rename('x', 'x'),
       lam('x', mkVar('y'))
     );
 
-    expectAbtEquals(
+    expectImmutableIs(
       lambda2.rename('y', 'y'),
       lam('x', mkVar('y'))
     );
+  });
+
+  it('instantiates', () => {
+    expectAbtEquals
   });
 });
