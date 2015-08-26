@@ -3,98 +3,96 @@
 // TODO:
 // * user-defined types
 // * source positions? how does this relate to names?
-import { Set } from 'immutable';
+import { Set, Record } from 'immutable';
 
-import { Abt, mkTm, Tm, Abs } from './abt';
 import { lookup } from './context';
 import type { Context } from './context';
 import { mkStuck, mkSuccess } from './evaluation';
 import type { EvaluationResult } from './evaluation';
-import upcast from './upcast';
+import type { AbsRef, Ref } from './ref';
 
 
-export class Expression extends Abt {
-  static renderName: string;
+export type Tm = {
+  evaluate: (root: AbsRef, ctx: Context) => EvaluationResult;
 
-  type: Expression;
+  subst: (root: AbsRef, ref: Ref, value: Tm) => Tm;
 
-  // bleh. making an exception here since Lam.evaluate uses an extra parameter.
-  // TODO figure out a better way.
-  //
-  // $flow-exception
-  evaluate: ((ctx: Context) => EvaluationResult<Expression>) &
-            ((ctx: Context, x: Expression) => EvaluationResult<Expression>);
-
-  constructor(children: Array<Abt>,
-              binders: Array<Array<?string>>,
-              type: Expression): void {
-
-    // fill in freevars and children with meaningless values, since we're
-    // required to call super before touching this.
-    super(Set(), []);
-
-    var abt: Abt = mkTm(children, binders);
-
-    this.freevars = abt.freevars;
-    this.children = abt.children;
-    this.type = type;
-  }
-
-  getChildTm(i: number): Expression {
-    var child: Tm = upcast(this.children[i], Tm);
-    var value: Abt = child.value;
-    return upcast(value, Expression);
-  }
-
-  getChildAbs(i: number, xs: Array<Expression>): Expression {
-    var child: Abs = upcast(this.children[i], Abs);
-    var tm: Tm = child.instantiate((xs: Array<Abt>));
-    var value: Abt = tm.value;
-    // XXX this upcast really won't work -- instantiate builds a plain ABT
-    return upcast(value, Expression);
-  }
-}
+  // the only time this is optional is for Type itself
+  getType: () => Tm;
+};
 
 
-export class Type extends Expression {
+export class Type {
+  static name: string;
+
   // $flowstatic
-  static arity = [];
-  // $flowstatic
-  static renderName = "type";
-  // $flowstatic
-  static singleton = new Type();
+  static singleton: Type = new Type();
 
-  constructor(): void {
-    // We make an exception here and allow the type to be null, so we don't end
-    // up with Type referring to itself, because that makes testing harder
-    // (involving JSON serialization).
-    //
-    // $flow-type-in-type
-    super([], [], null);
-    // circular json PITA
-    // this.type = this;
-  }
-
-  evaluate(): EvaluationResult<Expression> {
+  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
     return mkSuccess(this);
   }
-}
-Type.arity = [];
 
-
-export class Hole extends Expression {
-  // $flowstatic
-  static arity = [];
-  // $flowstatic
-  static renderName = "hole";
-  name: ?string;
-
-  constructor(name: ?string, type: Expression): void {
-    super([], [], type);
-    this.name = name;
+  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+    return this;
   }
 
-  evaluate(): EvaluationResult<Expression> {
+  getType(): Tm {
+    return this;
+  }
+}
+
+Type.name = 'type';
+
+
+var holeShape = Record({
+  type: null,
+  name: null,
+  ref: null,
+}, 'hole');
+
+export class Hole extends holeShape {
+
+  constructor(name: ?string, type: Object): void {
+    super({ type, name });
+  }
+
+  getType(): Tm {
+    return this.type;
+  }
+
+  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
     return mkStuck(this);
   }
+
+  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+    return ref.is(this.ref, root) ? value : this;
+  }
+
+}
+
+
+var varShape = Record({
+  ref: null,
+  type: null
+}, 'var');
+
+export class Var extends varShape {
+
+  constructor(ref: Ref, type: Tm): void {
+    super({ ref, type });
+  }
+
+  getType(): Tm {
+    return this.type;
+  }
+
+  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
+    throw new Error('evaluating variable!');
+    // return mkSuccess(lookup(ctx, this.ref));
+  }
+
+  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+    return ref.is(this.ref, root) ? value : this;
+  }
+
 }

@@ -1,32 +1,32 @@
-import type Context from './context';
+// @flow
 
-type EvaluationResult<A>
-  = { type: 'success', value: A }
-  | { type: 'stuck', value: A }
+import { Record } from 'immutable';
+
+import type { Context } from './context';
 
 
-export function mkSuccess(e: A): EvaluationResult<A> {
-  return {
+var shape = Record({ type: null, value: null }, 'evaluationresult');
+
+export class EvaluationResult extends shape {}
+
+export function mkSuccess(e: any): EvaluationResult {
+  return new EvaluationResult({
     type: 'success',
     value: e,
-  };
+  });
 }
 
 
-export function mkStuck(e: A): EvaluationResult<A> {
-  return {
+export function mkStuck(e: any): EvaluationResult {
+  return new EvaluationResult({
     type: 'stuck',
     value: e,
-  };
+  });
 }
 
 
-export function bind(e: EvaluationResult<A>,
-                     f: Function): EvaluationResult<A> {
+export function bind(
+  e: EvaluationResult,
+  f: (value: any) => EvaluationResult): EvaluationResult {
   return e.type === 'success' ? f(e.value) : e;
-}
-
-
-export function evalLookup(ctx: Context, name: string) {
-  return ctx.get(name).evaluate(ctx);
 }

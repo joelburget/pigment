@@ -1,52 +1,43 @@
 import expect from 'expect';
-import { Type } from '../src/theory/tm';
+import { List } from 'immutable';
+
+import { Type, Var } from '../src/theory/tm';
 import { mkSuccess, mkStuck, bind } from '../src/theory/evaluation';
-import { mkVar, mkTm } from '../src/theory/abt';
-import { Lam, App, Arr } from '../src/theory/lambda';
+import { Lam, App } from '../src/theory/lambda';
 import { empty as emptyCtx } from '../src/theory/context';
+import { mkRel, mkAbs } from '../src/theory/ref';
+
+import { id, k } from './examples';
+import expectImmutableIs from './expectImmutableIs';
 
 
 describe('lambda', () => {
   const type = Type.singleton;
 
-  const id = new Lam(
-    'x',
-    mkVar('x'),
-    new Arr(type, type)
-  );
-
-//   const k = new Lam(
-//     'x',
-//     new Lam(
-//       'y',
-//       new Var('x'),
-//       new Arr(
-//         type,
-//         new Lam(
-//           'Y',
-//           new Var('x'),
-//           new Arr(new Var('Y', new Var('X')))
-//         )
-//       )
-//     ),
-//     new Arr(
-//   );
-
   it('evaluates id', () => {
-    expect(new App(id, type).evaluate(emptyCtx))
-      .toEqual(mkSuccess(type));
+    var app = new App(
+      id,
+      type
+    );
+
+    expectImmutableIs(
+      app.evaluate(mkAbs(), emptyCtx),
+      mkSuccess(type)
+    );
   });
 
-//   it('evaluates k', () => {
-//     expect(new App(new App(k, type), id).evaluate(emptyCtx))
-//       .toEqual(mkSuccess(type));
-//   });
+  it('evaluates k', () => {
+    var app = new App(
+      new App(
+        k,
+        type
+      ),
+      type
+    );
 
-  // it('evaluates functions', () => {
-  //   expect(id.evaluate(emptyCtx, type))
-  //     .toEqual(mkStuck(id));
-
-  //   expect(new App(id, type).evaluate(emptyCtx))
-  //     .toEqual(mkSuccess(type));
-  // });
+    expectImmutableIs(
+      app.evaluate(mkAbs(), emptyCtx),
+      mkSuccess(type)
+    );
+  });
 });

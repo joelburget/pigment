@@ -1,66 +1,63 @@
 import expect from 'expect';
-import { Map } from 'immutable';
+import { Map, List } from 'immutable';
 
-import { Type, Hole } from '../src/theory/tm';
-import { mkSuccess, mkStuck, evalLookup } from '../src/theory/evaluation';
-import { Lam, Arr, App } from '../src/theory/lambda';
+import { Type, Hole, Var } from '../src/theory/tm';
+import { mkSuccess, mkStuck } from '../src/theory/evaluation';
+import { Lam, Arr, App, Binder } from '../src/theory/lambda';
 import { empty as emptyCtx } from '../src/theory/context';
-import { mkVar } from '../src/theory/abt';
+import { mkAbs, mkRel } from '../src/theory/ref';
 
 describe('eval', () => {
+  const type = Type.singleton;
+
   it('evaluates type', () => {
     // start with an empty context;
-    expect(Type.singleton.evaluate(emptyCtx))
-      .toEqual(mkSuccess(Type.singleton));
+    expect(type.evaluate(mkAbs(), emptyCtx))
+      .toEqual(mkSuccess(type));
   });
 
   it('gets stuck on holes', () => {
-    const hole = new Hole('hole', Type.singleton);
-    expect(hole.evaluate(emptyCtx))
+    const hole = new Hole('hole', type);
+    expect(hole.evaluate(mkAbs(), emptyCtx))
       .toEqual(mkStuck(hole));
-
-    // TODO would be awesome for this to be parametric
-    const lamTy = new Arr(Type.singleton, Type.singleton);
 
     const returningHole = new App(
-      new Lam(null, hole, lamTy),
-      Type.singleton
+      new Lam(new Binder({ name: null, type }),
+              hole
+             ),
+      type
     );
-    expect(returningHole.evaluate(emptyCtx))
+    expect(returningHole.evaluate(mkAbs(), emptyCtx))
       .toEqual(mkStuck(hole));
-  });
-
-  it('evaluates variables', () => {
-    const ctx = Map({'x': Type.singleton});
-    const lookedUp = evalLookup(ctx, 'x');
-
-    expect(lookedUp).toEqual(mkSuccess(Type.singleton));
   });
 
   describe('lam', () => {
     // TODO would be awesome for this to be parametric
-    const ty = Type.singleton;
-    const lamTy = new Arr(ty, ty);
-    const ctx = Map({'x': ty});
+    const ctx = Map({'x': type});
 
     it('works with var', () => {
       const tm = new App(
-        new Lam('x', mkVar('x'), lamTy),
-        ty
+        new Lam(new Binder({ name: 'x', type }),
+                new Var(mkRel('..', 'binder'))
+               ),
+        type
       );
 
-      expect(tm.evaluate(ctx))
-        .toEqual(mkSuccess(ty))
+      expect(tm.evaluate(mkAbs(), ctx))
+        .toEqual(mkSuccess(type))
     });
 
     it('works with wildcards', () => {
       const tm = new App(
-        new Lam(null, ty, lamTy),
-        ty
+        new Lam(
+          new Binder({ type }),
+          type,
+        ),
+        type
       );
 
-      expect(tm.evaluate(ctx))
-        .toEqual(mkSuccess(ty))
+      expect(tm.evaluate(mkAbs(), ctx))
+        .toEqual(mkSuccess(type))
     });
   });
 });

@@ -1,12 +1,12 @@
 import expect from 'expect';
-import { Var, Abs, Tm } from '../src/theory/abt';
-import { Label, Record, RowKind, Row, SelectRow, ExtendRow, RestrictRow }
-  from '../src/theory/record';
 import { Map, Set, OrderedMap } from 'immutable';
-import Immutable from 'immutable';
+
+import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow }
+  from '../src/theory/record';
 import { JsNumber } from '../src/theory/external';
 import { empty as emptyCtx } from '../src/theory/context';
 import { mkSuccess, bind } from '../src/theory/evaluation'
+import expectImmutableIs from './expectImmutableIs';
 
 
 describe('records', () => {
@@ -17,27 +17,32 @@ describe('records', () => {
   const zLabel = new Label('z');
 
   const xRow = new Row(OrderedMap({ x: numTy }));
-  const xRec = new Record(OrderedMap({
-    x: new JsNumber(0)
-  }),
-  xRow);
+  const xRec = new Rec(
+    OrderedMap({
+      x: new JsNumber(0)
+    }),
+    xRow
+  );
 
   const xyRow = new Row(OrderedMap({
     x: numTy,
     y: numTy,
   }));
-  const xyRec = new Record(OrderedMap({
-    x: new JsNumber(0),
-    y: new JsNumber(1),
-  }),
-  xyRow);
+  console.log(xyRow);
+  const xyRec = new Rec(
+    OrderedMap({
+      x: new JsNumber(0),
+      y: new JsNumber(1),
+    }),
+    xyRow
+  );
 
   const xyzRow = new Row(OrderedMap({
     x: numTy,
     y: numTy,
     z: numTy,
   }));
-  const xyzRec = new Record(OrderedMap({
+  const xyzRec = new Rec(OrderedMap({
     x: new JsNumber(0),
     y: new JsNumber(1),
     z: new JsNumber(2),
@@ -61,14 +66,16 @@ describe('records', () => {
     const extendedRec = new ExtendRow(xyRec, zLabel, new JsNumber(2));
     const evaluated = extendedRec.evaluate(emptyCtx).value;
 
-    expect(
-      Immutable.is(evaluated.type.description, xyzRow.description)
-    ).toBe(true);
+    expectImmutableIs(
+      evaluated.type,
+      xyzRow
+    );
 
     // TODO this doesn't work because the JsNumbers are not object equal
-    // expect(
-    //   Immutable.is(evaluated.values, xyzRec.values)
-    // ).toBe(true);
+    // expectImmutableIs(
+    //   evaluated.values,
+    //   xyzRec.values
+    // );
   });
 
   it('{ y: 1 | x: 0 }.y -> 1', () => {
@@ -101,9 +108,10 @@ describe('records', () => {
     const restrictedRec = new RestrictRow(xyRec, yLabel);
     const evaluated = restrictedRec.evaluate(emptyCtx).value;
 
-    expect(
-      Immutable.is(evaluated.type.description, xRow.description)
-    ).toBe(true);
+    expectImmutableIs(
+      evaluated.type,
+      xRow
+    );
   });
 
   it('restricts xyz', () => {
@@ -113,8 +121,9 @@ describe('records', () => {
     );
     const evaluated = restrictedRec.evaluate(emptyCtx).value;
 
-    expect(
-      Immutable.is(evaluated.type.description, xyRow.description)
-    ).toBe(true);
+    expectImmutableIs(
+      evaluated.type,
+      xyRow
+    );
   });
 });

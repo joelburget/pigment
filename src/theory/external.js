@@ -1,21 +1,16 @@
-import { Expression, Type } from './tm';
+import { Record } from 'immutable';
+
+import { Tm, Type } from './tm';
 import { mkSuccess } from './evaluation';
 import { Arr, App } from './lambda';
 
-export class External extends Expression {
-  static renderName = 'external';
-  static arity = [];
+export class External extends Record({ external: null, type: null }, 'external') {
 
-  constructor(e: any, type: Expression): void {
-    super([], [], type);
-    this.external = e;
+  constructor(external: any, type: Tm): void {
+    super({ external, type });
   };
 
-  map(): Expression {
-    return this;
-  }
-
-  evaluate(ctx: Context): EvaluationResult<Expression> {
+  evaluate(ctx: Context): EvaluationResult<Tm> {
   }
 
   getType(ctx: Context) {
@@ -35,12 +30,9 @@ export class External extends Expression {
 // * function
 
 
-export class JsExternalType extends Expression {
-  typeName: string;
-
+export class JsExternalType extends Record({ typeName: null }, 'externaltype') {
   constructor(typeName: string): void {
-    super([], [], Type.singleton);
-    this.typeName = typeName;
+    super({ typeName });
   }
 }
 
@@ -55,12 +47,9 @@ export class JsBoolean extends External {
 }
 
 
-export class JsExternalArr extends Expression {
-  ty: Arr;
-
+export class JsExternalArr extends Record({ ty: null }, 'externalarr') {
   constructor(ty: Arr): void {
-    super([], [], Type.singleton);
-    this.ty = ty;
+    super({ ty });
   }
 }
 
@@ -82,7 +71,7 @@ export class JsFunction extends External {
     super(f, new JsExternalArr(ty));
   }
 
-  getResultType(): Expression {
+  getResultType(): Tm {
     // const codomain = this.type.
   }
 }
@@ -100,15 +89,11 @@ export class JsApp extends External {
     return this.children[0];
   }
 
-  arg(): Expression {
+  arg(): Tm {
     return this.children[1];
   }
 
-  map(f: Function): Expression {
-    return new JsApp(f(this.func()), f(this.arg()));
-  }
-
-  evaluate(ctx: Context): EvaluationResult<Expression> {
+  evaluate(ctx: Context): EvaluationResult<Tm> {
     const f = this.func().external;
     const x = this.arg().external;
 

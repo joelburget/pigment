@@ -1,6 +1,5 @@
 import expect from 'expect';
 import { mkSuccess, bind } from '../src/theory/tm';
-import { Var, Abs, Tm } from '../src/theory/abt';
 import { arr } from '../src/theory/lambda';
 import { empty as emptyCtx } from '../src/theory/context';
 import { JsBoolean, JsNumber, JsApp, JsFunction } from '../src/theory/external';
