@@ -1,3 +1,5 @@
+// @flow
+
 import { List, Set } from 'immutable';
 
 import {
@@ -8,23 +10,39 @@ import {
   EXPRESSION_MOUSE_ENTER,
 } from '../actions/actionTypes';
 
-import { EVar, Hole } from '../theory/tm';
-import { Lam, Pi, } from '../theory/lambda';
-import { Tuple, Sigma } from '../theory/tuple';
+import { Var, Hole, Type } from '../theory/tm';
+import type { Tm } from '../theory/tm';
+import { Lam, Arr, Binder } from '../theory/lambda';
+import { Rec, Row } from '../theory/record';
+import { mkRel, mkAbs } from '../theory/ref';
+import type { Ref } from '../theory/ref';
 
-const goal = new Pi(
-  new EVar('A'),
-  new Pi(new EVar('B'),
-       new Sigma(new EVar('A'),
-               new EVar('B'))));
+const type = Type.singleton;
+
+const goal = new Arr(
+  new Var(mkAbs('A'), type),
+  new Arr(
+    new Var(mkAbs('B', type)),
+    new Row(
+      new Var(mkAbs('A', type)),
+      new Var(mkAbs('B', type))
+    )
+  )
+);
 
 const definitions = [
   {
     name: "pairer",
-    defn: new Lam('x',
-                  new Lam('y',
-                          new Tuple(new EVar('x'),
-                                    new EVar('y')))),
+    defn: new Lam(
+      new Binder({ name: 'x', type }),
+      new Lam(
+        new Binder({ name: 'y', type }),
+        new Row(
+          new Var(mkRel('..', '..', 'binder'), type),
+          new Var(mkRel('..', 'binder'), type)
+        )
+      )
+    ),
     type: "definition",
   },
   {
@@ -32,22 +50,67 @@ const definitions = [
     defn: "text of the note",
     type: "note",
   },
-  {
-    name: "pairer example",
-    defn: new Tuple(new EVar('x'), new EVar('y')),
-    type: "example",
-  },
+  // {
+  //   name: "pairer example",
+  //   defn: new Tuple(new Var('x'), new Var('y')),
+  //   type: "example",
+  // },
   {
     name: "pairer property",
-    defn: new EVar('TODO'),
+    defn: new Var(mkAbs('TODO'), type),
     type: "property",
   },
   {
+    name: 'uses var',
+    defn: new Lam(
+      new Binder({ name: 'x', type }),
+      new Var(mkRel('..', 'binder'), type)
+    ),
+    type: 'definition',
+  },
+  {
     name: "has hole",
-    defn: new Lam('x', new Hole('hole')),
+    defn: new Lam(
+      new Binder({ name: 'x', type }),
+      new Hole('hole', type)
+    ),
     type: "definition",
   },
 ];
+
+type Note = {
+  name: string;
+  defn: string;
+  type: 'note';
+};
+
+type Definition = {
+  name: string;
+  defn: Tm;
+  type: 'definition';
+};
+
+type Property = {
+  name: string;
+  defn: Tm;
+  type: 'property';
+};
+
+type Example = {
+  name: string;
+  defn: Tm;
+  type: 'note';
+};
+
+type Info = Note | Definition | Property | Example;
+
+type State = {
+  goal: Tm;
+  definitions: Array<Info>;
+  mouseDownStart: ?Element;
+  mouseDownEnd: ?Element;
+  mouseDownWithin: Set<Element>;
+};
 
 const initialState = {
   goal,
@@ -86,11 +149,13 @@ export default function widgets(state = initialState, action = {}) {
 
     case EXPRESSION_MOUSE_DEPRESS:
       const mouseDownStart = action.element;
+      console.log('depress', action.element);
       const mouseDownWithin = state.mouseDownWithin.add(action.element);
       return { ...state, mouseDownStart, mouseDownWithin };
 
     case EXPRESSION_MOUSE_ENTER:
       const mouseDownEnd = action.element;
+      console.log('enter', action.element);
       return { ...state, mouseDownEnd };
 
     case MOUSE_UP:
@@ -99,6 +164,23 @@ export default function widgets(state = initialState, action = {}) {
     default:
       return state;
   }
+}
+
+// TODO(joel) - I'm planning to develop this in a dangerous way at first --
+// just look up a ref when you want to know about it. The dangerous part is
+// that the ref could have updated without updating things that rely on it.
+// Right?
+export function lookupRef(definitions: Array<Info>, ref: AbsRef): Tm {
+  var path: List<string> = ref.path;
+  var entry: string = path.first();
+  var tail: List<string> = path.shift();
+
+  // TODO - make Ref into two parts: development (module) and path
+  var location: Info = definitions.find(defn => defn.name === entry);
+
+  // this is slick. thank you records!
+  // TODO how to tell type system that we can't have a note here?
+  return location.defn.getIn(tail);
 }
 
 export function isLoaded(globalState) {

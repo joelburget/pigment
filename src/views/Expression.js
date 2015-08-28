@@ -1,17 +1,18 @@
 import React, {Component, PropTypes} from 'react';
+import type { List } from 'immutable';
 import {requireServerCss} from '../util';
 
-import { Pair, Sigma } from './Expression/Pair';
-import { Lambda, Pi } from './Expression/Lambda';
 import Name from './Expression/Name';
 import Hole from './Expression/Hole';
+import { Lambda, Arr } from './Expression/Lambda';
+// import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow } from
 
 const styles = __CLIENT__ ?
   require('./Expression.scss') :
   requireServerCss(require.resolve('./Expression.scss'));
 
 
-class App extends Component {
+class Application extends Component {
   render() {
     return (
       <div>
@@ -29,9 +30,20 @@ class Type extends Component {
 }
 
 
+class Row extends Component {
+  render() {
+    return (
+      <div>
+        ROW
+      </div>
+    );
+  }
+}
+
+
 export default class Expression extends Component {
-  // static propTypes = {
-  //   expression: PropTypes.object.isRequired, // instanceOf(
+  // propTypes = {
+  //   path: PropTypes.instanceOf(List<string>)
   // };
 
   render() {
@@ -40,30 +52,31 @@ export default class Expression extends Component {
       "var": Name,
       hole: Hole,
 
-      app: App,
+      app: Application,
       lam: Lambda,
-      pi: Pi,
+      arr: Arr,
 
-      sigma: Sigma,
-      tuple: Pair, // TODO fix naming
+      // label: Label,
+      // rec: Rec,
+      // rowkind: RowKind,
+      row: Row,
+      // selectrow: SelectRow,
+      // extendrow: ExtendRow,
+      // restrictrow: RestrictRow,
     };
 
-    // kind of tricky destructuring here -- this.props.children looks like:
-    // {
-    //   constructor: { renderName },
-    //   children: ...,
-    //   [other stuff]
-    // }
-    //
-    // yep, children has children (it's an Expression (the class)). also we
-    // pass in whatever other stuff is in this.props.children.
-    const { renderName } = this.props.children.constructor;
+    // gross -- we're grabbing the name from Immutable.Record
+    const name = this.props.children._name;
+    const props = {
+      children: this.props.children,
+      path: this.props.path,
+    };
 
     return (
       <div className={styles.expression}
            onMouseDown={::this.handleMouseDown}
            onMouseOver={::this.handleMouseOver}>
-        {React.createElement(dispatch[renderName], this.props.children)}
+        {React.createElement(dispatch[name], props)}
       </div>
     );
   }

@@ -1,7 +1,9 @@
 import React, {Component, PropTypes} from 'react';
 import {bindActionCreators} from 'redux';
-import {isLoaded} from '../reducers/widgets';
 import {connect} from 'react-redux';
+import { List } from 'immutable';
+
+import {isLoaded, lookupRef} from '../reducers/widgets';
 import * as widgetActions from '../actions/widgetActions';
 import {load as loadWidgets} from '../actions/widgetActions';
 import {requireServerCss} from '../util';
@@ -74,7 +76,7 @@ class Definition extends Component {
       <tr className={styles.definitionRow}>
         <td className={styles.definitionType}>DEFINITION</td>
         <td>{nameCell}</td>
-        <td><Expression>{defn}</Expression></td>
+        <td><Expression path={List([name])}>{defn}</Expression></td>
       </tr>
     );
   }
@@ -121,7 +123,7 @@ class Workspace extends Component {
 
         <div>
           <h6>GOAL</h6>
-          <Expression>{goal}</Expression>
+          <Expression path={List(['goal'])}>{goal}</Expression>
         </div>
 
         <div>
@@ -143,8 +145,18 @@ class Workspace extends Component {
 }))
 export default class WidgetsContainer {
   static propTypes = {
-    dispatch: PropTypes.func.isRequired
+    dispatch: PropTypes.func.isRequired,
   };
+
+  static childContextTypes = {
+    lookupRef: PropTypes.func.isRequired,
+  };
+
+  getChildContext() {
+    return {
+      lookupRef: ref => lookupRef(this.props.definitions, ref)
+    };
+  }
 
   static fetchData(store) {
     if (!isLoaded(store.getState())) {
@@ -166,7 +178,8 @@ export default class WidgetsContainer {
 
   render() {
     const { dispatch, goal, definitions } = this.props;
-    return <Workspace {...bindActionCreators(widgetActions, dispatch)}
+    // return <Workspace {...bindActionCreators(widgetActions, dispatch)}
+    return <Workspace renameDefinition={(x, y) => dispatch(widgetActions.renameDefinition(x, y))}
                       {...{ goal, definitions }} />;
   }
 }

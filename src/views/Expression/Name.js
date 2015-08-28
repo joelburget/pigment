@@ -1,6 +1,7 @@
 // names (that you can click on)
 
 import React, {Component, PropTypes} from 'react';
+
 import childJoin from '../childJoin';
 import {requireServerCss} from '../../util';
 
@@ -23,12 +24,20 @@ class NameContextMenu extends Component {
 }
 
 
-export default class Name extends Component {
+export default class Ref extends Component {
   state = { expanded: false };
 
+  static contextTypes = {
+    lookupRef: PropTypes.func.isRequired,
+  };
+
   render() {
-    const [ nameAbt ] = this.props.children;
-    const { name } = nameAbt;
+    // a ref doesn't know its name or type, but it does know where to find
+    // them.
+    const nameRef = this.props.children;
+
+    const name = 'xname'; // TODO get from context
+    const type = 'type'; // TODO get from context
 
     return (
       <div className={styles.name}
@@ -42,6 +51,7 @@ export default class Name extends Component {
   }
 
   handleClick = () => {
+    console.log(this.context.lookupRef(this.props.children));
     // this.setState({ expanded: !this.state.expanded });
   };
 }

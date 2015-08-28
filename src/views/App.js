@@ -16,12 +16,12 @@ const styles = __CLIENT__ ?
 class App extends Component {
   static propTypes = {
     user: PropTypes.object,
-    logout: PropTypes.func
+    logout: PropTypes.func,
   }
 
   static contextTypes = {
     router: PropTypes.object.isRequired,
-    store: PropTypes.object.isRequired
+    store: PropTypes.object.isRequired,
   };
 
   componentWillMount() {

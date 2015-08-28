@@ -37,10 +37,10 @@ export function mouseup() {
 export function load() {
   return {
     types: [
-      DEFINITION_RENAME,
-      EXPRESSION_MOUSE_DEPRESS,
-      EXPRESSION_MOUSE_ENTER,
-      MOUSE_UP,
+      // DEFINITION_RENAME,
+      // EXPRESSION_MOUSE_DEPRESS,
+      // EXPRESSION_MOUSE_ENTER,
+      // MOUSE_UP,
     ],
     promise: (client) => client.get('/loadWidgets'),
   };

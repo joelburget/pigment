@@ -1,5 +1,4 @@
 import { mkStuck, mkSuccess, Expression, Type } from './tm';
-import { Tm } from './abt';
 import { add } from './context';
 
 

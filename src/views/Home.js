@@ -21,7 +21,6 @@ class Name extends Component {
   }
 
   handleClick() {
-    console.log("here");
     this.setState({ expanded: !this.state.expanded });
   }
 

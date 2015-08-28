@@ -5,7 +5,7 @@ import childJoin from '../childJoin';
 import {requireServerCss} from '../../util';
 import Name from './Name';
 import Expression from '../Expression';
-import { EVar } from '../../theory/tm';
+import { Var } from '../../theory/tm';
 
 const styles = __CLIENT__ ?
   require('./Lambda.scss') :
@@ -14,38 +14,41 @@ const styles = __CLIENT__ ?
 
 export class Lambda extends Component {
   static propTypes = {
-    names: PropTypes.array,
+    // names: PropTypes.array,
   };
 
   render() {
     // const { names, result } = this.props.children;
 
-    const { name, body } = this.props.children[0]; // XXX hacky [0]
-    const names = [ name ]; // XXX this is really all hacky
-    const result = body.value;
+    const binder = this.props.children.binder;
+    const body = this.props.children.body;
+    const { path } = this.props;
 
     // XXX gross making this var here
+        // {names.map(name => <Name>{new Var(name).children}</Name>)}
     return (
       <div className={styles.lambda}>
-        {names.map(name => <Name>{new EVar(name).children}</Name>)}
+        { binder }
         <div>
           <span className={styles.arr}>&#8614;</span>
         </div>
-        <Expression>{result}</Expression>
+        <Expression path={path.push('body')}>{body}</Expression>
       </div>
     );
   }
 }
 
 
-export class Pi extends Component {
+export class Arr extends Component {
   render() {
-    const pieces = this.props.children
-      .map(x => <Expression>{x.value}</Expression>);
+    const { domain, codomain } = this.props.children;
+    const { path } = this.props;
 
     return (
       <div className={styles.pi}>
-        {childJoin(pieces, <span>&rarr;</span>)}
+        <Expression path={path.push('domain')}>{domain}</Expression>
+        <span>&rarr;</span>
+        <Expression path={path.push('codomain')}>{codomain}</Expression>
       </div>
     );
   }

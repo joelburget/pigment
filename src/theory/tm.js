@@ -3,7 +3,7 @@
 // TODO:
 // * user-defined types
 // * source positions? how does this relate to names?
-import { Set, Record } from 'immutable';
+import { List, Set, Record } from 'immutable';
 
 import { lookup } from './context';
 import type { Context } from './context';
