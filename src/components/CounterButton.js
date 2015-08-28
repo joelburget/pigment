@@ -1,21 +1,20 @@
 import React, {Component, PropTypes} from 'react';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
-import * as counterActions from '../actions/counterActions';
+import {increment} from '../ducks/counter';
 
-class CounterButton extends Component {
+@connect(
+    state => ({count: state.counter.count}),
+    dispatch => bindActionCreators({increment}, dispatch))
+export default class CounterButton extends Component {
   static propTypes = {
     count: PropTypes.number,
     increment: PropTypes.func.isRequired,
     className: PropTypes.string
   }
 
-  props = {
-    className: ''
-  }
-
   render() {
-    const {count, increment} = this.props;
+    const {count, increment} = this.props; // eslint-disable-line no-shadow
     let {className} = this.props;
     className += ' btn btn-default';
     return (
@@ -24,21 +23,9 @@ class CounterButton extends Component {
       </button>
     );
   }
-}
 
-@connect(state => ({
-  count: state.counter.count
-}))
-export default
-class CounterButtonContainer {
-  static propTypes = {
-    count: PropTypes.number,
-    dispatch: PropTypes.func.isRequired,
-    className: PropTypes.string
-  }
-
-  render() {
-    const { dispatch } = this.props;
-    return <CounterButton {...this.props} {...bindActionCreators(counterActions, dispatch)}/>;
+  props = {
+    className: ''
   }
 }
+

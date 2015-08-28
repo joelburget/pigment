@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import {requireServerCss, requireServerImage} from '../util';
 
@@ -65,6 +65,9 @@ class Implementation extends Component {
 
 class Signature extends Component {
   render() {
+    const styles = require('./Home.scss');
+    // require the logo image both from client and server
+    const logoImage = require('./logo.png');
     return (
       <div>
         <div className={styles.signatureRow}>

@@ -17,29 +17,44 @@ export function required(value) {
 export function minLength(min) {
   return value => {
     if (!isEmpty(value) && value.length < min) {
-      return `Must be fewer than ${min} characters`;
+      return `Must be at least ${min} characters`;
     }
-  }
+  };
 }
 
 export function maxLength(max) {
   return value => {
     if (!isEmpty(value) && value.length > max) {
-      return `Must be fewer than ${max} characters`;
+      return `Must be no more than ${max} characters`;
     }
+  };
+}
+
+export function integer(value) {
+  if (!Number.isInteger(Number(value))) {
+    return 'Must be an integer';
   }
+}
+
+export function oneOf(enumeration) {
+  return value => {
+    if (!~enumeration.indexOf(value)) {
+      return `Must be one of: ${enumeration.join(', ')}`;
+    }
+  };
 }
 
 export function createValidator(rules) {
   return (data = {}) => {
-    const errors = {};
+    const errors = {valid: true};
     Object.keys(rules).forEach((key) => {
       const rule = join([].concat(rules[key])); // concat enables both functions and arrays of functions
       const error = rule(data[key]);
       if (error) {
         errors[key] = error;
+        errors.valid = false;
       }
     });
     return errors;
-  }
+  };
 }

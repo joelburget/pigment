@@ -2,21 +2,44 @@ import React, {Component, PropTypes} from 'react';
 import {Link} from 'react-router';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
-import {isLoaded as isAuthLoaded} from '../reducers/auth';
-import * as authActions from '../actions/authActions';
-import {load as loadAuth} from '../actions/authActions';
+import DocumentMeta from 'react-document-meta';
+import {isLoaded as isInfoLoaded, load as loadInfo} from '../ducks/info';
+import {isLoaded as isAuthLoaded, load as loadAuth, logout} from '../ducks/auth';
 import InfoBar from '../components/InfoBar';
 import {createTransitionHook} from '../universalRouter';
-import {requireServerCss} from '../util';
 
-const styles = __CLIENT__ ?
-  require('./App.scss') :
-  requireServerCss(require.resolve('./App.scss'));
 
-class App extends Component {
+const meta = {
+  title,
+  description,
+  meta: {
+    charSet: 'utf-8',
+    property: {
+      'og:site_name': title,
+      'og:image': image,
+      'og:locale': 'en_US',
+      'og:title': title,
+      'og:description': description,
+      'twitter:card': 'summary',
+      'twitter:site': '@erikras',
+      'twitter:creator': '@erikras',
+      'twitter:title': title,
+      'twitter:description': description,
+      'twitter:image': image,
+      'twitter:image:width': '200',
+      'twitter:image:height': '200'
+    }
+  }
+};
+
+@connect(
+    state => ({user: state.auth.user}),
+    dispatch => bindActionCreators({logout}, dispatch))
+export default class App extends Component {
   static propTypes = {
+    children: PropTypes.object.isRequired,
     user: PropTypes.object,
-    logout: PropTypes.func,
+    logout: PropTypes.func.isRequired
   }
 
   static contextTypes = {
@@ -30,18 +53,24 @@ class App extends Component {
     router.addTransitionHook(this.transitionHook);
   }
 
-  componentWillUnmount() {
-    const {router, store} = this.context;
-    router.removeTransitionHook(this.transitionHook);
+  componentWillReceiveProps(nextProps) {
+    if (!this.props.user && nextProps.user) {
+      // login
+      this.context.router.transitionTo('/loginSuccess');
+    } else if (this.props.user && !nextProps.user) {
+      // logout
+      this.context.router.transitionTo('/');
+    }
   }
 
-  handleLogout(event) {
-    event.preventDefault();
-    this.props.logout();
+  componentWillUnmount() {
+    const {router} = this.context;
+    router.removeTransitionHook(this.transitionHook);
   }
 
   render() {
     const {user} = this.props;
+    const styles = require('./App.scss');
     return (
       <div className={styles.app + " mdl-layout mdl-js-layout mdl-layout--fixed-header"}>
         <nav className="mdl-layout__header">
@@ -76,16 +105,10 @@ class App extends Component {
       </div>
     );
   }
-}
 
-@connect(state => ({
-  user: state.auth.user
-}))
-export default
-class AppContainer {
-  static propTypes = {
-    user: PropTypes.object,
-    dispatch: PropTypes.func.isRequired
+  handleLogout(event) {
+    event.preventDefault();
+    this.props.logout();
   }
 
   static fetchData(store) {
@@ -95,11 +118,5 @@ class AppContainer {
     }
     return Promise.all(promises);
   }
-
-  render() {
-    const { user, dispatch } = this.props;
-    return <App user={user} {...bindActionCreators(authActions, dispatch)}>
-      {this.props.children}
-    </App>;
-  }
 }
+
