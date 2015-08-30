@@ -20,9 +20,6 @@ export default class Html extends Component {
   }
 
   render() {
-    const title = 'Pigment';
-    const description = 'Programming Language, Designed';
-    const image = 'https://react-redux.herokuapp.com/logo.jpg';
     const {assets, component, store} = this.props;
     return (
       <html lang="en-us">

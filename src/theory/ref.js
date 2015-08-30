@@ -82,16 +82,21 @@ export class AbsRef extends Record({ path: null }) {
   }
 }
 
+
 export type Ref = RelRef | AbsRef;
 
 
-export function mkRel(...parts: Array<string>): RelRef {
-  var path = List(parts);
+// export function mkRel(...parts: Array<string>): RelRef {
+//   var path = List(parts);
+export function mkRel(): RelRef {
+  var path = List(arguments);
   return new RelRef({ path });
 }
 
 
-export function mkAbs(...parts: Array<string>): AbsRef {
-  var path = List(parts);
+// export function mkAbs(...parts: Array<string>): AbsRef {
+//   var path = List(parts);
+export function mkAbs(): AbsRef {
+  var path = List(arguments);
   return new AbsRef({ path });
 }

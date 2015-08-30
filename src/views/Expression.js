@@ -1,15 +1,12 @@
 import React, {Component, PropTypes} from 'react';
 import type { List } from 'immutable';
-import {requireServerCss} from '../util';
 
 import Name from './Expression/Name';
 import Hole from './Expression/Hole';
 import { Lambda, Arr } from './Expression/Lambda';
 // import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow } from
 
-const styles = __CLIENT__ ?
-  require('./Expression.scss') :
-  requireServerCss(require.resolve('./Expression.scss'));
+import styles from './Expression.scss';
 
 
 class Application extends Component {

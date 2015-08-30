@@ -1,10 +1,12 @@
 // @flow
 
-import { OrderedMap, Record } from 'immutable';
+import { OrderedMap } from 'immutable';
 
-import { Type } from './tm';
-import type { Tm } from './tm';
+import { TmRecord, Type } from './tm';
 import { mkSuccess } from './evaluation';
+import { register } from './registry';
+
+import type { Tm } from './tm';
 import type { EvaluationResult } from './evaluation';
 import type { AbsRef, Ref } from './ref';
 import type { Context } from './context';
@@ -26,9 +28,11 @@ import type { Context } from './context';
 //   origin = { x = 0, y = 0 }
 
 
-var labelShape = Record({
+var labelShape = TmRecord({
   name: null,
 }, 'label');
+
+register('label', Label);
 
 export class Label extends labelShape {
 
@@ -46,7 +50,7 @@ export class Label extends labelShape {
 }
 
 
-var recordShape = Record({
+var recordShape = TmRecord({
   values: null,
   type: null,
 }, 'rec');
@@ -66,6 +70,8 @@ export class Rec extends recordShape {
     return mkSuccess(this);
   }
 }
+
+register('rec', Rec);
 
 
 export class RowKind {
@@ -87,10 +93,12 @@ export class RowKind {
   }
 }
 
-RowKind.name = 'rowkind';
+register('rowkind', RowKind);
+
+// RowKind.name = 'rowkind';
 
 
-var rowShape = Record({
+var rowShape = TmRecord({
   description: null,
 }, 'row');
 
@@ -117,10 +125,13 @@ export class Row extends rowShape {
     // TODO evaluate all children?
     return mkSuccess(this);
   }
+
 }
 
+register('row', Row);
 
-var selectRowShape = Record({
+
+var selectRowShape = TmRecord({
   label: null,
   rec: null,
   type: null,
@@ -144,8 +155,10 @@ export class SelectRow extends selectRowShape {
   }
 }
 
+register('selectrow', SelectRow);
 
-var extendRowShape = Record({
+
+var extendRowShape = TmRecord({
   rec: null,
   label: null,
   value: null,
@@ -175,8 +188,10 @@ export class ExtendRow extends extendRowShape {
   }
 }
 
+register('extendrow', ExtendRow);
 
-var restrictRowShape = Record({
+
+var restrictRowShape = TmRecord({
   rec: null,
   label: null,
   type: null,
@@ -205,3 +220,5 @@ export class RestrictRow extends restrictRowShape {
     return mkSuccess(newRec);
   }
 }
+
+register('extendrow', ExtendRow);

@@ -1,8 +1,8 @@
 // @flow
 
-import { List, Record } from 'immutable';
+import { List } from 'immutable';
 
-import { Type } from './tm';
+import { TmRecord, Type } from './tm';
 import type { Tm } from './tm';
 import { mkStuck, mkSuccess, bind } from './evaluation';
 import type { EvaluationResult } from './evaluation';
@@ -10,12 +10,13 @@ import { lookup, add } from './context';
 import type { Context } from './context';
 import type { RelRef, AbsRef, Ref } from './ref';
 import { mkRel } from './ref';
+import { register } from './registry';
 
 
-export var Binder = Record({ name: null, type: null }, 'binder');
+export var Binder = TmRecord({ name: null, type: null }, 'binder');
 
 
-var lamShape = Record({
+var lamShape = TmRecord({
   binder: null,
   body: null,
 }, 'lam');
@@ -89,8 +90,10 @@ export class Lam extends lamShape {
   // }
 }
 
+register('lam', Lam);
 
-var arrShape = Record({
+
+var arrShape = TmRecord({
   domain: null,
   codomain: null,
 }, 'arr');
@@ -110,8 +113,10 @@ export class Arr extends arrShape {
   }
 }
 
+register('arr', Arr);
 
-var appShape = Record({
+
+var appShape = TmRecord({
   func: null,
   arg: null,
 }, 'app');
@@ -141,3 +146,5 @@ export class App extends appShape {
     );
   }
 }
+
+register('app', App);

@@ -1,8 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import {requireServerCss, requireServerImage} from '../util';
 
-const styles = __CLIENT__ ? require('./Home.scss') : requireServerCss(require.resolve('./Home.scss'));
+const styles = require('./Home.scss');
 
 
 class Name extends Component {
@@ -65,7 +64,6 @@ class Implementation extends Component {
 
 class Signature extends Component {
   render() {
-    const styles = require('./Home.scss');
     // require the logo image both from client and server
     const logoImage = require('./logo.png');
     return (

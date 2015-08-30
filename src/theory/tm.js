@@ -6,10 +6,13 @@
 import { List, Set, Record } from 'immutable';
 
 import { lookup } from './context';
-import type { Context } from './context';
 import { mkStuck, mkSuccess } from './evaluation';
+import { register } from './registry';
+
+import type { Context } from './context';
 import type { EvaluationResult } from './evaluation';
-import type { AbsRef, Ref } from './ref';
+import type { Ref, AbsRef } from './ref';
+import type { TmRecordEntry } from './registry';
 
 
 export type Tm = {
@@ -20,6 +23,15 @@ export type Tm = {
   // the only time this is optional is for Type itself
   getType: () => Tm;
 };
+
+
+// TODO this is really more general -- should be called SerializableRecord or
+// some such.
+export class TmRecord extends Record {
+  toString(): TmRecordEntry {
+    return { _name: this._name, ...(this.toJS()) };
+  }
+}
 
 
 export class Type {
@@ -39,12 +51,17 @@ export class Type {
   getType(): Tm {
     return this;
   }
+
+  serialize(): TmRecordEntry {
+    return { _name: 'type' };
+  }
 }
 
-Type.name = 'type';
+register('type', Type);
+// Type.name = 'type';
 
 
-var holeShape = Record({
+var holeShape = TmRecord({
   type: null,
   name: null,
   ref: null,
@@ -67,11 +84,12 @@ export class Hole extends holeShape {
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {
     return ref.is(this.ref, root) ? value : this;
   }
-
 }
 
+register('hole', Hole);
 
-var varShape = Record({
+
+var varShape = TmRecord({
   ref: null,
   type: null
 }, 'var');
@@ -96,3 +114,5 @@ export class Var extends varShape {
   }
 
 }
+
+register('var', Var);

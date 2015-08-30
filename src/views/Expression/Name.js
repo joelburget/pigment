@@ -3,11 +3,8 @@
 import React, {Component, PropTypes} from 'react';
 
 import childJoin from '../childJoin';
-import {requireServerCss} from '../../util';
 
-const styles = __CLIENT__ ?
-  require('./Name.scss') :
-  requireServerCss(require.resolve('./Name.scss'));
+const styles = require('./Name.scss');
 
 
 class NameContextMenu extends Component {

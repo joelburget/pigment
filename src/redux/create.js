@@ -1,5 +1,6 @@
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import createMiddleware from './clientMiddleware';
+import Immutable from 'immutable';
 
 export default function createApiClientStore(client, data) {
   const middleware = createMiddleware(client);

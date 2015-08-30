@@ -1,7 +1,7 @@
 
 
 export class Type {
-  static name: string;
+  static name: string = 'type';
 
   // $flowstatic
   static singleton: Type = new Type();
@@ -18,5 +18,5 @@ export class Type {
   }
 }
 
-Type.name = 'type';
+// Type.name = 'type';
 

@@ -3,17 +3,12 @@ import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 import { List } from 'immutable';
 
-import {isLoaded, lookupRef} from '../reducers/widgets';
+import {isLoaded, lookupRef} from '../ducks/widgets';
 import * as widgetActions from '../actions/widgetActions';
 import {load as loadWidgets} from '../actions/widgetActions';
-import {requireServerCss} from '../util';
 
 import Expression from './Expression';
-
-
-const styles = __CLIENT__ ?
-  require('./Widgets.scss') :
-  requireServerCss(require.resolve('./Widgets.scss'));
+import styles from './Widgets.scss';
 
 
 // give an example of the thing in use -- what is the return type of this?

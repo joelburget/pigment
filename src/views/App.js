@@ -5,9 +5,11 @@ import {connect} from 'react-redux';
 import DocumentMeta from 'react-document-meta';
 import {isLoaded as isInfoLoaded, load as loadInfo} from '../ducks/info';
 import {isLoaded as isAuthLoaded, load as loadAuth, logout} from '../ducks/auth';
-import InfoBar from '../components/InfoBar';
 import {createTransitionHook} from '../universalRouter';
 
+const title = 'Pigment';
+const description = 'Cooperative Programming';
+const image = 'TODO';
 
 const meta = {
   title,
@@ -98,8 +100,6 @@ export default class App extends Component {
           <div className={styles.appContent}>
             {this.props.children}
           </div>
-
-          <InfoBar/>
         </main>
 
       </div>

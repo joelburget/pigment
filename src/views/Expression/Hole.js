@@ -1,11 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import {requireServerCss} from '../../util';
-
-
-const styles = __CLIENT__ ?
-  require('./Hole.scss') :
-  requireServerCss(require.resolve('./Hole.scss'));
-
+import styles from './Hole.scss';
 
 export default class Hole extends Component {
   render() {

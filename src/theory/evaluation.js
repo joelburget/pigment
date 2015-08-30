@@ -28,5 +28,6 @@ export function mkStuck(e: any): EvaluationResult {
 export function bind(
   e: EvaluationResult,
   f: (value: any) => EvaluationResult): EvaluationResult {
+// export function bind(e, f) {
   return e.type === 'success' ? f(e.value) : e;
 }

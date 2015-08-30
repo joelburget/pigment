@@ -2,14 +2,10 @@
 
 import React, {Component, PropTypes} from 'react';
 import childJoin from '../childJoin';
-import {requireServerCss} from '../../util';
 import Name from './Name';
 import Expression from '../Expression';
 import { Var } from '../../theory/tm';
-
-const styles = __CLIENT__ ?
-  require('./Lambda.scss') :
-  requireServerCss(require.resolve('./Lambda.scss'));
+import styles from './Lambda.scss';
 
 
 export class Lambda extends Component {

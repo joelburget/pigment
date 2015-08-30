@@ -2,13 +2,9 @@
 
 import React, {Component, PropTypes} from 'react';
 import childJoin from '../childJoin';
-import {requireServerCss} from '../../util';
 
 import Expression from '../Expression';
-
-const styles = __CLIENT__ ?
-  require('./Pair.scss') :
-  requireServerCss(require.resolve('./Pair.scss'));
+import styles from './Pair.scss';
 
 
 export class Sigma extends Component {
