@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import serialize from 'serialize-javascript';
+import { writer } from './redux/transit';
 import DocumentMeta from 'react-document-meta';
 const cdn = '//cdnjs.cloudflare.com/ajax/libs/';
 
@@ -28,10 +28,8 @@ export default class Html extends Component {
           {DocumentMeta.rewind({asReact: true})}
 
           <link rel="shortcut icon" href="/favicon.ico" />
-          <link href={cdn + 'twitter-bootstrap/3.3.5/css/bootstrap.css'}
-                media="screen, projection" rel="stylesheet" type="text/css" />
-          <link href={cdn + 'font-awesome/4.3.0/css/font-awesome.min.css'}
-                media="screen, projection" rel="stylesheet" type="text/css" />
+          <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.indigo-teal.min.css" />
+          <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500' rel='stylesheet' type='text/css' />
 
           {/* styles (will be present only in production with webpack extract text plugin) */}
           {Object.keys(assets.styles).map((style, i) =>
@@ -41,7 +39,7 @@ export default class Html extends Component {
         </head>
         <body>
           <div id="content" dangerouslySetInnerHTML={{__html: React.renderToString(component)}}/>
-          <script dangerouslySetInnerHTML={{__html: `window.__data=${serialize(store.getState())};`}} />
+          <script dangerouslySetInnerHTML={{__html: `window.__data=${writer.write(store.getState())};`}} />
           <script src={assets.javascript.main}/>
         </body>
       </html>

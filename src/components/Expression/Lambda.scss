@@ -1,0 +1,15 @@
+.lambda, .pi {
+    display: inline-flex;
+    flex-direction: row;
+}
+
+.expandContainer {
+    position: relative;
+}
+
+.expand {
+    position: absolute;
+    background-color: white;
+    width: 100px;
+    display: flex;
+}

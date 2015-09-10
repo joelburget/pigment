@@ -1,8 +1,8 @@
 // @flow
 
-import { List } from 'immutable';
+import { Record, List } from 'immutable';
 
-import { TmRecord, Type } from './tm';
+import { Type } from './tm';
 import type { Tm } from './tm';
 import { mkStuck, mkSuccess, bind } from './evaluation';
 import type { EvaluationResult } from './evaluation';
@@ -13,10 +13,13 @@ import { mkRel } from './ref';
 import { register } from './registry';
 
 
-export var Binder = TmRecord({ name: null, type: null }, 'binder');
+export var Binder = Record({
+  name: null,
+  type: null,
+}, 'binder');
 
 
-var lamShape = TmRecord({
+var lamShape = Record({
   binder: null,
   body: null,
 }, 'lam');
@@ -56,6 +59,24 @@ export class Lam extends lamShape {
     );
   }
 
+  unify(tm: Tm): ?Tm {
+    if (!(tm instanceof Lam)) {
+      return null;
+    }
+
+    if (this.binder.type.unify(tm.binder.type) == null) {
+      return null;
+    }
+
+    var body = this.body.unify(tm.body);
+
+    if (body == null) {
+      return null;
+    }
+
+    return new Lam(this.binder, body);
+  }
+
   // instantiate(values: List<?Tm>): Tm {
   //   var body: Tm = this.body;
   //   var binders: List<?string> = this.binders;
@@ -93,7 +114,7 @@ export class Lam extends lamShape {
 register('lam', Lam);
 
 
-var arrShape = TmRecord({
+var arrShape = Record({
   domain: null,
   codomain: null,
 }, 'arr');
@@ -116,7 +137,7 @@ export class Arr extends arrShape {
 register('arr', Arr);
 
 
-var appShape = TmRecord({
+var appShape = Record({
   func: null,
   arg: null,
 }, 'app');

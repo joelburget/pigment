@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import type { List } from 'immutable';
 
-import Name from './Expression/Name';
+import Var from './Expression/Name';
 import Hole from './Expression/Hole';
 import { Lambda, Arr } from './Expression/Lambda';
 // import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow } from
@@ -22,7 +22,9 @@ class Application extends Component {
 
 class Type extends Component {
   render() {
-    return '*';
+    return (
+      <span>*</span>
+    );
   }
 }
 
@@ -43,47 +45,60 @@ export default class Expression extends Component {
   //   path: PropTypes.instanceOf(List<string>)
   // };
 
+  static contextTypes = {
+    isPathHighlighted: PropTypes.func.isRequired,
+    expressionMouseClick: PropTypes.func.isRequired,
+  };
+
   render() {
     const dispatch = {
-      type: Type,
-      "var": Name,
-      hole: Hole,
+      Type: Type,
+      "Var": Var,
+      Hole: Hole,
 
-      app: Application,
-      lam: Lambda,
-      arr: Arr,
+      App: Application,
+      Lam: Lambda,
+      Arr: Arr,
 
       // label: Label,
       // rec: Rec,
       // rowkind: RowKind,
-      row: Row,
+      Row: Row,
       // selectrow: SelectRow,
       // extendrow: ExtendRow,
       // restrictrow: RestrictRow,
     };
 
-    // gross -- we're grabbing the name from Immutable.Record
-    const name = this.props.children._name;
+    // gross -- grabbing the name in this way
+    const name = this.props.children.constructor.name;
     const props = {
       children: this.props.children,
       path: this.props.path,
     };
 
+    const isHighlighted = this.context.isPathHighlighted(this.props.path);
+    const highlightedStyle = isHighlighted ? styles.highlighted : '';
+
     return (
-      <div className={styles.expression}
-           onMouseDown={::this.handleMouseDown}
-           onMouseOver={::this.handleMouseOver}>
+      <div className={styles.expression + ' ' + highlightedStyle}
+           onClick={::this.handleClick}>
         {React.createElement(dispatch[name], props)}
       </div>
     );
   }
 
-  handleMouseDown() {
-    // TODO figure out how to find path to this expression (same with enter)
-    this.props.expressionMouseDepress(this);
+  handleClick(event) {
+    this.context.expressionMouseClick(this.props.path);
+    event.stopPropagation();
   }
 
-  handleMouseOver() {
-    this.props.expressionMouseEnter(this);
-  }
+//   handleMouseDown(event) {
+//     this.context.expressionMouseDepress(this.props.path);
+//     event.stopPropagation();
+//   }
+
+//   handleMouseOver(event) {
+//     this.context.expressionMouseOver(this.props.path);
+//     event.stopPropagation();
+//   }
 }

@@ -1,8 +1,8 @@
 // @flow
 
-import { OrderedMap } from 'immutable';
+import { Record, OrderedMap } from 'immutable';
 
-import { TmRecord, Type } from './tm';
+import { Type } from './tm';
 import { mkSuccess } from './evaluation';
 import { register } from './registry';
 
@@ -28,7 +28,7 @@ import type { Context } from './context';
 //   origin = { x = 0, y = 0 }
 
 
-var labelShape = TmRecord({
+var labelShape = Record({
   name: null,
 }, 'label');
 
@@ -50,7 +50,7 @@ export class Label extends labelShape {
 }
 
 
-var recordShape = TmRecord({
+var recordShape = Record({
   values: null,
   type: null,
 }, 'rec');
@@ -98,7 +98,7 @@ register('rowkind', RowKind);
 // RowKind.name = 'rowkind';
 
 
-var rowShape = TmRecord({
+var rowShape = Record({
   description: null,
 }, 'row');
 
@@ -131,7 +131,7 @@ export class Row extends rowShape {
 register('row', Row);
 
 
-var selectRowShape = TmRecord({
+var selectRowShape = Record({
   label: null,
   rec: null,
   type: null,
@@ -158,7 +158,7 @@ export class SelectRow extends selectRowShape {
 register('selectrow', SelectRow);
 
 
-var extendRowShape = TmRecord({
+var extendRowShape = Record({
   rec: null,
   label: null,
   value: null,
@@ -191,7 +191,7 @@ export class ExtendRow extends extendRowShape {
 register('extendrow', ExtendRow);
 
 
-var restrictRowShape = TmRecord({
+var restrictRowShape = Record({
   rec: null,
   label: null,
   type: null,

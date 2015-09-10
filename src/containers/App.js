@@ -3,9 +3,12 @@ import {Link} from 'react-router';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 import DocumentMeta from 'react-document-meta';
-import {isLoaded as isInfoLoaded, load as loadInfo} from '../ducks/info';
+import injectTapEventPlugin from 'react-tap-event-plugin';
+
 import {isLoaded as isAuthLoaded, load as loadAuth, logout} from '../ducks/auth';
 import {createTransitionHook} from '../universalRouter';
+
+injectTapEventPlugin();
 
 const title = 'Pigment';
 const description = 'Cooperative Programming';
@@ -23,8 +26,8 @@ const meta = {
       'og:title': title,
       'og:description': description,
       'twitter:card': 'summary',
-      'twitter:site': '@erikras',
-      'twitter:creator': '@erikras',
+      'twitter:site': '@pigmentio',
+      'twitter:creator': '@pigmentio',
       'twitter:title': title,
       'twitter:description': description,
       'twitter:image': image,
@@ -84,10 +87,6 @@ export default class App extends Component {
             <div className="mdl-layout-spacer" />
 
             <ul className="mdl-navigation mdl-layout--large-screen-only">
-              <li><Link className="mdl-navigation__link" to="/widgets">WIDGETS</Link></li>
-              <li><Link className="mdl-navigation__link" to="/survey">SURVEY</Link></li>
-              <li><Link className="mdl-navigation__link" to="/about">ABOUT</Link></li>
-              <li><Link className="mdl-navigation__link" to="/redirect">REDIRECT</Link></li>
               {!user && <li><Link className="mdl-navigation__link" to="/login">LOGIN</Link></li>}
               {user && <li className="logout-link"><a className="mdl-navigation__link" href="/logout" onClick={::this.handleLogout}>LOGOUT</a></li>}
             </ul>

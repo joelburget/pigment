@@ -4,10 +4,10 @@
 // * user-defined types
 // * source positions? how does this relate to names?
 import { List, Set, Record } from 'immutable';
+import transit from 'transit-js';
 
 import { lookup } from './context';
 import { mkStuck, mkSuccess } from './evaluation';
-import { register } from './registry';
 
 import type { Context } from './context';
 import type { EvaluationResult } from './evaluation';
@@ -22,16 +22,9 @@ export type Tm = {
 
   // the only time this is optional is for Type itself
   getType: () => Tm;
+
+  unify: (tm: Tm) => ?Tm;
 };
-
-
-// TODO this is really more general -- should be called SerializableRecord or
-// some such.
-export class TmRecord extends Record {
-  toString(): TmRecordEntry {
-    return { _name: this._name, ...(this.toJS()) };
-  }
-}
 
 
 export class Type {
@@ -52,19 +45,15 @@ export class Type {
     return this;
   }
 
-  serialize(): TmRecordEntry {
-    return { _name: 'type' };
+  unify(tm: Tm): ?Tm {
+    return tm === this ? this : null;
   }
 }
 
-register('type', Type);
-// Type.name = 'type';
 
-
-var holeShape = TmRecord({
-  type: null,
+var holeShape = Record({
   name: null,
-  ref: null,
+  type: null,
 }, 'hole');
 
 export class Hole extends holeShape {
@@ -84,12 +73,16 @@ export class Hole extends holeShape {
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {
     return ref.is(this.ref, root) ? value : this;
   }
+
+  unify(tm: Tm): ?Tm {
+    return this.type.unify(tm.getType()) == null ?
+      null :
+      tm;
+  }
 }
 
-register('hole', Hole);
 
-
-var varShape = TmRecord({
+var varShape = Record({
   ref: null,
   type: null
 }, 'var');
@@ -113,6 +106,9 @@ export class Var extends varShape {
     return ref.is(this.ref, root) ? value : this;
   }
 
+  unify(tm: Tm): ?Tm {
+    return this.type.unify(tm.getType()) == null ?
+      null :
+      tm;
+  }
 }
-
-register('var', Var);

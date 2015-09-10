@@ -1,4 +1,3 @@
-// @flow
 // A context holds the value (and type) of all the variables in scope
 
 import { Map } from 'immutable';

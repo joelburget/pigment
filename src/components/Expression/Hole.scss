@@ -1,0 +1,23 @@
+.hole {
+    input {
+        background-color: rgb(255, 195, 158);
+        border: none;
+        width: 50px;
+        padding: 0 5px;
+    }
+    padding: 2px 5px;
+
+    .completions {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+
+        color: white;
+        background-color: #2A2F3A;
+    }
+}
+
+.completion {
+    display: flex;
+    flex-direction: row;
+}
