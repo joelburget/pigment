@@ -1,8 +1,9 @@
 import expect from 'expect';
 import { List } from 'immutable';
 
-import expectImmutableIs from './expectImmutableIs';
-import { mkRel, mkAbs, RelRef, AbsRef } from '../src/theory/ref';
+import { mkRel, mkAbs, RelRef, AbsRef } from '../ref';
+
+import expectImmutableIs from '../../../test/expectImmutableIs';
 
 
 describe('ref', () => {

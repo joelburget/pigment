@@ -5,7 +5,7 @@ import { writeHandlers as theoryWriteHandlers,
 import { writeHandlers as immutableWriteHandlers,
          readHandlers as immutableReadHandlers } from '../transit-immutable-js';
 import { writeHandlers as widgetWriteHandlers,
-         readHandlers as widgetReadHandlers } from '../ducks/widgets';
+         readHandlers as widgetReadHandlers } from '../ducks/module';
 
 const FORMAT = 'json-verbose';
 

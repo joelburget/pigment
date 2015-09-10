@@ -1,9 +1,9 @@
 import expect from 'expect';
 
-import { Type, EVar } from '../src/theory/tm';
-import { Lam, Arr } from '../src/theory/lambda';
-// import { Sigma } from '../src/theory/tuple';
-import { empty as emptyCtx } from '../src/theory/context';
+import { Type, EVar } from '../tm';
+import { Lam, Arr } from '../lambda';
+// import { Sigma } from '../tuple';
+import { empty as emptyCtx } from '../context';
 
 describe('typelevels', () => {
   const type = Type.singleton;

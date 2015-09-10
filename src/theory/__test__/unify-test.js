@@ -1,9 +1,10 @@
 import expect from 'expect';
 import { List } from 'immutable';
 
-import expectImmutableIs from './expectImmutableIs';
-import { Type, Hole, Var } from '../src/theory/tm';
-import { mkRel } from '../src/theory/ref';
+import { Type, Hole, Var } from '../tm';
+import { mkRel } from '../ref';
+
+import expectImmutableIs from '../../../test/expectImmutableIs';
 
 
 describe('unification', () => {

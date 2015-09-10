@@ -1,13 +1,13 @@
 import expect from 'expect';
 
-import { Type, Var } from '../src/theory/tm';
-import { mkSuccess, mkStuck, bind } from '../src/theory/evaluation';
-import { Lam, App, Binder } from '../src/theory/lambda';
-import { empty as emptyCtx } from '../src/theory/context';
-import { mkRel, mkAbs } from '../src/theory/ref';
+import { Type, Var } from '../tm';
+import { mkSuccess, mkStuck, bind } from '../evaluation';
+import { Lam, App, Binder } from '../lambda';
+import { empty as emptyCtx } from '../context';
+import { mkRel, mkAbs } from '../ref';
 
-import { id, k } from './examples';
-import expectImmutableIs from './expectImmutableIs';
+import { id, k } from '../../../test/examples';
+import expectImmutableIs from '../../../test/expectImmutableIs';
 
 
 describe('lambda', () => {

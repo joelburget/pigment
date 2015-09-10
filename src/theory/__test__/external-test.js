@@ -1,10 +1,10 @@
 import expect from 'expect';
-import { mkSuccess, bind } from '../src/theory/tm';
-import { arr } from '../src/theory/lambda';
-import { empty as emptyCtx } from '../src/theory/context';
-import { JsBoolean, JsNumber, JsApp, JsFunction } from '../src/theory/external';
 import { Map, Set } from 'immutable';
-import Immutable from 'immutable';
+
+import { mkSuccess, bind } from '../tm';
+import { arr } from '../lambda';
+import { empty as emptyCtx } from '../context';
+import { JsBoolean, JsNumber, JsApp, JsFunction } from '../external';
 
 var disable = () => {};
 

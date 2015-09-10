@@ -1,11 +1,11 @@
 import expect from 'expect';
 import { Map, List } from 'immutable';
 
-import { Type, Hole, Var } from '../src/theory/tm';
-import { mkSuccess, mkStuck } from '../src/theory/evaluation';
-import { Lam, Arr, App, Binder } from '../src/theory/lambda';
-import { empty as emptyCtx } from '../src/theory/context';
-import { mkAbs, mkRel } from '../src/theory/ref';
+import { Type, Hole, Var } from '../tm';
+import { mkSuccess, mkStuck } from '../evaluation';
+import { Lam, Arr, App, Binder } from '../lambda';
+import { empty as emptyCtx } from '../context';
+import { mkAbs, mkRel } from '../ref';
 
 describe('eval', () => {
   const type = Type.singleton;

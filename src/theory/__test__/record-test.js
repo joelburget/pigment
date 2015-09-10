@@ -2,11 +2,12 @@ import expect from 'expect';
 import { Map, Set, OrderedMap } from 'immutable';
 
 import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow }
-  from '../src/theory/record';
-import { JsNumber } from '../src/theory/external';
-import { empty as emptyCtx } from '../src/theory/context';
-import { mkSuccess, bind } from '../src/theory/evaluation'
-import expectImmutableIs from './expectImmutableIs';
+  from '../record';
+import { JsNumber } from '../external';
+import { empty as emptyCtx } from '../context';
+import { mkSuccess, bind } from '../evaluation'
+
+import expectImmutableIs from '../../../test/expectImmutableIs';
 
 
 describe('records', () => {
