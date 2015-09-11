@@ -14,10 +14,10 @@ import {
 import type { Ref } from '../theory/ref';
 import type { Tm } from '../theory/tm';
 
-const DEFINITION_RENAME = 'redux-example/module/DEFINITION_RENAME';
-const EXPRESSION_MOUSE_CLICK = 'redux-example/module/EXPRESSION_MOUSE_CLICK';
-const UPDATE_AT = 'redux-example/module/UPDATE_AT';
-const MOVE_ITEM = 'redux-example/module/MOVE_ITEM';
+const DEFINITION_RENAME = 'pigment/module/DEFINITION_RENAME';
+const EXPRESSION_MOUSE_CLICK = 'pigment/module/EXPRESSION_MOUSE_CLICK';
+const UPDATE_AT = 'pigment/module/UPDATE_AT';
+const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
 
 
 const type = Type.singleton;

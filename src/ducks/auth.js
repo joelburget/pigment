@@ -1,12 +1,12 @@
-const LOAD = 'redux-example/auth/LOAD';
-const LOAD_SUCCESS = 'redux-example/auth/LOAD_SUCCESS';
-const LOAD_FAIL = 'redux-example/auth/LOAD_FAIL';
-const LOGIN = 'redux-example/auth/LOGIN';
-const LOGIN_SUCCESS = 'redux-example/auth/LOGIN_SUCCESS';
-const LOGIN_FAIL = 'redux-example/auth/LOGIN_FAIL';
-const LOGOUT = 'redux-example/auth/LOGOUT';
-const LOGOUT_SUCCESS = 'redux-example/auth/LOGOUT_SUCCESS';
-const LOGOUT_FAIL = 'redux-example/auth/LOGOUT_FAIL';
+const LOAD = 'pigment/auth/LOAD';
+const LOAD_SUCCESS = 'pigment/auth/LOAD_SUCCESS';
+const LOAD_FAIL = 'pigment/auth/LOAD_FAIL';
+const LOGIN = 'pigment/auth/LOGIN';
+const LOGIN_SUCCESS = 'pigment/auth/LOGIN_SUCCESS';
+const LOGIN_FAIL = 'pigment/auth/LOGIN_FAIL';
+const LOGOUT = 'pigment/auth/LOGOUT';
+const LOGOUT_SUCCESS = 'pigment/auth/LOGOUT_SUCCESS';
+const LOGOUT_FAIL = 'pigment/auth/LOGOUT_FAIL';
 
 const initialState = {
   loaded: false
