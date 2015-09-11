@@ -16,6 +16,11 @@ import type { TmRecordEntry } from './registry';
 
 
 export type Tm = {
+  // * We're not really using Context. I'm not sure it's necessary given our
+  //   model of computation.
+  // * Instead we can pass in the arguments it's being applied to. Tie this in
+  //   with the binding structure we expect to know from a term and we should
+  //   always know the right amount of arguments to pass in.
   evaluate: (root: AbsRef, ctx: Context) => EvaluationResult;
 
   subst: (root: AbsRef, ref: Ref, value: Tm) => Tm;

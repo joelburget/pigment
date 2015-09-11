@@ -107,15 +107,22 @@ export const writeHandlers = [
 
 
 export const readHandlers = {
+  // tm
   'type': () => Type.singleton,
-  'hole': function(rep) { return new Hole(rep[0], rep[1]); },
-  'var': function(rep) { return new Var(rep[0], rep[1]); },
-  'binder': function(rep) { return new Binder({ name: rep[0], type: rep[1] }); },
-  'lam': function(rep) { return new Lam(rep[0], rep[1]); },
-  'app': function(rep) { return new App(rep[0], rep[1]); },
-  'arr': function(rep) { return new Arr(rep[0], rep[1]); },
+  'hole': rep => new Hole(rep[0], rep[1]),
+  'var': rep => new Var(rep[0], rep[1]),
+
+  // lambda
+  'binder': rep => new Binder({ name: rep[0], type: rep[1] }),
+  'lam': rep => new Lam(rep[0], rep[1]),
+  'app': rep => new App(rep[0], rep[1]),
+  'arr': rep => new Arr(rep[0], rep[1]),
+
+  // ref
   'absref': path => new AbsRef({ path }),
   'relref': path => new RelRef({ path }),
+
+  // record
   'label': rep => new Label(rep),
   'rec': rep => new Rec(rep[0], rep[1]),
   'rowkind': () => RowKind.singleton,

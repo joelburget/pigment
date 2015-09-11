@@ -4,7 +4,6 @@ import React, {Component, PropTypes} from 'react';
 
 import { AbsRef, mkAbs } from '../../theory/ref';
 import { Hole } from '../../theory/tm';
-import childJoin from '../childJoin';
 
 const styles = require('./Name.scss');
 

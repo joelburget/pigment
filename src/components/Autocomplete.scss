@@ -1,0 +1,14 @@
+$bg: #2A2F3A;
+$hlbg: $bg - #222;
+
+.menu {
+    color: white;
+}
+
+.item {
+    background-color: #2A2F3A;
+}
+
+.highlightedItem {
+    background-color: $hlbg;
+}

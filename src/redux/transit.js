@@ -4,8 +4,8 @@ import { writeHandlers as theoryWriteHandlers,
          readHandlers as theoryReadHandlers } from '../theory/transit';
 import { writeHandlers as immutableWriteHandlers,
          readHandlers as immutableReadHandlers } from '../transit-immutable-js';
-import { writeHandlers as widgetWriteHandlers,
-         readHandlers as widgetReadHandlers } from '../ducks/module';
+import { writeHandlers as moduleWriteHandlers,
+         readHandlers as moduleReadHandlers } from '../ducks/module';
 
 const FORMAT = 'json-verbose';
 
@@ -13,14 +13,14 @@ const writeHandlers = transit.map(
   [].concat(
     theoryWriteHandlers,
     immutableWriteHandlers,
-    widgetWriteHandlers
+    moduleWriteHandlers
   )
 );
 
 const readHandlers = {
   ...theoryReadHandlers,
   ...immutableReadHandlers,
-  ...widgetReadHandlers,
+  ...moduleReadHandlers,
 };
 
 export const writer = transit.writer(FORMAT, { handlers: writeHandlers });

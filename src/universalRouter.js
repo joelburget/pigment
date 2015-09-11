@@ -1,6 +1,6 @@
 import React from 'react';
 import Router from 'react-router';
-import createRoutes from './views/createRoutes';
+import createRoutes from './createRoutes';
 import { Provider } from 'react-redux';
 
 const getFetchData = (component = {}) => {

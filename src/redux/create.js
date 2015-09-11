@@ -29,9 +29,7 @@ export default function createApiClientStore(client, data) {
     hydrated = undefined;
   } else {
     hydrated = Object.assign({}, data);
-    hydrated.widgets = decoder.decode(hydrated.widgets);
-    var x = decoder.decode(hydrated);
-    debugger;
+    hydrated.module = decoder.decode(hydrated.module);
   }
   const reducer = require('../ducks/reducer');
   const store = finalCreateStore(reducer, hydrated);

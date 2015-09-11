@@ -4,7 +4,6 @@ import React, {Component, PropTypes} from 'react';
 
 import { Var } from '../../theory/tm';
 import { Binder as TheoryBinder } from '../../theory/lambda';
-import childJoin from '../childJoin';
 import Name from './Name';
 import Expression from '../Expression';
 

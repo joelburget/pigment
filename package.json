@@ -75,6 +75,7 @@
     "query-string": "^2.4.0",
     "react": "0.13.3",
     "react-autocomplete": "^0.1.4",
+    "react-dnd": "^1.1.5",
     "react-document-meta": "^0.1.4",
     "react-inline-css": "1.2.1",
     "react-redux": "0.9.0",

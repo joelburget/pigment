@@ -22,7 +22,7 @@ export default class Login extends Component {
     return (
       <div className={styles.loginPage + ' container'}>
         <DocumentMeta title="React Redux Example: Login"/>
-        <h1>Login</h1>
+        <h6>Login</h6>
         {!user &&
         <div>
           <form className="login-form" onSubmit={::this.handleSubmit}>

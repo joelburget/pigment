@@ -4,6 +4,8 @@ import {connect} from 'react-redux';
 import {isLoaded as isAuthLoaded, load as loadAuth} from '../ducks/auth';
 import * as authActions from '../ducks/auth';
 
+import styles from './LoginSuccess.scss';
+
 @connect(
     state => ({user: state.auth.user}),
     dispatch => bindActionCreators(authActions, dispatch)
@@ -17,9 +19,10 @@ class LoginSuccess extends Component {
 
   render() {
     const {user, logout} = this.props;
+
     return (
-      <div className="container">
-        <h1>Login Success</h1>
+      <div className={styles.loginSuccess}>
+        <h6>Login Success</h6>
 
         <div>
           <p>Hi, {user.name}. You have just successfully logged in, and were forwarded here

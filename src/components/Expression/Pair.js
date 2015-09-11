@@ -1,7 +1,7 @@
 // pairs and sigmas
 
 import React, {Component, PropTypes} from 'react';
-import childJoin from '../childJoin';
+import childJoin from '../../childJoin';
 
 import Expression from '../Expression';
 import styles from './Pair.scss';

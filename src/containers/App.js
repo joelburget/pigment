@@ -5,8 +5,10 @@ import {connect} from 'react-redux';
 import DocumentMeta from 'react-document-meta';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 
+import Avatar from '../components/Avatar';
 import {isLoaded as isAuthLoaded, load as loadAuth, logout} from '../ducks/auth';
 import {createTransitionHook} from '../universalRouter';
+import styles from './App.scss';
 
 injectTapEventPlugin();
 
@@ -32,7 +34,7 @@ const meta = {
       'twitter:description': description,
       'twitter:image': image,
       'twitter:image:width': '200',
-      'twitter:image:height': '200'
+      'twitter:image:height': '200',
     }
   }
 };
@@ -44,7 +46,7 @@ export default class App extends Component {
   static propTypes = {
     children: PropTypes.object.isRequired,
     user: PropTypes.object,
-    logout: PropTypes.func.isRequired
+    logout: PropTypes.func.isRequired,
   }
 
   static contextTypes = {
@@ -75,23 +77,25 @@ export default class App extends Component {
 
   render() {
     const {user} = this.props;
-    const styles = require('./App.scss');
     return (
       <div className={styles.app + " mdl-layout mdl-js-layout mdl-layout--fixed-header"}>
-        <nav className="mdl-layout__header">
-          <div className="mdl-layout__header-row">
-            <Link to="/" className="mdl-layout-title mdl-navigation__link">
+        <nav>
+          <div>
+            <Link to="/" className={styles.title}>
               Pigment
             </Link>
+          </div>
 
-            <div className="mdl-layout-spacer" />
+          <div className="mdl-layout-spacer" />
 
-            <ul className="mdl-navigation mdl-layout--large-screen-only">
-              {!user && <li><Link className="mdl-navigation__link" to="/login">LOGIN</Link></li>}
-              {user && <li className="logout-link"><a className="mdl-navigation__link" href="/logout" onClick={::this.handleLogout}>LOGOUT</a></li>}
-            </ul>
+          <div className={styles.login}>
             {user &&
-            <p className={styles.loggedInMessage + ' navbar-text'}>Logged in as <strong>{user.name}</strong>.</p>}
+            /*<p className={styles.loggedInMessage + ' navbar-text'}>Logged in as <strong>{user.name}</strong>.</p>*/
+            <Avatar fbId='joelburget' round='true' size={40} />}
+            <div>
+              {!user && <Link className="mdl-navigation__link" to="/login">LOGIN</Link>}
+              {user && <a className="mdl-navigation__link" href="/logout" onClick={::this.handleLogout}>LOGOUT</a>}
+            </div>
           </div>
         </nav>
 

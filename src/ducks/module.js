@@ -6,7 +6,10 @@ import { Var, Hole, Type } from '../theory/tm';
 import { Lam, Arr, Binder } from '../theory/lambda';
 import { Rec, Row } from '../theory/record';
 import { mkRel, mkAbs } from '../theory/ref';
-import { Module, Note, Definition, Property, Example } from '../theory/module';
+import {
+  Module, Note, Definition, Property, Example,
+  MODULE_PUBLIC, MODULE_PRIVATE
+  } from '../theory/module';
 
 import type { Ref } from '../theory/ref';
 import type { Tm } from '../theory/tm';
@@ -14,6 +17,7 @@ import type { Tm } from '../theory/tm';
 const DEFINITION_RENAME = 'redux-example/module/DEFINITION_RENAME';
 const EXPRESSION_MOUSE_CLICK = 'redux-example/module/EXPRESSION_MOUSE_CLICK';
 const UPDATE_AT = 'redux-example/module/UPDATE_AT';
+const MOVE_ITEM = 'redux-example/module/MOVE_ITEM';
 
 
 const type = Type.singleton;
@@ -28,7 +32,8 @@ const contents = Immutable.fromJS([
         new Binder({ name: 'y', type }),
         type
       )
-    )
+    ),
+    visibility: MODULE_PUBLIC,
   }),
   new Definition({
     name: "pairer",
@@ -43,6 +48,7 @@ const contents = Immutable.fromJS([
         // )
       )
     ),
+    visibility: MODULE_PUBLIC,
   }),
   new Note({
     name: "about pairer",
@@ -63,6 +69,7 @@ const contents = Immutable.fromJS([
       new Binder({ name: 'x', type }),
       new Var(mkRel('..', 'binder'), type)
     ),
+    visibility: MODULE_PRIVATE,
   }),
   new Definition({
     name: "has hole",
@@ -70,6 +77,7 @@ const contents = Immutable.fromJS([
       new Binder({ name: 'x', type }),
       new Hole('hole', type)
     ),
+    visibility: MODULE_PRIVATE,
   }),
 ]);
 
@@ -89,7 +97,8 @@ export const writeHandlers = [
 
 
 export const readHandlers = {
-  'widgetstate': ([goal, definitions, mouseSelection]) => new WidgetState({ goal, definitions, mouseSelection }),
+  'widgetstate': ([module, mouseSelection]) =>
+    new WidgetState({ module, mouseSelection }),
 };
 
 
@@ -121,6 +130,16 @@ export default function reducer(state = initialState, action = {}) {
     case UPDATE_AT:
       const { ref, update } = action;
       return state.updateIn(ref.path, update);
+
+    case MOVE_ITEM:
+      const { beforeIx, afterIx } = action;
+      return state.updateIn(['module', 'contents'], contents => {
+        const item = contents.get(beforeIx);
+
+        return contents
+          .splice(beforeIx, 1)
+          .splice(afterIx, 0, item);
+      });
 
     default:
       return state;
@@ -193,6 +212,15 @@ export function findCompletions(state: WidgetState,
 
 export function isLoaded(globalState) {
   return globalState.module && globalState.module.loaded;
+}
+
+
+export function moveItem(beforeIx: number, afterIx: number) {
+  return {
+    type: MOVE_ITEM,
+    beforeIx,
+    afterIx,
+  };
 }
 
 
