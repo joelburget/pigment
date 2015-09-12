@@ -2,11 +2,19 @@
 
 import { Record } from 'immutable';
 
+
 export const MODULE_PUBLIC = 'module/MODULE_PUBLIC';
 export const MODULE_PRIVATE = 'module/MODULE_PRIVATE';
 // idris also has abstract, though i'm not sure when it's useful
 
 type Visibility = MODULE_PUBLIC | MODULE_PRIVATE;
+
+
+export class ModuleState extends Record({
+  module: null,
+  mouseSelection: null,
+}, 'modulestate') {}
+
 
 // This is gross / tricky -- need this type to align with the export list
 // from the Module, which is implicit -- you need to look at only

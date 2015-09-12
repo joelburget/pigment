@@ -1,7 +1,9 @@
 import { combineReducers } from 'redux';
 
 import auth from './auth';
-import module from './module';
+
+// XXX this should not be a reducer!
+import module from '../aspects/module';
 
 export default combineReducers({
   auth,

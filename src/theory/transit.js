@@ -4,7 +4,6 @@ import { AbsRef, RelRef } from './ref';
 import { Type, Var, Hole, } from './tm';
 import { Binder, Lam, App, Arr } from './lambda';
 import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow } from './record';
-import { Module, Note, Definition, Property, Example } from './module';
 
 
 export const writeHandlers = [
@@ -81,28 +80,6 @@ export const writeHandlers = [
     tag: () => 'restrictrow',
     rep: v => [v.rec, v.label, v.type],
   }),
-
-  // module
-  Module, transit.makeWriteHandler({
-    tag: () => 'module',
-    rep: v => [v.name, v.contents],
-  }),
-  Note, transit.makeWriteHandler({
-    tag: () => 'note',
-    rep: v => [v.name, v.defn],
-  }),
-  Definition, transit.makeWriteHandler({
-    tag: () => 'definition',
-    rep: v => [v.name, v.defn, v.visibility],
-  }),
-  Property, transit.makeWriteHandler({
-    tag: () => 'property',
-    rep: v => [v.name, v.defn],
-  }),
-  Example, transit.makeWriteHandler({
-    tag: () => 'example',
-    rep: v => [v.name, v.defn],
-  }),
 ];
 
 
@@ -130,11 +107,4 @@ export const readHandlers = {
   'selectrow': rep => new SelectRow(rep[0], rep[1], rep[2]),
   'extendrow': rep => new ExtendRow(rep[0], rep[1], rep[2]),
   'restrictrow': rep => new RestrictRow(rep[0], rep[1], rep[2]),
-
-  // module
-  'module': ([name, contents]) => new Module({ name, contents }),
-  'note': ([name, defn]) => new Note({ name, defn }),
-  'definition': ([name, defn, visibility]) => new Definition({ name, defn, visibility }),
-  'property': ([name, defn]) => new Property({ name, defn }),
-  'example': ([name, defn]) => new Example({ name, defn }),
 };

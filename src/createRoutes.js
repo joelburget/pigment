@@ -1,7 +1,8 @@
 import React from 'react';
 import {Route} from 'react-router';
 
-import { App, Module, Home, RequireLogin, Login, LoginSuccess, NotFound } from './containers';
+import { Module } from './aspects/module';
+import { App, Home, RequireLogin, Login, LoginSuccess, NotFound } from './containers';
 
 export default function(store) {
   return (

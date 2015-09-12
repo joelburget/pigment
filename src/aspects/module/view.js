@@ -7,6 +7,9 @@ import { DragSource, DropTarget } from 'react-dnd';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd/modules/backends/HTML5';
 
+import ThemeManager from '../../ThemeManager';
+import Expression from '../../components/Expression';
+
 import { isPathHighlighted,
          isLoaded,
          lookupRef,
@@ -15,17 +18,14 @@ import { isPathHighlighted,
          load as loadWidgets,
          findCompletions,
          moveItem,
-         renameDefinition } from '../ducks/module';
+         renameDefinition } from './controller';
 import { Definition as DuckDefinition,
          Note as DuckNote,
          Property as DuckProperty,
          Example as DuckExample,
          MODULE_PUBLIC,
-         MODULE_PRIVATE } from '../theory/module';
-
-import ThemeManager from '../ThemeManager';
-import Expression from '../components/Expression';
-import styles from './Module.scss';
+         MODULE_PRIVATE } from './data';
+import styles from './style.scss';
 
 
 const ITEM_TYPE = 'ITEM_TYPE';

@@ -1,18 +1,18 @@
 import { List, Record } from 'immutable';
 import Immutable from 'immutable';
-import transit from 'transit-js';
 
-import { Var, Hole, Type } from '../theory/tm';
-import { Lam, Arr, Binder } from '../theory/lambda';
-import { Rec, Row } from '../theory/record';
-import { mkRel, mkAbs } from '../theory/ref';
 import {
-  Module, Note, Definition, Property, Example,
+  ModuleState, Module, Note, Definition, Property, Example,
   MODULE_PUBLIC, MODULE_PRIVATE
-  } from '../theory/module';
+  } from './data';
 
-import type { Ref } from '../theory/ref';
-import type { Tm } from '../theory/tm';
+// import { Var, Hole, Type } from '../theory/tm';
+// import { Lam, Arr, Binder } from '../theory/lambda';
+// import { Rec, Row } from '../theory/record';
+// import { mkRel, mkAbs } from '../theory/ref';
+
+import type { Ref } from '../../theory/ref';
+import type { Tm } from '../../theory/tm';
 
 const DEFINITION_RENAME = 'pigment/module/DEFINITION_RENAME';
 const EXPRESSION_MOUSE_CLICK = 'pigment/module/EXPRESSION_MOUSE_CLICK';
@@ -20,94 +20,74 @@ const UPDATE_AT = 'pigment/module/UPDATE_AT';
 const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
 
 
-const type = Type.singleton;
+// const type = Type.singleton;
 
 
 const contents = Immutable.fromJS([
-  new Definition({
-    name: 'goal',
-    defn: new Lam(
-      new Binder({ name: 'x', type }),
-      new Lam(
-        new Binder({ name: 'y', type }),
-        type
-      )
-    ),
-    visibility: MODULE_PUBLIC,
-  }),
-  new Definition({
-    name: "pairer",
-    defn: new Lam(
-      new Binder({ name: 'x', type }),
-      new Lam(
-        new Binder({ name: 'y', type }),
-        type
-        // new Row(
-        //   new Var(mkRel('..', '..', 'binder'), type),
-        //   new Var(mkRel('..', 'binder'), type)
-        // )
-      )
-    ),
-    visibility: MODULE_PUBLIC,
-  }),
-  new Note({
-    name: "about pairer",
-    defn: "text of the note",
-  }),
-  new Example({
-    name: "pairer example",
-    // defn: new Tuple(new Var('x'), new Var('y')),
-    defn: type,
-    type: "example",
-  }),
-  new Property({
-    name: "pairer property",
-    // defn: new Var(mkAbs('TODO'), type),
-    defn: type,
-  }),
-  new Definition({
-    name: 'uses var',
-    defn: new Lam(
-      new Binder({ name: 'x', type }),
-      new Var(mkRel('..', 'binder'), type)
-    ),
-    visibility: MODULE_PRIVATE,
-  }),
-  new Definition({
-    name: "has hole",
-    defn: new Lam(
-      new Binder({ name: 'x', type }),
-      new Hole('hole', type)
-    ),
-    visibility: MODULE_PRIVATE,
-  }),
+  // new Definition({
+  //   name: 'goal',
+  //   defn: new Lam(
+  //     new Binder({ name: 'x', type }),
+  //     new Lam(
+  //       new Binder({ name: 'y', type }),
+  //       type
+  //     )
+  //   ),
+  //   visibility: MODULE_PUBLIC,
+  // }),
+  // new Definition({
+  //   name: "pairer",
+  //   defn: new Lam(
+  //     new Binder({ name: 'x', type }),
+  //     new Lam(
+  //       new Binder({ name: 'y', type }),
+  //       type
+  //       // new Row(
+  //       //   new Var(mkRel('..', '..', 'binder'), type),
+  //       //   new Var(mkRel('..', 'binder'), type)
+  //       // )
+  //     )
+  //   ),
+  //   visibility: MODULE_PUBLIC,
+  // }),
+  // new Note({
+  //   name: "about pairer",
+  //   defn: "text of the note",
+  // }),
+  // new Example({
+  //   name: "pairer example",
+  //   // defn: new Tuple(new Var('x'), new Var('y')),
+  //   defn: type,
+  //   type: "example",
+  // }),
+  // new Property({
+  //   name: "pairer property",
+  //   // defn: new Var(mkAbs('TODO'), type),
+  //   defn: type,
+  // }),
+  // new Definition({
+  //   name: 'uses var',
+  //   defn: new Lam(
+  //     new Binder({ name: 'x', type }),
+  //     new Var(mkRel('..', 'binder'), type)
+  //   ),
+  //   visibility: MODULE_PRIVATE,
+  // }),
+  // new Definition({
+  //   name: "has hole",
+  //   defn: new Lam(
+  //     new Binder({ name: 'x', type }),
+  //     new Hole('hole', type)
+  //   ),
+  //   visibility: MODULE_PRIVATE,
+  // }),
 ]);
 
 
-export class WidgetState extends Record({
-  module: null,
-  mouseSelection: null,
-}, 'widgetstate') {}
-
-
-export const writeHandlers = [
-  WidgetState, transit.makeWriteHandler({
-    tag: () => 'widgetstate',
-    rep: v => [v.module, v.mouseSelection],
-  })
-];
-
-
-export const readHandlers = {
-  'widgetstate': ([module, mouseSelection]) =>
-    new WidgetState({ module, mouseSelection }),
-};
-
-
-const initialState = new WidgetState({
+const initialState = new ModuleState({
   module: new Module({
     name: 'example module',
-    contents
+    contents,
   }),
   mouseSelection: null,
 });
@@ -149,7 +129,7 @@ export default function reducer(state = initialState, action = {}) {
 // just look up a ref when you want to know about it. The dangerous part is
 // that the ref could have updated without updating things that rely on it.
 // Right?
-export function lookupRef(state: WidgetState, ref: AbsRef): Tm {
+export function lookupRef(state: ModuleState, ref: AbsRef): Tm {
   // this is slick. thank you records!
   return state.getIn(ref.path);
 }
@@ -177,7 +157,7 @@ export function isPathHighlighted(mouseSelection: ?List<string>,
 // * its type
 // * its scope
 // * its prefix
-export function findCompletions(state: WidgetState,
+export function findCompletions(state: ModuleState,
                                 type: Tm,
                                 ref: AbsRef,
                                 prefix: string): Array<Binder> {
