@@ -52,9 +52,7 @@ export default class Var extends Component {
     } else {
       absRef = new AbsRef({ path }).extend(nameRef);
     }
-    const binder = this.context.lookupRef(absRef);
-    console.log('looking up', absRef.path, binder);
-    const { name, type } = binder;
+    const { name, type } = this.context.lookupRef(absRef);
 
     const ctxMenu = this.state.expanded &&
       <NameContextMenu name={name}

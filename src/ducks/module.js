@@ -54,14 +54,16 @@ const contents = Immutable.fromJS([
     name: "about pairer",
     defn: "text of the note",
   }),
-  // {
-  //   name: "pairer example",
-  //   defn: new Tuple(new Var('x'), new Var('y')),
-  //   type: "example",
-  // },
+  new Example({
+    name: "pairer example",
+    // defn: new Tuple(new Var('x'), new Var('y')),
+    defn: type,
+    type: "example",
+  }),
   new Property({
     name: "pairer property",
-    defn: new Var(mkAbs('TODO'), type),
+    // defn: new Var(mkAbs('TODO'), type),
+    defn: type,
   }),
   new Definition({
     name: 'uses var',
@@ -116,13 +118,7 @@ export default function reducer(state = initialState, action = {}) {
     case DEFINITION_RENAME:
       const { index, newName } = action;
 
-      const newArr = state.contents.slice();
-      newArr[index] = {
-        name: newName,
-        defn: newArr[index].defn,
-      };
-
-      return state.set('contents', newArr);
+      return state.setIn(['module', 'contents', index, 'name'], newName);
 
     case EXPRESSION_MOUSE_CLICK:
       return state.set('mouseSelection', action.path);
@@ -132,14 +128,16 @@ export default function reducer(state = initialState, action = {}) {
       return state.updateIn(ref.path, update);
 
     case MOVE_ITEM:
-      const { beforeIx, afterIx } = action;
-      return state.updateIn(['module', 'contents'], contents => {
-        const item = contents.get(beforeIx);
+      return state;
 
-        return contents
-          .splice(beforeIx, 1)
-          .splice(afterIx, 0, item);
-      });
+      // const { beforeIx, afterIx } = action;
+      // return state.updateIn(['module', 'contents'], contents => {
+      //   const item = contents.get(beforeIx);
+
+      //   return contents
+      //     .splice(beforeIx, 1)
+      //     .splice(afterIx, 0, item);
+      // });
 
     default:
       return state;

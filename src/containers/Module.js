@@ -14,7 +14,8 @@ import { isPathHighlighted,
          expressionMouseClick,
          load as loadWidgets,
          findCompletions,
-         moveItem } from '../ducks/module';
+         moveItem,
+         renameDefinition } from '../ducks/module';
 import { Definition as DuckDefinition,
          Note as DuckNote,
          Property as DuckProperty,
@@ -31,7 +32,7 @@ const widgetActions = { expressionMouseClick, updateAt };
 
 const itemSource = {
   beginDrag(props) {
-    console.log(props);
+    // console.log('source', props.index);
     return { index: props.index };
   }
 };
@@ -41,6 +42,7 @@ const itemTarget = {
   hover(props, monitor) {
     const draggedIx = monitor.getItem().index;
 
+    // console.log('target', props.index, draggedIx);
     if (draggedIx !== props.index) {
       props.moveItem(draggedIx, props.index);
     }
@@ -54,7 +56,7 @@ const itemTarget = {
 }))
 @DragSource(ITEM_TYPE, itemSource, (connect, monitor) => ({
   connectDragSource: connect.dragSource(),
-  isDragging: monitor.isDragging()
+  isDragging: monitor.isDragging(),
 }))
 class Draggable {
   static propTypes = {
@@ -68,23 +70,29 @@ class Draggable {
     const { isDragging, connectDragSource, connectDropTarget } = this.props;
     const opacity = isDragging ? 0 : 1;
 
-    return connectDragSource(connectDropTarget(
-      <tr className={styles.definitionRow} style={{ opacity }}>
+    return (( //connectDragSource(connectDropTarget(
+      <div className={styles.definitionRow} style={{ opacity }}>
         {this.props.children}
-      </tr>
+      </div>
     ));
   }
 }
 
 class Example extends Component {
   render() {
-    const { moveItem, index } = this.props;
+    const { name, defn, moveItem, index } = this.props;
 
     return (
       <Draggable moveItem={moveItem} index={index}>
-        <td className={styles.definitionType}>EXAMPLE</td>
-        <td>(example title)</td>
-        <td>(this is an example)</td>
+        <div className={styles.itemLabel}>
+          <div className={styles.itemType}>EXAMPLE</div>
+          <ItemTitle value={name} index={index} />
+        </div>
+        <div className={styles.itemContent}>
+          <Expression path={List(['module', 'contents', index, 'defn'])}>
+            {defn}
+          </Expression>
+        </div>
       </Draggable>
     );
   }
@@ -92,15 +100,24 @@ class Example extends Component {
 
 
 // a law that must hold. ie a test.
+//
+// for now this is exactly the same as example, but will most certainly be
+// customized in the future.
 class Property extends Component {
   render() {
-    const { moveItem, index } = this.props;
+    const { name, defn, moveItem, index } = this.props;
 
     return (
       <Draggable moveItem={moveItem} index={index}>
-        <td className={styles.definitionType}>PROPERTY</td>
-        <td>(property title)</td>
-        <td>(this is a property)</td>
+        <div className={styles.itemLabel}>
+          <div className={styles.itemType}>EXAMPLE</div>
+          <ItemTitle value={name} index={index} />
+        </div>
+        <div className={styles.itemContent}>
+          <Expression path={List(['module', 'contents', index, 'defn'])}>
+            {defn}
+          </Expression>
+        </div>
       </Draggable>
     );
   }
@@ -113,53 +130,97 @@ class Note extends Component {
 
     return (
       <Draggable moveItem={moveItem} index={index}>
-        <td className={styles.definitionType}>NOTE</td>
-        <td>{name}</td>
-        <td>{defn}</td>
+        <div className={styles.itemLabel}>
+          <div className={styles.itemType}>NOTE</div>
+          <ItemTitle value={name} index={index} />
+        </div>
+        <div className={styles.itemContent}>{defn}</div>
       </Draggable>
     );
   }
 }
 
 
-class Definition extends Component {
+class ItemTitle extends Component {
+  static propTypes = {
+    value: PropTypes.string.isRequired,
+    index: PropTypes.number.isRequired,
+  };
+
+  static contextTypes = {
+    renameDefinition: PropTypes.func.isRequired,
+  };
+
   state = {
     editing: false,
   };
 
   render() {
-    const { name, defn, index, moveItem } = this.props;
+    const { value } = this.props;
+    const { editing } = this.state;
 
-    const nameCell = this.state.editing ?
-      <input defaultValue={name}
+    const inner = editing ?
+      <input defaultValue={value}
              onKeyPress={::this.handleKeyPress}
+             onBlur={::this.returnToStatic}
              ref="input" /> :
-      <span onClick={::this.toggleEditing}>{name}</span>;
+      <span onClick={() => {this.setState({ editing: true });}}>
+        {value}
+      </span>;
 
     return (
-      <Draggable moveItem={moveItem} index={index}>
-        <td className={styles.definitionType}>DEFINITION</td>
-        <td>{nameCell}</td>
-        <td>
-          <Expression path={List(['module', 'contents', index, 'defn'])}>
-            {defn}
-          </Expression>
-        </td>
-      </Draggable>
+      <div>
+        {inner}
+      </div>
     );
   }
 
-  toggleEditing() {
-    this.setState({ editing: !this.state.editing });
+  // focus and move cursor to the end when the input exists
+  componentDidUpdate() {
+    const { input } = this.refs;
+    if (input) {
+      const node = React.findDOMNode(input);
+      node.focus();
+      node.selectionStart = node.selectionEnd = node.value.length;
+    }
+  }
+
+  returnToStatic() {
+    this.context.renameDefinition(
+      this.props.index,
+      React.findDOMNode(this.refs.input).value,
+    );
+    this.setState({ editing: false });
   }
 
   handleKeyPress(event) {
     if (event.key === "Enter") {
-      this.props.renameDefinition(this.props.index, this.refs.input.getDOMNode().value);
-      this.toggleEditing();
+      this.returnToStatic();
     }
   }
 }
+
+
+class Definition extends Component {
+  render() {
+    const { name, defn, index, moveItem } = this.props;
+
+    return (
+      <Draggable moveItem={moveItem} index={index}>
+        <div className={styles.itemLabel}>
+          <div className={styles.itemType}>DEFINITION</div>
+          <ItemTitle value={name} index={index} />
+        </div>
+        <div className={styles.itemContent}>
+          <Expression path={List(['module', 'contents', index, 'defn'])}>
+            {defn}
+          </Expression>
+        </div>
+      </Draggable>
+    );
+  }
+}
+
 
 class ContextualMenu extends Component {
   static childContextTypes = {
@@ -201,15 +262,14 @@ class Module extends Component {
 
   static propTypes = {
     contents: PropTypes.object.isRequired,
-    renameDefinition: PropTypes.func.isRequired,
   };
 
   // TODO rename away from definitions.
   // items? too generic
   itemDispatch(item, index) {
     const { name, defn } = item;
-    const { renameDefinition, expressionMouseClick } = this.props;
-    const { moveItem } = this.context;
+    const { expressionMouseClick } = this.props;
+    const { moveItem, renameDefinition } = this.context;
     const props = {
       renameDefinition, name, defn, index, expressionMouseClick, moveItem
     };
@@ -229,19 +289,17 @@ class Module extends Component {
   }
 
   render() {
-    const { contents, name, renameDefinition } = this.props;
+    const { contents, name } = this.props;
 
     return (
       <div className={styles.module}>
         <h6>MODULE {name}</h6>
-        <table>
-          <tbody>
-            { contents.map(::this.itemDispatch) }
-            <tr className={styles.definitionRow}>
-              <td><button className="mdl-button" style={{ padding: 0 }}>Add New</button></td>
-            </tr>
-          </tbody>
-        </table>
+        <div className={styles.moduleTable}>
+          { contents.map(::this.itemDispatch).toJS() }
+        </div>
+        <div>
+          <button className="mdl-button" style={{ padding: 0 }}>Add New</button>
+        </div>
       </div>
     );
   }
@@ -267,6 +325,7 @@ export default class ModuleContainer {
     updateAt: PropTypes.func.isRequired,
     expressionMouseClick: PropTypes.func.isRequired,
     findCompletions: PropTypes.func.isRequired,
+    renameDefinition: PropTypes.func.isRequired,
     moveItem: PropTypes.func.isRequired,
   };
 
@@ -283,9 +342,14 @@ export default class ModuleContainer {
       findCompletions: (type, ref, prefix) => this.props.dispatch(
         findCompletions(this.props.state, type, ref, prefix)
       ),
-      moveItem: (beforeIx, afterIx) => this.props.dispatch(
-        moveItem(beforeIx, afterIx)
+      renameDefinition: (index, value) => this.props.dispatch(
+        renameDefinition(index, value)
       ),
+      // dispatch is, for whatever reason, hella slow. async also?
+      moveItem: () => {},
+      // moveItem: (beforeIx, afterIx) => this.props.dispatch(
+      //   moveItem(beforeIx, afterIx)
+      // ),
     };
   }
 

@@ -40,23 +40,40 @@
 }
 
 .module {
-  margin-left: 20px;
+  margin-left: 40px;
 
   display: flex;
   flex-direction: column;
+}
 
-  table {
-    margin-left: 10px;
-  }
+.moduleTable {
+  display: flex;
+  flex-direction: column;
 }
 
 .definitionRow {
-  td {
-    padding: 5px 5px 5px 0;
-  }
+  display: flex;
+  flex-direction: row;
+
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.definitionType {
+.itemLabel {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+
+  // TODO - figure out a better place to put this move handle
+  // cursor: move;
+}
+
+.itemContent {
+  vertical-align: top;
+  padding: 10px 0 10px 40px;
+  width: 500px;
+}
+
+.itemType {
   font-size: 10px;
   font-weight: bold;
 }

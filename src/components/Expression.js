@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from 'react';
+import React, { Component, PropTypes } from 'react';
 import type { List } from 'immutable';
 
 import Var from './Expression/Name';
@@ -71,6 +71,7 @@ export default class Expression extends Component {
 
     // gross -- grabbing the name in this way
     const name = this.props.children.constructor.name;
+
     const props = {
       children: this.props.children,
       path: this.props.path,
