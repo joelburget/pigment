@@ -19,7 +19,9 @@ import { isPathHighlighted,
 import { Definition as DuckDefinition,
          Note as DuckNote,
          Property as DuckProperty,
-         Example as DuckExample } from '../theory/module';
+         Example as DuckExample,
+         MODULE_PUBLIC,
+         MODULE_PRIVATE } from '../theory/module';
 
 import ThemeManager from '../ThemeManager';
 import Expression from '../components/Expression';
@@ -80,7 +82,8 @@ class Draggable {
 
 class Example extends Component {
   render() {
-    const { name, defn, moveItem, index } = this.props;
+    const { item, index, moveItem } = this.props;
+    const { name, defn } = item;
 
     return (
       <Draggable moveItem={moveItem} index={index}>
@@ -105,7 +108,8 @@ class Example extends Component {
 // customized in the future.
 class Property extends Component {
   render() {
-    const { name, defn, moveItem, index } = this.props;
+    const { item, index, moveItem } = this.props;
+    const { name, defn } = item;
 
     return (
       <Draggable moveItem={moveItem} index={index}>
@@ -126,7 +130,8 @@ class Property extends Component {
 
 class Note extends Component {
   render() {
-    const { name, defn, moveItem, index } = this.props;
+    const { item, index, moveItem } = this.props;
+    const { name, defn } = item;
 
     return (
       <Draggable moveItem={moveItem} index={index}>
@@ -203,13 +208,20 @@ class ItemTitle extends Component {
 
 class Definition extends Component {
   render() {
-    const { name, defn, index, moveItem } = this.props;
+    const { item, index, moveItem } = this.props;
+    const { name, defn, visibility } = item;
+
+    // TODO put this somewhere useful
+    const visibilityElem = visibility === MODULE_PUBLIC ?
+      'public' :
+      'private';
 
     return (
       <Draggable moveItem={moveItem} index={index}>
         <div className={styles.itemLabel}>
           <div className={styles.itemType}>DEFINITION</div>
           <ItemTitle value={name} index={index} />
+          <div>{visibilityElem}</div>
         </div>
         <div className={styles.itemContent}>
           <Expression path={List(['module', 'contents', index, 'defn'])}>
@@ -267,11 +279,10 @@ class Module extends Component {
   // TODO rename away from definitions.
   // items? too generic
   itemDispatch(item, index) {
-    const { name, defn } = item;
     const { expressionMouseClick } = this.props;
     const { moveItem, renameDefinition } = this.context;
     const props = {
-      renameDefinition, name, defn, index, expressionMouseClick, moveItem
+      item, renameDefinition, index, expressionMouseClick, moveItem
     };
 
     var cls;

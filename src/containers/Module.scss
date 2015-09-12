@@ -1,46 +1,8 @@
-.arr {
-    // font-size: 150%;
-    // vertical-align: center;
-}
-
-.widgets {
-  .refreshBtn {
-    margin-left: 20px;
-  }
-  .idCol {
-    width: 5%;
-  }
-  .colorCol {
-    width: 20%;
-  }
-  .sprocketsCol {
-    width: 20%;
-    text-align: right;
-    input {
-      text-align: right;
-    }
-  }
-  .ownerCol {
-    width: 30%;
-  }
-  .buttonCol {
-    width: 25%;
-    :global(.btn) {
-      margin: 0 5px;
-    }
-  }
-  tr.saving {
-    opacity: 0.8;
-    :global(.btn) {
-      &[disabled] {
-        opacity: 1;
-      }
-    }
-  }
-}
+$padding: 15px;
+$bigMargin: 40px;
 
 .module {
-  margin-left: 40px;
+  margin-left: $bigMargin;
 
   display: flex;
   flex-direction: column;
@@ -61,7 +23,9 @@
 .itemLabel {
   display: flex;
   flex-direction: column;
-  padding: 10px 0;
+
+  padding: $padding 0;
+  width: 200px;
 
   // TODO - figure out a better place to put this move handle
   // cursor: move;
@@ -69,7 +33,7 @@
 
 .itemContent {
   vertical-align: top;
-  padding: 10px 0 10px 40px;
+  padding: $padding 0 $padding $bigMargin;
   width: 500px;
 }
 

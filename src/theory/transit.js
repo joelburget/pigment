@@ -93,7 +93,7 @@ export const writeHandlers = [
   }),
   Definition, transit.makeWriteHandler({
     tag: () => 'definition',
-    rep: v => [v.name, v.defn],
+    rep: v => [v.name, v.defn, v.visibility],
   }),
   Property, transit.makeWriteHandler({
     tag: () => 'property',
@@ -134,7 +134,7 @@ export const readHandlers = {
   // module
   'module': ([name, contents]) => new Module({ name, contents }),
   'note': ([name, defn]) => new Note({ name, defn }),
-  'definition': ([name, defn]) => new Definition({ name, defn }),
+  'definition': ([name, defn, visibility]) => new Definition({ name, defn, visibility }),
   'property': ([name, defn]) => new Property({ name, defn }),
   'example': ([name, defn]) => new Example({ name, defn }),
 };
