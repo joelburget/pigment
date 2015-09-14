@@ -1,34 +1,26 @@
 // @flow
 //
 // TODO:
-// * user-defined types
 // * source positions? how does this relate to names?
-import { List, Set, Record } from 'immutable';
-import transit from 'transit-js';
+import { List, Set, Record, Iterable } from 'immutable';
 
-import { lookup } from './context';
 import { mkStuck, mkSuccess } from './evaluation';
 
-import type { Context } from './context';
 import type { EvaluationResult } from './evaluation';
 import type { Ref, AbsRef } from './ref';
-import type { TmRecordEntry } from './registry';
 
 
 export type Tm = {
-  // * We're not really using Context. I'm not sure it's necessary given our
-  //   model of computation.
   // * Instead we can pass in the arguments it's being applied to. Tie this in
   //   with the binding structure we expect to know from a term and we should
   //   always know the right amount of arguments to pass in.
-  evaluate: (root: AbsRef, ctx: Context) => EvaluationResult;
+  evaluate: (root: AbsRef, args: [Tm]) => EvaluationResult;
 
   subst: (root: AbsRef, ref: Ref, value: Tm) => Tm;
 
-  // the only time this is optional is for Type itself
   getType: () => Tm;
 
-  unify: (tm: Tm) => ?Tm;
+  slots: () => Iterable<K, V>;
 };
 
 
@@ -38,7 +30,7 @@ export class Type {
   // $flowstatic
   static singleton: Type = new Type();
 
-  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
+  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
     return mkSuccess(this);
   }
 
@@ -50,8 +42,8 @@ export class Type {
     return this;
   }
 
-  unify(tm: Tm): ?Tm {
-    return tm === this ? this : null;
+  slots(): Iterable<K, V> {
+    return Iterable();
   }
 }
 
@@ -67,11 +59,7 @@ export class Hole extends holeShape {
     super({ type, name });
   }
 
-  getType(): Tm {
-    return this.type;
-  }
-
-  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
+  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
     return mkStuck(this);
   }
 
@@ -79,12 +67,17 @@ export class Hole extends holeShape {
     return ref.is(this.ref, root) ? value : this;
   }
 
-  unify(tm: Tm): ?Tm {
-    return this.type.unify(tm.getType()) == null ?
-      null :
-      tm;
+  slots() {
+    throw new Error('Hole.slots - unimplemented');
   }
 }
+
+
+// what's the difference between a variable and a hole?
+// a variable is intangible / a hole sits in for a term
+// a slot can be a variable, but not a hole
+//
+// what's a slot? a term or a variable?
 
 
 var varShape = Record({
@@ -98,22 +91,15 @@ export class Var extends varShape {
     super({ ref, type });
   }
 
-  getType(): Tm {
-    return this.type;
-  }
-
-  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
+  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
     throw new Error('evaluating variable!');
-    // return mkSuccess(lookup(ctx, this.ref));
   }
 
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {
     return ref.is(this.ref, root) ? value : this;
   }
 
-  unify(tm: Tm): ?Tm {
-    return this.type.unify(tm.getType()) == null ?
-      null :
-      tm;
+  slots() {
+    throw new Error('Var.slots - unimplemented');
   }
 }

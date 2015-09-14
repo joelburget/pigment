@@ -10,36 +10,12 @@ export const MODULE_PRIVATE = 'module/MODULE_PRIVATE';
 type Visibility = MODULE_PUBLIC | MODULE_PRIVATE;
 
 
-export class ModuleState extends Record({
-  module: null,
-  mouseSelection: null,
-}, 'modulestate') {}
-
-
-// This is gross / tricky -- need this type to align with the export list
-// from the Module, which is implicit -- you need to look at only
-// definitions, and then only at the subset which are public.
-export class ModuleType extends Record({
-  contents: null // List<Ty>
-}, 'moduletype') {}
-
-
 var moduleShape = Record({
   name: null,     // string
   contents: null, // List<Note | Definition | Property | Example>
 }, 'module');
 
 export class Module extends moduleShape {
-  getType(): Tm {
-    const contents = this.contents
-    .filter(
-      item => item instanceof Definition && item.visibility === MODULE_PUBLIC
-    )
-    .map(item => item.getType());
-
-    return new ModuleType({ contents });
-  }
-
   evaluate(root: AbsRef, ctx: Context): EvaluationResult {
     throw new Error('unimplemented: Module.evaluate');
   }

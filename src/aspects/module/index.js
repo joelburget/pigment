@@ -1,3 +1,2 @@
-export { default as default } from './controller';
-export * from './view';
-export * from './transit';
+// export { * as data } from './controller';
+export { default as view } from './view';

@@ -5,4 +5,6 @@
 // primitives:
 // *
 
-import type { Label } from './record';
+import type { Label } from '../record';
+
+

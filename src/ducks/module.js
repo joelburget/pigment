@@ -1,10 +1,11 @@
+import transit from 'transit-js';
 import { List, Record } from 'immutable';
 import Immutable from 'immutable';
 
 import {
-  ModuleState, Module, Note, Definition, Property, Example,
+  Module, Note, Definition, Property, Example,
   MODULE_PUBLIC, MODULE_PRIVATE
-  } from './data';
+  } from '../aspects/module/data';
 
 // import { Var, Hole, Type } from '../theory/tm';
 // import { Lam, Arr, Binder } from '../theory/lambda';
@@ -18,6 +19,26 @@ const DEFINITION_RENAME = 'pigment/module/DEFINITION_RENAME';
 const EXPRESSION_MOUSE_CLICK = 'pigment/module/EXPRESSION_MOUSE_CLICK';
 const UPDATE_AT = 'pigment/module/UPDATE_AT';
 const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
+
+
+export class ModuleState extends Record({
+  module: null,
+  mouseSelection: null,
+}, 'modulestate') {}
+
+
+export const writeHandlers = [
+  ModuleState, transit.makeWriteHandler({
+    tag: () => 'modulestate',
+    rep: v => [v.module, v.mouseSelection],
+  }),
+];
+
+
+export const readHandlers = {
+  'modulestate': ([module, mouseSelection]) =>
+    new ModuleState({ module, mouseSelection }),
+};
 
 
 // const type = Type.singleton;

@@ -3,21 +3,11 @@ import type { List } from 'immutable';
 
 import Var from './Expression/Name';
 import Hole from './Expression/Hole';
-import { Lambda, Arr } from './Expression/Lambda';
+import Lambda from '../aspects/lambda/view';
+import Application from '../aspects/application/view';
 // import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow } from
 
 import styles from './Expression.scss';
-
-
-class Application extends Component {
-  render() {
-    return (
-      <div>
-        {this.props.children}
-      </div>
-    );
-  }
-}
 
 
 class Type extends Component {
@@ -58,7 +48,7 @@ export default class Expression extends Component {
 
       App: Application,
       Lam: Lambda,
-      Arr: Arr,
+      // Arr: Arr,
 
       // label: Label,
       // rec: Rec,
