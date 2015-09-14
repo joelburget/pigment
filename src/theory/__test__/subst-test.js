@@ -2,12 +2,12 @@ import expect from 'expect';
 
 import { Type, Var } from '../tm';
 import { mkSuccess, mkStuck, bind } from '../evaluation';
-import { Lam, App, Binder } from '../lambda';
-import { empty as emptyCtx } from '../context';
 import { mkRel, mkAbs } from '../ref';
+import Lam from '../../aspects/lambda/data';
+import App from '../../aspects/application/data';
 
-import { id, k } from '../../../test/examples';
-import expectImmutableIs from '../../../test/expectImmutableIs';
+import { id, k } from '../../testutil/examples';
+import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 
 describe('lambda', () => {
@@ -35,7 +35,9 @@ describe('lambda', () => {
     expectImmutableIs(
       id.subst(mkAbs(), mkRel('binder'), type),
       new Lam(
-        new Binder({ name: 'x', type }),
+        'x',
+        type,
+        type,
         type
       )
     );
@@ -52,11 +54,15 @@ describe('lambda', () => {
     expectImmutableIs(
       k.subst(mkAbs(), mkRel('binder'), type),
       new Lam(
-        new Binder({ name: 'x', type }),
+        'x',
+        type,
         new Lam(
-          new Binder({ name: 'y', type }),
+          'y',
+          type,
+          type,
           type
-        )
+        ),
+        type
       )
     );
 
@@ -64,11 +70,15 @@ describe('lambda', () => {
     expectImmutableIs(
       k.subst(mkAbs(), mkAbs('binder'), type),
       new Lam(
-        new Binder({ name: 'x', type }),
+        'x',
+        type,
         new Lam(
-          new Binder({ name: 'y', type }),
+          'y',
+          type,
+          type,
           type
-        )
+        ),
+        type,
       )
     );
 

@@ -3,8 +3,9 @@ import { List } from 'immutable';
 
 import { Type, Hole, Var } from '../tm';
 import { mkRel } from '../ref';
+import unify from '../unify';
 
-import expectImmutableIs from '../../../test/expectImmutableIs';
+import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 
 describe('unification', () => {

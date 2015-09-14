@@ -1,14 +1,14 @@
 import expect from 'expect';
 import { List } from 'immutable';
 
-import { Type, Var } from '../tm';
-import { mkSuccess, mkStuck, bind } from '../evaluation';
-import { Lam, App } from '../lambda';
-import { empty as emptyCtx } from '../context';
-import { mkRel, mkAbs } from '../ref';
+import { Type, Var } from '../../theory/tm';
+import { mkSuccess, mkStuck, bind } from '../../theory/evaluation';
+import { mkRel, mkAbs } from '../../theory/ref';
+import Lam from './data';
+import App from '../application/data';
 
-import { id, k } from '../../../test/examples';
-import expectImmutableIs from '../../../test/expectImmutableIs';
+import { id, k } from '../../testutil/examples';
+import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 
 describe('lambda', () => {
@@ -21,7 +21,7 @@ describe('lambda', () => {
     );
 
     expectImmutableIs(
-      app.evaluate(mkAbs(), emptyCtx),
+      app.evaluate([mkAbs()]),
       mkSuccess(type)
     );
   });
@@ -36,7 +36,7 @@ describe('lambda', () => {
     );
 
     expectImmutableIs(
-      app.evaluate(mkAbs(), emptyCtx),
+      app.evaluate([mkAbs()]),
       mkSuccess(type)
     );
   });

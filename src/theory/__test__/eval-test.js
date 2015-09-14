@@ -3,31 +3,35 @@ import { Map, List } from 'immutable';
 
 import { Type, Hole, Var } from '../tm';
 import { mkSuccess, mkStuck } from '../evaluation';
-import { Lam, Arr, App, Binder } from '../lambda';
-import { empty as emptyCtx } from '../context';
 import { mkAbs, mkRel } from '../ref';
+
+import Lam from '../../aspects/lambda/data';
+import App from '../../aspects/application/data';
 
 describe('eval', () => {
   const type = Type.singleton;
 
   it('evaluates type', () => {
     // start with an empty context;
-    expect(type.evaluate(mkAbs(), emptyCtx))
+    expect(type.evaluate([mkAbs()]))
       .toEqual(mkSuccess(type));
   });
 
   it('gets stuck on holes', () => {
     const hole = new Hole('hole', type);
-    expect(hole.evaluate(mkAbs(), emptyCtx))
+    expect(hole.evaluate([mkAbs()]))
       .toEqual(mkStuck(hole));
 
     const returningHole = new App(
-      new Lam(new Binder({ name: null, type }),
-              hole
-             ),
+      new Lam(
+        null,
+        type,
+        hole,
+        type
+      ),
       type
     );
-    expect(returningHole.evaluate(mkAbs(), emptyCtx))
+    expect(returningHole.evaluate([mkAbs()]))
       .toEqual(mkStuck(hole));
   });
 
@@ -37,9 +41,12 @@ describe('eval', () => {
 
     it('works with var', () => {
       const tm = new App(
-        new Lam(new Binder({ name: 'x', type }),
-                new Var(mkRel('..', 'binder'))
-               ),
+        new Lam(
+          'x',
+          type,
+          type,
+          type,
+        ),
         type
       );
 
@@ -50,8 +57,10 @@ describe('eval', () => {
     it('works with wildcards', () => {
       const tm = new App(
         new Lam(
-          new Binder({ type }),
+          null,
           type,
+          type,
+          type
         ),
         type
       );

@@ -1,8 +1,9 @@
 import { Record } from 'immutable';
 
-import { Tm, Type } from './tm';
-import { mkSuccess } from './evaluation';
-import { Arr, App } from './lambda';
+import { Tm, Type } from '../theory/tm';
+import { mkSuccess } from '../theory/evaluation';
+import Arr from './lambda/data';
+import App from './application/data';
 
 export class External extends Record({ external: null, type: null }, 'external') {
 

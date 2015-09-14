@@ -3,7 +3,7 @@ import { List } from 'immutable';
 
 import { mkRel, mkAbs, RelRef, AbsRef } from '../ref';
 
-import expectImmutableIs from '../../../test/expectImmutableIs';
+import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 
 describe('ref', () => {

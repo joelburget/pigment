@@ -1,9 +1,8 @@
 import expect from 'expect';
 
-import { Type, EVar } from '../tm';
-import { Lam, Arr } from '../lambda';
+import { Type } from '../tm';
+import { Lam } from '../../aspects/lambda/data';
 // import { Sigma } from '../tuple';
-import { empty as emptyCtx } from '../context';
 
 describe('typelevels', () => {
   const type = Type.singleton;
@@ -12,13 +11,9 @@ describe('typelevels', () => {
     expect(type.getType()).toBe(type);
   });
 
-  it('knows arrs', () => {
-    expect(new Arr(type, type).getType()).toBe(type);
-  });
-
   // it('knows sigmas', () => {
   //   // XXX what should the second part of a sigma be? is it a lambda?
-  //   expect(new Sigma(type, new Lam('x', type)).getType(emptyCtx))
+  //   expect(new Sigma(type, new Lam('x', type)).getType([]))
   //     .toBe(type);
   // });
 });

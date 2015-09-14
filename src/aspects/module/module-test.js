@@ -1,10 +1,10 @@
 import expect from 'expect';
 import { List } from 'immutable';
 
-import { Module, Note, Definition, Property, Example } from '../module';
+import { Module, Note, Definition, Property, Example } from '../module/data';
 
-import expectImmutableIs from '../../../test/expectImmutableIs';
-import { id } from '../../../test/examples';
+import expectImmutableIs from '../../testutil/expectImmutableIs';
+import { id } from '../../testutil/examples';
 
 
 const testModule = new Module({
