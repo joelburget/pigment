@@ -14,6 +14,7 @@ import { isPathHighlighted,
          load as loadWidgets,
          findCompletions,
          moveItem,
+         addNew,
          renameDefinition } from '../ducks/module';
 
 
@@ -41,6 +42,7 @@ export default class ModuleContainer {
     findCompletions: PropTypes.func.isRequired,
     renameDefinition: PropTypes.func.isRequired,
     moveItem: PropTypes.func.isRequired,
+    addNew: PropTypes.func.isRequired,
   };
 
   getChildContext() {
@@ -64,6 +66,7 @@ export default class ModuleContainer {
       // moveItem: (beforeIx, afterIx) => this.props.dispatch(
       //   moveItem(beforeIx, afterIx)
       // ),
+      addNew: () => this.props.dispatch(addNew()),
     };
   }
 

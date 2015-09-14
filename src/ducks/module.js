@@ -19,6 +19,7 @@ const DEFINITION_RENAME = 'pigment/module/DEFINITION_RENAME';
 const EXPRESSION_MOUSE_CLICK = 'pigment/module/EXPRESSION_MOUSE_CLICK';
 const UPDATE_AT = 'pigment/module/UPDATE_AT';
 const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
+const ADD_NEW = 'pigment/module/ADD_NEW';
 
 
 export class ModuleState extends Record({
@@ -140,6 +141,11 @@ export default function reducer(state = initialState, action = {}) {
       //     .splice(afterIx, 0, item);
       // });
 
+    case ADD_NEW:
+      return state.updateIn(['module', 'contents'], contents =>
+        contents.push(new Note({ name: 'here', defn: 'here' }))
+      );
+
     default:
       return state;
   }
@@ -246,6 +252,10 @@ export function updateAt(ref: AbsRef, update) {
     ref,
     update,
   };
+}
+
+export function addNew() {
+  return { type: ADD_NEW };
 }
 
 export function load() {

@@ -232,6 +232,7 @@ export default class Module extends Component {
 
   static contextTypes = {
     moveItem: PropTypes.func.isRequired,
+    addNew: PropTypes.func.isRequired,
   };
 
   static propTypes = {
@@ -271,7 +272,11 @@ export default class Module extends Component {
           { contents.map(::this.itemDispatch).toJS() }
         </div>
         <div>
-          <button className="mdl-button" style={{ padding: 0 }}>Add New</button>
+          <button onClick={this.context.addNew}
+                  className="mdl-button"
+                  style={{ padding: 0 }}>
+            Add New
+          </button>
         </div>
       </div>
     );
