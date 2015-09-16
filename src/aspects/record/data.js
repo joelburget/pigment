@@ -2,7 +2,7 @@
 
 import { Record, OrderedMap } from 'immutable';
 
-import { Type } from '../../theory/tm';
+import { INTRO, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 
@@ -46,6 +46,8 @@ export default class Rec extends recordShape {
     // TODO evaluate all children?
     return mkSuccess(this);
   }
+
+  static form = INTRO;
 }
 
 register('rec', Rec);

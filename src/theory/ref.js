@@ -4,6 +4,7 @@
 
 import { List, Record, is } from 'immutable';
 
+// TODO come to terms with the fact that these '..'s are de bruijn indices
 export class RelRef extends Record({ path: null }) {
   normalize(): RelRef {
     var stack = [];

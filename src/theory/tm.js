@@ -2,12 +2,20 @@
 //
 // TODO:
 // * source positions? how does this relate to names?
+import invariant from 'invariant';
 import { List, Set, Record, Iterable } from 'immutable';
 
 import { mkStuck, mkSuccess } from './evaluation';
+import { register } from './registry';
 
 import type { EvaluationResult } from './evaluation';
 import type { Ref, AbsRef } from './ref';
+
+
+export var VARIABLE = 'VARIABLE';
+export var INTRO = 'INTRO';
+export var ELIM = 'ELIM';
+export type IntroElim = INTRO | ELIM;
 
 
 export type Tm = {
@@ -21,6 +29,16 @@ export type Tm = {
   getType: () => Tm;
 
   slots: () => Iterable<K, V>;
+
+  // static form: IntroElim;
+
+  // static typeClass
+  // - the class of the type this inhabits!
+  // - INTRO *only*
+
+  // static fillHole(type: Tm) => Tm
+  // - return an instance that fills this type of hole
+  // - INTRO *only*
 };
 
 
@@ -45,7 +63,22 @@ export class Type {
   slots(): Iterable<K, V> {
     return Iterable();
   }
+
+  static typeClass = Type;
+
+  static fillHole(type: Tm): Type {
+    invariant(
+      type === Type.singleton,
+      'Type asked to fill a hole of type other than Type'
+    );
+
+    return Type.singleton;
+  }
+
+  static form = INTRO;
 }
+
+register('type', Type);
 
 
 var holeShape = Record({
@@ -70,6 +103,8 @@ export class Hole extends holeShape {
   slots() {
     throw new Error('Hole.slots - unimplemented');
   }
+
+  // static form = INTRO;
 }
 
 
@@ -102,4 +137,6 @@ export class Var extends varShape {
   slots() {
     throw new Error('Var.slots - unimplemented');
   }
+
+  // static form =
 }

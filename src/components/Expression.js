@@ -60,6 +60,9 @@ export default class Expression extends Component {
     };
 
     // gross -- grabbing the name in this way
+    if (this.props.children == undefined) {
+      debugger;
+    }
     const name = this.props.children.constructor.name;
 
     const props = {

@@ -2,6 +2,8 @@
 
 import { Record } from 'immutable';
 
+import { register } from '../../theory/registry';
+
 
 export const MODULE_PUBLIC = 'module/MODULE_PUBLIC';
 export const MODULE_PRIVATE = 'module/MODULE_PRIVATE';
@@ -13,6 +15,7 @@ type Visibility = MODULE_PUBLIC | MODULE_PRIVATE;
 var moduleShape = Record({
   name: null,     // string
   contents: null, // List<Note | Definition | Property | Example>
+  scratch: null,  // Note | Definition | Property | Example
 }, 'module');
 
 export class Module extends moduleShape {
@@ -49,3 +52,5 @@ export class Example extends Record({
   name: null, // string;
   defn: null, // Tm;
 }, 'example') {}
+
+register('module', Module);

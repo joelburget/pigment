@@ -23,6 +23,7 @@ class NameContextMenu extends Component {
   }
 
   // replace this instance of the variable with a hole of the same type
+  // TODO this logic should not be here!
   handleUnbind() {
     const { name, path } = this.props;
     this.context.updateAt(

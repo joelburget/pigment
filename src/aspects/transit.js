@@ -86,7 +86,7 @@ export const writeHandlers = [
   // module
   Module, transit.makeWriteHandler({
     tag: () => 'module',
-    rep: v => [v.name, v.contents],
+    rep: v => [v.name, v.contents, v.scratch],
   }),
   Note, transit.makeWriteHandler({
     tag: () => 'note',
@@ -134,7 +134,8 @@ export const readHandlers = {
   // 'restrictrow': rep => new RestrictRow(rep[0], rep[1], rep[2]),
 
   // module
-  'module': ([name, contents]) => new Module({ name, contents }),
+  'module': ([name, contents, scratch]) =>
+    new Module({ name, contents, scratch }),
   'note': ([name, defn]) => new Note({ name, defn }),
   'definition': ([name, defn, visibility]) =>
     new Definition({ name, defn, visibility }),

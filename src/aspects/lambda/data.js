@@ -1,8 +1,9 @@
 // @flow
 
+import invariant from 'invariant';
 import { Record, List } from 'immutable';
 
-import { Type } from '../../theory/tm';
+import { INTRO, Type } from '../../theory/tm';
 import { mkRel } from '../../theory/ref';
 import { register } from '../../theory/registry';
 
@@ -56,6 +57,19 @@ export default class Lam extends lamShape {
     // TODO lambda doesn't have codomain yet.
     return List([ this.domain, this.codomain ]);
   }
+
+  static fillHole(type: Tm): Lambda {
+    // invariant(type instanceof
+    throw new Error('unimplemented - Lambda.fillHole');
+    return new Lambda(
+      name,
+      domain,
+      body,
+      codomain
+    );
+  }
+
+  static form = INTRO;
 
   // instantiate(values: List<?Tm>): Tm {
   //   var body: Tm = this.body;

@@ -1,16 +1,19 @@
 import React, { Component, PropTypes } from 'react';
-import { List } from 'immutable';
+import Immutable, { List } from 'immutable';
 import { DragSource, DropTarget } from 'react-dnd';
+import RadioButtonGroup from 'material-ui/lib/radio-button-group';
+import RadioButton from 'material-ui/lib/radio-button';
+// temporarily removed for DropDownMenu
+// import SelectField from 'material-ui/lib/select-field';
+import DropDownMenu from 'material-ui/lib/drop-down-menu';
+import TextField from 'material-ui/lib/text-field';
 
 import ThemeManager from '../../ThemeManager';
 import Expression from '../../components/Expression';
+import { Type, Hole } from '../../theory/tm';
 
-import { Definition as DuckDefinition,
-         Note as DuckNote,
-         Property as DuckProperty,
-         Example as DuckExample,
-         MODULE_PUBLIC,
-         MODULE_PRIVATE } from './data';
+import * as data from './data';
+import { MODULE_PUBLIC, MODULE_PRIVATE } from './data';
 import styles from './style.scss';
 
 
@@ -19,19 +22,19 @@ const ITEM_TYPE = 'ITEM_TYPE';
 
 const itemSource = {
   beginDrag(props) {
-    // console.log('source', props.index);
-    return { index: props.index };
+    // console.log('source', props.path);
+    return { path: props.path };
   }
 };
 
 
 const itemTarget = {
   hover(props, monitor) {
-    const draggedIx = monitor.getItem().index;
+    const draggedIx = monitor.getItem().path;
 
-    // console.log('target', props.index, draggedIx);
-    if (draggedIx !== props.index) {
-      props.moveItem(draggedIx, props.index);
+    // console.log('target', props.path, draggedIx);
+    if (!Immutable.is(draggedIx, props.path)) {
+      props.moveItem(draggedIx, props.path);
     }
   }
 };
@@ -67,17 +70,17 @@ class Draggable {
 
 class Example extends Component {
   render() {
-    const { item, index, moveItem } = this.props;
+    const { item, path, moveItem } = this.props;
     const { name, defn } = item;
 
     return (
-      <Draggable moveItem={moveItem} index={index}>
+      <Draggable moveItem={moveItem} path={path}>
         <div className={styles.itemLabel}>
           <div className={styles.itemType}>EXAMPLE</div>
-          <ItemTitle value={name} index={index} />
+          <ItemTitle value={name} path={path} />
         </div>
         <div className={styles.itemContent}>
-          <Expression path={List(['module', 'contents', index, 'defn'])}>
+          <Expression path={path.push('defn')}>
             {defn}
           </Expression>
         </div>
@@ -93,17 +96,17 @@ class Example extends Component {
 // customized in the future.
 class Property extends Component {
   render() {
-    const { item, index, moveItem } = this.props;
+    const { item, path, moveItem } = this.props;
     const { name, defn } = item;
 
     return (
-      <Draggable moveItem={moveItem} index={index}>
+      <Draggable moveItem={moveItem} path={path}>
         <div className={styles.itemLabel}>
           <div className={styles.itemType}>EXAMPLE</div>
-          <ItemTitle value={name} index={index} />
+          <ItemTitle value={name} path={path} />
         </div>
         <div className={styles.itemContent}>
-          <Expression path={List(['module', 'contents', index, 'defn'])}>
+          <Expression path={path.push('defn')}>
             {defn}
           </Expression>
         </div>
@@ -115,14 +118,14 @@ class Property extends Component {
 
 class Note extends Component {
   render() {
-    const { item, index, moveItem } = this.props;
+    const { item, path, moveItem } = this.props;
     const { name, defn } = item;
 
     return (
-      <Draggable moveItem={moveItem} index={index}>
+      <Draggable moveItem={moveItem} path={path}>
         <div className={styles.itemLabel}>
           <div className={styles.itemType}>NOTE</div>
-          <ItemTitle value={name} index={index} />
+          <ItemTitle value={name} path={path} />
         </div>
         <div className={styles.itemContent}>{defn}</div>
       </Draggable>
@@ -134,7 +137,7 @@ class Note extends Component {
 class ItemTitle extends Component {
   static propTypes = {
     value: PropTypes.string.isRequired,
-    index: PropTypes.number.isRequired,
+    // path: PropTypes.number.isRequired,
   };
 
   static contextTypes = {
@@ -177,7 +180,7 @@ class ItemTitle extends Component {
 
   returnToStatic() {
     this.context.renameDefinition(
-      this.props.index,
+      this.props.path,
       React.findDOMNode(this.refs.input).value,
     );
     this.setState({ editing: false });
@@ -193,7 +196,7 @@ class ItemTitle extends Component {
 
 class Definition extends Component {
   render() {
-    const { item, index, moveItem } = this.props;
+    const { item, path, moveItem } = this.props;
     const { name, defn, visibility } = item;
 
     // TODO put this somewhere useful
@@ -202,14 +205,14 @@ class Definition extends Component {
       'private';
 
     return (
-      <Draggable moveItem={moveItem} index={index}>
+      <Draggable moveItem={moveItem} path={path}>
         <div className={styles.itemLabel}>
           <div className={styles.itemType}>DEFINITION</div>
-          <ItemTitle value={name} index={index} />
+          <ItemTitle value={name} path={path} />
           <div>{visibilityElem}</div>
         </div>
         <div className={styles.itemContent}>
-          <Expression path={List(['module', 'contents', index, 'defn'])}>
+          <Expression path={path.push('defn')}>
             {defn}
           </Expression>
         </div>
@@ -221,64 +224,161 @@ class Definition extends Component {
 
 export default class Module extends Component {
   static childContextTypes = {
-    muiTheme: React.PropTypes.object
+    muiTheme: React.PropTypes.object,
   };
 
   getChildContext() {
     return {
-      muiTheme: ThemeManager.getCurrentTheme()
+      muiTheme: ThemeManager.getCurrentTheme(),
     };
   }
-
-  static contextTypes = {
-    moveItem: PropTypes.func.isRequired,
-    addNew: PropTypes.func.isRequired,
-  };
 
   static propTypes = {
     contents: PropTypes.object.isRequired,
+    name: PropTypes.string.isRequired,
+    scratch: PropTypes.object.isRequired,
   };
 
-  // TODO rename away from definitions.
-  // items? too generic
-  itemDispatch(item, index) {
-    const { expressionMouseClick } = this.props;
-    const { moveItem, renameDefinition } = this.context;
-    const props = {
-      item, renameDefinition, index, expressionMouseClick, moveItem
-    };
-
-    var cls;
-    if (item instanceof DuckDefinition) {
-      cls = Definition;
-    } else if (item instanceof DuckExample) {
-      cls = Example;
-    } else if (item instanceof DuckProperty) {
-      cls = Property;
-    } else if (item instanceof DuckNote) {
-      cls = Note;
-    }
-
-    return React.createElement(cls, props);
-  }
-
   render() {
-    const { contents, name } = this.props;
+    const { contents, name, scratch } = this.props;
+    const renderedItems = contents
+      .map((item, index) =>
+           <Item item={item}
+                 path={List(['module', 'contents', index])} />
+      )
+      .toJS();
 
     return (
       <div className={styles.module}>
         <h6>MODULE {name}</h6>
         <div className={styles.moduleTable}>
-          { contents.map(::this.itemDispatch).toJS() }
+          {renderedItems}
         </div>
         <div>
-          <button onClick={this.context.addNew}
-                  className="mdl-button"
-                  style={{ padding: 0 }}>
-            Add New
-          </button>
+          <NewItem scratch={scratch} />
         </div>
       </div>
     );
+  }
+}
+
+
+class Item extends Component {
+  static contextTypes = {
+    moveItem: PropTypes.func.isRequired,
+    renameDefinition: PropTypes.func.isRequired,
+    expressionMouseClick: PropTypes.func.isRequired,
+  };
+
+  render() {
+    const { item, path } = this.props;
+    const { moveItem, renameDefinition, expressionMouseClick } = this.context;
+    const props = {
+      item, renameDefinition, path, expressionMouseClick, moveItem
+    };
+
+    var cls;
+    if (item instanceof data.Definition) {
+      cls = Definition;
+    } else if (item instanceof data.Example) {
+      cls = Example;
+    } else if (item instanceof data.Property) {
+      cls = Property;
+    } else if (item instanceof data.Note) {
+      cls = Note;
+    }
+
+    return React.createElement(cls, props);
+  }
+}
+
+
+class NewItem extends Component {
+  static contextTypes = {
+    addNew: PropTypes.func.isRequired,
+  };
+
+  // bleh:
+  // * definition
+  //   - visibility
+  //   - defn: Tm
+  // * note, property, example
+  //   - defn: string
+  state = {
+    type: 'definition',
+    visibility: 'public',
+  };
+
+  render() {
+    const itemTypes = [
+      { text: 'Definition', payload: 'definition' },
+      { text: 'Note',       payload: 'note', disabled: true },
+      { text: 'Property',   payload: 'property', disabled: true },
+      { text: 'Example',    payload: 'example', disabled: true },
+    ];
+
+    const visibilities = [
+      { text: 'public', payload: MODULE_PUBLIC },
+      { text: 'private', payload: MODULE_PRIVATE },
+    ];
+
+    return (
+      <div className={styles.newItem}>
+
+        <div>
+          New
+          <DropDownMenu menuItems={itemTypes}
+                        value={this.state.type}
+                        style={{ top: 16 }}
+                        onChange={::this.handleSelectType} />
+        </div>
+
+        <div>
+          Name: <TextField defaultValue='new item' ref='name' />
+        </div>
+
+        <div>
+          Visibility: <DropDownMenu menuItems={visibilities}
+                                    value={this.state.visibility}
+                                    style={{ top: 16 }}
+                                    onChange={::this.handleSelectVisibility} />
+        </div>
+
+        <div className='mdl-textfield'>
+          <Item item={this.props.scratch}
+                path={List(['module', 'scratch'])} />
+          {/*<textarea className='mdl-textfield__input' />*/}
+        </div>
+
+        <div>
+          <button onClick={::this.handleCreate}
+                  className='mdl-button'
+                  style={{ padding: 0 }}>
+            CREATE
+          </button>
+        </div>
+
+      </div>
+    );
+  }
+
+  handleSelectType(event) {
+    this.setState({ type: event.target.value });
+  }
+
+  handleSelectVisibility(event) {
+    this.setState({ visibility: event.target.value });
+  }
+
+  handleCreate() {
+    const name = this.refs.name.getValue();
+    const { type, visibility } = this.state;
+
+    this.context.addNew({
+      type,
+      name,
+      visibility,
+    });
+    // this.context.addNew(...);
   }
 }

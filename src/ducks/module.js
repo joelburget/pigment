@@ -7,19 +7,23 @@ import {
   MODULE_PUBLIC, MODULE_PRIVATE
   } from '../aspects/module/data';
 
+import Lam from '../aspects/lambda/data';
+import { read as readRegistry } from '../theory/registry';
+import { VARIABLE, INTRO, ELIM, Hole, Type } from '../theory/tm';
+
 // import { Var, Hole, Type } from '../theory/tm';
-// import { Lam, Arr, Binder } from '../theory/lambda';
 // import { Rec, Row } from '../theory/record';
 // import { mkRel, mkAbs } from '../theory/ref';
 
-import type { Ref } from '../../theory/ref';
-import type { Tm } from '../../theory/tm';
+import type { Ref } from '../theory/ref';
+import type { Tm } from '../theory/tm';
 
 const DEFINITION_RENAME = 'pigment/module/DEFINITION_RENAME';
 const EXPRESSION_MOUSE_CLICK = 'pigment/module/EXPRESSION_MOUSE_CLICK';
 const UPDATE_AT = 'pigment/module/UPDATE_AT';
 const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
 const ADD_NEW = 'pigment/module/ADD_NEW';
+const FILL_HOLE = 'pigment/module/FILL_HOLE';
 
 
 export class ModuleState extends Record({
@@ -106,10 +110,21 @@ const contents = Immutable.fromJS([
 ]);
 
 
+const scratch = new Definition({
+  name: 'new definition',
+  defn: new Hole(
+    '_',
+    Type.singleton
+  ),
+  visibility: MODULE_PUBLIC,
+});
+
+
 const initialState = new ModuleState({
   module: new Module({
     name: 'example module',
     contents,
+    scratch,
   }),
   mouseSelection: null,
 });
@@ -118,9 +133,12 @@ const initialState = new ModuleState({
 export default function reducer(state = initialState, action = {}) {
   switch (action.type) {
     case DEFINITION_RENAME:
-      const { index, newName } = action;
+      {
+        const { path, newName } = action;
 
-      return state.setIn(['module', 'contents', index, 'name'], newName);
+        // eg ['module', 'contents', index, 'name']
+        return state.setIn(path.push('name'), newName);
+      }
 
     case EXPRESSION_MOUSE_CLICK:
       return state.set('mouseSelection', action.path);
@@ -142,9 +160,37 @@ export default function reducer(state = initialState, action = {}) {
       // });
 
     case ADD_NEW:
-      return state.updateIn(['module', 'contents'], contents =>
-        contents.push(new Note({ name: 'here', defn: 'here' }))
-      );
+      // TODO this only applies to definitions
+      const { type, name, visibility } = action.payload;
+
+      return state
+        .updateIn(['module', 'contents'],
+                  contents => contents.push(state.module.scratch))
+        .setIn(['module', 'scratch'], scratch);
+
+    case FILL_HOLE:
+      {
+        const { path, itemType, category, item } = action;
+
+        // the item we're going to fill the hole with. not quite the same as the
+        // item we get from the action because when it's an intro or elimination
+        // form that item is a class
+        var fillItem;
+
+        if (category === VARIABLE) {
+          fillItem = item;
+        } else if (category === INTRO) {
+          // need a default value to fill the hole with
+          // - we need a protocol for defaults
+
+          // in this case item is class
+          fillItem = item.fillHole(itemType);
+        } else if (category === ELIM) {
+          fillItem = item.fillHole(itemType);
+        }
+
+        return state.setIn(path, fillItem);
+      }
 
     default:
       return state;
@@ -193,25 +239,33 @@ export function findCompletions(state: ModuleState,
   // walk from the root to the ref, collecting matching binders
   var currentLoc = state;
   ref.path.forEach(piece => {
-    console.log('piece', piece);
     currentLoc = currentLoc.get(piece);
 
     if (currentLoc instanceof Lam) {
-      console.log('islam');
       var binder = currentLoc.binder;
-      console.log(binder.type, type);
       if (binder.type.unify(type) != null) {
-        console.log('unifies');
-        console.log(binder.name);
         if (binder.name.startsWith(prefix)) {
-          console.log('isprefix');
           matches.push(binder);
         }
       }
     }
   });
 
-  return matches;
+  // find forms that could match this thing. ~using slots!!~
+  // scratch that slots thing... really interesting that this uses almost no
+  // information about the actual hole we're trying to fill
+  const intro = readRegistry()
+    .filter(cls => cls === type.constructor)
+    .toArray();
+  const elims = readRegistry()
+    .filter(cls => cls.form === ELIM)
+    .toArray();
+
+  return {
+    variables: matches,
+    intros: intro, // invariant -- intros should have length 1
+    elims,
+  };
 }
 
 
@@ -229,10 +283,10 @@ export function moveItem(beforeIx: number, afterIx: number) {
 }
 
 
-export function renameDefinition(index, newName) {
+export function renameDefinition(path, newName) {
   return {
     type: DEFINITION_RENAME,
-    index,
+    path,
     newName,
   };
 }
@@ -254,8 +308,18 @@ export function updateAt(ref: AbsRef, update) {
   };
 }
 
-export function addNew() {
-  return { type: ADD_NEW };
+export function addNew(payload) {
+  return { type: ADD_NEW, payload };
+}
+
+export function fillHole(path, itemType, category, item) {
+  return {
+    type: FILL_HOLE,
+    path,
+    itemType,
+    category,
+    item,
+  }
 }
 
 export function load() {

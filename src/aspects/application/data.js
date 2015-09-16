@@ -2,6 +2,7 @@
 
 import { Record, List } from 'immutable';
 
+import { ELIM, Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
 import { bind } from '../../theory/evaluation';
 
@@ -44,6 +45,21 @@ export default class App extends appShape {
   slots(): Iterable<K, V> {
     return List([ this.type ]);
   }
+
+  static fillHole(type: Tm): App {
+    // how to quantify this variable so it's the same in both places?
+    // future plan: instantiate here with a quantifier, its context menu allows
+    // you to instantiate it and remove the quantifier.
+    const x = Type.singleton;
+
+    return new App(
+      new Hole('f', XXX /* this needs to be an arrow... */),
+      new Hole('x', x),
+      type
+    );
+  }
+
+  static form = ELIM;
 }
 
 register('app', App);

@@ -15,6 +15,7 @@ import { isPathHighlighted,
          findCompletions,
          moveItem,
          addNew,
+         fillHole,
          renameDefinition } from '../ducks/module';
 
 
@@ -26,6 +27,7 @@ const widgetActions = { expressionMouseClick, updateAt };
   state: state.module,
   contents: state.module.module.contents,
   name: state.module.module.name,
+  scratch: state.module.module.scratch,
   mouseSelection: state.module.mouseSelection,
 }))
 @DragDropContext(HTML5Backend)
@@ -43,6 +45,7 @@ export default class ModuleContainer {
     renameDefinition: PropTypes.func.isRequired,
     moveItem: PropTypes.func.isRequired,
     addNew: PropTypes.func.isRequired,
+    fillHole: PropTypes.func.isRequired,
   };
 
   getChildContext() {
@@ -55,9 +58,8 @@ export default class ModuleContainer {
       expressionMouseClick: path => this.props.dispatch(
         expressionMouseClick(path)
       ),
-      findCompletions: (type, ref, prefix) => this.props.dispatch(
-        findCompletions(this.props.state, type, ref, prefix)
-      ),
+      findCompletions: (type, ref, prefix) =>
+        findCompletions(this.props.state, type, ref, prefix),
       renameDefinition: (index, value) => this.props.dispatch(
         renameDefinition(index, value)
       ),
@@ -66,7 +68,10 @@ export default class ModuleContainer {
       // moveItem: (beforeIx, afterIx) => this.props.dispatch(
       //   moveItem(beforeIx, afterIx)
       // ),
-      addNew: () => this.props.dispatch(addNew()),
+      addNew: payload => this.props.dispatch(addNew(payload)),
+      fillHole: (path, type, category, item) => this.props.dispatch(
+        fillHole(path, type, category, item)
+      ),
     };
   }
 
@@ -77,9 +82,10 @@ export default class ModuleContainer {
   }
 
   render() {
-    const { dispatch, contents, name } = this.props;
+    const { dispatch, contents, name, scratch } = this.props;
     return <Module {...bindActionCreators(widgetActions, dispatch)}
                    contents={contents}
-                   name={name} />;
+                   name={name}
+                   scratch={scratch} />;
   }
 }

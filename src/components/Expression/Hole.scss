@@ -1,23 +1,46 @@
+$yellow: #FCF474;
+$gray: #ddd;
+
 .hole {
+    padding: 0 5px;
+    display: flex;
+    flex-direction: row;
+
     input {
-        background-color: rgb(255, 195, 158);
+        background-color: $yellow;
+        // background-color: rgb(255, 195, 158);
         border: none;
         width: 50px;
-        padding: 0 5px;
+        padding: 4px 5px;
+        outline: none;
     }
-    padding: 2px 5px;
 
-    .completions {
-        position: absolute;
-        display: flex;
-        flex-direction: column;
-
-        color: white;
-        background-color: #2A2F3A;
+    // This is gross -- target the autocomplete overlay so it appears above
+    // other page elements.
+    > div > div:nth-child(2) {
+        z-index: 1;
     }
+}
+
+.ascription {
+    margin: 0 2px;
+}
+
+.completionHl {
+    background-color: $yellow;
 }
 
 .completion {
     display: flex;
     flex-direction: row;
+}
+
+.completionCategory {
+    padding: 5px 10px;
+    border-right: 1px solid $gray;
+    width: 100px;
+}
+
+.completionName {
+    padding: 5px 10px;
 }
