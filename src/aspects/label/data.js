@@ -1,7 +1,7 @@
 // @flow
 
 import invariant from 'invariant';
-import { Record, OrderedMap } from 'immutable';
+import { Record } from 'immutable';
 
 import { INTRO, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';

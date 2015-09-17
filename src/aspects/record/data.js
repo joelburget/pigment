@@ -1,6 +1,6 @@
 // @flow
 
-import { Record, OrderedMap } from 'immutable';
+import { Record, Map } from 'immutable';
 
 import { INTRO, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
@@ -29,22 +29,30 @@ import type { AbsRef, Ref } from '../../theory/ref';
 
 var recordShape = Record({
   values: null,
-  type: null,
+  row: null,
 }, 'rec');
 
 export default class Rec extends recordShape {
 
-  constructor(values: OrderedMap<string, Tm>, type: Row) {
-    super({ values, type });
+  constructor(values: Map<string, Tm>, row: Row) {
+    super({ values, row });
   }
 
   getType(): Tm {
-    return this.type;
+    return this.row;
   }
 
   evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
     // TODO evaluate all children?
     return mkSuccess(this);
+  }
+
+  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+    throw new Error('unimplemented - Record.subst');
+  }
+
+  slots(): Iterable<K, V> {
+    throw new Error('unimplemented - Record.slots');
   }
 
   static form = INTRO;
