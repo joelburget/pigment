@@ -111,10 +111,17 @@ const contents = Immutable.fromJS([
 
 
 const scratch = new Definition({
+  // TODO: 'new definition' here, 'new item' in module/view
   name: 'new definition',
   defn: new Hole(
     '_',
-    Type.singleton
+
+    // The type of this thing is a hole!
+    // TODO: don't show the kind in the new definition prompt!
+    new Hole(
+      '_',
+      Type.singleton
+    )
   ),
   visibility: MODULE_PUBLIC,
 });
@@ -254,7 +261,7 @@ export function findCompletions(state: ModuleState,
   // find forms that could match this thing. ~using slots!!~
   // scratch that slots thing... really interesting that this uses almost no
   // information about the actual hole we're trying to fill
-  const intro = readRegistry()
+  const intros = readRegistry()
     .filter(cls => cls === type.constructor)
     .toArray();
   const elims = readRegistry()
@@ -263,7 +270,7 @@ export function findCompletions(state: ModuleState,
 
   return {
     variables: matches,
-    intros: intro, // invariant -- intros should have length 1
+    intros, // invariant -- intros should have length 1
     elims,
   };
 }
