@@ -30,8 +30,8 @@ export default class Hole extends Component {
 
     const completions = [].concat(
       variables.map(item => ({ category: VARIABLE, item })),
-      intros.map(item => ({ category: INTRO, item })),
-      elims.map(item => ({ category: ELIM, item }))
+      intros.map(item => ({ category: INTRO, item }))
+      // elims.map(item => ({ category: ELIM, item }))
     );
 
     return (
