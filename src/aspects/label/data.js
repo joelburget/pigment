@@ -13,7 +13,7 @@ var labelShape = Record({
   name: null,
 }, 'label');
 
-export class Label extends labelShape {
+export default class Label extends labelShape {
 
   constructor(name: string): void {
     super({ name });
@@ -27,15 +27,15 @@ export class Label extends labelShape {
     return mkSuccess(this);
   }
 
-  static typeClass = Type.singleton;
+  static typeClass = Type;
 
   static fillHole(type: Tm): Label {
     invariant(
-      type === LabelTy
-      'Type asked to fill a hole of type other than LabelTy'
+      type === Type.singleton,
+      'Label asked to fill a hole of type other than Type'
     );
 
-    return LabelTy.singleton;
+    return new Label('new label');
   }
 
   static form = INTRO;

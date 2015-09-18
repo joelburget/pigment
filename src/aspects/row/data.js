@@ -13,7 +13,7 @@ var rowShape = Record({
   entries: null, // Map<string, Tm>
 }, 'row');
 
-export class Row extends rowShape {
+export default class Row extends rowShape {
 
   // TODO maybe this should be an OrderedMap?
   constructor(entries: Map<string, Tm>): void {
@@ -28,16 +28,15 @@ export class Row extends rowShape {
     return mkSuccess(this);
   }
 
-  static typeClass = Type.singleton;
+  static typeClass = Type;
 
   static fillHole(type: Tm): Row {
-    // XXX hold up what's happening here?
     invariant(
-      type === Type.singleton
-      'Type asked to fill a hole of type other than RowTy'
+      type === Type.singleton,
+      'Row asked to fill a hole of type other than *'
     );
 
-    return RowTy.singleton;
+    return new Row(Map({}));
   }
 
   static form = INTRO;
