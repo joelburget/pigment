@@ -1,10 +1,12 @@
 // @flow
 
 import { Record, Map } from 'immutable';
+import invariant from 'invariant';
 
 import { INTRO, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
+import Row from '../row/data';
 
 import type { Tm } from '../../theory/tm';
 import type { EvaluationResult } from '../../theory/evaluation';
@@ -53,6 +55,21 @@ export default class Rec extends recordShape {
 
   slots(): Iterable<K, V> {
     throw new Error('unimplemented - Record.slots');
+  }
+
+  static typeClass = Row;
+
+  static fillHole(row: Row): Rec {
+    invariant(
+      row.constructor === Row,
+      'Rec asked to fill a hole of type other than Row'
+    );
+
+    const values = row.entries.map(
+      (type, name) => new Hole(name + ' hole', type)
+    );
+
+    return new Rec(values, row);
   }
 
   static form = INTRO;
