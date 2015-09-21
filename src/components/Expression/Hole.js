@@ -53,6 +53,7 @@ export default class Hole extends Component {
   renderCompletion({ category, item}, isHighlighted) {
     // TODO what is the right path here? tricky...
     const cls = isHighlighted ? styles.completionHl : '';
+
     return (
       <div className={styles.completion + ' ' + cls}>
         <div className={styles.completionCategory}>{category}</div>

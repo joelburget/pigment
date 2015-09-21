@@ -7,6 +7,11 @@ import {
   MODULE_PUBLIC, MODULE_PRIVATE
   } from '../aspects/module/data';
 
+// XXX only importing here for the side effect of these registering
+import Row from '../aspects/row/data';
+import Label from '../aspects/label/data';
+import Rec from '../aspects/record/data';
+
 import Lam from '../aspects/lambda/data';
 import { read as readRegistry } from '../theory/registry';
 import { VARIABLE, INTRO, ELIM, Hole, Type } from '../theory/tm';
@@ -24,6 +29,7 @@ const UPDATE_AT = 'pigment/module/UPDATE_AT';
 const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
 const ADD_NEW = 'pigment/module/ADD_NEW';
 const FILL_HOLE = 'pigment/module/FILL_HOLE';
+const CHILD_ACTION = 'pigment/module/CHILD_ACTION';
 
 
 export class ModuleState extends Record({
@@ -199,6 +205,12 @@ export default function reducer(state = initialState, action = {}) {
         return state.setIn(path, fillItem);
       }
 
+    case CHILD_ACTION:
+      {
+        const { path, subAction } = action;
+        return state.setIn(path, subAction);
+      }
+
     default:
       return state;
   }
@@ -262,7 +274,7 @@ export function findCompletions(state: ModuleState,
   // scratch that slots thing... really interesting that this uses almost no
   // information about the actual hole we're trying to fill
   const intros = readRegistry()
-    .filter(cls => cls === type.constructor)
+    .filter(cls => cls.typeClass === type.constructor)
     .toArray();
   const elims = readRegistry()
     .filter(cls => cls.form === ELIM)
@@ -326,7 +338,15 @@ export function fillHole(path, itemType, category, item) {
     itemType,
     category,
     item,
-  }
+  };
+}
+
+export function childAction(path, subAction) {
+  return {
+    type: CHILD_ACTION,
+    path,
+    subAction,
+  };
 }
 
 export function load() {

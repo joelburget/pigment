@@ -8,6 +8,10 @@ import RadioButton from 'material-ui/lib/radio-button';
 import DropDownMenu from 'material-ui/lib/drop-down-menu';
 import TextField from 'material-ui/lib/text-field';
 
+import MuiList from 'material-ui/lib/lists/list';
+import ListItem from 'material-ui/lib/lists/list-item';
+import ListDivider from 'material-ui/lib/lists/list-divider';
+
 import ThemeManager from '../../ThemeManager';
 import Expression from '../../components/Expression';
 import { Type, Hole } from '../../theory/tm';
@@ -62,7 +66,10 @@ class Draggable {
 
     return (( //connectDragSource(connectDropTarget(
       <div className={styles.definitionRow} style={{ opacity }}>
-        {this.props.children}
+        <div>
+          {this.props.children}
+        </div>
+        <div className={styles.rowSpacer} />
       </div>
     ));
   }
@@ -83,6 +90,9 @@ class Example extends Component {
           <Expression path={path.push('defn')}>
             {defn}
           </Expression>
+          <div>
+            <div className={styles.itemType}>OUTPUT</div>
+          </div>
         </div>
       </Draggable>
     );
@@ -109,6 +119,9 @@ class Property extends Component {
           <Expression path={path.push('defn')}>
             {defn}
           </Expression>
+          <div>
+            <div className={styles.itemType}>RESULT</div>
+          </div>
         </div>
       </Draggable>
     );
@@ -195,6 +208,10 @@ class ItemTitle extends Component {
 
 
 class Definition extends Component {
+  static contextTypes = {
+    dispatchAction: PropTypes.func.isRequired,
+  };
+
   render() {
     const { item, path, moveItem } = this.props;
     const { name, defn, visibility } = item;
@@ -204,17 +221,48 @@ class Definition extends Component {
       'public' :
       'private';
 
+    const dispatchAction = action =>
+      this.context.dispatchAction(path.push('defn'), action());
+
+    const menuItems = item.defn.actions().map(({ name, action }) =>
+      <ListItem primaryText={name} onClick={() => dispatchAction(action)} />
+    );
+
     return (
       <Draggable moveItem={moveItem} path={path}>
-        <div className={styles.itemLabel}>
-          <div className={styles.itemType}>DEFINITION</div>
-          <ItemTitle value={name} path={path} />
-          <div>{visibilityElem}</div>
-        </div>
-        <div className={styles.itemContent}>
-          <Expression path={path.push('defn')}>
-            {defn}
-          </Expression>
+        <div className={styles.itemRow}>
+
+          <div // display row
+            className={styles.rowContent}
+            >
+            <div className={styles.itemLabel}>
+              <div className={styles.itemType}>DEFINITION</div>
+              <ItemTitle value={name} path={path} />
+              <div>{visibilityElem}</div>
+            </div>
+            <div className={styles.itemContent}>
+              <Expression path={path.push('defn')}>
+                {defn}
+              </Expression>
+            </div>
+            <div className={styles.itemNotes}>
+              <div className={styles.itemType}>NOTES</div>
+              <TextField multiLine />
+            </div>
+          </div>
+
+          <div // edit row
+            >
+            <div className={styles.itemType}>EDIT</div>
+            {/*
+            <Expression path={path.push('type')}>
+            </Expression>
+            */}
+            <MuiList>
+              {menuItems}
+            </MuiList>
+          </div>
+
         </div>
       </Draggable>
     );
@@ -344,7 +392,9 @@ class NewItem extends Component {
                                     onChange={::this.handleSelectVisibility} />
         </div>
 
-        <div className='mdl-textfield'>
+        <hr />
+
+        <div>
           <Item item={this.props.scratch}
                 path={List(['module', 'scratch'])} />
           {/*<textarea className='mdl-textfield__input' />*/}

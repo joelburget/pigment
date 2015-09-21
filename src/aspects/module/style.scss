@@ -1,5 +1,6 @@
 $padding: 15px;
 $bigMargin: 40px;
+$vBorder: 1px solid #e0e0e0;
 
 .module {
   margin-left: $bigMargin;
@@ -14,10 +15,22 @@ $bigMargin: 40px;
 }
 
 .definitionRow {
-  display: flex;
-  flex-direction: row;
+  margin-bottom: $bigMargin;
+  border-bottom: $vBorder;
 
-  border-bottom: 1px solid #e0e0e0;
+  .rowContent {
+      display: flex;
+      flex-direction: row;
+  }
+
+  .rowSpacer {
+      height: $padding;
+  }
+}
+
+.itemRow {
+  display: flex;
+  flex-direction: column;
 }
 
 .itemLabel {
@@ -32,9 +45,18 @@ $bigMargin: 40px;
 }
 
 .itemContent {
+  display: flex;
+  flex-direction: column;
+
   vertical-align: top;
+  border-left: $vBorder;
   padding: $padding 0 $padding $bigMargin;
   width: 500px;
+}
+
+.itemNotes {
+  padding: $padding;
+  border-left: $vBorder;
 }
 
 .itemType {

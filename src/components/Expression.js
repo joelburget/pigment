@@ -5,6 +5,9 @@ import Var from './Expression/Name';
 import Hole from './Expression/Hole';
 import Lambda from '../aspects/lambda/view';
 import Application from '../aspects/application/view';
+import Label from '../aspects/label/view';
+import Row from '../aspects/row/view';
+import Rec from '../aspects/record/view';
 // import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow } from
 
 import styles from './Expression.scss';
@@ -14,17 +17,6 @@ class Type extends Component {
   render() {
     return (
       <span>*</span>
-    );
-  }
-}
-
-
-class Row extends Component {
-  render() {
-    return (
-      <div>
-        ROW
-      </div>
     );
   }
 }
@@ -50,19 +42,16 @@ export default class Expression extends Component {
       Lam: Lambda,
       // Arr: Arr,
 
-      // label: Label,
-      // rec: Rec,
+      Label: Label,
+      Rec: Rec,
       // rowkind: RowKind,
       Row: Row,
+
       // selectrow: SelectRow,
       // extendrow: ExtendRow,
       // restrictrow: RestrictRow,
     };
 
-    // gross -- grabbing the name in this way
-    if (this.props.children == undefined) {
-      debugger;
-    }
     const name = this.props.children.constructor.name;
 
     const props = {

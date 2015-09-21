@@ -1,9 +1,9 @@
 // @flow
 
-import { Record, Map } from 'immutable';
+import { List, Record, Map } from 'immutable';
 import invariant from 'invariant';
 
-import { INTRO, Type } from '../../theory/tm';
+import { INTRO, Hole, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import Row from '../row/data';
@@ -55,6 +55,25 @@ export default class Rec extends recordShape {
 
   slots(): Iterable<K, V> {
     throw new Error('unimplemented - Record.slots');
+  }
+
+  actions(): List<Action> {
+    return List([
+      {
+        name: 'add entry',
+        action: () => {
+          const newRec = new Rec(
+            this.values.set(
+              'new entry',
+              new Hole('new entry', Type.singleton)
+            ),
+            this.row
+          );
+          console.log('rec: add entry', newRec);
+          return newRec;
+        }
+      },
+    ]);
   }
 
   static typeClass = Row;

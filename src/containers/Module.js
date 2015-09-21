@@ -16,6 +16,7 @@ import { isPathHighlighted,
          moveItem,
          addNew,
          fillHole,
+         childAction,
          renameDefinition } from '../ducks/module';
 
 
@@ -46,6 +47,7 @@ export default class ModuleContainer {
     moveItem: PropTypes.func.isRequired,
     addNew: PropTypes.func.isRequired,
     fillHole: PropTypes.func.isRequired,
+    dispatchAction: PropTypes.func.isRequired,
   };
 
   getChildContext() {
@@ -71,6 +73,9 @@ export default class ModuleContainer {
       addNew: payload => this.props.dispatch(addNew(payload)),
       fillHole: (path, type, category, item) => this.props.dispatch(
         fillHole(path, type, category, item)
+      ),
+      dispatchAction: (path, action) => this.props.dispatch(
+        childAction(path, action)
       ),
     };
   }

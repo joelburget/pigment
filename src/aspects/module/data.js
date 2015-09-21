@@ -1,6 +1,6 @@
 // @flow
 
-import { Record } from 'immutable';
+import { List, Record } from 'immutable';
 
 import { register } from '../../theory/registry';
 
@@ -29,6 +29,12 @@ export class Module extends moduleShape {
 
   unify(tm: Tm): ?Tm {
     throw new Error('unimplemented: Module.unify');
+  }
+
+  actions(): List<Action> {
+    return List([
+      { name: 'add entry', action: () => { console.log('mod: add entry'); } },
+    ]);
   }
 }
 

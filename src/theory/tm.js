@@ -18,6 +18,12 @@ export var ELIM = 'ELIM';
 export type IntroElim = INTRO | ELIM;
 
 
+export type Action = {
+  name: string;
+  action: () => any;
+}
+
+
 export type Tm = {
   // * Instead we can pass in the arguments it's being applied to. Tie this in
   //   with the binding structure we expect to know from a term and we should
@@ -29,6 +35,8 @@ export type Tm = {
   getType: () => Tm;
 
   slots: () => Iterable<K, V>;
+
+  actions: () => List<Action>;
 
   // static form: IntroElim;
 
@@ -62,6 +70,10 @@ export class Type {
 
   slots(): Iterable<K, V> {
     return Iterable();
+  }
+
+  actions(): List<Action> {
+    return List();
   }
 
   static typeClass = Type;
@@ -104,6 +116,10 @@ export class Hole extends holeShape {
     throw new Error('Hole.slots - unimplemented');
   }
 
+  actions(): List<Action> {
+    return List();
+  }
+
   // static form = INTRO;
 }
 
@@ -136,6 +152,10 @@ export class Var extends varShape {
 
   slots() {
     throw new Error('Var.slots - unimplemented');
+  }
+
+  actions(): List<Action> {
+    return List();
   }
 
   // static form =

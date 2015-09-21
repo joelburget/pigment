@@ -1,9 +1,9 @@
 // @flow
 
 import invariant from 'invariant';
-import { Record, Map } from 'immutable';
+import { Record, Map, List } from 'immutable';
 
-import { INTRO, Type } from '../../theory/tm';
+import { INTRO, Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
 
 import type { Tm } from '../../theory/tm';
@@ -26,6 +26,24 @@ export default class Row extends rowShape {
 
   evaluate(root: AbsRef, ctx: Context): EvaluationResult {
     return mkSuccess(this);
+  }
+
+  actions(): List<Action> {
+    return List([
+      {
+        name: 'add entry',
+        action: () => {
+          const newRow = new Row(
+            this.entries.set(
+              'new entry',
+              new Hole('new entry', Type.singleton)
+            )
+          );
+          console.log('row: add entry', newRow);
+          return newRow;
+        }
+      },
+    ]);
   }
 
   static typeClass = Type;
