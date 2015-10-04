@@ -1,38 +1,92 @@
+@import '../style/color';
+
+// TODO probably simpler to just make this a list, no?
+.margin {
+    margin: 40px 0 0 40px;
+    color: $margin-links;
+    text-decoration: none;
+    font-family: "Roboto","Helvetica","Arial",sans-serif;
+}
+
+.columnar {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
 body {
   font-family: "Helvetica Neue", Helvetica, sans-serif;
 }
+
 .app {
-  :global(.navbar-brand) {
-    position:relative;
-    padding-left: 50px;
-  }
+  @extend .row;
+
   nav {
-      display: flex;
-      flex-direction: row;
+      width: 200px;
+      background-color: $margin-background;
+
+      @extend .columnar;
 
       .title {
-          color: #424242;
-          text-decoration: none;
-          margin-top: 40px;
-          margin-left: 40px;
+          @extend .margin;
 
           display: block;
-          font-family: "Roboto","Helvetica","Arial",sans-serif;
           font-size: 20px;
           font-weight: 400;
       }
+
+      .module {
+          @extend .margin;
+      }
+
+      .status {
+          @extend .margin;
+          padding-left: 0;
+
+          .hole {
+              margin: 10px 0;
+              border-bottom: 4px solid $hole;
+          }
+
+          .conflict {
+              margin: 10px 0;
+              border-bottom: 4px solid $conflict;
+          }
+      }
+
+      .subModule {
+          padding-left: 10px;
+      }
+
+      li {
+          list-style-type: none;
+          margin-left: 0;
+      }
+
+      .login {
+          @extend .row;
+          @extend .margin;
+
+          a {
+              color: $margin-links;
+              text-decoration: none;
+              font-weight: 500;
+              font-size: 13px;
+              margin: 0;
+          }
+      }
   }
-  nav :global(.fa) {
-    font-size: 2em;
-    line-height: 20px;
-  }
-  .login {
-      margin-right: 40px;
-      margin-top: 40px;
-      display: flex;
-      flex-direction: row;
+
+  main {
+      flex: 1;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   }
 }
+
 .appContent {
   margin: 50px 0; // for fixed navbar
 }

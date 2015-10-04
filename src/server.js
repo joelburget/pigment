@@ -1,6 +1,7 @@
 import Express from 'express';
 import React from 'react';
-import Location from 'react-router/lib/Location';
+import ReactDOM from 'react-dom/server';
+import createLocation from 'history/lib/createLocation';
 import config from './config';
 import favicon from 'serve-favicon';
 import compression from 'compression';
@@ -12,11 +13,15 @@ import ApiClient from './ApiClient';
 import universalRouter from './universalRouter';
 import Html from './Html';
 import PrettyError from 'pretty-error';
+import http from 'http';
+import SocketIo from 'socket.io';
 
 const pretty = new PrettyError();
 const app = new Express();
+const server = new http.Server(app);
 const proxy = httpProxy.createProxyServer({
-  target: 'http://localhost:' + config.apiPort
+  target: 'http://localhost:' + config.apiPort,
+  ws: true,
 });
 
 app.use(compression());
@@ -49,42 +54,51 @@ app.use((req, res) => {
   }
   const client = new ApiClient(req);
   const store = createStore(client);
-  const location = new Location(req.path, req.query);
-  if (__DISABLE_SSR__) {
+  const location = createLocation(req.path, req.query);
+
+  function hydrateOnClient() {
     res.send('<!doctype html>\n' +
-      React.renderToString(<Html assets={webpackIsomorphicTools.assets()} component={<div/>} store={store}/>));
-  } else {
-    universalRouter(location, undefined, store)
-      .then(({component, transition, isRedirect}) => {
-        if (isRedirect) {
-          res.redirect(transition.redirectInfo.pathname);
-          return;
-        }
-        res.send('<!doctype html>\n' +
-          React.renderToString(<Html assets={webpackIsomorphicTools.assets()} component={component} store={store}/>));
-      })
-      .catch((error) => {
-        if (error.redirect) {
-          res.redirect(error.redirect);
-          return;
-        }
-        console.error('ROUTER ERROR:', pretty.render(error));
-        res.status(500).send({error: error.stack});
-      });
+      ReactDOM.renderToString(<Html assets={webpackIsomorphicTools.assets()} component={<div/>} store={store}/>));
   }
+
+  if (__DISABLE_SSR__) {
+    hydrateOnClient();
+    return;
+  }
+
+  universalRouter(location, undefined, store, true)
+    .then(({component, redirectLocation}) => {
+      if (redirectLocation) {
+        res.redirect(redirectLocation.pathname + redirectLocation.search);
+        return;
+      }
+      res.send('<!doctype html>\n' +
+        ReactDOM.renderToString(<Html assets={webpackIsomorphicTools.assets()} component={component} store={store}/>));
+    })
+    .catch((error) => {
+      if (error.redirect) {
+        res.redirect(error.redirect);
+        return;
+      }
+      console.error('ROUTER ERROR:', pretty.render(error));
+      hydrateOnClient(); // let client render error page or re-request data
+    });
 });
 
 if (config.port) {
-  app.listen(config.port, (err) => {
+  if (config.isProduction) {
+    const io = new SocketIo(server);
+    io.path('/api/ws');
+  }
+
+  server.listen(config.port, (err) => {
     if (err) {
       console.error(err);
-    } else {
-      api().then(() => {
-        console.info('==> ✅  Server is listening');
-        console.info('==> 🌎  %s running on port %s, API on port %s', config.app.name, config.port, config.apiPort);
-        console.info('----------\n==> 💻  Open http://localhost:%s in a browser to view the app.', config.port);
-      });
     }
+
+    console.info('==> ✅  Server is listening');
+    console.info('==> 🌎  %s running on port %s, API on port %s', config.app.name, config.port, config.apiPort);
+    console.info('----------\n==> 💻  Open http://localhost:%s in a browser to view the app.', config.port);
   });
 } else {
   console.error('==>     ERROR: No PORT environment variable has been specified');

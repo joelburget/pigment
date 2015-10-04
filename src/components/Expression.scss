@@ -1,12 +1,19 @@
+@import '../style/color';
+
 .expression {
   padding: 0 5px;
   cursor: pointer;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.04)
+    background-color: $expression-highlight;
   }
 }
 
 .highlighted {
-  background-color: rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  border-bottom: 2px solid rgb(112, 182, 255);
+}
+
+.conflict {
+  background-color: $conflict;
 }

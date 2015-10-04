@@ -42,7 +42,7 @@ module.exports = {
       },
       parser: function(m, options) {
         if (m.source) {
-          var regex = options.environment === 'production' ? /module\.exports = ((.|\n)+);/ : /exports\.locals = ((.|\n)+);/;
+          var regex = options.development ? /exports\.locals = ((.|\n)+);/ : /module\.exports = ((.|\n)+);/;
           var match = m.source.match(regex);
           return match ? JSON.parse(match[1]) : {};
         }

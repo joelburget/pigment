@@ -1,7 +1,7 @@
 import transit from 'transit-js';
 import { List, Set, OrderedMap, Map } from 'immutable';
 
-export var writeHandlers = [
+export const writeHandlers = [
   List, transit.makeWriteHandler({
     tag: () => 'iL',
     rep: v => v.toArray(),
@@ -20,7 +20,7 @@ export var writeHandlers = [
   }),
 ];
 
-export var readHandlers = {
+export const readHandlers = {
   'iL': rep => List(rep),
   'iS': rep => Set(rep),
   'iO': rep => OrderedMap(rep),

@@ -12,13 +12,14 @@ export const MODULE_PRIVATE = 'module/MODULE_PRIVATE';
 type Visibility = MODULE_PUBLIC | MODULE_PRIVATE;
 
 
-var moduleShape = Record({
+var ModuleShape = Record({
   name: null,     // string
   contents: null, // List<Note | Definition | Property | Example>
   scratch: null,  // Note | Definition | Property | Example
 }, 'module');
 
-export class Module extends moduleShape {
+
+export default class Module extends ModuleShape {
   evaluate(root: AbsRef, ctx: Context): EvaluationResult {
     throw new Error('unimplemented: Module.evaluate');
   }

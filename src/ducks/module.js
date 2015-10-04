@@ -2,8 +2,10 @@ import transit from 'transit-js';
 import { List, Record } from 'immutable';
 import Immutable from 'immutable';
 
-import {
-  Module, Note, Definition, Property, Example,
+import isPrefix from '../util/isPrefix';
+
+import Module, {
+  Note, Definition, Property, Example,
   MODULE_PUBLIC, MODULE_PRIVATE
   } from '../aspects/module/data';
 
@@ -11,10 +13,12 @@ import {
 import Row from '../aspects/row/data';
 import Label from '../aspects/label/data';
 import Rec from '../aspects/record/data';
-
 import Lam from '../aspects/lambda/data';
+
+import { OPEN } from '../theory/edit';
 import { read as readRegistry } from '../theory/registry';
 import { VARIABLE, INTRO, ELIM, Hole, Type } from '../theory/tm';
+import { AbsRef } from '../theory/ref';
 
 // import { Var, Hole, Type } from '../theory/tm';
 // import { Rec, Row } from '../theory/record';
@@ -29,26 +33,27 @@ const UPDATE_AT = 'pigment/module/UPDATE_AT';
 const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
 const ADD_NEW = 'pigment/module/ADD_NEW';
 const FILL_HOLE = 'pigment/module/FILL_HOLE';
-const CHILD_ACTION = 'pigment/module/CHILD_ACTION';
+const OPEN_NEW_EDIT = 'pigment/module/OPEN_NEW_EDIT';
 
 
 export class ModuleState extends Record({
-  module: null,
-  mouseSelection: null,
+  module: null,         // Module
+  mouseSelection: null, // Path
+  openEdit: null,       // Edit
 }, 'modulestate') {}
 
 
 export const writeHandlers = [
   ModuleState, transit.makeWriteHandler({
     tag: () => 'modulestate',
-    rep: v => [v.module, v.mouseSelection],
+    rep: v => [v.module, v.mouseSelection, v.openEdit],
   }),
 ];
 
 
 export const readHandlers = {
-  'modulestate': ([module, mouseSelection]) =>
-    new ModuleState({ module, mouseSelection }),
+  'modulestate': ([module, mouseSelection, openEdit]) =>
+    new ModuleState({ module, mouseSelection, openEdit }),
 };
 
 
@@ -140,6 +145,7 @@ const initialState = new ModuleState({
     scratch,
   }),
   mouseSelection: null,
+  openEdit: null,
 });
 
 
@@ -205,11 +211,48 @@ export default function reducer(state = initialState, action = {}) {
         return state.setIn(path, fillItem);
       }
 
-    case CHILD_ACTION:
-      {
-        const { path, subAction } = action;
-        return state.setIn(path, subAction);
+    // 1. make sure we have an open edit
+    // 2. add to it
+    case OPEN_NEW_EDIT:
+      const { path, catalyst } = action;
+      // XXX does catalyst have a path?
+      const tm = lookupRef(state, new AbsRef({ path }));
+
+      // Action = {
+      //   id: string;
+      //   title: string;
+      //   value?: any;
+      // }
+      //
+      // Action => List<Edit>
+      const edit = tm.performEdit(catalyst);
+
+      // TODO - I think we want to be a little more sophisticated here:
+      // - if an edit can be completed (closed) we should do that!
+      // - there are two slightly different concepts
+      //   1. opening a new edit (and the transitive closure of conflicts),
+      //      which is what happens here.
+      //   2. continuing an open edit (resolving conflicts). closing the last
+      //      conflict should close the open edit.
+      //   * though this command only necessarily does (1), it can also do (2)
+
+      // TODO record the sequence of edits!
+      var newState;
+
+      // There's already an open edit -- add to its closure
+      if (state.openEdit) {
+        newState = state.openEdit.resolve(edit);
+
+      // Open our new edit
+      } else if (edit.status === OPEN) {
+        newState = state.set('openEdit', edit);
+
+      // The new edit is immediately closed
+      } else {
+        newState = state.setIn(path, edit.after);
       }
+
+      return newState;
 
     default:
       return state;
@@ -242,6 +285,20 @@ export function isPathHighlighted(mouseSelection: ?List<string>,
   }
 
   return true;
+}
+
+
+export function getActions(state: ModuleState, path: List<string>) {
+  var defn = state.getIn(path);
+  const { mouseSelection } = state;
+
+  // If the mouse selection is within this definition, use the selected term
+  // instead.
+  if (mouseSelection && isPrefix(path, mouseSelection)) {
+    return state.getIn(mouseSelection).actions();
+  } else {
+    return defn.defn.actions();
+  }
 }
 
 
@@ -341,11 +398,11 @@ export function fillHole(path, itemType, category, item) {
   };
 }
 
-export function childAction(path, subAction) {
+export function openNewEdit(path: List<string>, catalyst: string) {
   return {
-    type: CHILD_ACTION,
+    type: OPEN_NEW_EDIT,
+    catalyst,
     path,
-    subAction,
   };
 }
 

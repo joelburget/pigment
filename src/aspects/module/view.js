@@ -1,18 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import Immutable, { List } from 'immutable';
 import { DragSource, DropTarget } from 'react-dnd';
-import RadioButtonGroup from 'material-ui/lib/radio-button-group';
-import RadioButton from 'material-ui/lib/radio-button';
-// temporarily removed for DropDownMenu
-// import SelectField from 'material-ui/lib/select-field';
+
 import DropDownMenu from 'material-ui/lib/drop-down-menu';
 import TextField from 'material-ui/lib/text-field';
-
 import MuiList from 'material-ui/lib/lists/list';
 import ListItem from 'material-ui/lib/lists/list-item';
-import ListDivider from 'material-ui/lib/lists/list-divider';
 
-import ThemeManager from '../../ThemeManager';
 import Expression from '../../components/Expression';
 import { Type, Hole } from '../../theory/tm';
 
@@ -209,7 +203,8 @@ class ItemTitle extends Component {
 
 class Definition extends Component {
   static contextTypes = {
-    dispatchAction: PropTypes.func.isRequired,
+    dispatchEdit: PropTypes.func.isRequired,
+    getActions: PropTypes.func.isRequired,
   };
 
   render() {
@@ -221,12 +216,13 @@ class Definition extends Component {
       'public' :
       'private';
 
-    const dispatchAction = action =>
-      this.context.dispatchAction(path.push('defn'), action());
+    const dispatchEdit = action =>
+      this.context.dispatchEdit(path.push('defn'), action);
 
-    const menuItems = item.defn.actions().map(({ name, action }) =>
-      <ListItem primaryText={name} onClick={() => dispatchAction(action)} />
-    );
+    const menuItems = this.context.getActions(path)
+      .map(({ title, id }) =>
+        <ListItem primaryText={title} onClick={() => dispatchEdit(id)} />
+      ).toArray();
 
     return (
       <Draggable moveItem={moveItem} path={path}>
@@ -275,12 +271,6 @@ export default class Module extends Component {
     muiTheme: React.PropTypes.object,
   };
 
-  getChildContext() {
-    return {
-      muiTheme: ThemeManager.getCurrentTheme(),
-    };
-  }
-
   static propTypes = {
     contents: PropTypes.object.isRequired,
     name: PropTypes.string.isRequired,
@@ -298,7 +288,7 @@ export default class Module extends Component {
 
     return (
       <div className={styles.module}>
-        <h6>MODULE {name}</h6>
+        <h6><span className={styles.moduleHeader}>MODULE</span> {name}</h6>
         <div className={styles.moduleTable}>
           {renderedItems}
         </div>

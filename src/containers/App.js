@@ -3,14 +3,14 @@ import {Link} from 'react-router';
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
 import DocumentMeta from 'react-document-meta';
-import injectTapEventPlugin from 'react-tap-event-plugin';
+import EventPluginHub from 'react/lib/EventPluginHub';
+import TapEventPlugin from 'react/lib/TapEventPlugin';
 
 import Avatar from '../components/Avatar';
 import {isLoaded as isAuthLoaded, load as loadAuth, logout} from '../ducks/auth';
-import {createTransitionHook} from '../universalRouter';
 import styles from './App.scss';
 
-injectTapEventPlugin();
+EventPluginHub.injection.injectEventPluginsByName({ TapEventPlugin });
 
 const title = 'Pigment';
 const description = 'Cooperative Programming';
@@ -50,35 +50,23 @@ export default class App extends Component {
   }
 
   static contextTypes = {
-    router: PropTypes.object.isRequired,
     store: PropTypes.object.isRequired,
   };
-
-  componentWillMount() {
-    const {router, store} = this.context;
-    this.transitionHook = createTransitionHook(store);
-    router.addTransitionHook(this.transitionHook);
-  }
 
   componentWillReceiveProps(nextProps) {
     if (!this.props.user && nextProps.user) {
       // login
-      this.context.router.transitionTo('/loginSuccess');
+      this.props.history.pushState(null, '/loginSuccess');
     } else if (this.props.user && !nextProps.user) {
       // logout
-      this.context.router.transitionTo('/');
+      this.props.history.pushState(null, '/');
     }
-  }
-
-  componentWillUnmount() {
-    const {router} = this.context;
-    router.removeTransitionHook(this.transitionHook);
   }
 
   render() {
     const {user} = this.props;
     return (
-      <div className={styles.app + " mdl-layout mdl-js-layout mdl-layout--fixed-header"}>
+      <div className={styles.app}>
         <nav>
           <div>
             <Link to="/" className={styles.title}>
@@ -86,20 +74,31 @@ export default class App extends Component {
             </Link>
           </div>
 
-          <div className="mdl-layout-spacer" />
-
           <div className={styles.login}>
             {user &&
             /*<p className={styles.loggedInMessage + ' navbar-text'}>Logged in as <strong>{user.name}</strong>.</p>*/
             <Avatar fbId='joelburget' round='true' size={40} />}
             <div>
-              {!user && <Link className="mdl-navigation__link" to="/login">LOGIN</Link>}
-              {user && <a className="mdl-navigation__link" href="/logout" onClick={::this.handleLogout}>LOGOUT</a>}
+              {!user && <Link to="/login">LOGIN</Link>}
+              {user && <a href="/logout" onClick={::this.handleLogout}>LOGOUT</a>}
             </div>
           </div>
+
+          <div className={styles.module}>
+            Module
+              <ul className={styles.subModule}>
+                <li>history</li>
+                <li>edit</li>
+              </ul>
+          </div>
+
+          <ul className={styles.status}>
+            <li className={styles.hole}>2 holes remaining</li>
+            <li className={styles.conflict}>3 conflicts remaining</li>
+          </ul>
         </nav>
 
-        <main className="mdl-layout__content">
+        <main>
           <div className={styles.appContent}>
             {this.props.children}
           </div>

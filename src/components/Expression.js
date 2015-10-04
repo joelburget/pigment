@@ -8,7 +8,6 @@ import Application from '../aspects/application/view';
 import Label from '../aspects/label/view';
 import Row from '../aspects/row/view';
 import Rec from '../aspects/record/view';
-// import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow } from
 
 import styles from './Expression.scss';
 
@@ -17,6 +16,17 @@ class Type extends Component {
   render() {
     return (
       <span>*</span>
+    );
+  }
+}
+
+
+class Conflict extends Component {
+  render() {
+    return (
+      <div className={styles.conflict}>
+        {this.props.children}
+      </div>
     );
   }
 }
@@ -34,18 +44,19 @@ export default class Expression extends Component {
 
   render() {
     const dispatch = {
-      Type: Type,
-      "Var": Var,
-      Hole: Hole,
+      Type,
+      Conflict,
+      Var,
+      Hole,
 
       App: Application,
       Lam: Lambda,
       // Arr: Arr,
 
-      Label: Label,
-      Rec: Rec,
+      Label,
+      Rec,
       // rowkind: RowKind,
-      Row: Row,
+      Row,
 
       // selectrow: SelectRow,
       // extendrow: ExtendRow,

@@ -1,29 +1,12 @@
 import transit from 'transit-js';
 
-import { AbsRef, RelRef } from '../theory/ref';
-import { Type, Var, Hole } from '../theory/tm';
-import { data as Lam } from './lambda';
-import { data as App } from './application';
-import { data as Rec } from './record';
-import { Module, Note, Definition, Property, Example } from './module/data';
+import Lam from './lambda/data';
+import App from './application/data';
+import Rec from './record/data';
+import Module, { Note, Definition, Property, Example } from './module/data';
 
 
 export const writeHandlers = [
-  // tm
-  Type, transit.makeWriteHandler({
-    tag: () => 'type',
-    rep: () => [],
-    stringRep: 'ty',
-  }),
-  Hole, transit.makeWriteHandler({
-    tag: () => 'hole',
-    rep: v => [v.name, v.type],
-  }),
-  Var, transit.makeWriteHandler({
-    tag: () => 'var',
-    rep: v => [v.ref, v.type],
-  }),
-
   // lambda
   // Binder, transit.makeWriteHandler({
   //   tag: () => 'binder',
@@ -41,16 +24,6 @@ export const writeHandlers = [
   //   tag: () => 'arr',
   //   rep: v => [v.domain, v.codomain],
   // }),
-
-  // ref
-  AbsRef, transit.makeWriteHandler({
-    tag: () => 'absref',
-    rep: v => v.path,
-  }),
-  RelRef, transit.makeWriteHandler({
-    tag: () => 'relref',
-    rep: v => v.path,
-  }),
 
   // record
   // Label, transit.makeWriteHandler({
@@ -108,21 +81,12 @@ export const writeHandlers = [
 
 
 export const readHandlers = {
-  // tm
-  'type': () => Type.singleton,
-  'hole': rep => new Hole(rep[0], rep[1]),
-  'var': rep => new Var(rep[0], rep[1]),
-
   // lambda
   // 'binder': ([name, type]) => new Binder({ name, type }),
   'lam': ([name, domain, body, codomain]) =>
     new Lam(name, domain, body, codomain),
   'app': rep => new App(rep[0], rep[1]),
   // 'arr': rep => new Arr(rep[0], rep[1]),
-
-  // ref
-  'absref': path => new AbsRef({ path }),
-  'relref': path => new RelRef({ path }),
 
   // record
   // 'label': rep => new Label(rep),

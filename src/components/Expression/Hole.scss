@@ -1,4 +1,5 @@
-$yellow: #FCF474;
+@import '../../style/color';
+
 $gray: #ddd;
 
 .hole {
@@ -7,7 +8,7 @@ $gray: #ddd;
     flex-direction: row;
 
     input {
-        background-color: $yellow;
+        background-color: $hole;
         // background-color: rgb(255, 195, 158);
         border: none;
         width: 50px;
@@ -27,7 +28,7 @@ $gray: #ddd;
 }
 
 .completionHl {
-    background-color: $yellow;
+    background-color: $hole;
 }
 
 .completion {

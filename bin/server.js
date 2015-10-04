@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('../compiler'); // enables ES6 support
+require('../server.babel'); // babel registration (runtime transpilation for node)
 var path = require('path');
 var rootDir = path.resolve(__dirname, '..');
 /**

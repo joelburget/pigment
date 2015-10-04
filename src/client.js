@@ -3,43 +3,64 @@
  */
 import 'babel/polyfill';
 import React from 'react';
-import BrowserHistory from 'react-router/lib/BrowserHistory';
-import Location from 'react-router/lib/Location';
-import queryString from 'query-string';
+import ReactDOM from 'react-dom';
+import createHistory from 'history/lib/createBrowserHistory';
+import createLocation from 'history/lib/createLocation';
 import createStore from './redux/create';
-import ApiClient from './ApiClient';
-import universalRouter from './universalRouter';
-const history = new BrowserHistory();
+import ApiClient from './helpers/ApiClient';
+import universalRouter from './helpers/universalRouter';
+import io from 'socket.io-client';
+
+const history = createHistory();
 const client = new ApiClient();
 
 const dest = document.getElementById('content');
 const store = createStore(client, window.__data);
-const search = document.location.search;
-const query = search && queryString.parse(search);
-const location = new Location(document.location.pathname, query);
 
-
-universalRouter(location, history, store)
-  .then(({component}) => {
-    if (__DEVTOOLS__) {
-      const { DevTools, DebugPanel, LogMonitor } = require('redux-devtools/lib/react');
-      console.info('You will see a "Warning: React attempted to reuse markup in a container but the checksum was' +
-        ' invalid." message. That\'s because the redux-devtools are enabled.');
-      React.render(
-        <div>
-          {component}
-          <DebugPanel top right bottom key="debugPanel">
-            <DevTools store={store} monitor={LogMonitor} />
-          </DebugPanel>
-        </div>,
-      dest);
-    } else {
-      React.render(component, dest);
-    }
-  }, (error) => {
-    console.error(error);
+function initSocket() {
+  const socket = io('', {path: '/api/ws', transports: ['polling']});
+  socket.on('news', (data) => {
+    console.log(data);
+    socket.emit('my other event', { my: 'data from client' });
+  });
+  socket.on('msg', (data) => {
+    console.log(data);
   });
 
+  return socket;
+}
+
+global.socket = initSocket();
+
+const location = createLocation(document.location.pathname, document.location.search);
+
+const render = (loc, hist, str, preload) => {
+  return universalRouter(loc, hist, str, preload)
+    .then(({component}) => {
+      if (!__DEVTOOLS__) {
+        ReactDOM.render(component, dest);
+      } else {
+        const { DevTools, DebugPanel, LogMonitor } = require('redux-devtools/lib/react');
+        ReactDOM.render(<div>
+          {component}
+          <DebugPanel top right bottom key="debugPanel">
+            <DevTools store={store} monitor={LogMonitor}/>
+          </DebugPanel>
+        </div>, dest);
+      }
+    }, (error) => {
+      console.error(error);
+    });
+};
+
+history.listen(() => {});
+
+history.listenBefore((loc, callback) => {
+  render(loc, history, store, true)
+    .then((callback));
+});
+
+render(location, history, store);
 
 if (process.env.NODE_ENV !== 'production') {
   window.React = React; // enable debugger

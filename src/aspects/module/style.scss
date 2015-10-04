@@ -1,12 +1,20 @@
+@import '../../style/color';
+@import '../../style/header';
+
 $padding: 15px;
 $bigMargin: 40px;
 $vBorder: 1px solid #e0e0e0;
 
 .module {
+  @extend .material-header;
   margin-left: $bigMargin;
 
   display: flex;
   flex-direction: column;
+}
+
+.moduleHeader {
+  border-bottom: 2px solid $margin-links;
 }
 
 .moduleTable {

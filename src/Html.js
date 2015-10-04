@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import ReactDOM from 'react-dom/server';
 import { writer } from './redux/transit';
 import DocumentMeta from 'react-document-meta';
 const cdn = '//cdnjs.cloudflare.com/ajax/libs/';
@@ -38,7 +39,7 @@ export default class Html extends Component {
           )}
         </head>
         <body>
-          <div id="content" dangerouslySetInnerHTML={{__html: React.renderToString(component)}}/>
+          <div id="content" dangerouslySetInnerHTML={{__html: ReactDOM.renderToString(component)}}/>
           <script dangerouslySetInnerHTML={{__html: `window.__data=${writer.write(store.getState())};`}} />
           <script src={assets.javascript.main}/>
         </body>

@@ -7,21 +7,17 @@ import { List, Set, Record, Iterable } from 'immutable';
 
 import { mkStuck, mkSuccess } from './evaluation';
 import { register } from './registry';
+import { openNewEdit } from './edit';
 
 import type { EvaluationResult } from './evaluation';
 import type { Ref, AbsRef } from './ref';
+import type Edit, { Action } from './edit';
 
 
 export var VARIABLE = 'VARIABLE';
 export var INTRO = 'INTRO';
 export var ELIM = 'ELIM';
 export type IntroElim = INTRO | ELIM;
-
-
-export type Action = {
-  name: string;
-  action: () => any;
-}
 
 
 export type Tm = {
@@ -38,6 +34,8 @@ export type Tm = {
 
   actions: () => List<Action>;
 
+  performEdit: (id: string) => List<Edit>;
+
   // static form: IntroElim;
 
   // static typeClass
@@ -48,6 +46,9 @@ export type Tm = {
   // - return an instance that fills this type of hole
   // - INTRO *only*
 };
+
+
+var POKE_HOLE = 'POKE_HOLE';
 
 
 export class Type {
@@ -73,7 +74,26 @@ export class Type {
   }
 
   actions(): List<Action> {
-    return List();
+    return List([
+      {
+        id: POKE_HOLE,
+        title: 'poke hole',
+      },
+    ]);
+  }
+
+  performEdit(id: string): List<Edit> {
+    invariant(
+      id === POKE_HOLE,
+      'Type.edit only knows of POKE_HOLE'
+    );
+
+    return openNewEdit(
+      id,
+      this,
+      new Hole(null, Type.singleton),
+      List()
+    );
   }
 
   static typeClass = Type;
@@ -159,4 +179,34 @@ export class Var extends varShape {
   }
 
   // static form =
+}
+
+
+var ConflictShape = Record({
+  left: null,
+  right: null,
+});
+
+
+export class Conflict extends ConflictShape {
+
+  actions(): List<Action> {
+    return List([
+      {
+        name: 'take left',
+        action: () => {
+          console.log('conflict: take left', this.left);
+          return this.left;
+        }
+      },
+      {
+        name: 'take right',
+        action: () => {
+          console.log('conflict: take right', this.right);
+          return this.right;
+        }
+      },
+    ]);
+  }
+
 }

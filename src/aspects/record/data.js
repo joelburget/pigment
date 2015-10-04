@@ -29,6 +29,9 @@ import type { AbsRef, Ref } from '../../theory/ref';
 //   origin = { x = 0, y = 0 }
 
 
+var ADD_ENTRY = 'ADD_ENTRY';
+
+
 var recordShape = Record({
   values: null,
   row: null,
@@ -60,18 +63,15 @@ export default class Rec extends recordShape {
   actions(): List<Action> {
     return List([
       {
-        name: 'add entry',
-        action: () => {
-          const newRec = new Rec(
-            this.values.set(
-              'new entry',
-              new Hole('new entry', Type.singleton)
-            ),
-            this.row
-          );
-          console.log('rec: add entry', newRec);
-          return newRec;
-        }
+        id: ADD_ENTRY,
+        title: 'add entry',
+        value: new Rec(
+          this.values.set(
+            'new entry',
+            new Hole('new entry', Type.singleton)
+          ),
+          this.row
+        )
       },
     ]);
   }

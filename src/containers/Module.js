@@ -16,8 +16,9 @@ import { isPathHighlighted,
          moveItem,
          addNew,
          fillHole,
-         childAction,
-         renameDefinition } from '../ducks/module';
+         openNewEdit,
+         renameDefinition,
+         getActions } from '../ducks/module';
 
 
 const widgetActions = { expressionMouseClick, updateAt };
@@ -47,7 +48,8 @@ export default class ModuleContainer {
     moveItem: PropTypes.func.isRequired,
     addNew: PropTypes.func.isRequired,
     fillHole: PropTypes.func.isRequired,
-    dispatchAction: PropTypes.func.isRequired,
+    dispatchEdit: PropTypes.func.isRequired,
+    getActions: PropTypes.func.isRequired,
   };
 
   getChildContext() {
@@ -74,9 +76,10 @@ export default class ModuleContainer {
       fillHole: (path, type, category, item) => this.props.dispatch(
         fillHole(path, type, category, item)
       ),
-      dispatchAction: (path, action) => this.props.dispatch(
-        childAction(path, action)
+      dispatchEdit: (path, action) => this.props.dispatch(
+        openNewEdit(path, action)
       ),
+      getActions: path => getActions(this.props.state, path),
     };
   }
 
