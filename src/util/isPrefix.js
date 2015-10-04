@@ -1,3 +1,4 @@
+/* eslint no-else-return: 0 */
 import { is } from 'immutable';
 import type { List } from 'immutable';
 

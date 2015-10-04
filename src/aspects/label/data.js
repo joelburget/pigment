@@ -3,9 +3,12 @@
 import invariant from 'invariant';
 import { Record } from 'immutable';
 
-import { INTRO, Type } from '../../theory/tm';
+import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
+import { INTRO, Type } from '../../theory/tm';
 
+import type { EvaluationResult } from '../../theory/evaluation';
+import type { AbsRef } from '../../theory/ref';
 import type { Tm } from '../../theory/tm';
 
 
@@ -23,7 +26,7 @@ export default class Label extends labelShape {
     return Type.singleton;
   }
 
-  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
+  evaluate(root: AbsRef): EvaluationResult {
     return mkSuccess(this);
   }
 

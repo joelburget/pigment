@@ -4,19 +4,19 @@ import { List, Set, OrderedMap, Map } from 'immutable';
 export const writeHandlers = [
   List, transit.makeWriteHandler({
     tag: () => 'iL',
-    rep: v => v.toArray(),
+    rep: vec => vec.toArray(),
   }),
   Set, transit.makeWriteHandler({
     tag: () => 'iS',
-    rep: v => v.toArray(),
+    rep: vec => vec.toArray(),
   }),
   OrderedMap, transit.makeWriteHandler({
     tag: () => 'iO',
-    rep: v => v.toArray(),
+    rep: vec => vec.toArray(),
   }),
   Map, transit.makeWriteHandler({
     tag: () => 'iM',
-    rep: v => v.toArray(),
+    rep: vec => vec.toArray(),
   }),
 ];
 
@@ -25,4 +25,4 @@ export const readHandlers = {
   'iS': rep => Set(rep),
   'iO': rep => OrderedMap(rep),
   'iM': rep => Map(rep),
-}
+};

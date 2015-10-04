@@ -2,32 +2,32 @@
 
 import { Record } from 'immutable';
 
-import type { Context } from './context';
 
+var Shape = Record({
+  type: null,  // string
+  value: null, // X
+}, 'evaluationresult');
 
-var shape = Record({ type: null, value: null }, 'evaluationresult');
+export class EvaluationResult extends Shape {}
 
-export class EvaluationResult extends shape {}
-
-export function mkSuccess(e: any): EvaluationResult {
+export function mkSuccess(value: any): EvaluationResult {
   return new EvaluationResult({
     type: 'success',
-    value: e,
+    value,
   });
 }
 
 
-export function mkStuck(e: any): EvaluationResult {
+export function mkStuck(value: any): EvaluationResult {
   return new EvaluationResult({
     type: 'stuck',
-    value: e,
+    value,
   });
 }
 
 
 export function bind(
-  e: EvaluationResult,
-  f: (value: any) => EvaluationResult): EvaluationResult {
-// export function bind(e, f) {
-  return e.type === 'success' ? f(e.value) : e;
+  result: EvaluationResult,
+  fun: (value: any) => EvaluationResult): EvaluationResult {
+  return result.type === 'success' ? fun(result.value) : result;
 }

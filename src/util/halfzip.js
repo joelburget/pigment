@@ -14,12 +14,12 @@ export default function halfZip<K, V>(
       const bVal = bs.get(aKey);
       if (!bVal) {
         // TODO find more idiomatic way
-        throw 'stop iteration!';
+        throw new Error('stop iteration!');
       } else {
         return [aVal, bVal];
       }
     });
-  } catch (e) {
+  } catch (stop) {
     return null;
   }
 }

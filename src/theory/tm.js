@@ -3,7 +3,7 @@
 // TODO:
 // * source positions? how does this relate to names?
 import invariant from 'invariant';
-import { List, Set, Record, Iterable } from 'immutable';
+import { List, Record, Iterable } from 'immutable';
 
 import { mkStuck, mkSuccess } from './evaluation';
 import { register } from './registry';
@@ -14,9 +14,9 @@ import type { Ref, AbsRef } from './ref';
 import type Edit, { Action } from './edit';
 
 
-export var VARIABLE = 'VARIABLE';
-export var INTRO = 'INTRO';
-export var ELIM = 'ELIM';
+export const VARIABLE = 'VARIABLE';
+export const INTRO = 'INTRO';
+export const ELIM = 'ELIM';
 export type IntroElim = INTRO | ELIM;
 
 

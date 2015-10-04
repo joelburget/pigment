@@ -6,9 +6,15 @@
     "mocha": true,
   },
   "rules": {
+    // immutable violates this rule
+    "new-cap": 0,
+    // allow `== null`
+    "eqeqeq": [2, "smart"],
     "react/jsx-uses-react": 2,
     "react/jsx-uses-vars": 2,
     "react/react-in-jsx-scope": 2,
+    "react/jsx-quotes": 0,
+    "jsx-quotes": 2,
     // Temporarirly disabled due to a possible bug in babel-eslint (todomvc example)
     "block-scoped-var": 0,
     // Temporarily disabled for test/* until babel/babel-eslint#33 is resolved
@@ -26,6 +32,7 @@
     "__SERVER__": true,
     "__DISABLE_SSR__": true,
     "__DEVTOOLS__": true,
+    "socket": true,
     "webpackIsomorphicTools": true
   }
 }

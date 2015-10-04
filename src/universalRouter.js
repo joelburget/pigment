@@ -1,5 +1,6 @@
+import qs from 'query-string';
 import React from 'react';
-import Router from 'react-router';
+import {match, RoutingContext} from 'react-router';
 import createRoutes from './createRoutes';
 import { Provider } from 'react-redux';
 

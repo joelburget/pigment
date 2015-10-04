@@ -1,3 +1,4 @@
+/* eslint id-length: 0 */
 import transit from 'transit-js';
 
 import { AbsRef, RelRef } from './ref';
