@@ -33,7 +33,7 @@ const widgetActions = { expressionMouseClick, updateAt };
   mouseSelection: state.module.mouseSelection,
 }))
 @DragDropContext(HTML5Backend)
-export default class ModuleContainer {
+export default class ModuleContainer extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
   };

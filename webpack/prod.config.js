@@ -27,6 +27,13 @@ module.exports = {
   },
   module: {
     loaders: [
+      // auth0 stuff
+      {
+        test: /node_modules\/auth0-lock-passwordless\/.*\.js$/,
+        loader: 'transform?brfs!transform?packageify'
+      },
+      {test: /\.ejs$/, loader: 'transform?ejsify'},
+
       { test: /\.js$/, exclude: /node_modules/, loaders: [strip.loader('debug'), 'babel?stage=0&optional=runtime&plugins=typecheck']},
       { test: /\.json$/, loader: 'json-loader' },
       { test: /\.scss$/, loader: ExtractTextPlugin.extract('style', 'css?modules&importLoaders=2&sourceMap!autoprefixer?browsers=last 2 version!sass?outputStyle=expanded&sourceMap=true&sourceMapContents=true') },

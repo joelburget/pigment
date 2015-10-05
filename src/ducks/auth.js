@@ -1,3 +1,5 @@
+// import Auth0LockPasswordless from 'auth0-lock-passwordless';
+
 const LOAD = 'pigment/auth/LOAD';
 const LOAD_SUCCESS = 'pigment/auth/LOAD_SUCCESS';
 const LOAD_FAIL = 'pigment/auth/LOAD_FAIL';
@@ -8,8 +10,36 @@ const LOGOUT = 'pigment/auth/LOGOUT';
 const LOGOUT_SUCCESS = 'pigment/auth/LOGOUT_SUCCESS';
 const LOGOUT_FAIL = 'pigment/auth/LOGOUT_FAIL';
 
+// const clientId = '0jfYz9zpjXZ4W0b5HMwiTnWVRrUkPkRJ';
+// const authDomain = 'joel.auth0.com';
+// const lock = new Auth0LockPasswordless(clientId, authDomain);
+
+// const linkOptions = {
+//   responseType: 'token',
+// };
+
+// // popup mode. relevant detail is we pass in a callback and get the jwt back as
+// // id_token.
+// lock.magiclink(linkOptions, (err, profile, id_token) => {
+//   if (err) {
+//     console.log("There was an error :/", err);
+//     return;
+//   }
+
+//   console.log("Hey dude", profile);
+// });
+
 const initialState = {
-  loaded: false
+  loaded: false,
+  loading: false,
+  loggingIn: false,
+  loggingOut: false,
+
+  user: null,
+  jwt: null,
+
+  loginError: null,
+  logoutError: null,
 };
 
 export default function reducer(state = initialState, action = {}) {

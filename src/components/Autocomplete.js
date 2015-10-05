@@ -6,10 +6,12 @@ import styles from './Autocomplete.scss';
 // Synchronous loading component -- no "loading..."
 export default class Autocomplete extends Component {
   static propTypes = {
-    items: PropTypes.shape({
-      category: PropTypes.string.isRequired,
-      items: PropTypes.arrayOf(PropTypes.object).isRequired,
-    }),
+    items: PropTypes.arrayOf(
+      PropTypes.shape({
+        category: PropTypes.string.isRequired,
+        item: PropTypes.object.isRequired,
+      })
+    ),
     renderItem: PropTypes.func.isRequired,
     onSelect: PropTypes.func.isRequired,
   };

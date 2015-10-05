@@ -2,10 +2,10 @@ import React, { Component, PropTypes } from 'react';
 import Immutable, { List } from 'immutable';
 import { DragSource, DropTarget } from 'react-dnd';
 
-import DropDownMenu from 'material-ui/lib/drop-down-menu';
-import TextField from 'material-ui/lib/text-field';
-import MuiList from 'material-ui/lib/lists/list';
-import ListItem from 'material-ui/lib/lists/list-item';
+// import DropDownMenu from 'material-ui/lib/drop-down-menu';
+// import TextField from 'material-ui/lib/text-field';
+// import MuiList from 'material-ui/lib/lists/list';
+// import ListItem from 'material-ui/lib/lists/list-item';
 
 import Expression from '../../components/Expression';
 import { Type, Hole } from '../../theory/tm';
@@ -46,7 +46,7 @@ const itemTarget = {
   connectDragSource: connect.dragSource(),
   isDragging: monitor.isDragging(),
 }))
-class Draggable {
+class Draggable extends Component {
   static propTypes = {
     connectDragSource: PropTypes.func.isRequired,
     connectDropTarget: PropTypes.func.isRequired,
@@ -179,16 +179,15 @@ class ItemTitle extends Component {
   componentDidUpdate() {
     const { input } = this.refs;
     if (input) {
-      const node = React.findDOMNode(input);
-      node.focus();
-      node.selectionStart = node.selectionEnd = node.value.length;
+      input.focus();
+      input.selectionStart = input.selectionEnd = input.value.length;
     }
   }
 
   returnToStatic() {
     this.context.renameDefinition(
       this.props.path,
-      React.findDOMNode(this.refs.input).value,
+      this.refs.input.value,
     );
     this.setState({ editing: false });
   }
@@ -198,6 +197,22 @@ class ItemTitle extends Component {
       this.returnToStatic();
     }
   }
+}
+
+
+function ListItem({ primaryText, onClick }) {
+  return (
+    <span key={primaryText} onClick={onClick}>{primaryText}</span>
+  );
+}
+
+
+function UiList({ children }) {
+  return (
+    <div>
+      {children}
+    </div>
+  );
 }
 
 
@@ -254,15 +269,28 @@ class Definition extends Component {
             <Expression path={path.push('type')}>
             </Expression>
             */}
-            <MuiList>
+            <UiList>
               {menuItems}
-            </MuiList>
+            </UiList>
           </div>
 
         </div>
       </Draggable>
     );
   }
+}
+
+
+function TextField({ multiLine, defaultValue, ref }) {
+  const field = multiLine ?
+    <textarea className="mdl-textfield__input" type="text" ref={ref} ></textarea> :
+    <input className="mdl-textfield__input" type="text" defaultValue={defaultValue} ref={ref} />;
+
+  return (
+    <div className="mdl-textfield mdl-js-textfield">
+      {field}
+    </div>
+  );
 }
 
 
@@ -331,6 +359,30 @@ class Item extends Component {
 }
 
 
+class DropDownMenu extends Component {
+  static propTypes = {
+    menuItems: PropTypes.array.isRequired,
+    value: PropTypes.string.isRequired,
+    style: PropTypes.object,
+    onChange: PropTypes.func.isRequired,
+  };
+
+  render() {
+    const { menuItems, value, style, onChange } = this.props;
+
+    return (
+      <select value={value} onChange={onChange} style={style}>
+        {menuItems.map(({ text, payload }) => (
+          <option key={payload} value={payload}>
+            {text}
+          </option>
+        ))}
+      </select>
+    );
+  }
+}
+
+
 class NewItem extends Component {
   static contextTypes = {
     addNew: PropTypes.func.isRequired,
@@ -376,7 +428,8 @@ class NewItem extends Component {
         </div>
 
         <div>
-          Visibility: <DropDownMenu menuItems={visibilities}
+          Visibility:
+            <DropDownMenu menuItems={visibilities}
                                     value={this.state.visibility}
                                     style={{ top: 16 }}
                                     onChange={::this.handleSelectVisibility} />

@@ -44,7 +44,7 @@ const render = (loc, hist, str, preload) => {
         ReactDOM.render(<div>
           {component}
           <DebugPanel top right bottom key="debugPanel">
-            <DevTools store={store} monitor={LogMonitor}/>
+            <DevTools store={store} monitor={LogMonitor} visibleOnLoad={false} />
           </DebugPanel>
         </div>, dest);
       }

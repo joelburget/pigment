@@ -26,7 +26,7 @@
 //       {() => <InfoBar/>}
 //     </Provider>
 //   );
-//   const dom = React.findDOMNode(renderer);
+//   const dom = renderer;
 
 //   it('should render correctly', () => {
 //     expect(renderer).to.be.ok;

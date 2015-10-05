@@ -13,8 +13,7 @@ export default function createApiClientStore(client, data) {
       applyMiddleware(middleware),
       devTools(),
       persistState(window.location.href.match(/[?&]debug_session=([^&]+)\b/)),
-      createStore
-    );
+    )(createStore);
   } else {
     finalCreateStore = applyMiddleware(middleware)(createStore);
   }
@@ -24,13 +23,14 @@ export default function createApiClientStore(client, data) {
   //
   // ... that's the idea, anyway.
   // HACK HACK HACK
-  var hydrated;
+  let hydrated;
   if (data == null) {
     hydrated = undefined;
   } else {
     hydrated = Object.assign({}, data);
     hydrated.module = decoder.decode(hydrated.module);
   }
+
   const reducer = require('../ducks/reducer');
   const store = finalCreateStore(reducer, hydrated);
   store.client = client;
