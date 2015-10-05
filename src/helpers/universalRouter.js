@@ -1,7 +1,7 @@
 import qs from 'query-string';
 import React from 'react';
 import {match, RoutingContext} from 'react-router';
-import createRoutes from './createRoutes';
+import createRoutes from '../routes';
 import { Provider } from 'react-redux';
 
 const getFetchData = (component = {}) => {

@@ -67,6 +67,7 @@ export default class App extends Component {
     const {user} = this.props;
     return (
       <div className={styles.app}>
+        <DocumentMeta {...meta} />
         <nav>
           <div>
             <Link to="/" className={styles.title}>

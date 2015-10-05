@@ -20,7 +20,7 @@ module.exports = {
       extension: 'scss',
       development: true,
       filter: function(m, regex, options) {
-        if (options.environment === 'production') {
+        if (options.development) {
           return regex.test(m.name);
         }
         //filter by modules with '.scss' inside name string, that also have name and moduleName that end with 'ss'(allows for css, less, sass, and scss extensions)
@@ -42,7 +42,9 @@ module.exports = {
       },
       parser: function(m, options) {
         if (m.source) {
-          var regex = options.development ? /exports\.locals = ((.|\n)+);/ : /module\.exports = ((.|\n)+);/;
+          var regex = options.development ?
+            /exports\.locals = ((.|\n)+);/ :
+            /module\.exports = ((.|\n)+);/;
           var match = m.source.match(regex);
           return match ? JSON.parse(match[1]) : {};
         }
