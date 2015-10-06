@@ -97,11 +97,12 @@ export default class Rec extends RecordShape {
       label = labelPrefix + ' ' + i;
     }
 
-    const val = new Hole(null, Type.singleton);
+    const ty = new Hole(null, Type.singleton);
+    const val = new Hole(null, ty);
 
     const newTm = new Rec(
       values.set(label, val),
-      new Row(row.entries.set(label, Type.singleton))
+      new Row(row.entries.set(label, ty))
     );
 
     return openNewEdit(id, this, newTm, new List());

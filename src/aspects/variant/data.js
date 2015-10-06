@@ -69,11 +69,12 @@ export class Variant extends VariantShape {
       label = labelPrefix + ' ' + i;
     }
 
-    const val = new Hole(null, Type.singleton);
+    const ty = new Hole(null, Type.singleton);
+    const val = new Hole(null, ty);
 
     const newTm = new Variant({
       values: values.set(label, val),
-      row: new Row(row.entries.set(label, Type.singleton))
+      row: new Row(row.entries.set(label, ty))
     });
 
     return openNewEdit(id, this, newTm, new List());
