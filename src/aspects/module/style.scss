@@ -36,11 +36,6 @@ $vBorder: 1px solid #e0e0e0;
   }
 }
 
-.itemRow {
-  display: flex;
-  flex-direction: column;
-}
-
 .itemLabel {
   display: flex;
   flex-direction: column;
@@ -55,11 +50,11 @@ $vBorder: 1px solid #e0e0e0;
 .itemContent {
   display: flex;
   flex-direction: column;
+  flex: 1;
 
   vertical-align: top;
   border-left: $vBorder;
   padding: $padding 0 $padding $bigMargin;
-  width: 500px;
 }
 
 .itemNotes {
@@ -73,5 +68,5 @@ $vBorder: 1px solid #e0e0e0;
 }
 
 .newItem {
-  border: 2px dashed gray;
+  padding-top: 10px;
 }

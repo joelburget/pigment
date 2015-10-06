@@ -243,44 +243,43 @@ class Definition extends Component {
 
     return (
       <Draggable moveItem={moveItem} path={path}>
-        <div className={styles.itemRow}>
 
-          <div // display row
-            className={styles.rowContent}
+        <div // display row
+          className={styles.rowContent}
+          >
+
+          <div className={styles.itemLabel} // header column
             >
-            <div className={styles.itemLabel}>
-              <div className={styles.itemType}>DEFINITION</div>
-              <ItemTitle value={name} path={path} />
-              <div>{visibilityElem}</div>
-            </div>
-            <div className={styles.itemContent}>
-              <Expression path={path.push('defn')}>
-                {defn}
-              </Expression>
-            </div>
-            <div className={styles.itemNotes}>
-              <div className={styles.itemType}>NOTES</div>
-              <TextField multiLine />
-            </div>
+            <div className={styles.itemType}>DEFINITION</div>
+            <ItemTitle value={name} path={path} />
+            <div>{visibilityElem}</div>
           </div>
 
-          <div // type row
+          <div className={styles.itemContent} // term column
+            >
+            <div className={styles.itemType}>TERM</div>
+            <Expression path={path.push('defn')}>
+              {defn}
+            </Expression>
+          </div>
+
+          <div className={styles.itemContent} // type column
             >
             <div className={styles.itemType}>TYPE</div>
             <Expression path={path.push('defn').push('type')}>
               {defn.type}
             </Expression>
           </div>
-
-          <div // edit row
-            >
-            <div className={styles.itemType}>EDIT</div>
-            <UiList>
-              {menuItems}
-            </UiList>
-          </div>
-
         </div>
+
+        <div // edit row
+          >
+          <div className={styles.itemType}>EDIT</div>
+          <UiList>
+            {menuItems}
+          </UiList>
+        </div>
+
       </Draggable>
     );
   }
