@@ -7,7 +7,7 @@ import { List, Record } from 'immutable';
 
 import { mkStuck, mkSuccess } from './evaluation';
 import { register } from './registry';
-import { openNewEdit } from './edit';
+import { POKE_HOLE, pokeHole, doPokeHole } from '../commands/pokeHole';
 
 import type { EvaluationResult } from './evaluation';
 import type { Ref, AbsRef } from './ref';
@@ -44,9 +44,6 @@ export type Tm = {
 };
 
 
-const POKE_HOLE = 'POKE_HOLE';
-
-
 export class Type {
   static name: string;
 
@@ -62,12 +59,7 @@ export class Type {
   }
 
   actions(): List<Action> {
-    return List([
-      {
-        id: POKE_HOLE,
-        title: 'poke hole',
-      },
-    ]);
+    return List([pokeHole]);
   }
 
   performEdit(id: string): Edit {
@@ -76,12 +68,7 @@ export class Type {
       'Type.edit only knows of POKE_HOLE'
     );
 
-    return openNewEdit(
-      id,
-      this,
-      new Hole(null, Type.singleton),
-      List()
-    );
+    return doPokeHole(this);
   }
 
   static typeClass = Type;

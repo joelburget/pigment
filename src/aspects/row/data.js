@@ -8,6 +8,7 @@ import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
 import { ADD_ENTRY, addEntry } from '../../commands/addEntry';
+import { POKE_HOLE, pokeHole, doPokeHole } from '../../commands/pokeHole';
 
 import type { Tm } from '../../theory/tm';
 
@@ -29,21 +30,25 @@ export default class Row extends rowShape {
   }
 
   actions(): List<Action> {
-    return List([addEntry]);
+    return List([addEntry, pokeHole]);
   }
 
   performEdit(id: string): List<Edit> {
     invariant(
-      id === ADD_ENTRY,
-      'Row.performEdit only knows of ADD_ENTRY'
+      id === ADD_ENTRY || id === POKE_HOLE,
+      'Row.performEdit only knows of ADD_ENTRY and POKE_HOLE'
     );
 
-    const { values, row } = this;
+    if (id === ADD_ENTRY) {
+      const { values, row } = this;
 
-    const label = 'new entry';
-    const newRow = new Row(this.entries.set(label, Type.singleton))
+      const label = 'new entry';
+      const newRow = new Row(this.entries.set(label, Type.singleton))
 
-    return openNewEdit(id, this, newRow, new List());
+      return openNewEdit(id, this, newRow, new List());
+    } else {
+      return doPokeHole(this);
+    }
   }
 
   static typeClass = Type;
