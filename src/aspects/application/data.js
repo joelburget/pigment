@@ -38,10 +38,6 @@ export default class App extends appShape {
     throw new Error('unimplemented - App.subst');
   }
 
-  slots(): Iterable<K, V> {
-    return List([ this.type ]);
-  }
-
   static fillHole(type: Tm): App {
     // how to quantify this variable so it's the same in both places?
     // future plan: instantiate here with a quantifier, its context menu allows

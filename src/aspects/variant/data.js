@@ -46,10 +46,6 @@ export default class Variant extends VariantShape {
     throw new Error('unimplemented - Variant.subst');
   }
 
-  slots(): Iterable<K, V> {
-    throw new Error('unimplemented - Variant.slots');
-  }
-
   actions(): List<Action> {
     return List([
       {

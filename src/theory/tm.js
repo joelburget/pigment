@@ -28,8 +28,6 @@ export type Tm = {
 
   subst: (root: AbsRef, ref: Ref, value: Tm) => Tm;
 
-  slots: () => Iterable<K, V>;
-
   actions: () => List<Action>;
 
   performEdit: (id: string) => Edit;
@@ -55,16 +53,12 @@ export class Type {
   // $flowstatic
   static singleton: Type = new Type();
 
-  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
+  evaluate(root: AbsRef): EvaluationResult {
     return mkSuccess(this);
   }
 
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {
     return this;
-  }
-
-  slots(): Iterable<K, V> {
-    return Iterable();
   }
 
   actions(): List<Action> {
@@ -128,10 +122,6 @@ export class Hole extends HoleShape {
     return ref.is(this.ref, root) ? value : this;
   }
 
-  slots() {
-    throw new Error('Hole.slots - unimplemented');
-  }
-
   actions(): List<Action> {
     return List();
   }
@@ -164,10 +154,6 @@ export class Var extends VarShape {
 
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {
     return ref.is(this.ref, root) ? value : this;
-  }
-
-  slots() {
-    throw new Error('Var.slots - unimplemented');
   }
 
   actions(): List<Action> {

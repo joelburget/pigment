@@ -42,25 +42,3 @@ export function deserialize(obj: TmRecordEntry): any {
 
   return new registry[name](withoutName);
 }
-
-
-// // if this works it's going to be *so cool*.
-// // * try unifying the most general form (slots are variables) of each
-// //   registered form
-// // * if it unifies keep that unified form
-// // * return all unified forms
-// export function unifiersOf(tm: Tm): QueryResult {
-//   const results = [];
-
-//   // XXX surely we have to do something with form
-//   // * form is the class -- we need a way to instantiate it with all variables
-//   // * can see how that works for lambda -- how about records?
-//   registry.forEach((form, name) => {
-//     const unified = unify(tm, form);
-//     if (unified != null) {
-//       results.push([name, unified]);
-//     }
-//   });
-
-//   return results;
-// }

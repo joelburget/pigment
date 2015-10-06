@@ -66,10 +66,6 @@ export default class Rec extends RecordShape {
     throw new Error('unimplemented - Record.subst');
   }
 
-  slots(): Iterable<K, V> {
-    throw new Error('unimplemented - Record.slots');
-  }
-
   actions(): List<Action> {
     return List([
       {

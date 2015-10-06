@@ -327,9 +327,8 @@ export function findCompletions(state: ModuleState,
     matches = [];
   }
 
-  // find forms that could match this thing. ~using slots!!~
-  // scratch that slots thing... really interesting that this uses almost no
-  // information about the actual hole we're trying to fill
+  // really interesting that this uses almost no information about the actual
+  // hole we're trying to fill
   const intros = readRegistry()
     .filter(cls => cls.typeClass === type.constructor)
     .toArray();
