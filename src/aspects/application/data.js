@@ -16,7 +16,7 @@ var appShape = Record({
 export default class App extends appShape {
 
   constructor(func: Tm, arg: Tm, type: Tm): void {
-    var fType = func.getType();
+    var fType = func.type;
 
     if (fType instanceof Arr) {
       var type = fType.codomain;
@@ -36,10 +36,6 @@ export default class App extends appShape {
   // hm... this hardly seems to make sense for app...
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {
     throw new Error('unimplemented - App.subst');
-  }
-
-  getType(): Tm {
-    return this.type;
   }
 
   slots(): Iterable<K, V> {

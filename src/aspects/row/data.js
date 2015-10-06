@@ -15,17 +15,14 @@ const ADD_ENTRY = 'ADD_ENTRY';
 
 var rowShape = Record({
   entries: null, // Map<string, Tm>
+  type: null, // Tm
 }, 'row');
 
 export default class Row extends rowShape {
 
   // TODO maybe this should be an OrderedMap?
   constructor(entries: Map<string, Tm>): void {
-    super({ entries });
-  }
-
-  getType(): Tm {
-    return Type.singleton;
+    super({ entries, type: Type.singleton });
   }
 
   evaluate(root: AbsRef, ctx: Context): EvaluationResult {

@@ -20,17 +20,23 @@ import Row from '../row/data';
 const ADD_ENTRY = 'ADD_ENTRY';
 
 
-var VariantShape = Record({
-  values: null,
-  row: null,
+const VariantTyShape = Record({
+  row: null, // Row
+  type: null, // Type
 });
 
 
-export class Variant extends VariantShape {
-  getType(): Tm {
-    return this.row;
-  }
+export class VariantTy extends VariantTyShape {
+}
 
+
+const VariantShape = Record({
+  values: null,
+  type: null,
+});
+
+
+export default class Variant extends VariantShape {
   evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
     // TODO evaluate all children?
     throw new Error('unimplemented - Variant.evaluate');

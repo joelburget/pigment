@@ -36,19 +36,25 @@ import type { AbsRef, Ref } from '../../theory/ref';
 const ADD_ENTRY = 'ADD_ENTRY';
 
 
+const RecordTyShape = Record({
+  row: null, // Row
+  type: null, // Type
+});
+
+
+export class RecordTy extends RecordTyShape {
+}
+
+
 const RecordShape = Record({
   values: null,
-  row: null,
+  type: null,
 }, 'rec');
 
 export default class Rec extends RecordShape {
 
   constructor(values: Map<string, Tm>, row: Row) {
     super({ values, row });
-  }
-
-  getType(): Tm {
-    return this.row;
   }
 
   evaluate(root: AbsRef, args: [Tm]): EvaluationResult {

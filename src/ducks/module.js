@@ -122,20 +122,13 @@ const contents = Immutable.fromJS([
 ]);
 
 
+const scratchTy = new Hole(null, Type.singleton);
 const scratch = new Definition({
   // TODO: 'new definition' here, 'new item' in module/view
   name: 'new definition',
-  defn: new Hole(
-    '_',
-
-    // The type of this thing is a hole!
-    // TODO: don't show the kind in the new definition prompt!
-    new Hole(
-      '_',
-      Type.singleton
-    )
-  ),
+  defn: new Hole('_', scratchTy),
   visibility: MODULE_PUBLIC,
+  type: scratchTy,
 });
 
 
@@ -311,22 +304,28 @@ export function findCompletions(state: ModuleState,
                                 type: Tm,
                                 ref: AbsRef,
                                 prefix: string): Array<Binder> {
-  var matches = [];
+  let matches = [];
 
-  // walk from the root to the ref, collecting matching binders
-  var currentLoc = state;
-  ref.path.forEach(piece => {
-    currentLoc = currentLoc.get(piece);
+  try {
+    // walk from the root to the ref, collecting matching binders
+    var currentLoc = state;
+    ref.path.forEach(piece => {
+      currentLoc = currentLoc.get(piece);
 
-    if (currentLoc instanceof Lam) {
-      var binder = currentLoc.binder;
-      if (binder.type.unify(type) != null) {
-        if (binder.name.startsWith(prefix)) {
-          matches.push(binder);
+      if (currentLoc instanceof Lam) {
+        var binder = currentLoc.binder;
+        if (binder.type.unify(type) != null) {
+          if (binder.name.startsWith(prefix)) {
+            matches.push(binder);
+          }
         }
       }
-    }
-  });
+    });
+  } catch (err) {
+    // TODO(joel) fix this properly by not using the fake path .type in the
+    // module render.
+    matches = [];
+  }
 
   // find forms that could match this thing. ~using slots!!~
   // scratch that slots thing... really interesting that this uses almost no

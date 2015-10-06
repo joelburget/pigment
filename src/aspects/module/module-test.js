@@ -1,7 +1,7 @@
 import expect from 'expect';
 import { List } from 'immutable';
 
-import { Module, Note, Definition, Property, Example } from '../module/data';
+import { Module, Note, Definition, Property, Example, MODULE_PUBLIC, MODULE_PRIVATE } from '../module/data';
 
 import expectImmutableIs from '../../testutil/expectImmutableIs';
 import { id } from '../../testutil/examples';
@@ -17,6 +17,7 @@ const testModule = new Module({
     new Definition({
       name: 'f',
       defn: id,
+      visibility: MODULE_PUBLIC,
     }),
   ]),
 });

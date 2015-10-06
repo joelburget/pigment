@@ -28,8 +28,6 @@ export type Tm = {
 
   subst: (root: AbsRef, ref: Ref, value: Tm) => Tm;
 
-  getType: () => Tm;
-
   slots: () => Iterable<K, V>;
 
   actions: () => List<Action>;
@@ -62,10 +60,6 @@ export class Type {
   }
 
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {
-    return this;
-  }
-
-  getType(): Tm {
     return this;
   }
 
@@ -109,6 +103,8 @@ export class Type {
 
   static form = INTRO;
 }
+
+Type.singleton.type = Type.singleton;
 
 register('type', Type);
 

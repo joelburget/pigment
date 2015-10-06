@@ -13,17 +13,14 @@ import type { Tm } from '../../theory/tm';
 
 
 var labelShape = Record({
-  name: null,
+  name: null, // string
+  type: null, // Tm
 }, 'label');
 
 export default class Label extends labelShape {
 
   constructor(name: string): void {
-    super({ name });
-  }
-
-  getType(): Tm {
-    return Type.singleton;
+    super({ name, type: Type.singleton });
   }
 
   evaluate(root: AbsRef): EvaluationResult {

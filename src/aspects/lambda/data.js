@@ -11,23 +11,28 @@ import type { Tm } from '../../theory/tm';
 import type { RelRef, AbsRef, Ref } from '../../theory/ref';
 
 
-var lamShape = Record({
-  name: null,
+const ArrowShape = Record({
   domain: null,
-  body: null,
   codomain: null,
+});
+
+
+export class Arrow extends ArrowShape {
+}
+
+
+const LamShape = Record({
+  name: null, // string
+  body: null, // Tm
+  type: null, // Arrow
 }, 'lam');
 
-export default class Lam extends lamShape {
-
-  constructor(name: string, domain: Tm, body: Tm, codomain: Tm): void {
-    super({ name, domain, body, codomain });
-  }
+export default class Lam extends LamShape {
 
   // apply just one argument
   evaluate(root: AbsRef, args: [Tm]): Tm {
-    var [ arg ] = args;
-    var { body, name } = this;
+    const [ arg ] = args;
+    const { body, name } = this;
 
     // if the name is null it's not really doing anything
     if (name != null) {
@@ -49,23 +54,13 @@ export default class Lam extends lamShape {
     );
   }
 
-  getType(): Tm {
-    return new Arr(this.domain, this.codomain);
-  }
-
-  slots(): List<Tm> {
-    // TODO lambda doesn't have codomain yet.
-    return List([ this.domain, this.codomain ]);
-  }
-
   static fillHole(type: Tm): Lambda {
     // invariant(type instanceof
     throw new Error('unimplemented - Lambda.fillHole');
     return new Lambda(
       name,
-      domain,
       body,
-      codomain
+      type,
     );
   }
 

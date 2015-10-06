@@ -264,6 +264,14 @@ class Definition extends Component {
             </div>
           </div>
 
+          <div // type row
+            >
+            <div className={styles.itemType}>TYPE</div>
+            <Expression path={path.push('defn').push('type')}>
+              {defn.type}
+            </Expression>
+          </div>
+
           <div // edit row
             >
             <div className={styles.itemType}>EDIT</div>

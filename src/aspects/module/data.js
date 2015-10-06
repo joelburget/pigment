@@ -1,6 +1,7 @@
 // @flow
 
 import { List, Record } from 'immutable';
+import invariant from 'invariant';
 
 import { register } from '../../theory/registry';
 

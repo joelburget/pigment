@@ -13,9 +13,6 @@ export class External extends Record({ external: null, type: null }, 'external')
 
   evaluate(ctx: Context): EvaluationResult<Tm> {
   }
-
-  getType(ctx: Context) {
-  }
 }
 
 // js primitives:
