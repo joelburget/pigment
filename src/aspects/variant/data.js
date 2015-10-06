@@ -87,17 +87,17 @@ export default class Variant extends VariantShape {
 
   static typeClass = Row;
 
-  static fillHole(row: Row): Variant {
+  static fillHole(type: Row): Variant {
     invariant(
-      row.constructor === Row,
+      type.constructor === Row,
       'Variant asked to fill a hole of type other than Row'
     );
 
-    const values = row.entries.map(
+    const values = type.entries.map(
       (type, name) => new Hole(name + ' hole', type)
     );
 
-    return new Variant({ values, row });
+    return new Variant({ values, type });
   }
 
   static form = INTRO;
