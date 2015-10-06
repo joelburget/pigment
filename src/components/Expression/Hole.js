@@ -80,18 +80,26 @@ export default class Hole extends Component {
     );
   }
 
+  componentDidMount() {
+    const completions = this.fetchCompletions('');
+    this.setState({ completions });
+  }
+
   handleAutocomplete(value) {
-    const hole = this.props.children;
+    const completions = this.fetchCompletions(value);
+    this.setState({ completions });
+  }
+
+  fetchCompletions(value) {
+    const { children: hole, path } = this.props;
     // Need to find values in scope
     // ... of the right type.
     //
     // This is the really important bit -- search is type-directed.
-    const completions = this.context.findCompletions(
+    return this.context.findCompletions(
       hole.type,
-      new AbsRef({ path: this.props.path }),
+      new AbsRef({ path }),
       value
     );
-
-    this.setState({ completions });
   }
 }

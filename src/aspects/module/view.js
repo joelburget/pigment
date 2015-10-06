@@ -283,16 +283,23 @@ class Definition extends Component {
 }
 
 
-function TextField({ multiLine, defaultValue, ref }) {
-  const field = multiLine ?
-    <textarea className="mdl-textfield__input" type="text" ref={ref} ></textarea> :
-    <input className="mdl-textfield__input" type="text" defaultValue={defaultValue} ref={ref} />;
+class TextField extends Component {
+  render() {
+    const { multiLine, defaultValue } = this.props;
+    const field = multiLine ?
+      <textarea className="mdl-textfield__input" type="text" ref="iput" ></textarea> :
+      <input className="mdl-textfield__input" type="text" defaultValue={defaultValue} ref="iput" />;
 
-  return (
-    <div className="mdl-textfield mdl-js-textfield">
-      {field}
-    </div>
-  );
+    return (
+      <div className="mdl-textfield mdl-js-textfield">
+        {field}
+      </div>
+    );
+  }
+
+  getValue() {
+    return this.refs.iput.value;
+  }
 }
 
 
