@@ -9,6 +9,10 @@ import { register } from '../../theory/registry';
 import type { Tm } from '../../theory/tm';
 
 
+// TODO does it smell that the same code is defined in both Row and Record?
+const ADD_ENTRY = 'ADD_ENTRY';
+
+
 var rowShape = Record({
   entries: null, // Map<string, Tm>
 }, 'row');
@@ -31,19 +35,24 @@ export default class Row extends rowShape {
   actions(): List<Action> {
     return List([
       {
-        name: 'add entry',
-        action: () => {
-          const newRow = new Row(
-            this.entries.set(
-              'new entry',
-              new Hole('new entry', Type.singleton)
-            )
-          );
-          console.log('row: add entry', newRow);
-          return newRow;
-        }
+        id: ADD_ENTRY,
+        title: 'add entry',
       },
     ]);
+  }
+
+  performEdit(id: string): List<Edit> {
+    invariant(
+      id === ADD_ENTRY,
+      'Row.performEdit only knows of ADD_ENTRY'
+    );
+
+    const { values, row } = this;
+
+    const label = 'new entry';
+    const newRow = new Row(this.entries.set(label, Type.singleton))
+
+    return openNewEdit(id, this, newRow, new List());
   }
 
   static typeClass = Type;

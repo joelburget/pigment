@@ -30,6 +30,17 @@ export default class Label extends labelShape {
     return mkSuccess(this);
   }
 
+  actions(): List<Action> {
+    return List();
+  }
+
+  performEdit(id: string): List<Edit> {
+    invariant(
+      false,
+      "Label.performEdit doesn't know any actions"
+    );
+  }
+
   static typeClass = Type;
 
   static fillHole(type: Tm): Label {

@@ -79,15 +79,23 @@ export default class Rec extends recordShape {
     ]);
   }
 
+  // TODO should this use Row.performEdit instead of building its own row?
   performEdit(id: string): List<Edit> {
     invariant(
       id === ADD_ENTRY,
-      'Type.edit only knows of POKE_HOLE'
+      'Row.performEdit only knows of ADD_ENTRY'
     );
 
     const { values, row } = this;
 
-    const label = 'new entry';
+    const labelPrefix = 'new entry';
+    let label = labelPrefix;
+    let i = 0;
+    while (this.values.has(label)) {
+      i += 1
+      label = labelPrefix + ' ' + i;
+    }
+
     const val = new Hole(null, Type.singleton);
 
     const newTm = new Rec(
