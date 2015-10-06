@@ -110,8 +110,8 @@ const HoleShape = Record({
 
 export class Hole extends HoleShape {
 
-  constructor(name: ?string, type: Object): void {
-    super({ type, name });
+  constructor(name: ?string, type: Tm): void {
+    super({ name, type });
   }
 
   evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
@@ -170,25 +170,34 @@ const ConflictShape = Record({
 });
 
 
+const TAKE_LEFT = 'TAKE_LEFT';
+const TAKE_RIGHT = 'TAKE_RIGHT';
+
 export class Conflict extends ConflictShape {
 
   actions(): List<Action> {
     return List([
       {
-        name: 'take left',
-        action: () => {
-          console.log('conflict: take left', this.left);
-          return this.left;
-        }
+        title: 'take left',
+        id: TAKE_LEFT,
       },
       {
-        name: 'take right',
-        action: () => {
-          console.log('conflict: take right', this.right);
-          return this.right;
-        }
+        title: 'take right',
+        id: TAKE_RIGHT,
       },
     ]);
+  }
+
+  performEdit(id: string): Edit {
+    invariant(
+      id === TAKE_LEFT || id === TAKE_RIGHT,
+      'Conflict only knows TAKE_LEFT and TAKE_RIGHT'
+    );
+
+    return {
+      TAKE_LEFT: this.left,
+      TAKE_RIGHT: this.right,
+    }[id];
   }
 
 }

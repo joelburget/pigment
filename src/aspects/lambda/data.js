@@ -32,7 +32,7 @@ export default class Lam extends LamShape {
   // apply just one argument
   evaluate(root: AbsRef, args: [Tm]): Tm {
     const [ arg ] = args;
-    const { body, name } = this;
+    let { body, name } = this;
 
     // if the name is null it's not really doing anything
     if (name != null) {
