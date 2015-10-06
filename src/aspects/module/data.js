@@ -6,9 +6,11 @@ import invariant from 'invariant';
 import { register } from '../../theory/registry';
 
 
+const ADD_ENTRY = 'ADD_ENTRY';
 export const MODULE_PUBLIC = 'module/MODULE_PUBLIC';
 export const MODULE_PRIVATE = 'module/MODULE_PRIVATE';
 // idris also has abstract, though i'm not sure when it's useful
+
 
 type Visibility = MODULE_PUBLIC | MODULE_PRIVATE;
 
@@ -35,8 +37,20 @@ export default class Module extends ModuleShape {
 
   actions(): List<Action> {
     return List([
-      { name: 'add entry', action: () => { console.log('mod: add entry'); } },
+      {
+        title: 'add entry',
+        id: ADD_ENTRY,
+      },
     ]);
+  }
+
+  performEdit(id: string): Edit {
+    invariant(
+      id === ADD_ENTRY,
+      'Module only konws ADD_ENTRY'
+    );
+
+    throw new Error('Module.performEdit -- not implemented yet');
   }
 }
 
