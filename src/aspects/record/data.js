@@ -1,6 +1,7 @@
 // @flow
 
 import { List, Record, Map } from 'immutable';
+import type { Iterable } from 'immutable';
 import invariant from 'invariant';
 
 import { INTRO, Hole, Type } from '../../theory/tm';
@@ -35,12 +36,12 @@ import type { AbsRef, Ref } from '../../theory/ref';
 const ADD_ENTRY = 'ADD_ENTRY';
 
 
-const recordShape = Record({
+const RecordShape = Record({
   values: null,
   row: null,
 }, 'rec');
 
-export default class Rec extends recordShape {
+export default class Rec extends RecordShape {
 
   constructor(values: Map<string, Tm>, row: Row) {
     super({ values, row });

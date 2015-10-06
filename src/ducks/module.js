@@ -13,6 +13,7 @@ import Module, {
 import Row from '../aspects/row/data';
 import Label from '../aspects/label/data';
 import Rec from '../aspects/record/data';
+import Variant from '../aspects/variant/data';
 import Lam from '../aspects/lambda/data';
 
 import { OPEN } from '../theory/edit';

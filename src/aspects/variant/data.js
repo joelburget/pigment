@@ -5,20 +5,25 @@
 // primitives:
 // *
 
-import { Record } from 'immutable';
+import { List, Record } from 'immutable';
 import type { Iterable } from 'immutable';
+import invariant from 'invariant';
 
+import { INTRO, Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
 
-import type { Label } from '../record';
+import Label from '../label/data';
+import Row from '../row/data';
 
 
-var variantShape = Record({
+var VariantShape = Record({
+  values: null,
+  row: null,
 });
 
-export class Variant extends variantShape {
+export class Variant extends VariantShape {
   getType(): Tm {
-    throw new Error('unimplemented - Variant.getType');
+    return this.row;
   }
 
   evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
@@ -32,6 +37,32 @@ export class Variant extends variantShape {
 
   slots(): Iterable<K, V> {
     throw new Error('unimplemented - Variant.slots');
+  }
+
+  actions(): List<Action> {
+    return List();
+  }
+
+  performEdit(id: string): List<Edit> {
+    invariant(
+      false,
+      "Variant.performEdit doesn't know any edits"
+    );
+  }
+
+  static typeClass = Row;
+
+  static fillHole(row: Row): Variant {
+    invariant(
+      row.constructor === Row,
+      'Variant asked to fill a hole of type other than Row'
+    );
+
+    const values = row.entries.map(
+      (type, name) => new Hole(name + ' hole', type)
+    );
+
+    return new Variant({ values, row });
   }
 
   static form = INTRO;

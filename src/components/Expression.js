@@ -8,6 +8,7 @@ import Application from '../aspects/application/view';
 import Label from '../aspects/label/view';
 import Row from '../aspects/row/view';
 import Rec from '../aspects/record/view';
+import Variant from '../aspects/variant/view';
 
 import styles from './Expression.scss';
 
@@ -57,6 +58,7 @@ export default class Expression extends Component {
       Rec,
       // rowkind: RowKind,
       Row,
+      Variant,
 
       // selectrow: SelectRow,
       // extendrow: ExtendRow,
