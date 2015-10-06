@@ -1,7 +1,7 @@
 // @flow
 
 import invariant from 'invariant';
-import { Record } from 'immutable';
+import { List, Record } from 'immutable';
 
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
