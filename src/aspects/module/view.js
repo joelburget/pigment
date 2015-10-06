@@ -275,10 +275,6 @@ class Definition extends Component {
           <div // edit row
             >
             <div className={styles.itemType}>EDIT</div>
-            {/*
-            <Expression path={path.push('type')}>
-            </Expression>
-            */}
             <UiList>
               {menuItems}
             </UiList>
