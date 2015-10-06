@@ -64,7 +64,7 @@ export default class Variant extends VariantShape {
       "Variant.performEdit only knows of ADD_ENTRY"
     );
 
-    const { values, row } = this;
+    const { values, type } = this;
 
     const labelPrefix = 'new entry';
     let label = labelPrefix;
@@ -79,7 +79,7 @@ export default class Variant extends VariantShape {
 
     const newTm = new Variant({
       values: values.set(label, val),
-      row: new Row(row.entries.set(label, ty))
+      type: new Row(type.entries.set(label, ty))
     });
 
     return openNewEdit(id, this, newTm, new List());
