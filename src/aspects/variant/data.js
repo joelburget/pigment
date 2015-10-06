@@ -11,15 +11,20 @@ import invariant from 'invariant';
 
 import { INTRO, Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
+import { openNewEdit } from '../../theory/edit';
 
 import Label from '../label/data';
 import Row from '../row/data';
+
+
+const ADD_ENTRY = 'ADD_ENTRY';
 
 
 var VariantShape = Record({
   values: null,
   row: null,
 });
+
 
 export class Variant extends VariantShape {
   getType(): Tm {
@@ -40,14 +45,38 @@ export class Variant extends VariantShape {
   }
 
   actions(): List<Action> {
-    return List();
+    return List([
+      {
+        id: ADD_ENTRY,
+        title: 'add entry',
+      },
+    ]);
   }
 
   performEdit(id: string): List<Edit> {
     invariant(
-      false,
-      "Variant.performEdit doesn't know any edits"
+      id === ADD_ENTRY,
+      "Variant.performEdit only knows of ADD_ENTRY"
     );
+
+    const { values, row } = this;
+
+    const labelPrefix = 'new entry';
+    let label = labelPrefix;
+    let i = 0;
+    while (this.values.has(label)) {
+      i += 1
+      label = labelPrefix + ' ' + i;
+    }
+
+    const val = new Hole(null, Type.singleton);
+
+    const newTm = new Variant({
+      values: values.set(label, val),
+      row: new Row(row.entries.set(label, Type.singleton))
+    });
+
+    return openNewEdit(id, this, newTm, new List());
   }
 
   static typeClass = Row;
