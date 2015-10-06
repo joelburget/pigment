@@ -4,7 +4,9 @@ import invariant from 'invariant';
 import { Record, Map, List } from 'immutable';
 
 import { INTRO, Hole, Type } from '../../theory/tm';
+import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
+import { openNewEdit } from '../../theory/edit';
 
 import type { Tm } from '../../theory/tm';
 

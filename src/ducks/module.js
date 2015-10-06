@@ -210,7 +210,7 @@ export default function reducer(state = initialState, action = {}) {
     case OPEN_NEW_EDIT:
       const { path, catalyst } = action;
       // XXX does catalyst have a path?
-      const tm = lookupRef(state, new AbsRef({ path }));
+      const focus = itemGetFocus(state, path);
 
       // Action = {
       //   id: string;
@@ -219,7 +219,7 @@ export default function reducer(state = initialState, action = {}) {
       // }
       //
       // Action => List<Edit>
-      const edit = tm.performEdit(catalyst);
+      const edit = focus.performEdit(catalyst);
 
       // TODO - I think we want to be a little more sophisticated here:
       // - if an edit can be completed (closed) we should do that!
@@ -282,17 +282,24 @@ export function isPathHighlighted(mouseSelection: ?List<string>,
 }
 
 
-export function getActions(state: ModuleState, path: List<string>) {
+// Look up some definition in the module. It's possible that there'll be focus
+// within the module, which we *actually* want to get.
+function itemGetFocus(state: ModuleState, path: List<string>) {
   var defn = state.getIn(path);
   const { mouseSelection } = state;
 
   // If the mouse selection is within this definition, use the selected term
   // instead.
   if (mouseSelection && isPrefix(path, mouseSelection)) {
-    return state.getIn(mouseSelection).actions();
+    return state.getIn(mouseSelection);
   } else {
-    return defn.defn.actions();
+    return defn.defn;
   }
+}
+
+
+export function getActions(state: ModuleState, path: List<string>) {
+  return itemGetFocus(state, path).actions();
 }
 
 
