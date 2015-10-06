@@ -6,6 +6,9 @@ import invariant from 'invariant';
 import { INTRO, Hole, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
+import { openNewEdit } from '../../theory/edit';
+
+import Label from '../label/data';
 import Row from '../row/data';
 
 import type { Tm } from '../../theory/tm';
@@ -29,10 +32,10 @@ import type { AbsRef, Ref } from '../../theory/ref';
 //   origin = { x = 0, y = 0 }
 
 
-var ADD_ENTRY = 'ADD_ENTRY';
+const ADD_ENTRY = 'ADD_ENTRY';
 
 
-var recordShape = Record({
+const recordShape = Record({
   values: null,
   row: null,
 }, 'rec');
@@ -65,15 +68,34 @@ export default class Rec extends recordShape {
       {
         id: ADD_ENTRY,
         title: 'add entry',
-        value: new Rec(
-          this.values.set(
-            'new entry',
-            new Hole('new entry', Type.singleton)
-          ),
-          this.row
-        )
+        // value: new Rec(
+        //   this.values.set(
+        //     'new entry',
+        //     new Hole('new entry', Type.singleton)
+        //   ),
+        //   this.row
+        // )
       },
     ]);
+  }
+
+  performEdit(id: string): List<Edit> {
+    invariant(
+      id === ADD_ENTRY,
+      'Type.edit only knows of POKE_HOLE'
+    );
+
+    const { values, row } = this;
+
+    const label = 'new entry';
+    const val = new Hole(null, Type.singleton);
+
+    const newTm = new Rec(
+      values.set(label, val),
+      new Row(row.entries.set(label, Type.singleton))
+    );
+
+    return openNewEdit(id, this, newTm, new List());
   }
 
   static typeClass = Row;

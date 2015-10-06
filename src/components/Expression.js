@@ -63,20 +63,20 @@ export default class Expression extends Component {
       // restrictrow: RestrictRow,
     };
 
-    const name = this.props.children.constructor.name;
+    const { path, children } = this.props;
+    const name = children.constructor.name;
 
-    const props = {
-      children: this.props.children,
-      path: this.props.path,
-    };
+    if (dispatch[name] == null) {
+      debugger;
+    }
 
-    const isHighlighted = this.context.isPathHighlighted(this.props.path);
+    const isHighlighted = this.context.isPathHighlighted(path);
     const highlightedStyle = isHighlighted ? styles.highlighted : '';
 
     return (
       <div className={styles.expression + ' ' + highlightedStyle}
            onClick={::this.handleClick}>
-        {React.createElement(dispatch[name], props)}
+        {React.createElement(dispatch[name], { path, children })}
       </div>
     );
   }

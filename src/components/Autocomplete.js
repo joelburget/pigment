@@ -9,7 +9,9 @@ export default class Autocomplete extends Component {
     items: PropTypes.arrayOf(
       PropTypes.shape({
         category: PropTypes.string.isRequired,
-        item: PropTypes.object.isRequired,
+
+        // really, an instance of Tm, which isn't a real class
+        item: PropTypes.func.isRequired,
       })
     ),
     renderItem: PropTypes.func.isRequired,

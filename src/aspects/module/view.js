@@ -202,7 +202,7 @@ class ItemTitle extends Component {
 
 function ListItem({ primaryText, onClick }) {
   return (
-    <span key={primaryText} onClick={onClick}>{primaryText}</span>
+    <span onClick={onClick}>{primaryText}</span>
   );
 }
 
@@ -236,7 +236,9 @@ class Definition extends Component {
 
     const menuItems = this.context.getActions(path)
       .map(({ title, id }) =>
-        <ListItem primaryText={title} onClick={() => dispatchEdit(id)} />
+        <ListItem key={id}
+                  primaryText={title}
+                  onClick={() => dispatchEdit(id)} />
       ).toArray();
 
     return (

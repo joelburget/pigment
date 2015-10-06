@@ -34,7 +34,7 @@ export type Tm = {
 
   actions: () => List<Action>;
 
-  performEdit: (id: string) => List<Edit>;
+  performEdit: (id: string) => Edit;
 
   // static form: IntroElim;
 
@@ -82,7 +82,7 @@ export class Type {
     ]);
   }
 
-  performEdit(id: string): List<Edit> {
+  performEdit(id: string): Edit {
     invariant(
       id === POKE_HOLE,
       'Type.edit only knows of POKE_HOLE'

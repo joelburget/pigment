@@ -18,8 +18,6 @@ export default class Row extends Component {
         );
       });
 
-        // <FlatButton secondary label='add' onClick={::this.handleAdd} />
-
     return (
       <div className={style.row}>
         <div>{'{'}</div>

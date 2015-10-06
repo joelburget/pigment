@@ -12,13 +12,14 @@ export default class Rec extends Component {
       .toArray()
       .map(([name, value]) => {
         return (
-          <Expression path={this.props.path.push(name)}>
-            {value}
-          </Expression>
+          <div className={style.recRow}>
+            {name} :
+            <Expression path={this.props.path.push('values').push(name)}>
+              {value}
+            </Expression>
+          </div>
         );
       });
-
-        // <FlatButton secondary label='add' onClick={::this.handleAdd} />
 
     return (
       <div className={style.rec}>

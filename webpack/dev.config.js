@@ -51,7 +51,7 @@ module.exports = {
       // auth0 stuff
       {
         test: /node_modules\/auth0-lock-passwordless\/.*\.jsx?$/,
-        loaders: ['transform?packageify', 'babel?' + JSON.stringify(babelLoaderQuery)],
+        loaders: ['babel?' + JSON.stringify(babelLoaderQuery)],
       },
       { test: /node_modules\/auth0-lock-passwordless\/.*\.css$/, loader: 'style!css' },
 
@@ -69,7 +69,7 @@ module.exports = {
       'src',
       'node_modules'
     ],
-    extensions: ['', '.json', '.js']
+    extensions: ['', '.json', '.js', '.jsx']
   },
   plugins: [
     // hot reload

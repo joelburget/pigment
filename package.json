@@ -79,6 +79,7 @@
     }
   },
   "dependencies": {
+    "auth0-lock-passwordless": "joelburget/lock-passwordless#no-packageify",
     "babel": "5.8.23",
     "babel-plugin-typecheck": "1.3.0",
     "body-parser": "^1.14.1",
