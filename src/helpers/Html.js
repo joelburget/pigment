@@ -2,7 +2,6 @@ import React, {Component, PropTypes} from 'react';
 import ReactDOM from 'react-dom/server';
 import { writer } from '../redux/transit';
 import DocumentMeta from 'react-document-meta';
-const cdn = '//cdnjs.cloudflare.com/ajax/libs/';
 
 /**
  * Wrapper component containing HTML metadata and boilerplate tags.

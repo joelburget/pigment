@@ -7,8 +7,8 @@ import { List, Record, is } from 'immutable';
 // TODO come to terms with the fact that these '..'s are de bruijn indices
 export class RelRef extends Record({ path: null }) {
   normalize(): RelRef {
-    var stack = [];
-    var last = '..';
+    let stack = [];
+    let last = '..';
 
     this.path.forEach(piece => {
       if (piece === '..' && last !== '..') {
@@ -19,12 +19,12 @@ export class RelRef extends Record({ path: null }) {
       last = piece;
     });
 
-    var path = List(stack);
+    const path = List(stack);
     return new RelRef({ path });
   }
 
   extend(ref: RelRef): RelRef {
-    var path = this.path.concat(ref.path);
+    const path = this.path.concat(ref.path);
     return new RelRef({ path }).normalize();
   }
 
@@ -47,8 +47,8 @@ export class RelRef extends Record({ path: null }) {
 
 export class AbsRef extends Record({ path: null }) {
   normalize(): AbsRef {
-    var relNormalized = new RelRef({ path: this.path }).normalize();
-    var path = relNormalized.path;
+    const relNormalized = new RelRef({ path: this.path }).normalize();
+    const path = relNormalized.path;
 
     if (path.get(0) === '..') {
       throw new Error('AbsRef.normalize went below root');
@@ -58,12 +58,12 @@ export class AbsRef extends Record({ path: null }) {
   }
 
   relativize(root: RelRef): RelRef {
-    var path = root.path.concat(this.path);
+    const path = root.path.concat(this.path);
     return new RelRef({ path }).normalize();
   }
 
   extend(ref: RelRef): AbsRef {
-    var path = this.path.concat(ref.path);
+    const path = this.path.concat(ref.path);
     return new AbsRef({ path }).normalize();
   }
 
@@ -88,16 +88,16 @@ export type Ref = RelRef | AbsRef;
 
 
 // export function mkRel(...parts: Array<string>): RelRef {
-//   var path = List(parts);
+//   const path = List(parts);
 export function mkRel(): RelRef {
-  var path = List(arguments);
+  const path = List(arguments);
   return new RelRef({ path });
 }
 
 
 // export function mkAbs(...parts: Array<string>): AbsRef {
-//   var path = List(parts);
+//   const path = List(parts);
 export function mkAbs(): AbsRef {
-  var path = List(arguments);
+  const path = List(arguments);
   return new AbsRef({ path });
 }

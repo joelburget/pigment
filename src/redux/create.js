@@ -1,7 +1,6 @@
-import Immutable from 'immutable';
 import { createStore, applyMiddleware, compose } from 'redux';
 
-import { reader, decoder } from './transit';
+import { decoder } from './transit';
 import createMiddleware from './clientMiddleware';
 
 export default function createApiClientStore(client, data) {

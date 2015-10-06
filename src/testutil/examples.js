@@ -1,6 +1,6 @@
+/* eslint id-length: 0 */
 import { Type, Var } from '../theory/tm';
-import { mkSuccess, mkStuck, bind } from '../theory/evaluation';
-import { mkRel, mkAbs } from '../theory/ref';
+import { mkRel } from '../theory/ref';
 import Lam from '../aspects/lambda/data';
 
 const type = Type.singleton;

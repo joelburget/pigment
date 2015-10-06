@@ -1,7 +1,7 @@
 import React from 'react';
 import {Route} from 'react-router';
 
-import { Module, App, Home, RequireLogin, Login, LoginSuccess, NotFound } from './containers';
+import { Module, App, RequireLogin, Login, LoginSuccess, NotFound } from './containers';
 
 export default function(store) {
   return (

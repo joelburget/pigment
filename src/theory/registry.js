@@ -6,7 +6,7 @@ import type { Tm } from './tm';
 import unify from './unify';
 
 
-var registry = {};
+let registry = {};
 
 
 const NAME_KEY = '_name';
@@ -30,7 +30,7 @@ export function register(name: string, cls: any): void {
 export function deserialize(obj: TmRecordEntry): any {
   const name = obj[NAME_KEY];
 
-  var withoutName = {};
+  let withoutName = {};
   Object.keys(obj).forEach(key => {
     if (key !== NAME_KEY) {
       const value = obj[key];

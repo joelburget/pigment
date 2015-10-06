@@ -25,13 +25,13 @@ export type Action = {
 }
 
 
-export var OPEN = 'OPEN';
-export var CLOSED = 'CLOSED';
+export const OPEN = 'OPEN';
+export const CLOSED = 'CLOSED';
 
 
 // An edit describes some user-initiated change (the catalyst), and all the
 // conflicts that resulted from that change (along with their solutions).
-var EditShape = Record({
+const EditShape = Record({
   status:   null, // OPEN | CLOSED
 
   // Where did this take place and what was the intent of the command.
@@ -73,7 +73,7 @@ export function openNewEdit(catalyst: string,
                             after: Tm,
                             closure: List<Edit>): Edit {
 
-  var status = closure.count() === 0 ? CLOSED : OPEN;
+  const status = closure.count() === 0 ? CLOSED : OPEN;
 
   return new Edit({
     status,

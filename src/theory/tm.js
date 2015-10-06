@@ -48,7 +48,7 @@ export type Tm = {
 };
 
 
-var POKE_HOLE = 'POKE_HOLE';
+const POKE_HOLE = 'POKE_HOLE';
 
 
 export class Type {
@@ -113,12 +113,12 @@ export class Type {
 register('type', Type);
 
 
-var holeShape = Record({
+const HoleShape = Record({
   name: null,
   type: null,
 }, 'hole');
 
-export class Hole extends holeShape {
+export class Hole extends HoleShape {
 
   constructor(name: ?string, type: Object): void {
     super({ type, name });
@@ -151,12 +151,12 @@ export class Hole extends holeShape {
 // what's a slot? a term or a variable?
 
 
-var varShape = Record({
+const VarShape = Record({
   ref: null,
   type: null
 }, 'var');
 
-export class Var extends varShape {
+export class Var extends VarShape {
 
   constructor(ref: Ref, type: Tm): void {
     super({ ref, type });
@@ -182,7 +182,7 @@ export class Var extends varShape {
 }
 
 
-var ConflictShape = Record({
+const ConflictShape = Record({
   left: null,
   right: null,
 });
