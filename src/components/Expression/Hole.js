@@ -40,12 +40,6 @@ export default class Hole extends Component {
                       renderItem={::this.renderCompletion}
                       onChange={::this.handleAutocomplete}
                       onSelect={::this.handleSelect} />
-
-        <div className={styles.ascription}>:</div>
-
-        <Expression path={path.push('type')}>
-          {type}
-        </Expression>
       </div>
     );
   }
