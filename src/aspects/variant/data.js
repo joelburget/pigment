@@ -12,15 +12,13 @@ import invariant from 'invariant';
 import { INTRO, Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
+import { ADD_ENTRY, addEntry } from '../../commands/addEntry';
 
 import Label from '../label/data';
 import Row from '../row/data';
 
 import type { Tm } from '../../theory/tm';
 import type { AbsRef } from '../../theory/ref';
-
-
-const ADD_ENTRY = 'ADD_ENTRY';
 
 
 const VariantTyShape = Record({
@@ -34,12 +32,13 @@ export class VariantTy extends VariantTyShape {
 
 
 const VariantShape = Record({
-  values: null,
+  label: null,
   type: null,
 });
 
 
 export default class Variant extends VariantShape {
+
   evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
     // TODO evaluate all children?
     throw new Error('unimplemented - Variant.evaluate');
@@ -50,12 +49,7 @@ export default class Variant extends VariantShape {
   }
 
   actions(): List<Action> {
-    return List([
-      {
-        id: ADD_ENTRY,
-        title: 'add entry',
-      },
-    ]);
+    return List();
   }
 
   performEdit(id: string): List<Edit> {
@@ -64,15 +58,9 @@ export default class Variant extends VariantShape {
       "Variant.performEdit only knows of ADD_ENTRY"
     );
 
-    const { values, type } = this;
+    const { label, type } = this;
 
     const labelPrefix = 'new entry';
-    let label = labelPrefix;
-    let i = 0;
-    while (this.values.has(label)) {
-      i += 1
-      label = labelPrefix + ' ' + i;
-    }
 
     const ty = new Hole(null, Type.singleton);
     const val = new Hole(null, ty);
@@ -101,6 +89,7 @@ export default class Variant extends VariantShape {
   }
 
   static form = INTRO;
+
 }
 
 register('variant', Variant);

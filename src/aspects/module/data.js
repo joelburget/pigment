@@ -4,9 +4,9 @@ import { List, Record } from 'immutable';
 import invariant from 'invariant';
 
 import { register } from '../../theory/registry';
+import { ADD_ENTRY, addEntry } from '../../commands/addEntry';
 
 
-const ADD_ENTRY = 'ADD_ENTRY';
 export const MODULE_PUBLIC = 'module/MODULE_PUBLIC';
 export const MODULE_PRIVATE = 'module/MODULE_PRIVATE';
 // idris also has abstract, though i'm not sure when it's useful
@@ -36,12 +36,7 @@ export default class Module extends ModuleShape {
   }
 
   actions(): List<Action> {
-    return List([
-      {
-        title: 'add entry',
-        id: ADD_ENTRY,
-      },
-    ]);
+    return List([addEntry]);
   }
 
   performEdit(id: string): Edit {

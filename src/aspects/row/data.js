@@ -7,12 +7,9 @@ import { INTRO, Hole, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
+import { ADD_ENTRY, addEntry } from '../../commands/addEntry';
 
 import type { Tm } from '../../theory/tm';
-
-
-// TODO does it smell that the same code is defined in both Row and Record?
-const ADD_ENTRY = 'ADD_ENTRY';
 
 
 var rowShape = Record({
@@ -32,12 +29,7 @@ export default class Row extends rowShape {
   }
 
   actions(): List<Action> {
-    return List([
-      {
-        id: ADD_ENTRY,
-        title: 'add entry',
-      },
-    ]);
+    return List([addEntry]);
   }
 
   performEdit(id: string): List<Edit> {

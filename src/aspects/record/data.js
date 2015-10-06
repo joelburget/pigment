@@ -8,6 +8,7 @@ import { INTRO, Hole, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
+import { ADD_ENTRY, addEntry, makeLabel } from '../../commands/addEntry';
 
 import Label from '../label/data';
 import Row from '../row/data';
@@ -31,9 +32,6 @@ import type { AbsRef, Ref } from '../../theory/ref';
 //   { l = e | r }
 //   origin = { x = 0 | { y = 0 | {} } }
 //   origin = { x = 0, y = 0 }
-
-
-const ADD_ENTRY = 'ADD_ENTRY';
 
 
 const RecordTyShape = Record({
@@ -67,19 +65,7 @@ export default class Rec extends RecordShape {
   }
 
   actions(): List<Action> {
-    return List([
-      {
-        id: ADD_ENTRY,
-        title: 'add entry',
-        // value: new Rec(
-        //   this.values.set(
-        //     'new entry',
-        //     new Hole('new entry', Type.singleton)
-        //   ),
-        //   this.row
-        // )
-      },
-    ]);
+    return List([addEntry]);
   }
 
   // TODO should this use Row.performEdit instead of building its own row?
@@ -90,14 +76,7 @@ export default class Rec extends RecordShape {
     );
 
     const { values, row } = this;
-
-    const labelPrefix = 'new entry';
-    let label = labelPrefix;
-    let i = 0;
-    while (this.values.has(label)) {
-      i += 1
-      label = labelPrefix + ' ' + i;
-    }
+    const label = makeLabel(values);
 
     const ty = new Hole(null, Type.singleton);
     const val = new Hole(null, ty);
