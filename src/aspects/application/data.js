@@ -1,13 +1,17 @@
 // @flow
 
-import { Record, List } from 'immutable';
+import { Record } from 'immutable';
 
-import { ELIM, Hole, Type } from '../../theory/tm';
+import { ELIM, Hole } from '../../theory/tm';
 import { register } from '../../theory/registry';
 import { bind } from '../../theory/evaluation';
+import { mkRel } from '../../theory/ref';
+
+import type { Tm } from '../../theory/tm';
+import type { AbsRef, Ref } from '../../theory/ref';
 
 
-var appShape = Record({
+const appShape = Record({
   func: null,
   arg: null,
   type: null,
@@ -16,10 +20,10 @@ var appShape = Record({
 export default class App extends appShape {
 
   constructor(func: Tm, arg: Tm, type: Tm): void {
-    var fType = func.type;
+    const fType = func.type;
 
     if (fType instanceof Arr) {
-      var type = fType.codomain;
+      const type = fType.codomain;
       super({ func, arg, type });
     } else {
       throw new Error('runtime error in App constructor');

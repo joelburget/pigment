@@ -35,11 +35,11 @@ class NameContextMenu extends Component {
 
 
 export default class Var extends Component {
-  state = { expanded: false };
-
   static contextTypes = {
     lookupRef: PropTypes.func.isRequired,
   };
+
+  state = { expanded: false };
 
   render() {
     // a ref doesn't know its name or type, but it does know where to find
@@ -53,11 +53,11 @@ export default class Var extends Component {
     } else {
       absRef = new AbsRef({ path }).extend(nameRef);
     }
-    const { name, type } = this.context.lookupRef(absRef);
+    const { name } = this.context.lookupRef(absRef);
 
     const ctxMenu = this.state.expanded &&
       <NameContextMenu name={name}
-                       path={path} />
+                       path={path} />;
 
     return (
       <div className={styles.name}
@@ -72,5 +72,5 @@ export default class Var extends Component {
 
   handleClick() {
     this.setState({ expanded: !this.state.expanded });
-  };
+  }
 }

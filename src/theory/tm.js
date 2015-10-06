@@ -3,7 +3,7 @@
 // TODO:
 // * source positions? how does this relate to names?
 import invariant from 'invariant';
-import { List, Record, Iterable } from 'immutable';
+import { List, Record } from 'immutable';
 
 import { mkStuck, mkSuccess } from './evaluation';
 import { register } from './registry';

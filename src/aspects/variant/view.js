@@ -1,4 +1,4 @@
-import { Component, PropTypes } from 'react';
+import React, { Component, PropTypes } from 'react';
 import FlatButton from 'material-ui/lib/flat-button';
 
 import Expression from '../../components/Expression';

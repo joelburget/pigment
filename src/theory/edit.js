@@ -15,7 +15,7 @@
 
 import { List, Record } from 'immutable';
 
-import type { AbsRef } from './ref';
+import type { Tm } from './tm';
 
 
 export type Action = {
@@ -32,7 +32,7 @@ export const CLOSED = 'CLOSED';
 // An edit describes some user-initiated change (the catalyst), and all the
 // conflicts that resulted from that change (along with their solutions).
 const EditShape = Record({
-  status:   null, // OPEN | CLOSED
+  status: null, // OPEN | CLOSED
 
   // Where did this take place and what was the intent of the command.
   // Catalyzes a chain of edits (closure).
@@ -53,7 +53,7 @@ const EditShape = Record({
   //   then leave existence over the course of this edit being built. We need
   //   more structure so we can talk about the edits that exist at a given
   //   time / frontier.
-  closure:  null, // List<Edit>
+  closure: null, // List<Edit>
 });
 
 

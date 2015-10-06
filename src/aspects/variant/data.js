@@ -16,6 +16,9 @@ import { openNewEdit } from '../../theory/edit';
 import Label from '../label/data';
 import Row from '../row/data';
 
+import type { Tm } from '../../theory/tm';
+import type { AbsRef } from '../../theory/ref';
+
 
 const ADD_ENTRY = 'ADD_ENTRY';
 
