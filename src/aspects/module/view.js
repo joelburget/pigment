@@ -243,7 +243,7 @@ class Definition extends Component {
     const dispatchEdit = action =>
       this.context.dispatchEdit(focusPath, action);
 
-    const menuItems = isPrefix(path, focusPath) ?
+    const menuItems = focusPath && isPrefix(path, focusPath) ?
       this.context.getActions(focusPath)
         .map(({ title, id }) =>
           <ListItem key={id}
