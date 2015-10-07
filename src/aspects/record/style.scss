@@ -1,9 +1,9 @@
-.rec {
+.recList {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 }
 
 .recRow {
     display: flex;
-    flex-display: column;
+    flex-display: row;
 }

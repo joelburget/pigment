@@ -28,7 +28,7 @@ export default class Row extends Component {
       });
 
     return (
-      <div className={style.row}>
+      <div>
         <div>Row {'{'}</div>
         <div className={style.rowList}>
           {children}

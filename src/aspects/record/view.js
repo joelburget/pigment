@@ -22,9 +22,9 @@ export default class Rec extends Component {
       });
 
     return (
-      <div className={style.rec}>
-        <div>{'{'}</div>
-        <div>
+      <div>
+        <div>Record {'{'}</div>
+        <div className={style.recList}>
           {children}
         </div>
         <div>{'}'}</div>
