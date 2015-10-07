@@ -8,7 +8,7 @@ import { DragSource, DropTarget } from 'react-dnd';
 // import ListItem from 'material-ui/lib/lists/list-item';
 
 import isPrefix from '../../util/isPrefix';
-import Expression from '../../components/Expression';
+import { expr } from '../../components/Expression';
 import { Type, Hole } from '../../theory/tm';
 
 import * as data from './data';
@@ -82,9 +82,7 @@ class Example extends Component {
           <ItemTitle value={name} path={path} />
         </div>
         <div className={styles.itemContent}>
-          <Expression path={path.push('defn')}>
-            {defn}
-          </Expression>
+          {expr(item, path, 'defn')}
           <div>
             <div className={styles.itemType}>OUTPUT</div>
           </div>
@@ -111,9 +109,7 @@ class Property extends Component {
           <ItemTitle value={name} path={path} />
         </div>
         <div className={styles.itemContent}>
-          <Expression path={path.push('defn')}>
-            {defn}
-          </Expression>
+          {expr(item, path, 'defn')}
           <div>
             <div className={styles.itemType}>RESULT</div>
           </div>
@@ -269,17 +265,14 @@ class Definition extends Component {
           <div className={styles.itemContent} // term column
             >
             <div className={styles.itemType}>TERM</div>
-            <Expression path={path.push('defn')}>
-              {defn}
-            </Expression>
+
+            {expr(item, path, 'defn')}
           </div>
 
           <div className={styles.itemContent} // type column
             >
             <div className={styles.itemType}>TYPE</div>
-            <Expression path={path.push('defn').push('type')}>
-              {defn.type}
-            </Expression>
+            {expr(item, path, ['defn', 'type'])}
           </div>
         </div>
 

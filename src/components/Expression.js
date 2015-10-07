@@ -33,6 +33,19 @@ class Conflict extends Component {
 }
 
 
+export function expr(value, path, chunk) {
+  const accessor = chunk instanceof Array ?
+    chunk :
+    [chunk];
+
+  return (
+    <Expression path={path.concat(chunk)}>
+      {value.getIn(accessor)}
+    </Expression>
+  );
+}
+
+
 export default class Expression extends Component {
   // propTypes = {
   //   path: PropTypes.instanceOf(List<string>)
