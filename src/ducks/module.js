@@ -218,7 +218,7 @@ export default function reducer(state = initialState, action = {}) {
       //   value?: any;
       // }
       //
-      // Action => List<Edit>
+      // Action => Edit
       const edit = focus.performEdit(catalyst);
 
       // TODO - I think we want to be a little more sophisticated here:
@@ -282,24 +282,16 @@ export function isPathHighlighted(mouseSelection: ?List<string>,
 }
 
 
-// Look up some definition in the module. It's possible that there'll be focus
-// within the module, which we *actually* want to get.
+// Look up some definition in the module.
 function itemGetFocus(state: ModuleState, path: List<string>) {
-  var defn = state.getIn(path);
-  const { mouseSelection } = state;
-
-  // If the mouse selection is within this definition, use the selected term
-  // instead.
-  if (mouseSelection && isPrefix(path, mouseSelection)) {
-    return state.getIn(mouseSelection);
-  } else {
-    return defn.defn;
-  }
+  return state.getIn(path);
 }
 
 
 export function getActions(state: ModuleState, path: List<string>) {
-  return itemGetFocus(state, path).actions();
+  return path != null ?
+    itemGetFocus(state, path).actions() :
+    List();
 }
 
 

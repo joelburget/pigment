@@ -223,11 +223,14 @@ function UiList({ children }) {
 
 class Definition extends Component {
   static contextTypes = {
+    focusPath: PropTypes.object,
+
     dispatchEdit: PropTypes.func.isRequired,
     getActions: PropTypes.func.isRequired,
   };
 
   render() {
+    const { focusPath } = this.context;
     const { item, path, moveItem } = this.props;
     const { name, defn, visibility } = item;
 
@@ -237,9 +240,9 @@ class Definition extends Component {
       'private';
 
     const dispatchEdit = action =>
-      this.context.dispatchEdit(path.push('defn'), action);
+      this.context.dispatchEdit(focusPath, action);
 
-    const menuItems = this.context.getActions(path)
+    const menuItems = this.context.getActions(focusPath)
       .map(({ title, id }) =>
         <ListItem key={id}
                   primaryText={title}

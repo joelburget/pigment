@@ -39,6 +39,8 @@ export default class ModuleContainer extends Component {
   };
 
   static childContextTypes = {
+    focusPath: PropTypes.object,
+
     isPathHighlighted: PropTypes.func.isRequired,
     lookupRef: PropTypes.func.isRequired,
     updateAt: PropTypes.func.isRequired,
@@ -54,6 +56,8 @@ export default class ModuleContainer extends Component {
 
   getChildContext() {
     return {
+      focusPath: this.props.mouseSelection,
+
       isPathHighlighted: path => isPathHighlighted(this.props.mouseSelection, path),
       lookupRef: ref => lookupRef(this.props.state, ref),
       updateAt: (ref, update) => this.props.dispatch(
