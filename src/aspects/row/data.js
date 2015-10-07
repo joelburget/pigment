@@ -7,7 +7,7 @@ import { INTRO, Hole, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
-import { ADD_ENTRY, addEntry } from '../../commands/addEntry';
+import { ADD_ENTRY, addEntry, makeLabel } from '../../commands/addEntry';
 import { POKE_HOLE, pokeHole, doPokeHole } from '../../commands/pokeHole';
 
 import type { Tm } from '../../theory/tm';
@@ -40,10 +40,11 @@ export default class Row extends rowShape {
     );
 
     if (id === ADD_ENTRY) {
-      const { values, row } = this;
+      const { entries } = this;
 
-      const label = 'new entry';
-      const newRow = new Row(this.entries.set(label, Type.singleton))
+      const label = makeLabel(entries);
+      const val = new Hole(null, Type.singleton);
+      const newRow = new Row(entries.set(label, val));
 
       return openNewEdit(id, this, newRow, new List());
     } else {

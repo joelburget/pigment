@@ -12,7 +12,7 @@ import invariant from 'invariant';
 import { INTRO, Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
-import { ADD_ENTRY, addEntry } from '../../commands/addEntry';
+import { ADD_ENTRY, addEntry, makeLabel } from '../../commands/addEntry';
 
 import Label from '../label/data';
 import Row from '../row/data';
@@ -49,7 +49,7 @@ export default class Variant extends VariantShape {
   }
 
   actions(): List<Action> {
-    return List();
+    return List([addEntry]);
   }
 
   performEdit(id: string): List<Edit> {
@@ -58,10 +58,9 @@ export default class Variant extends VariantShape {
       "Variant.performEdit only knows of ADD_ENTRY"
     );
 
-    const { label, type } = this;
+    const { row, type } = this;
 
-    const labelPrefix = 'new entry';
-
+    const label = makeLabel(row.values);
     const ty = new Hole(null, Type.singleton);
     const val = new Hole(null, ty);
 
