@@ -16,7 +16,7 @@ import { isPathHighlighted,
          moveItem,
          addNew,
          fillHole,
-         openNewEdit,
+         dispatchUserEdit,
          renameDefinition,
          getActions } from '../ducks/module';
 
@@ -77,7 +77,7 @@ export default class ModuleContainer extends Component {
         fillHole(path, type, category, item)
       ),
       dispatchEdit: (path, action) => this.props.dispatch(
-        openNewEdit(path, action)
+        dispatchUserEdit(path, action)
       ),
       getActions: path => getActions(this.props.state, path),
     };

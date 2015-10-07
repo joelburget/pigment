@@ -34,7 +34,7 @@ const UPDATE_AT = 'pigment/module/UPDATE_AT';
 const MOVE_ITEM = 'pigment/module/MOVE_ITEM';
 const ADD_NEW = 'pigment/module/ADD_NEW';
 const FILL_HOLE = 'pigment/module/FILL_HOLE';
-const OPEN_NEW_EDIT = 'pigment/module/OPEN_NEW_EDIT';
+const DISPATCH_USER_EDIT = 'pigment/module/DISPATCH_USER_EDIT';
 
 
 export class ModuleState extends Record({
@@ -207,7 +207,7 @@ export default function reducer(state = initialState, action = {}) {
 
     // 1. make sure we have an open edit
     // 2. add to it
-    case OPEN_NEW_EDIT:
+    case DISPATCH_USER_EDIT:
       const { path, catalyst } = action;
       // XXX does catalyst have a path?
       const focus = itemGetFocus(state, path);
@@ -404,9 +404,9 @@ export function fillHole(path, itemType, category, item) {
   };
 }
 
-export function openNewEdit(path: List<string>, catalyst: string) {
+export function dispatchUserEdit(path: List<string>, catalyst: string) {
   return {
-    type: OPEN_NEW_EDIT,
+    type: DISPATCH_USER_EDIT,
     catalyst,
     path,
   };
