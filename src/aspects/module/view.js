@@ -201,8 +201,13 @@ class ItemTitle extends Component {
 
 
 function ListItem({ primaryText, onClick }) {
+  // TODO figure out why opacity is 0 from mdl-menu__item
   return (
-    <span onClick={onClick}>{primaryText}</span>
+    <li className="mdl-menu__item"
+        style={{opacity: 1}}
+        onClick={onClick}>
+      {primaryText}
+    </li>
   );
 }
 
