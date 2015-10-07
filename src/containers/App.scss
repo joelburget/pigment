@@ -41,10 +41,6 @@ body {
 
       .module {
           @extend .margin;
-      }
-
-      .status {
-          @extend .margin;
           padding-left: 0;
 
           .hole {
@@ -55,6 +51,11 @@ body {
           .conflict {
               margin: 10px 0;
               border-bottom: 4px solid $conflict;
+          }
+
+          .history {
+              margin: 10px 0;
+              border-bottom: 4px solid $history;
           }
       }
 

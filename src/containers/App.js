@@ -86,17 +86,13 @@ export default class App extends Component {
           </div>
 
           <div className={styles.module}>
-            Module
+            MODULE
               <ul className={styles.subModule}>
-                <li>history</li>
-                <li>edit</li>
+                <li className={styles.hole}>2 holes remaining</li>
+                <li className={styles.conflict}>3 conflicts remaining</li>
+                <li className={styles.history}>history</li>
               </ul>
           </div>
-
-          <ul className={styles.status}>
-            <li className={styles.hole}>2 holes remaining</li>
-            <li className={styles.conflict}>3 conflicts remaining</li>
-          </ul>
         </nav>
 
         <main>
