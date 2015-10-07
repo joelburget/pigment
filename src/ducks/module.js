@@ -2,8 +2,6 @@ import transit from 'transit-js';
 import { List, Record } from 'immutable';
 import Immutable from 'immutable';
 
-import isPrefix from '../util/isPrefix';
-
 import Module, {
   Note, Definition, Property, Example,
   MODULE_PUBLIC, MODULE_PRIVATE
@@ -267,18 +265,6 @@ export function lookupRef(state: ModuleState, ref: AbsRef): Tm {
 export function isPathHighlighted(mouseSelection: ?List<string>,
                                   path: List<string>): boolean {
   return Immutable.is(mouseSelection, path);
-  // this path is highlighted if the current mouse selection is a prefix
-  if (mouseSelection == null) {
-    return false;
-  }
-
-  for (var i = 0; i < mouseSelection.size; i++) {
-    if (mouseSelection.get(i) !== path.get(i)) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 

@@ -7,6 +7,7 @@ import { DragSource, DropTarget } from 'react-dnd';
 // import MuiList from 'material-ui/lib/lists/list';
 // import ListItem from 'material-ui/lib/lists/list-item';
 
+import isPrefix from '../../util/isPrefix';
 import Expression from '../../components/Expression';
 import { Type, Hole } from '../../theory/tm';
 
@@ -242,12 +243,14 @@ class Definition extends Component {
     const dispatchEdit = action =>
       this.context.dispatchEdit(focusPath, action);
 
-    const menuItems = this.context.getActions(focusPath)
-      .map(({ title, id }) =>
-        <ListItem key={id}
-                  primaryText={title}
-                  onClick={() => dispatchEdit(id)} />
-      ).toArray();
+    const menuItems = isPrefix(path, focusPath) ?
+      this.context.getActions(focusPath)
+        .map(({ title, id }) =>
+          <ListItem key={id}
+                    primaryText={title}
+                    onClick={() => dispatchEdit(id)} />
+        ).toArray() :
+      [];
 
     return (
       <Draggable moveItem={moveItem} path={path}>
@@ -280,13 +283,15 @@ class Definition extends Component {
           </div>
         </div>
 
-        <div // edit row
-          >
-          <div className={styles.itemType}>EDIT</div>
-          <UiList>
-            {menuItems}
-          </UiList>
-        </div>
+        {!!menuItems.length &&
+          <div // edit row
+            >
+            <div className={styles.itemType}>EDIT</div>
+            <UiList>
+              {menuItems}
+            </UiList>
+          </div>
+        }
 
       </Draggable>
     );
