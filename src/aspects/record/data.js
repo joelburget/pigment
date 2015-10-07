@@ -69,7 +69,7 @@ export default class Rec extends RecordShape {
   }
 
   // TODO should this use Row.performEdit instead of building its own row?
-  performEdit(id: string): List<Edit> {
+  performEdit(id: string): Edit {
     invariant(
       id === ADD_ENTRY,
       'Row.performEdit only knows of ADD_ENTRY'

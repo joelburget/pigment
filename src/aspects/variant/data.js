@@ -52,7 +52,7 @@ export default class Variant extends VariantShape {
     return List([addEntry]);
   }
 
-  performEdit(id: string): List<Edit> {
+  performEdit(id: string): Edit {
     invariant(
       id === ADD_ENTRY,
       "Variant.performEdit only knows of ADD_ENTRY"

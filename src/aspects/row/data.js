@@ -33,7 +33,7 @@ export default class Row extends rowShape {
     return List([addEntry, pokeHole]);
   }
 
-  performEdit(id: string): List<Edit> {
+  performEdit(id: string): Edit {
     invariant(
       id === ADD_ENTRY || id === POKE_HOLE,
       'Row.performEdit only knows of ADD_ENTRY and POKE_HOLE'
@@ -47,7 +47,7 @@ export default class Row extends rowShape {
       const newRow = new Row(entries.set(label, val));
 
       return openNewEdit(id, this, newRow, new List());
-    } else {
+    } else { // id === POKE_HOLE
       return doPokeHole(this);
     }
   }

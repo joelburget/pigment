@@ -31,7 +31,7 @@ export default class Label extends labelShape {
     return List();
   }
 
-  performEdit(id: string): List<Edit> {
+  performEdit(id: string): Edit {
     invariant(
       false,
       "Label.performEdit doesn't know any actions"
