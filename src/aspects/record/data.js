@@ -51,8 +51,8 @@ const RecordShape = Record({
 
 export default class Rec extends RecordShape {
 
-  constructor(values: Map<string, Tm>, row: Row) {
-    super({ values, row });
+  constructor(values: Map<string, Tm>, type: Row) {
+    super({ values, type });
   }
 
   evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
@@ -75,7 +75,7 @@ export default class Rec extends RecordShape {
       'Row.performEdit only knows of ADD_ENTRY'
     );
 
-    const { values, row } = this;
+    const { values, type } = this;
     const label = makeLabel(values);
 
     const ty = new Hole(null, Type.singleton);
@@ -83,7 +83,7 @@ export default class Rec extends RecordShape {
 
     const newTm = new Rec(
       values.set(label, val),
-      new Row(row.entries.set(label, ty))
+      new Row(type.entries.set(label, ty))
     );
 
     return openNewEdit(id, this, newTm, new List());
@@ -91,17 +91,17 @@ export default class Rec extends RecordShape {
 
   static typeClass = Row;
 
-  static fillHole(row: Row): Rec {
+  static fillHole(type: Row): Rec {
     invariant(
-      row.constructor === Row,
+      type.constructor === Row,
       'Rec asked to fill a hole of type other than Row'
     );
 
-    const values = row.entries.map(
-      (type, name) => new Hole(name + ' hole', type)
+    const values = type.entries.map(
+      (holeTy, name) => new Hole(name + ' hole', holeTy)
     );
 
-    return new Rec(values, row);
+    return new Rec(values, type);
   }
 
   static form = INTRO;
