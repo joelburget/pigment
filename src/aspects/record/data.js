@@ -9,6 +9,7 @@ import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
 import { ADD_ENTRY, addEntry, makeLabel } from '../../commands/addEntry';
+import { POKE_HOLE, pokeHole, doPokeHole } from '../../commands/pokeHole';
 
 import Label from '../label/data';
 import Row from '../row/data';
@@ -65,28 +66,32 @@ export default class Rec extends RecordShape {
   }
 
   actions(): List<Action> {
-    return List([addEntry]);
+    return List([addEntry, pokeHole]);
   }
 
   // TODO should this use Row.performEdit instead of building its own row?
   performEdit(id: string): Edit {
     invariant(
-      id === ADD_ENTRY,
-      'Row.performEdit only knows of ADD_ENTRY'
+      id === ADD_ENTRY || id === POKE_HOLE,
+      'Rec.performEdit only knows of ADD_ENTRY and POKE_HOLE'
     );
 
-    const { values, type } = this;
-    const label = makeLabel(values);
+    if (id === ADD_ENTRY) {
+      const { values, type } = this;
+      const label = makeLabel(values);
 
-    const ty = new Hole(null, Type.singleton);
-    const val = new Hole(null, ty);
+      const ty = new Hole(null, Type.singleton);
+      const val = new Hole(null, ty);
 
-    const newTm = new Rec(
-      values.set(label, val),
-      new Row(type.entries.set(label, ty))
-    );
+      const newTm = new Rec(
+        values.set(label, val),
+        new Row(type.entries.set(label, ty))
+      );
 
-    return openNewEdit(id, this, newTm, new List());
+      return openNewEdit(id, this, newTm, new List());
+    } else { // id === POKE_HOLE
+      return doPokeHole(this);
+    }
   }
 
   static typeClass = Row;
