@@ -30,11 +30,6 @@ babelLoaderQuery.extra['react-transform'] = {
     locals: ['module']
   }]
 };
-babelLoaderQuery.optional = babelLoaderQuery.optional || [];
-babelLoaderQuery.optional.push(
-  "optimisation.react.constantElements",
-  "optimisation.react.inlineElements"
-);
 
 module.exports = {
   devtool: 'inline-source-map',
