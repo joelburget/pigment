@@ -12,9 +12,9 @@ let styles = {
 };
 
 @Radium
-export default class PageLayout extends React.Component {
+export default class Page extends React.Component {
   render() {
-    let [ editView, commandLine, messages ] = this.props.children;
+      let [ editView, commandLine, messages ] = ['foo', 'bar', 'baz']; //this.props.children;
 
     return <div style={styles.page}>
       <div style={styles.editView}>{editView}</div>
