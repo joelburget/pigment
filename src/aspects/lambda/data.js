@@ -34,8 +34,8 @@ export class Arrow extends ArrowShape {
 
     // for now, just start with * -> *
     return new Arrow({
-      domain: type,
-      codomain: type,
+      domain: new Hole(null, type),
+      codomain: new Hole(null, type),
       type,
     });
   }
