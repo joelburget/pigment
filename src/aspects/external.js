@@ -11,7 +11,7 @@ export class External extends Record({ external: null, type: null }, 'external')
     super({ external, type });
   };
 
-  evaluate(ctx: Context): EvaluationResult<Tm> {
+  step(ctx: Context): EvaluationResult<Tm> {
   }
 }
 
@@ -91,7 +91,7 @@ export class JsApp extends External {
     return this.children[1];
   }
 
-  evaluate(ctx: Context): EvaluationResult<Tm> {
+  step(ctx: Context): EvaluationResult<Tm> {
     const f = this.func().external;
     const x = this.arg().external;
 

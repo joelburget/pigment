@@ -9,6 +9,9 @@ import { mkSuccess, bind } from '../../theory/evaluation'
 import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 
+const emptyCtx;
+
+
 describe('records', () => {
   const numTy = JsNumber.type;
 
@@ -52,64 +55,64 @@ describe('records', () => {
   it('creates and selects simple records', () => {
     // { x: 0, y: 1 }.x -> 0 : JsNumber
     const selectX = new SelectRow(xLabel, numTy, xyRec);
-    expect(selectX.evaluate([]))
+    expect(selectX.step([]))
       .toEqual(mkSuccess(new JsNumber(0)));
     expect(selectX.type)
       .toEqual(numTy);
 
     // { x: 0, y: 1 }.x -> 1 : JsNumber
-    expect(new SelectRow(yLabel, numTy, xyRec).evaluate([]))
+    expect(new SelectRow(yLabel, numTy, xyRec).step(emptyCtx))
       .toEqual(mkSuccess(new JsNumber(1)));
   });
 
   it('extends', () => {
     const extendedRec = new ExtendRow(xyRec, zLabel, new JsNumber(2));
-    const evaluated = extendedRec.evaluate([]).value;
+    const stepped = extendedRec.step(emptyCtx).value;
 
     expectImmutableIs(
-      evaluated.type,
+      stepped.type,
       xyzRow
     );
 
     // TODO this doesn't work because the JsNumbers are not object equal
     // expectImmutableIs(
-    //   evaluated.values,
+    //   stepped.values,
     //   xyzRec.values
     // );
   });
 
   it('{ y: 1 | x: 0 }.y -> 1', () => {
     const expression = bind(
-      new ExtendRow(xRec, yLabel, new JsNumber(1)).evaluate([]),
+      new ExtendRow(xRec, yLabel, new JsNumber(1)).step(emptyCtx),
       rec => new SelectRow(
         yLabel,
         numTy,
         rec
       )
-    ).evaluate([]);
+    ).step([]);
 
     expect(expression.value).toEqual(new JsNumber(1));
   });
 
   it('{ y: 1 | x: 0 }.x -> 0', () => {
     const expression = bind(
-      new ExtendRow(xRec, yLabel, new JsNumber(1)).evaluate([]),
+      new ExtendRow(xRec, yLabel, new JsNumber(1)).step(emptyCtx),
       rec => new SelectRow(
         xLabel,
         numTy,
         rec
       )
-    ).evaluate([]);
+    ).step(emptyCtx);
 
     expect(expression.value).toEqual(new JsNumber(0));
   });
 
   it('restricts xy', () => {
     const restrictedRec = new RestrictRow(xyRec, yLabel);
-    const evaluated = restrictedRec.evaluate([]).value;
+    const stepped = restrictedRec.step(emptyCtx).value;
 
     expectImmutableIs(
-      evaluated.type,
+      stepped.type,
       xRow
     );
   });
@@ -119,10 +122,10 @@ describe('records', () => {
       xyzRec,
       zLabel
     );
-    const evaluated = restrictedRec.evaluate([]).value;
+    const stepped = restrictedRec.step(emptyCtx).value;
 
     expectImmutableIs(
-      evaluated.type,
+      stepped.type,
       xyRow
     );
   });

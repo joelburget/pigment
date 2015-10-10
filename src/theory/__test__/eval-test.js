@@ -8,18 +8,21 @@ import { mkAbs, mkRel } from '../ref';
 import Lam from '../../aspects/lambda/data';
 import App from '../../aspects/application/data';
 
+
+const emptyCtx;
+
 describe('eval', () => {
   const type = Type.singleton;
 
-  it('evaluates type', () => {
+  it('steps type', () => {
     // start with an empty context;
-    expect(type.evaluate([mkAbs()]))
+    expect(type.step(emptyCtx.bind(mkAbs())))
       .toEqual(mkSuccess(type));
   });
 
   it('gets stuck on holes', () => {
     const hole = new Hole('hole', type);
-    expect(hole.evaluate([mkAbs()]))
+    expect(hole.step(emptyCtx.bind(mkAbs())))
       .toEqual(mkStuck(hole));
 
     const returningHole = new App(
@@ -31,7 +34,7 @@ describe('eval', () => {
       ),
       type
     );
-    expect(returningHole.evaluate([mkAbs()]))
+    expect(returningHole.step(emptyCtx.bind(mkAbs())))
       .toEqual(mkStuck(hole));
   });
 
@@ -50,7 +53,7 @@ describe('eval', () => {
         type
       );
 
-      expect(tm.evaluate(mkAbs(), ctx))
+      expect(tm.step(mkAbs(), ctx))
         .toEqual(mkSuccess(type))
     });
 
@@ -65,7 +68,7 @@ describe('eval', () => {
         type
       );
 
-      expect(tm.evaluate(mkAbs(), ctx))
+      expect(tm.step(mkAbs(), ctx))
         .toEqual(mkSuccess(type))
     });
   });

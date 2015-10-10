@@ -23,7 +23,7 @@ export default class Label extends labelShape {
     super({ name, type: Type.singleton });
   }
 
-  evaluate(root: AbsRef): EvaluationResult {
+  step(root: AbsRef): EvaluationResult {
     return mkSuccess(this);
   }
 

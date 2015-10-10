@@ -24,7 +24,7 @@ disable('externals', () => {
     );
     const num = new JsNumber(0);
 
-    expect(new JsApp(fun, num).evaluate([]))
+    expect(new JsApp(fun, num).step([]))
       .toEqual(mkSuccess(new JsNumber(1)));
   });
 
@@ -38,8 +38,8 @@ disable('externals', () => {
     const num1 = new JsNumber(1);
 
     const computation = bind(
-      new JsApp(fun, num0).evaluate([]),
-      fun_ => new JsApp(fun_, num1).evaluate([])
+      new JsApp(fun, num0).step([]),
+      fun_ => new JsApp(fun_, num1).step([])
     );
 
     expect(computation).toEqual(mkSuccess(num1));

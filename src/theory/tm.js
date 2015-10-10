@@ -24,7 +24,7 @@ export type Tm = {
   // * Instead we can pass in the arguments it's being applied to. Tie this in
   //   with the binding structure we expect to know from a term and we should
   //   always know the right amount of arguments to pass in.
-  evaluate: (root: AbsRef, args: [Tm]) => EvaluationResult;
+  step: (root: AbsRef, args: [Tm]) => EvaluationResult;
 
   subst: (root: AbsRef, ref: Ref, value: Tm) => Tm;
 
@@ -50,7 +50,7 @@ export class Type {
   // $flowstatic
   static singleton: Type = new Type();
 
-  evaluate(root: AbsRef): EvaluationResult {
+  step(root: AbsRef): EvaluationResult {
     return mkSuccess(this);
   }
 
@@ -101,7 +101,7 @@ export class Hole extends HoleShape {
     super({ name, type });
   }
 
-  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
+  step(root: AbsRef, args: [Tm]): EvaluationResult {
     return mkStuck(this);
   }
 
@@ -135,8 +135,8 @@ export class Var extends VarShape {
     super({ ref, type });
   }
 
-  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
-    throw new Error('evaluating variable!');
+  step(root: AbsRef, ctx: Context): EvaluationResult {
+    throw new Error('stepping variable!');
   }
 
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {

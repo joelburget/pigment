@@ -23,8 +23,8 @@ var ModuleShape = Record({
 
 
 export default class Module extends ModuleShape {
-  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
-    throw new Error('unimplemented: Module.evaluate');
+  step(root: AbsRef, ctx: Context): EvaluationResult {
+    throw new Error('unimplemented: Module.step');
   }
 
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {

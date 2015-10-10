@@ -25,7 +25,7 @@ export default class Row extends rowShape {
     super({ entries, type: Type.singleton });
   }
 
-  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
+  step(root: AbsRef, ctx: Context): EvaluationResult {
     return mkSuccess(this);
   }
 

@@ -61,7 +61,7 @@ const LamShape = Record({
 export default class Lam extends LamShape {
 
   // apply just one argument
-  evaluate(root: AbsRef, args: [Tm]): Tm {
+  step(root: AbsRef, ctx: Context): EvaluationResult {
     const [ arg ] = args;
     let { body, name } = this;
 
@@ -71,7 +71,7 @@ export default class Lam extends LamShape {
     }
     // if the name is null it's not really doing anything
 
-    return body.evaluate(root, mkRel('body'), ctx);
+    return body.step(root, ctx.bind(mkRel('body')));
   }
 
   subst(root: AbsRef, ref: Ref, tm: Tm): Tm {

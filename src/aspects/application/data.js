@@ -30,10 +30,10 @@ export default class App extends appShape {
     }
   }
 
-  evaluate(root: AbsRef, ctx: Context): EvaluationResult {
+  step(root: AbsRef, ctx: Context): EvaluationResult {
     return bind(
-      this.arg.evaluate(root.extend(mkRel('arg')), ctx),
-      arg => this.func.evaluate(root.extend(mkRel('func')), ctx, arg)
+      this.arg.step(root.extend(mkRel('arg')), ctx),
+      arg => this.func.step(root.extend(mkRel('func')), ctx, arg)
     );
   }
 

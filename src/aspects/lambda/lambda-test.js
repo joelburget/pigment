@@ -14,19 +14,19 @@ import expectImmutableIs from '../../testutil/expectImmutableIs';
 describe('lambda', () => {
   const type = Type.singleton;
 
-  it('evaluates id', () => {
+  it('steps id', () => {
     var app = new App(
       id,
       type
     );
 
     expectImmutableIs(
-      app.evaluate([mkAbs()]),
+      app.step([mkAbs()]),
       mkSuccess(type)
     );
   });
 
-  it('evaluates k', () => {
+  it('steps k', () => {
     var app = new App(
       new App(
         k,
@@ -36,7 +36,7 @@ describe('lambda', () => {
     );
 
     expectImmutableIs(
-      app.evaluate([mkAbs()]),
+      app.step([mkAbs()]),
       mkSuccess(type)
     );
   });

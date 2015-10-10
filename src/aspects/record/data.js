@@ -56,8 +56,8 @@ export default class Rec extends RecordShape {
     super({ values, type });
   }
 
-  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
-    // TODO evaluate all children?
+  step(root: AbsRef, args: [Tm]): EvaluationResult {
+    // TODO step all children?
     return mkSuccess(this);
   }
 

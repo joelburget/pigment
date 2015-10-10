@@ -39,9 +39,9 @@ const VariantShape = Record({
 
 export default class Variant extends VariantShape {
 
-  evaluate(root: AbsRef, args: [Tm]): EvaluationResult {
-    // TODO evaluate all children?
-    throw new Error('unimplemented - Variant.evaluate');
+  step(root: AbsRef, ctx: Context): EvaluationResult {
+    // TODO step all children?
+    throw new Error('unimplemented - Variant.step');
   }
 
   subst(root: AbsRef, ref: Ref, value: Tm): Tm {

@@ -14,8 +14,8 @@ export class Equality extends Expression {
     throw new Error('unimplemented - Equality.map');
   }
 
-  evaluate(): EvaluationResult<Expression> {
-    throw new Error('unimplemented - Equality.evaluate');
+  step(): EvaluationResult<Expression> {
+    throw new Error('unimplemented - Equality.step');
   }
 }
 
@@ -34,7 +34,7 @@ export class Refl extends Expression {
     throw new Error('unimplemented - Refl.map');
   }
 
-  evaluate(): EvaluationResult<Expression> {
-    throw new Error('unimplemented - Refl.evaluate');
+  step(): EvaluationResult<Expression> {
+    throw new Error('unimplemented - Refl.step');
   }
 }
