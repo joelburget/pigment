@@ -3,7 +3,7 @@
 import invariant from 'invariant';
 import { Record, List } from 'immutable';
 
-import { INTRO, Type } from '../../theory/tm';
+import { INTRO, Type, Hole } from '../../theory/tm';
 import { mkRel } from '../../theory/ref';
 import { register } from '../../theory/registry';
 
@@ -14,11 +14,42 @@ import type { RelRef, AbsRef, Ref } from '../../theory/ref';
 const ArrowShape = Record({
   domain: null,
   codomain: null,
+  type: null,
 });
 
 
 export class Arrow extends ArrowShape {
+  // TODO(joel) -- explore this concept that you might want to autocomplete
+  // using any of a bunch of names.
+  static searchAliases = ['arrow', 'function', 'lambda'];
+
+  static form = INTRO;
+  static typeClass = Type;
+
+  static fillHole(type: Tm): Lambda {
+    invariant(
+      type instanceof Type,
+      'Lambda can only fill holes of type Type'
+    );
+
+    // for now, just start with * -> *
+    return new Arrow({
+      domain: type,
+      codomain: type,
+      type,
+    });
+  }
+
+  actions(): List<Action> {
+    return List([]);
+  }
+
+  performEdit(id: string): Edit {
+  }
 }
+
+
+register('arrow', Arrow);
 
 
 const LamShape = Record({
@@ -54,17 +85,28 @@ export default class Lam extends LamShape {
     );
   }
 
-  static fillHole(type: Tm): Lambda {
-    // invariant(type instanceof
-    throw new Error('unimplemented - Lambda.fillHole');
-    return new Lambda(
-      name,
-      body,
-      type,
+  static fillHole(type: Tm): Lam {
+    invariant(
+      type instanceof Arrow,
+      'Lam can only fill holes of type Arrow'
     );
+
+    return new Lam({
+      name: 'x',
+      body: new Hole(null, type.codomain),
+      type,
+    });
   }
 
   static form = INTRO;
+  static typeClass = Arrow;
+
+  actions(): List<Action> {
+    return List([]);
+  }
+
+  performEdit(id: string): Edit {
+  }
 
   // instantiate(values: List<?Tm>): Tm {
   //   var body: Tm = this.body;

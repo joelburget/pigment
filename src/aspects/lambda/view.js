@@ -4,7 +4,7 @@ import React, { Component, PropTypes } from 'react';
 
 import { Var } from '../../theory/tm';
 import Name from '../../components/Expression/Name';
-import Expression from '../../components/Expression';
+import Expression, { expr } from '../../components/Expression';
 
 import styles from './style.scss';
 
@@ -26,7 +26,7 @@ export class Binder extends Component {
     return (
       <span onClick={::this.toggle}>
         <div className={styles.expandContainer}>{expanded}</div>
-        {this.props.children.name}
+        {this.props.name}
       </span>
     );
   }
@@ -46,6 +46,20 @@ export class Binder extends Component {
   toggle() {
     console.log('toggle');
     this.setState({ expanded: !this.state.expanded });
+  }
+}
+
+
+export class Arrow extends Component {
+  render() {
+    const { children: item, path } = this.props;
+    return (
+      <div>
+        {expr(item, path, 'domain')}
+        ->
+        {expr(item, path, 'codomain')}
+      </div>
+    );
   }
 }
 

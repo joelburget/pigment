@@ -3,7 +3,7 @@ import type { List } from 'immutable';
 
 import Var from './Expression/Name';
 import Hole from './Expression/Hole';
-import Lambda from '../aspects/lambda/view';
+import { Arrow, Lambda } from '../aspects/lambda/view';
 import Application from '../aspects/application/view';
 import Label from '../aspects/label/view';
 import Row from '../aspects/row/view';
@@ -65,7 +65,7 @@ export default class Expression extends Component {
 
       App: Application,
       Lam: Lambda,
-      // Arr: Arr,
+      Arrow: Arrow,
 
       Label,
       Rec,
