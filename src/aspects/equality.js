@@ -1,8 +1,8 @@
 // @flow
 import { Record } from 'immutable';
 
-import { Type } from './tm';
-import EvaluationResult from './evaluation';
+import { Type } from '../theory/tm';
+import { EvaluationResult } from '../theory/evaluation';
 
 
 const EqualityShape = Record({
