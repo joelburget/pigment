@@ -75,7 +75,7 @@ export class Type {
 
   static typeClass = Type;
 
-  static fillHole(type: Tm): Type {
+  static fillHole(type: Tm): [Set<Relation>, Type] {
     invariant(
       type === Type.singleton,
       'Type asked to fill a hole of type other than Type'

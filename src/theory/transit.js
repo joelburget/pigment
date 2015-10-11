@@ -4,8 +4,14 @@ import transit from 'transit-js';
 import { AbsRef, RelRef } from './ref';
 import { Type, Var, Hole } from './tm';
 import Edit from './edit';
+import Relation from './relation';
 
 export const writeHandlers = [
+
+  Relation, transit.makeWriteHandler({
+    tag: () => 'relation',
+    rep: v => [v.type, v.subject, v.object],
+  }),
 
   Edit, transit.makeWriteHandler({
     tag: () => 'edit',
@@ -41,6 +47,9 @@ export const writeHandlers = [
 
 
 export const readHandlers = {
+
+  'relation': ([type, subject, object]) =>
+    new Relation({ type, subject, object }),
 
   'edit': ([status, world, catalyst, closure]) =>
     new Edit({ status, world, catalyst, closure }),

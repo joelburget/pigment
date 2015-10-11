@@ -1,11 +1,12 @@
 // @flow
 
 import invariant from 'invariant';
-import { Record, List } from 'immutable';
+import { Record, List, Set } from 'immutable';
 
 import { INTRO, Type, Hole } from '../../theory/tm';
 import { mkRel } from '../../theory/ref';
 import { register } from '../../theory/registry';
+import Relation from '../../theory/relation';
 
 import type { EvaluationResult } from '../../theory/evaluation';
 import type { AbsRef, Ref } from '../../theory/ref';
@@ -28,19 +29,28 @@ export class Arrow extends ArrowShape {
   static form = INTRO;
   static typeClass = Type;
 
-  static fillHole(type: Tm): Arrow {
-    invariant(
-      type instanceof Type,
-      'Arrow can only fill holes of type Type'
-    );
+  -- [Set<Relation>, Lambda]
+  static fillHole = [
+    Set([
+      new Relation({
+        type: IS_TYPE,
+        subject: this.path.push('domain'),
+        object: this.path.push('type'),
+      }),
 
-    // for now, just start with * -> *
-    return new Arrow({
+      new Relation({
+        type: IS_TYPE,
+        subject: this.path.push('codomain'),
+        object: this.path.push('type'),
+      }),
+    ]),
+
+    new Arrow({
       domain: new Hole(null, type),
       codomain: new Hole(null, type),
       type,
-    });
-  }
+    }),
+  ]
 
   actions(): List<Action> {
     return List([]);
@@ -88,17 +98,27 @@ export default class Lam extends LamShape {
     );
   }
 
-  static fillHole(type: Tm): Lam {
+  static fillHole(type: Tm): [Set<Relation>, Lam] {
     invariant(
       type instanceof Arrow,
       'Lam can only fill holes of type Arrow'
     );
 
-    return new Lam({
+    const relations = Set([
+      new Relation({
+        type: IS_TYPE,
+        subject: this.path.push('body'),
+        object: this.path.push('type'),
+      })
+    ]);
+
+    const tm = new Lam({
       name: 'x',
       body: new Hole(null, type.codomain),
       type,
     });
+
+    return [relations, tm];
   }
 
   static form = INTRO;

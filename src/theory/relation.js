@@ -15,12 +15,20 @@
 
 import { Record } from 'immutable';
 
+// Subject and object both need to point to locations -- definitely not a term.
+// Because the term is immutable and it can change, we can't point right at it!
+
+
 export const IS_TYPE = 'IS_TYPE';
 export const ACCEPTS_TERM = 'ACCEPTS_TERM';
 export const MATCHES = 'MATCHES';
 
-export const Relation = Record({
+
+const Relation = Record({
   type: MATCHES, // x _ y
   subject: null, // _ matches y
   object: null,  // x matches _
 });
+
+
+export default Relation;

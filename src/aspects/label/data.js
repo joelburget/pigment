@@ -1,11 +1,12 @@
 // @flow
 
 import invariant from 'invariant';
-import { List, Record } from 'immutable';
+import { List, Record, Set } from 'immutable';
 
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import { INTRO, Type } from '../../theory/tm';
+import Relation, { IS_TYPE, MATCHES } from '../../theory/relation';
 
 import type { EvaluationResult } from '../../theory/evaluation';
 import type { Tm } from '../../theory/tm';
@@ -40,14 +41,16 @@ export default class Label extends LabelShape {
 
   static typeClass = Type;
 
-  static fillHole(type: Tm): Label {
-    invariant(
-      type === Type.singleton,
-      'Label asked to fill a hole of type other than Type'
-    );
-
-    return new Label('new label');
-  }
+  static fillHole = [
+    Set([
+      new Relation({
+        type: IS_TYPE,
+        subject: this.path,
+        object: this.path.type,
+      });
+    ]),
+    new Label('new label'),
+  ]
 
   static form = INTRO;
 }
