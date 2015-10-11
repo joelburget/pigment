@@ -358,10 +358,6 @@ export default class Module extends Component {
     scratch: PropTypes.object.isRequired,
   };
 
-  static childContextTypes = {
-    muiTheme: React.PropTypes.object,
-  };
-
   render() {
     const { contents, name, scratch } = this.props;
     const renderedItems = contents
@@ -388,7 +384,12 @@ export default class Module extends Component {
 
 class Item extends Component {
   static propTypes = {
-    item: PropTypes.instanceOf(PropertyData).isRequired,
+    item: PropTypes.oneOfType([
+      PropTypes.instanceOf(NoteData),
+      PropTypes.instanceOf(DefinitionData),
+      PropTypes.instanceOf(PropertyData),
+      PropTypes.instanceOf(ExampleData),
+    ]).isRequired,
     path: PropTypes.instanceOf(List).isRequired,
   };
 
@@ -448,7 +449,7 @@ class DropDownMenu extends Component {
 
 class NewItem extends Component {
   static propTypes = {
-    scratch: PropTypes.instanceOf(ModuleData).isRequired,
+    scratch: PropTypes.instanceOf(DefinitionData).isRequired,
   };
 
   static contextTypes = {

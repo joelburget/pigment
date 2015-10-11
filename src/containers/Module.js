@@ -5,7 +5,8 @@ import { connect } from 'react-redux';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd/modules/backends/HTML5';
 
-import ModuleData, { Definition } from '../aspects/module/data';
+import { Definition } from '../aspects/module/data';
+import { ModuleState } from '../ducks/module';
 import Module from '../aspects/module/view';
 
 import { isPathHighlighted,
@@ -38,11 +39,11 @@ const widgetActions = { expressionMouseClick, updateAt };
 export default class ModuleContainer extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
-    state: PropTypes.instanceOf(ModuleData).isRequired,
+    state: PropTypes.instanceOf(ModuleState).isRequired,
     contents: PropTypes.instanceOf(List).isRequired,
     name: PropTypes.string.isRequired,
     scratch: PropTypes.instanceOf(Definition).isRequired,
-    mouseSelection: PropTypes.instanceOf(List).isRequired,
+    mouseSelection: PropTypes.instanceOf(List),
   };
 
   static childContextTypes = {

@@ -1,4 +1,3 @@
-import History from 'history';
 import React, {Component, PropTypes} from 'react';
 import {Link} from 'react-router';
 import {bindActionCreators} from 'redux';
@@ -48,7 +47,7 @@ export default class App extends Component {
     children: PropTypes.object.isRequired,
     user: PropTypes.object,
     logout: PropTypes.func.isRequired,
-    history: PropTypes.instanceOf(History).isRequired,
+    history: PropTypes.object,
   }
 
   static contextTypes = {
