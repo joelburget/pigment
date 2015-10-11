@@ -1,8 +1,6 @@
 import expect from 'expect';
 
 import { Type } from '../tm';
-import { Lam } from '../../aspects/lambda/data';
-// import { Sigma } from '../tuple';
 
 describe('typelevels', () => {
   const type = Type.singleton;

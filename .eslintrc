@@ -14,14 +14,15 @@
     "react/jsx-uses-vars": 2,
     "react/react-in-jsx-scope": 2,
     "react/jsx-quotes": 0,
-    "jsx-quotes": 2,
+    "jsx-quotes": [2, "prefer-single"],
     // Temporarirly disabled due to a possible bug in babel-eslint (todomvc example)
     "block-scoped-var": 0,
     // Temporarily disabled for test/* until babel/babel-eslint#33 is resolved
     "padded-blocks": 0,
     "comma-dangle": 0,  // not sure why airbnb turned this on. gross!
     "indent": [2, 2, {"SwitchCase": 1}],
-    "no-console": 0
+    "no-console": 0,
+    "no-else-return": 0
   },
   "plugins": [
     "react"

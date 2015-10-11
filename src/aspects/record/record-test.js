@@ -1,15 +1,15 @@
 import expect from 'expect';
-import { Map, Set, OrderedMap } from 'immutable';
+import { Map, OrderedMap } from 'immutable';
 
-import { Label, Rec, RowKind, Row, SelectRow, ExtendRow, RestrictRow }
+import { Label, Rec, Row, SelectRow, ExtendRow, RestrictRow }
   from './data';
 import { JsNumber } from '../external';
-import { mkSuccess, bind } from '../../theory/evaluation'
+import { mkSuccess, bind } from '../../theory/evaluation';
 
 import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 
-const emptyCtx;
+const emptyCtx = Map();
 
 
 describe('records', () => {

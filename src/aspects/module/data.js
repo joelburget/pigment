@@ -6,16 +6,20 @@ import invariant from 'invariant';
 import { register } from '../../theory/registry';
 import { ADD_ENTRY, addEntry } from '../../commands/addEntry';
 
+import type { Tm } from '../../theory/tm';
+import type { EvaluationResult } from '../../theory/evaluation';
+import type Edit, { Action } from '../../theory/edit';
+
 
 export const MODULE_PUBLIC = 'module/MODULE_PUBLIC';
 export const MODULE_PRIVATE = 'module/MODULE_PRIVATE';
 // idris also has abstract, though i'm not sure when it's useful
 
 
-type Visibility = MODULE_PUBLIC | MODULE_PRIVATE;
+export type Visibility = MODULE_PUBLIC | MODULE_PRIVATE;
 
 
-var ModuleShape = Record({
+const ModuleShape = Record({
   name: null,     // string
   contents: null, // List<Note | Definition | Property | Example>
   scratch: null,  // Note | Definition | Property | Example
@@ -23,15 +27,15 @@ var ModuleShape = Record({
 
 
 export default class Module extends ModuleShape {
-  step(root: AbsRef, ctx: Context): EvaluationResult {
+  step(): EvaluationResult {
     throw new Error('unimplemented: Module.step');
   }
 
-  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+  subst(): Tm {
     throw new Error('unimplemented: Module.subst');
   }
 
-  unify(tm: Tm): ?Tm {
+  unify(): ?Tm {
     throw new Error('unimplemented: Module.unify');
   }
 

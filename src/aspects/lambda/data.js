@@ -7,8 +7,10 @@ import { INTRO, Type, Hole } from '../../theory/tm';
 import { mkRel } from '../../theory/ref';
 import { register } from '../../theory/registry';
 
+import type { EvaluationResult } from '../../theory/evaluation';
+import type { AbsRef, Ref } from '../../theory/ref';
 import type { Tm } from '../../theory/tm';
-import type { RelRef, AbsRef, Ref } from '../../theory/ref';
+import type Edit, { Action } from '../../theory/edit';
 
 
 const ArrowShape = Record({
@@ -26,10 +28,10 @@ export class Arrow extends ArrowShape {
   static form = INTRO;
   static typeClass = Type;
 
-  static fillHole(type: Tm): Lambda {
+  static fillHole(type: Tm): Arrow {
     invariant(
       type instanceof Type,
-      'Lambda can only fill holes of type Type'
+      'Arrow can only fill holes of type Type'
     );
 
     // for now, just start with * -> *
@@ -44,7 +46,7 @@ export class Arrow extends ArrowShape {
     return List([]);
   }
 
-  performEdit(id: string): Edit {
+  performEdit(): Edit {
   }
 }
 
@@ -61,12 +63,11 @@ const LamShape = Record({
 export default class Lam extends LamShape {
 
   // apply just one argument
-  step(root: AbsRef, ctx: Context): EvaluationResult {
-    const [ arg ] = args;
-    let { body, name } = this;
+  step(root: AbsRef, ctx: Map<string, Tm>): EvaluationResult {
+    let { body } = this;
 
     // if the name is null it's not really doing anything
-    if (name != null) {
+    if (this.name != null) {
       body = body.subst(root, mkRel('..', 'binder'), arg);
     }
     // if the name is null it's not really doing anything
@@ -105,7 +106,7 @@ export default class Lam extends LamShape {
     return List([]);
   }
 
-  performEdit(id: string): Edit {
+  performEdit(): Edit {
   }
 
   // instantiate(values: List<?Tm>): Tm {

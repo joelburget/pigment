@@ -10,10 +10,12 @@ import { openNewEdit } from '../../theory/edit';
 import { ADD_ENTRY, addEntry, makeLabel } from '../../commands/addEntry';
 import { POKE_HOLE, pokeHole, doPokeHole } from '../../commands/pokeHole';
 
+import type { EvaluationResult } from '../../theory/evaluation';
 import type { Tm } from '../../theory/tm';
+import type Edit, { Action } from '../../theory/edit';
 
 
-var rowShape = Record({
+const rowShape = Record({
   entries: null, // Map<string, Tm>
   type: null, // Tm
 }, 'row');
@@ -25,7 +27,7 @@ export default class Row extends rowShape {
     super({ entries, type: Type.singleton });
   }
 
-  step(root: AbsRef, ctx: Context): EvaluationResult {
+  step(): EvaluationResult {
     return mkSuccess(this);
   }
 

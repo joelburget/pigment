@@ -70,7 +70,7 @@ export default class App extends Component {
         <DocumentMeta {...meta} />
         <nav>
           <div>
-            <Link to="/" className={styles.title}>
+            <Link to='/' className={styles.title}>
               Pigment
             </Link>
           </div>
@@ -80,8 +80,8 @@ export default class App extends Component {
             /*<p className={styles.loggedInMessage + ' navbar-text'}>Logged in as <strong>{user.name}</strong>.</p>*/
             <Avatar fbId='joelburget' round='true' size={40} />}
             <div>
-              {!user && <Link to="/login">LOGIN</Link>}
-              {user && <a href="/logout" onClick={::this.handleLogout}>LOGOUT</a>}
+              {!user && <Link to='/login'>LOGIN</Link>}
+              {user && <a href='/logout' onClick={::this.handleLogout}>LOGOUT</a>}
             </div>
           </div>
 

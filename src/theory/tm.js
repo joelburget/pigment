@@ -50,11 +50,11 @@ export class Type {
   // $flowstatic
   static singleton: Type = new Type();
 
-  step(root: AbsRef): EvaluationResult {
+  step(): EvaluationResult {
     return mkSuccess(this);
   }
 
-  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+  subst(): Tm {
     return this;
   }
 
@@ -101,7 +101,7 @@ export class Hole extends HoleShape {
     super({ name, type });
   }
 
-  step(root: AbsRef, args: [Tm]): EvaluationResult {
+  step(): EvaluationResult {
     return mkStuck(this);
   }
 
@@ -135,7 +135,7 @@ export class Var extends VarShape {
     super({ ref, type });
   }
 
-  step(root: AbsRef, ctx: Context): EvaluationResult {
+  step(): EvaluationResult {
     throw new Error('stepping variable!');
   }
 

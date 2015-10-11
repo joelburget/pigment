@@ -1,10 +1,6 @@
-import expect from 'expect';
-import { List } from 'immutable';
-
-import { Type, Var } from '../../theory/tm';
-import { mkSuccess, mkStuck, bind } from '../../theory/evaluation';
-import { mkRel, mkAbs } from '../../theory/ref';
-import Lam from './data';
+import { Type } from '../../theory/tm';
+import { mkSuccess } from '../../theory/evaluation';
+import { mkAbs } from '../../theory/ref';
 import App from '../application/data';
 
 import { id, k } from '../../testutil/examples';
@@ -15,7 +11,7 @@ describe('lambda', () => {
   const type = Type.singleton;
 
   it('steps id', () => {
-    var app = new App(
+    const app = new App(
       id,
       type
     );
@@ -27,7 +23,7 @@ describe('lambda', () => {
   });
 
   it('steps k', () => {
-    var app = new App(
+    const app = new App(
       new App(
         k,
         type

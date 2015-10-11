@@ -1,9 +1,9 @@
 import React from 'react';
 
-export default function childJoin(xs, joiner) {
-  let result = [];
-  React.Children.map(xs, x => {
-    result.push(x);
+export default function childJoin(children, joiner) {
+  const result = [];
+  React.Children.map(children, child => {
+    result.push(child);
     result.push(React.cloneElement(joiner));
   });
   result.pop();

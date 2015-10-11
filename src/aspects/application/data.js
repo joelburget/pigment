@@ -7,8 +7,10 @@ import { register } from '../../theory/registry';
 import { bind } from '../../theory/evaluation';
 import { mkRel } from '../../theory/ref';
 
+import type { Map } from 'immutable';
+import type { EvaluationResult } from '../../theory/evaluation';
 import type { Tm } from '../../theory/tm';
-import type { AbsRef, Ref } from '../../theory/ref';
+import type { AbsRef } from '../../theory/ref';
 
 
 const appShape = Record({
@@ -19,18 +21,7 @@ const appShape = Record({
 
 export default class App extends appShape {
 
-  constructor(func: Tm, arg: Tm, type: Tm): void {
-    const fType = func.type;
-
-    if (fType instanceof Arr) {
-      const type = fType.codomain;
-      super({ func, arg, type });
-    } else {
-      throw new Error('runtime error in App constructor');
-    }
-  }
-
-  step(root: AbsRef, ctx: Context): EvaluationResult {
+  step(root: AbsRef, ctx: Map<string, Tm>): EvaluationResult {
     return bind(
       this.arg.step(root.extend(mkRel('arg')), ctx),
       arg => this.func.step(root.extend(mkRel('func')), ctx, arg)
@@ -38,7 +29,7 @@ export default class App extends appShape {
   }
 
   // hm... this hardly seems to make sense for app...
-  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+  subst(): Tm {
     throw new Error('unimplemented - App.subst');
   }
 

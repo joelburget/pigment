@@ -35,7 +35,7 @@ export default function universalRouter(location, history, store, preload) {
       }
 
       const component = (
-        <Provider store={store} key="provider">
+        <Provider store={store} key='provider'>
           <RoutingContext {...renderProps} />
         </Provider>
       );

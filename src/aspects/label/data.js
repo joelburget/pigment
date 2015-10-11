@@ -8,22 +8,22 @@ import { register } from '../../theory/registry';
 import { INTRO, Type } from '../../theory/tm';
 
 import type { EvaluationResult } from '../../theory/evaluation';
-import type { AbsRef } from '../../theory/ref';
 import type { Tm } from '../../theory/tm';
+import type Edit, { Action } from '../../theory/edit';
 
 
-var labelShape = Record({
+const LabelShape = Record({
   name: null, // string
   type: null, // Tm
 }, 'label');
 
-export default class Label extends labelShape {
+export default class Label extends LabelShape {
 
   constructor(name: string): void {
     super({ name, type: Type.singleton });
   }
 
-  step(root: AbsRef): EvaluationResult {
+  step(): EvaluationResult {
     return mkSuccess(this);
   }
 
@@ -31,7 +31,7 @@ export default class Label extends labelShape {
     return List();
   }
 
-  performEdit(id: string): Edit {
+  performEdit(): Edit {
     invariant(
       false,
       "Label.performEdit doesn't know any actions"

@@ -25,12 +25,12 @@ class Name extends Component {
 
   renderContextual() {
     return (
-      <ul className="mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect"
-          htmlFor="demo-menu-lower-left">
-        <li className="mdl-menu__item">Some Action</li>
-        <li className="mdl-menu__item">Another Action</li>
-        <li disabled className="mdl-menu__item">Disabled Action</li>
-        <li className="mdl-menu__item">Yet Another Action</li>
+      <ul className='mdl-menu mdl-menu--bottom-left mdl-js-menu mdl-js-ripple-effect'
+          htmlFor='demo-menu-lower-left'>
+        <li className='mdl-menu__item'>Some Action</li>
+        <li className='mdl-menu__item'>Another Action</li>
+        <li disabled className='mdl-menu__item'>Disabled Action</li>
+        <li className='mdl-menu__item'>Yet Another Action</li>
       </ul>
     );
   }
@@ -104,18 +104,18 @@ export default class Development extends Component {
             TOOLBOX
           </div>
 
-          <div className="mdl-textfield mdl-js-textfield textfield-demo">
-            <input className="mdl-textfield__input" type="text" id="sample1" />
-            <label className="mdl-textfield__label" htmlFor="sample1">SEARCH</label>
+          <div className='mdl-textfield mdl-js-textfield textfield-demo'>
+            <input className='mdl-textfield__input' type='text' id='sample1' />
+            <label className='mdl-textfield__label' htmlFor='sample1'>SEARCH</label>
           </div>
 
-          <div className="mdl-textfield mdl-js-textfield mdl-textfield--expandable textfield-demo">
-            <label className="mdl-button mdl-js-button mdl-button--icon" htmlFor="sample6">
-              <i className="material-icons">search</i>
+          <div className='mdl-textfield mdl-js-textfield mdl-textfield--expandable textfield-demo'>
+            <label className='mdl-button mdl-js-button mdl-button--icon' htmlFor='sample6'>
+              <i className='material-icons'>search</i>
             </label>
-            <div className="mdl-textfield__expandable-holder">
-              <input className="mdl-textfield__input" type="text" />
-              <label className="mdl-textfield__label" htmlFor="sample-expandable">Expandable Input</label>
+            <div className='mdl-textfield__expandable-holder'>
+              <input className='mdl-textfield__input' type='text' />
+              <label className='mdl-textfield__label' htmlFor='sample-expandable'>Expandable Input</label>
             </div>
           </div>
 

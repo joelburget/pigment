@@ -6,12 +6,12 @@ import { Module, App, RequireLogin, Login, LoginSuccess, NotFound } from './cont
 export default function(store) {
   return (
     <Route component={App}>
-      <Route path="/" component={Module}/>
-      <Route path="/login" component={Login}/>
+      <Route path='/' component={Module}/>
+      <Route path='/login' component={Login}/>
       <Route component={RequireLogin} onEnter={RequireLogin.onEnter(store)}>
-        <Route path="/loginSuccess" component={LoginSuccess}/>
+        <Route path='/loginSuccess' component={LoginSuccess}/>
       </Route>
-      <Route path="*" component={NotFound}/>
+      <Route path='*' component={NotFound}/>
     </Route>
   );
 }

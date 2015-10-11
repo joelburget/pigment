@@ -13,7 +13,7 @@
 // I'm not yet sure if these are all the relations we care about, but they're
 // all I can think of at the moment.
 
-import { Relation } from 'immutable';
+import { Record } from 'immutable';
 
 export const IS_TYPE = 'IS_TYPE';
 export const ACCEPTS_TERM = 'ACCEPTS_TERM';

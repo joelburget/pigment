@@ -7,7 +7,7 @@ import { List, Record, is } from 'immutable';
 // TODO come to terms with the fact that these '..'s are de bruijn indices
 export class RelRef extends Record({ path: null }) {
   normalize(): RelRef {
-    let stack = [];
+    const stack = [];
     let last = '..';
 
     this.path.forEach(piece => {
@@ -29,18 +29,16 @@ export class RelRef extends Record({ path: null }) {
   }
 
   is(ref: Ref, root: AbsRef): boolean {
-    if (ref instanceof RelRef) {
-      return is(this.normalize().path, ref.normalize().path);
-    } else {
-      return is(
+    return is(
+      ref instanceof RelRef ?
+        this.normalize().path :
         root.extend(this).normalize().path,
-        ref.normalize().path
-      );
-    }
+      ref.normalize().path
+    );
   }
 
   goIn(): RelRef {
-    return mkRel('..').extend(this);
+    return new RelRef({ path: '..' }).extend(this);
   }
 }
 
@@ -68,14 +66,12 @@ export class AbsRef extends Record({ path: null }) {
   }
 
   is(ref: Ref, root: AbsRef): boolean {
-    if (ref instanceof AbsRef) {
-      return is(this.normalize().path, ref.normalize().path);
-    } else {
-      return is(
-        root.extend(ref).normalize().path,
-        this.normalize().path
-      );
-    }
+    return is(
+      ref instanceof AbsRef ?
+        this.normalize().path :
+        root.extend(this).normalize().path,
+      ref.normalize().path
+    );
   }
 
   goIn(): AbsRef {

@@ -1,9 +1,11 @@
+import { List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd/modules/backends/HTML5';
 
+import ModuleData, { Definition } from '../aspects/module/data';
 import Module from '../aspects/module/view';
 
 import { isPathHighlighted,
@@ -13,7 +15,7 @@ import { isPathHighlighted,
          expressionMouseClick,
          load as loadWidgets,
          findCompletions,
-         moveItem,
+         // moveItem,
          addNew,
          fillHole,
          dispatchUserEdit,
@@ -36,6 +38,11 @@ const widgetActions = { expressionMouseClick, updateAt };
 export default class ModuleContainer extends Component {
   static propTypes = {
     dispatch: PropTypes.func.isRequired,
+    state: PropTypes.instanceOf(ModuleData).isRequired,
+    contents: PropTypes.instanceOf(List).isRequired,
+    name: PropTypes.string.isRequired,
+    scratch: PropTypes.instanceOf(Definition).isRequired,
+    mouseSelection: PropTypes.instanceOf(List).isRequired,
   };
 
   static childContextTypes = {
@@ -47,7 +54,7 @@ export default class ModuleContainer extends Component {
     expressionMouseClick: PropTypes.func.isRequired,
     findCompletions: PropTypes.func.isRequired,
     renameDefinition: PropTypes.func.isRequired,
-    moveItem: PropTypes.func.isRequired,
+    // moveItem: PropTypes.func.isRequired,
     addNew: PropTypes.func.isRequired,
     fillHole: PropTypes.func.isRequired,
     dispatchEdit: PropTypes.func.isRequired,
@@ -95,9 +102,11 @@ export default class ModuleContainer extends Component {
 
   render() {
     const { dispatch, contents, name, scratch } = this.props;
-    return <Module {...bindActionCreators(widgetActions, dispatch)}
-                   contents={contents}
-                   name={name}
-                   scratch={scratch} />;
+    return (
+      <Module {...bindActionCreators(widgetActions, dispatch)}
+              contents={contents}
+              name={name}
+              scratch={scratch} />
+    );
   }
 }

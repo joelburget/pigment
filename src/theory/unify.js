@@ -16,7 +16,7 @@ export default function unify(tm1: Tm, tm2: Tm): ?Tm {
       const unifiedSlots = zipped.map(([left, right]) => unify(left, right));
 
       if (unifiedSlots.every(unifier => unifier != null)) {
-        return new tm.constructor(unifiedSlots);
+        return new tm1.constructor(unifiedSlots);
       }
     }
   }

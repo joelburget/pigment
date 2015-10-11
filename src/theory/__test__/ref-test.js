@@ -8,45 +8,56 @@ import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 describe('ref', () => {
   it('mkRel', () => {
-    var rel = mkRel('..', 'arg');
-    var expected = new RelRef({ path: List(['..', 'arg']) });
+    const rel = mkRel('..', 'arg');
+    const expected = new RelRef({ path: List(['..', 'arg']) });
 
     expectImmutableIs(rel, expected);
   });
 
   it('mkAbs', () => {
-    var abs = mkAbs('module', 'function');
-    var expected = new AbsRef({ path: List(['module', 'function']) });
+    const abs = mkAbs('module', 'function');
+    const expected = new AbsRef({ path: List(['module', 'function']) });
 
     expectImmutableIs(abs, expected);
   });
 
   it('normalizes rel refs', () => {
-    var redundant = mkRel('a', 'b', '..', 'c', '..').normalize();
-    var expected = mkRel('a');
-    expectImmutableIs(redundant, expected);
+    {
+      const redundant = mkRel('a', 'b', '..', 'c', '..').normalize();
+      const expected = mkRel('a');
+      expectImmutableIs(redundant, expected);
+    }
 
-    var redundant = mkRel('a', '..', 'b', '..').normalize();
-    var expected = mkRel();
-    expectImmutableIs(redundant, expected);
+    {
+      const redundant = mkRel('a', '..', 'b', '..').normalize();
+      const expected = mkRel();
+      expectImmutableIs(redundant, expected);
+    }
 
-    var redundant = mkRel('..', 'b', '..').normalize();
-    var expected = mkRel('..');
-    expectImmutableIs(redundant, expected);
+    {
+      const redundant = mkRel('..', 'b', '..').normalize();
+      const expected = mkRel('..');
+      expectImmutableIs(redundant, expected);
+    }
   });
 
   it('normalizes abs refs', () => {
-    var redundant = mkAbs('a', 'b', '..', 'c', '..').normalize();
-    var expected = mkAbs('a');
-    expectImmutableIs(redundant, expected);
+    {
+      const redundant = mkAbs('a', 'b', '..', 'c', '..').normalize();
+      const expected = mkAbs('a');
+      expectImmutableIs(redundant, expected);
+    }
 
-    var redundant = mkAbs('a', '..', 'b', '..').normalize();
-    var expected = mkAbs();
-    expectImmutableIs(redundant, expected);
+    {
+      const redundant = mkAbs('a', '..', 'b', '..').normalize();
+      const expected = mkAbs();
+      expectImmutableIs(redundant, expected);
+    }
 
-    var redundant = mkAbs('..', 'b', '..');
-    var expected = mkAbs('..');
-    expect(() => { redundant.normalize(); }).toThrow();
+    {
+      const redundant = mkAbs('..', 'b', '..');
+      expect(() => { redundant.normalize(); }).toThrow();
+    }
   });
 
   it('relativizies abs refs', () => {

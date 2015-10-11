@@ -1,17 +1,25 @@
 // @flow
 
-import { Component, PropTypes } from 'react';
+import { List } from 'immutable';
+import React, { Component, PropTypes } from 'react';
+
+import { expr } from '../../components/Expression';
+import AppData from './data';
 import styles from './styles.scss';
 
 export default class App extends Component {
+  static propTypes = {
+    children: PropTypes.instanceOf(AppData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+  };
+
   render() {
-    const { func, arg } = this.props.children;
-    const { path } = this.props;
+    const { path, children: item } = this.props;
 
     return (
       <div className={styles.app}>
-        <Expression path={path.push('func')}>{func}</Expression>
-        <Expression path={path.push('arg')}>{arg}</Expression>
+        {expr(item, path, 'func')}
+        {expr(item, path, 'arg')}
       </div>
     );
   }

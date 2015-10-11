@@ -3,12 +3,11 @@
 import { Record } from 'immutable';
 
 
-var Shape = Record({
+export class EvaluationResult extends Record({
   type: null,  // string
   value: null, // X
-}, 'evaluationresult');
+}, 'evaluationresult') {}
 
-export class EvaluationResult extends Shape {}
 
 export function mkSuccess(value: any): EvaluationResult {
   return new EvaluationResult({

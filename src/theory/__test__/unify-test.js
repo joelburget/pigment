@@ -1,9 +1,5 @@
-import expect from 'expect';
-import { List } from 'immutable';
-
 import { Type, Hole, Var } from '../tm';
 import { mkRel } from '../ref';
-import unify from '../unify';
 
 import expectImmutableIs from '../../testutil/expectImmutableIs';
 
@@ -21,7 +17,7 @@ describe('unification', () => {
   });
 
   it('vars unify with everything', () => {
-    const v = new Var(mkRel('..', 'binder'), type);
+    const v = new Var(mkRel('..', 'binder'), type); // eslint-disable-line id-length
     expectImmutableIs(v.unify(type), type);
   });
 });

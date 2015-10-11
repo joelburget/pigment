@@ -43,7 +43,7 @@ const render = (loc, hist, str, preload) => {
         const { DevTools, DebugPanel, LogMonitor } = require('redux-devtools/lib/react');
         ReactDOM.render(<div>
           {component}
-          <DebugPanel top right bottom key="debugPanel">
+          <DebugPanel top right bottom key='debugPanel'>
             <DevTools store={store} monitor={LogMonitor} visibleOnLoad={false} />
           </DebugPanel>
         </div>, dest);

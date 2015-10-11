@@ -1,11 +1,17 @@
+import { List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
-import FlatButton from 'material-ui/lib/flat-button';
 
 import Expression from '../../components/Expression';
+import VariantData from './data';
 import style from './style.scss';
 
 
 export default class Variant extends Component {
+  static propTypes = {
+    children: PropTypes.instanceOf(VariantData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+  };
+
   render() {
     const children = this.props.children.values
       .entrySeq()
@@ -30,8 +36,5 @@ export default class Variant extends Component {
         <div>{'}'}</div>
       </div>
     );
-  }
-
-  handleAdd(event) {
   }
 }

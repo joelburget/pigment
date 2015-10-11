@@ -22,25 +22,25 @@ export default class Html extends Component {
   render() {
     const {assets, component, store} = this.props;
     return (
-      <html lang="en-us">
+      <html lang='en-us'>
         <head>
-          <meta charSet="utf-8"/>
+          <meta charSet='utf-8'/>
           {/* Auth0 asked to include this viewport */}
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
           {DocumentMeta.renderAsReact()}
 
-          <link rel="shortcut icon" href="/favicon.ico" />
-          <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.indigo-teal.min.css" />
+          <link rel='shortcut icon' href='/favicon.ico' />
+          <link rel='stylesheet' href='https://storage.googleapis.com/code.getmdl.io/1.0.4/material.indigo-teal.min.css' />
           <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500' rel='stylesheet' type='text/css' />
 
           {/* styles (will be present only in production with webpack extract text plugin) */}
-          {Object.keys(assets.styles).map((style, i) =>
-            <link href={assets.styles[style]} key={i} media="screen, projection"
-                  rel="stylesheet" type="text/css"/>
+          {Object.keys(assets.styles).map((style, key) =>
+            <link href={assets.styles[style]} key={key} media='screen, projection'
+                  rel='stylesheet' type='text/css'/>
           )}
         </head>
         <body>
-          <div id="content" dangerouslySetInnerHTML={{__html: ReactDOM.renderToString(component)}}/>
+          <div id='content' dangerouslySetInnerHTML={{__html: ReactDOM.renderToString(component)}}/>
           <script dangerouslySetInnerHTML={{__html: `window.__data=${writer.write(store.getState())};`}} />
           <script src={assets.javascript.main}/>
         </body>

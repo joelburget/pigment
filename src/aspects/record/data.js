@@ -1,7 +1,6 @@
 // @flow
 
 import { List, Record, Map } from 'immutable';
-import type { Iterable } from 'immutable';
 import invariant from 'invariant';
 
 import { INTRO, Hole, Type } from '../../theory/tm';
@@ -11,12 +10,11 @@ import { openNewEdit } from '../../theory/edit';
 import { ADD_ENTRY, addEntry, makeLabel } from '../../commands/addEntry';
 import { POKE_HOLE, pokeHole, doPokeHole } from '../../commands/pokeHole';
 
-import Label from '../label/data';
 import Row from '../row/data';
 
 import type { Tm } from '../../theory/tm';
 import type { EvaluationResult } from '../../theory/evaluation';
-import type { AbsRef, Ref } from '../../theory/ref';
+import type Edit, { Action } from '../../theory/edit';
 
 
 // record primitive operations
@@ -56,12 +54,12 @@ export default class Rec extends RecordShape {
     super({ values, type });
   }
 
-  step(root: AbsRef, args: [Tm]): EvaluationResult {
+  step(): EvaluationResult {
     // TODO step all children?
     return mkSuccess(this);
   }
 
-  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
+  subst(): Tm {
     throw new Error('unimplemented - Record.subst');
   }
 

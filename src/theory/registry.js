@@ -3,10 +3,9 @@
 import Immutable from 'immutable';
 
 import type { Tm } from './tm';
-import unify from './unify';
 
 
-let registry = {};
+const registry = {};
 
 
 const NAME_KEY = '_name';
@@ -30,7 +29,7 @@ export function register(name: string, cls: any): void {
 export function deserialize(obj: TmRecordEntry): any {
   const name = obj[NAME_KEY];
 
-  let withoutName = {};
+  const withoutName = {};
   Object.keys(obj).forEach(key => {
     if (key !== NAME_KEY) {
       const value = obj[key];

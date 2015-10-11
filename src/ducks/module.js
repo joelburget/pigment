@@ -1,3 +1,4 @@
+/* eslint no-unused-vars: 0 */
 import transit from 'transit-js';
 import { List, Record } from 'immutable';
 import Immutable from 'immutable';
@@ -45,7 +46,7 @@ export class ModuleState extends Record({
 export const writeHandlers = [
   ModuleState, transit.makeWriteHandler({
     tag: () => 'modulestate',
-    rep: v => [v.module, v.mouseSelection, v.openEdit],
+    rep: v => [v.module, v.mouseSelection, v.openEdit], // eslint-disable-line id-length
   }),
 ];
 
@@ -176,7 +177,7 @@ export default function reducer(state = initialState, action = {}) {
 
       return state
         .updateIn(['module', 'contents'],
-                  contents => contents.push(state.module.scratch))
+                  modContents => modContents.push(state.module.scratch))
         .setIn(['module', 'scratch'], scratch);
 
     case FILL_HOLE:
@@ -186,7 +187,7 @@ export default function reducer(state = initialState, action = {}) {
         // the item we're going to fill the hole with. not quite the same as the
         // item we get from the action because when it's an intro or elimination
         // form that item is a class
-        var fillItem;
+        let fillItem;
 
         if (category === VARIABLE) {
           fillItem = item;
@@ -208,7 +209,7 @@ export default function reducer(state = initialState, action = {}) {
     case DISPATCH_USER_EDIT:
       const { path, catalyst } = action;
       // XXX does catalyst have a path?
-      const focus = itemGetFocus(state, path);
+      const focus = itemGetFocus(state, path); // eslint-disable-line no-use-before-define
 
       // Action = {
       //   id: string;
@@ -229,7 +230,7 @@ export default function reducer(state = initialState, action = {}) {
       //   * though this command only necessarily does (1), it can also do (2)
 
       // TODO record the sequence of edits!
-      var newState;
+      let newState;
 
       // There's already an open edit -- add to its closure
       if (state.openEdit) {
@@ -281,6 +282,13 @@ export function getActions(state: ModuleState, path: List<string>) {
 }
 
 
+type Completions = {
+  variables: Array<Tm>;
+  intros: Array<Tm>;
+  elims: Array<Tm>;
+};
+
+
 // to autocomplete a hole, we need to know:
 // * its type
 // * its scope
@@ -288,17 +296,17 @@ export function getActions(state: ModuleState, path: List<string>) {
 export function findCompletions(state: ModuleState,
                                 type: Tm,
                                 ref: AbsRef,
-                                prefix: string): Array<Binder> {
+                                prefix: string): Completions {
   let matches = [];
 
   try {
     // walk from the root to the ref, collecting matching binders
-    var currentLoc = state;
+    let currentLoc = state;
     ref.path.forEach(piece => {
       currentLoc = currentLoc.get(piece);
 
       if (currentLoc instanceof Lam) {
-        var binder = currentLoc.binder;
+        const binder = currentLoc.binder;
         if (binder.type.unify(type) != null) {
           if (binder.name.startsWith(prefix)) {
             matches.push(binder);

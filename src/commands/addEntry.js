@@ -8,10 +8,10 @@ export const addEntry = {
 export function makeLabel(values) {
   const labelPrefix = 'new entry';
   let label = labelPrefix;
-  let i = 0;
+  let ix = 0;
   while (values.has(label)) {
-    i += 1
-    label = labelPrefix + ' ' + i;
+    ix += 1;
+    label = labelPrefix + ' ' + ix;
   }
 
   return label;

@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import Rackt from 'react-autocomplete';
 
-import styles from './Autocomplete.scss';
+// TODO - should this be removed? I can't remember where styles come from
+// import styles from './Autocomplete.scss';
 
 // Synchronous loading component -- no "loading..."
 export default class Autocomplete extends Component {
@@ -16,6 +17,7 @@ export default class Autocomplete extends Component {
     ),
     renderItem: PropTypes.func.isRequired,
     onSelect: PropTypes.func.isRequired,
+    onChange: PropTypes.func.isRequired,
   };
 
   render() {

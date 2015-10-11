@@ -1,10 +1,6 @@
-import expect from 'expect';
-
-import { Type, Var } from '../tm';
-import { mkSuccess, mkStuck, bind } from '../evaluation';
+import { Type } from '../tm';
 import { mkRel, mkAbs } from '../ref';
 import Lam from '../../aspects/lambda/data';
-import App from '../../aspects/application/data';
 
 import { id, k } from '../../testutil/examples';
 import expectImmutableIs from '../../testutil/expectImmutableIs';
@@ -14,7 +10,7 @@ describe('lambda', () => {
   const type = Type.singleton;
 
   it("doesn't substitute", () => {
-    var noVarLam = new Lam(
+    const noVarLam = new Lam(
       ['x', type],
       type
     );

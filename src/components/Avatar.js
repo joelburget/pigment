@@ -1,6 +1,12 @@
-import { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
 
 export default class Avatar extends Component {
+  static propTypes = {
+    size: PropTypes.number,
+    round: PropTypes.bool,
+    // fbId: PropTypes.string.isRequired,
+  };
+
   render() {
     const size = this.props.size || 50;
     const width = size;
@@ -12,7 +18,7 @@ export default class Avatar extends Component {
       boxSizing: 'border-box',
       border: '1px solid #ddd',
     };
-    const fbId = this.props.fbId;
+    // const fbId = this.props.fbId;
     const src = 'http://joelburget.com/media/img/profile.jpg';
 
     return (

@@ -1,5 +1,7 @@
+/* eslint no-unused-vars: 0 */
+/* eslint react/no-multi-comp: 0 */
 import React, { Component, PropTypes } from 'react';
-import Immutable, { List } from 'immutable';
+import { List, is } from 'immutable';
 import { DragSource, DropTarget } from 'react-dnd';
 
 // import DropDownMenu from 'material-ui/lib/drop-down-menu';
@@ -12,7 +14,15 @@ import { expr } from '../../components/Expression';
 import { Type, Hole } from '../../theory/tm';
 
 import * as data from './data';
-import { MODULE_PUBLIC, MODULE_PRIVATE } from './data';
+import {
+  MODULE_PUBLIC,
+  MODULE_PRIVATE,
+  Module as ModuleData,
+  Note as NoteData,
+  Definition as DefinitionData,
+  Property as PropertyData,
+  Example as ExampleData
+} from './data';
 import styles from './style.scss';
 
 
@@ -32,7 +42,7 @@ const itemTarget = {
     const draggedIx = monitor.getItem().path;
 
     // console.log('target', props.path, draggedIx);
-    if (!Immutable.is(draggedIx, props.path)) {
+    if (!is(draggedIx, props.path)) {
       props.moveItem(draggedIx, props.path);
     }
   }
@@ -52,14 +62,14 @@ class Draggable extends Component {
     connectDragSource: PropTypes.func.isRequired,
     connectDropTarget: PropTypes.func.isRequired,
     isDragging: PropTypes.bool.isRequired,
-    // children:
+    children: React.PropTypes.node.isRequired,
   };
 
   render() {
     const { isDragging, connectDragSource, connectDropTarget } = this.props;
     const opacity = isDragging ? 0 : 1;
 
-    return (( //connectDragSource(connectDropTarget(
+    return (( // connectDragSource(connectDropTarget(
       <div className={styles.definitionRow} style={{ opacity }}>
         <div>
           {this.props.children}
@@ -71,6 +81,12 @@ class Draggable extends Component {
 }
 
 class Example extends Component {
+  static propTypes = {
+    item: PropTypes.instanceOf(ExampleData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+    moveItem: PropTypes.func.isRequired,
+  };
+
   render() {
     const { item, path, moveItem } = this.props;
     const { name, defn } = item;
@@ -98,6 +114,12 @@ class Example extends Component {
 // for now this is exactly the same as example, but will most certainly be
 // customized in the future.
 class Property extends Component {
+  static propTypes = {
+    item: PropTypes.instanceOf(PropertyData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+    moveItem: PropTypes.func.isRequired,
+  };
+
   render() {
     const { item, path, moveItem } = this.props;
     const { name, defn } = item;
@@ -121,6 +143,12 @@ class Property extends Component {
 
 
 class Note extends Component {
+  static propTypes = {
+    item: PropTypes.instanceOf(NoteData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+    moveItem: PropTypes.func.isRequired,
+  };
+
   render() {
     const { item, path, moveItem } = this.props;
     const { name, defn } = item;
@@ -141,7 +169,7 @@ class Note extends Component {
 class ItemTitle extends Component {
   static propTypes = {
     value: PropTypes.string.isRequired,
-    // path: PropTypes.number.isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
   };
 
   static contextTypes = {
@@ -151,26 +179,6 @@ class ItemTitle extends Component {
   state = {
     editing: false,
   };
-
-  render() {
-    const { value } = this.props;
-    const { editing } = this.state;
-
-    const inner = editing ?
-      <input defaultValue={value}
-             onKeyPress={::this.handleKeyPress}
-             onBlur={::this.returnToStatic}
-             ref="input" /> :
-      <span onClick={() => {this.setState({ editing: true });}}>
-        {value}
-      </span>;
-
-    return (
-      <div>
-        {inner}
-      </div>
-    );
-  }
 
   // focus and move cursor to the end when the input exists
   componentDidUpdate() {
@@ -190,9 +198,29 @@ class ItemTitle extends Component {
   }
 
   handleKeyPress(event) {
-    if (event.key === "Enter") {
+    if (event.key === 'Enter') {
       this.returnToStatic();
     }
+  }
+
+  render() {
+    const { value } = this.props;
+    const { editing } = this.state;
+
+    const inner = editing ?
+      <input defaultValue={value}
+             onKeyPress={::this.handleKeyPress}
+             onBlur={::this.returnToStatic}
+             ref='input' /> :
+      <span onClick={() => {this.setState({ editing: true });}}>
+        {value}
+      </span>;
+
+    return (
+      <div>
+        {inner}
+      </div>
+    );
   }
 }
 
@@ -200,7 +228,7 @@ class ItemTitle extends Component {
 function ListItem({ primaryText, onClick }) {
   // TODO figure out why opacity is 0 from mdl-menu__item
   return (
-    <li className="mdl-menu__item"
+    <li className='mdl-menu__item'
         style={{opacity: 1}}
         onClick={onClick}>
       {primaryText}
@@ -219,6 +247,12 @@ function UiList({ children }) {
 
 
 class Definition extends Component {
+  static propTypes = {
+    item: PropTypes.instanceOf(DefinitionData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+    moveItem: PropTypes.func.isRequired,
+  };
+
   static contextTypes = {
     focusPath: PropTypes.object,
 
@@ -293,34 +327,39 @@ class Definition extends Component {
 
 
 class TextField extends Component {
-  render() {
-    const { multiLine, defaultValue } = this.props;
-    const field = multiLine ?
-      <textarea className="mdl-textfield__input" type="text" ref="iput" ></textarea> :
-      <input className="mdl-textfield__input" type="text" defaultValue={defaultValue} ref="iput" />;
-
-    return (
-      <div className="mdl-textfield mdl-js-textfield">
-        {field}
-      </div>
-    );
-  }
+  static propTypes = {
+    multiLine: PropTypes.bool,
+    defaultValue: PropTypes.string,
+  };
 
   getValue() {
     return this.refs.iput.value;
+  }
+
+  render() {
+    const { multiLine, defaultValue } = this.props;
+    const field = multiLine ?
+      <textarea className='mdl-textfield__input' type='text' ref='iput' ></textarea> :
+      <input className='mdl-textfield__input' type='text' defaultValue={defaultValue} ref='iput' />;
+
+    return (
+      <div className='mdl-textfield mdl-js-textfield'>
+        {field}
+      </div>
+    );
   }
 }
 
 
 export default class Module extends Component {
-  static childContextTypes = {
-    muiTheme: React.PropTypes.object,
-  };
-
   static propTypes = {
     contents: PropTypes.object.isRequired,
     name: PropTypes.string.isRequired,
     scratch: PropTypes.object.isRequired,
+  };
+
+  static childContextTypes = {
+    muiTheme: React.PropTypes.object,
   };
 
   render() {
@@ -348,6 +387,11 @@ export default class Module extends Component {
 
 
 class Item extends Component {
+  static propTypes = {
+    item: PropTypes.instanceOf(PropertyData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+  };
+
   static contextTypes = {
     moveItem: PropTypes.func.isRequired,
     renameDefinition: PropTypes.func.isRequired,
@@ -361,7 +405,7 @@ class Item extends Component {
       item, renameDefinition, path, expressionMouseClick, moveItem
     };
 
-    var cls;
+    let cls;
     if (item instanceof data.Definition) {
       cls = Definition;
     } else if (item instanceof data.Example) {
@@ -402,6 +446,10 @@ class DropDownMenu extends Component {
 
 
 class NewItem extends Component {
+  static propTypes = {
+    scratch: PropTypes.instanceOf(ModuleData).isRequired,
+  };
+
   static contextTypes = {
     addNew: PropTypes.func.isRequired,
   };
@@ -417,12 +465,32 @@ class NewItem extends Component {
     visibility: 'public',
   };
 
+  handleSelectType(event) {
+    this.setState({ type: event.target.value });
+  }
+
+  handleSelectVisibility(event) {
+    this.setState({ visibility: event.target.value });
+  }
+
+  handleCreate() {
+    const name = this.refs.name.getValue();
+    const { type, visibility } = this.state;
+
+    this.context.addNew({
+      type,
+      name,
+      visibility,
+    });
+    // this.context.addNew(...);
+  }
+
   render() {
     const itemTypes = [
       { text: 'Definition', payload: 'definition' },
-      { text: 'Note',       payload: 'note', disabled: true },
-      { text: 'Property',   payload: 'property', disabled: true },
-      { text: 'Example',    payload: 'example', disabled: true },
+      { text: 'Note', payload: 'note', disabled: true },
+      { text: 'Property', payload: 'property', disabled: true },
+      { text: 'Example', payload: 'example', disabled: true },
     ];
 
     const visibilities = [
@@ -458,7 +526,7 @@ class NewItem extends Component {
         <div>
           <Item item={this.props.scratch}
                 path={List(['module', 'scratch'])} />
-          {/*<textarea className='mdl-textfield__input' />*/}
+          {/* <textarea className='mdl-textfield__input' /> */}
         </div>
 
         <div>
@@ -471,25 +539,5 @@ class NewItem extends Component {
 
       </div>
     );
-  }
-
-  handleSelectType(event) {
-    this.setState({ type: event.target.value });
-  }
-
-  handleSelectVisibility(event) {
-    this.setState({ visibility: event.target.value });
-  }
-
-  handleCreate() {
-    const name = this.refs.name.getValue();
-    const { type, visibility } = this.state;
-
-    this.context.addNew({
-      type,
-      name,
-      visibility,
-    });
-    // this.context.addNew(...);
   }
 }

@@ -13,23 +13,19 @@ import Variant from '../aspects/variant/view';
 import styles from './Expression.scss';
 
 
-class Type extends Component {
-  render() {
-    return (
-      <span>*</span>
-    );
-  }
+function Type() {
+  return (
+    <span>*</span>
+  );
 }
 
 
-class Conflict extends Component {
-  render() {
-    return (
-      <div className={styles.conflict}>
-        {this.props.children}
-      </div>
-    );
-  }
+function Conflict() {
+  return (
+    <div className={styles.conflict}>
+      {this.props.children}
+    </div>
+  );
 }
 
 
@@ -47,14 +43,30 @@ export function expr(value, path, chunk) {
 
 
 export default class Expression extends Component {
-  // propTypes = {
-  //   path: PropTypes.instanceOf(List<string>)
-  // };
+  static propTypes = {
+    path: PropTypes.instanceOf(List).isRequired,
+    children: PropTypes.object.isRequired, // Tm
+  };
 
   static contextTypes = {
     isPathHighlighted: PropTypes.func.isRequired,
     expressionMouseClick: PropTypes.func.isRequired,
   };
+
+  handleClick(event) {
+    this.context.expressionMouseClick(this.props.path);
+    event.stopPropagation();
+  }
+
+//   handleMouseDown(event) {
+//     this.context.expressionMouseDepress(this.props.path);
+//     event.stopPropagation();
+//   }
+
+//   handleMouseOver(event) {
+//     this.context.expressionMouseOver(this.props.path);
+//     event.stopPropagation();
+//   }
 
   render() {
     const dispatch = {
@@ -82,7 +94,7 @@ export default class Expression extends Component {
     const name = children.constructor.name;
 
     if (dispatch[name] == null) {
-      debugger;
+      debugger; // eslint-disable-line no-debugger
     }
 
     const isHighlighted = this.context.isPathHighlighted(path);
@@ -95,19 +107,4 @@ export default class Expression extends Component {
       </div>
     );
   }
-
-  handleClick(event) {
-    this.context.expressionMouseClick(this.props.path);
-    event.stopPropagation();
-  }
-
-//   handleMouseDown(event) {
-//     this.context.expressionMouseDepress(this.props.path);
-//     event.stopPropagation();
-//   }
-
-//   handleMouseOver(event) {
-//     this.context.expressionMouseOver(this.props.path);
-//     event.stopPropagation();
-//   }
 }
