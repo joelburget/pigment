@@ -1,5 +1,5 @@
+import { List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
-import type { List } from 'immutable';
 
 import Var from './Expression/Name';
 import Hole from './Expression/Hole';

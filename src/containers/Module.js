@@ -54,7 +54,7 @@ export default class ModuleContainer extends Component {
     expressionMouseClick: PropTypes.func.isRequired,
     findCompletions: PropTypes.func.isRequired,
     renameDefinition: PropTypes.func.isRequired,
-    // moveItem: PropTypes.func.isRequired,
+    moveItem: PropTypes.func.isRequired,
     addNew: PropTypes.func.isRequired,
     fillHole: PropTypes.func.isRequired,
     dispatchEdit: PropTypes.func.isRequired,

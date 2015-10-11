@@ -1,40 +1,46 @@
-import { Expression, Type } from './tm';
+// @flow
+import { Record } from 'immutable';
+
+import { Type } from './tm';
+import EvaluationResult from './evaluation';
+
+
+const EqualityShape = Record({
+  of: null, // Tm
+  type: Type.singleton,
+}, 'equality');
 
 
 // Propositional Equality type
-export class Equality extends Expression {
+export class Equality extends EqualityShape {
   static arity = [0];
-  static renderName = "equality";
-
-  constructor(ty): void {
-    super([ty], Type.singleton);
-  }
 
   map(): Equality {
     throw new Error('unimplemented - Equality.map');
   }
 
-  step(): EvaluationResult<Expression> {
+  step(): EvaluationResult {
     throw new Error('unimplemented - Equality.step');
   }
 }
 
 
+const ReflShape = Record({
+  left: null, // Tm
+  right: null, // Tm
+  type: Type.singleton,
+}, 'refl');
+
+
 // TODO come up with appropriate name for this
-export class Refl extends Expression {
+export class Refl extends ReflShape {
   static arity = [0, 0];
-  static renderName = "refl";
-
-
-  constructor(l: Expression, r: Expression): void {
-    super([l, r], tyXXX);
-  }
 
   map(): Equality {
     throw new Error('unimplemented - Refl.map');
   }
 
-  step(): EvaluationResult<Expression> {
+  step(): EvaluationResult {
     throw new Error('unimplemented - Refl.step');
   }
 }

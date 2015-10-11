@@ -1,11 +1,10 @@
 import expect from 'expect';
-import { Map, Set } from 'immutable';
 
 import { mkSuccess, bind } from '../theory/tm';
 import Arr from './lambda/data';
 import { JsBoolean, JsNumber, JsApp, JsFunction } from './external';
 
-var disable = () => {};
+const disable = () => {};
 
 disable('externals', () => {
   it('does booleans', () => {
@@ -19,7 +18,7 @@ disable('externals', () => {
   it('does (increment) functions', () => {
     const numTy = JsNumber.type;
     const fun = new JsFunction(
-      function(x) { return x + 1; },
+      x => x + 1, // eslint-disable-line id-length
       new Arr(numTy, numTy)
     );
     const num = new JsNumber(0);
@@ -31,7 +30,7 @@ disable('externals', () => {
   it('does (curried) functions', () => {
     const numTy = JsNumber.type;
     const fun = new JsFunction(
-      function(x, y) { return x + y; },
+      (x, y) => x + y, // eslint-disable-line id-length
       new Arr(numTy, Arr(numTy, numTy))
     );
     const num0 = new JsNumber(0);

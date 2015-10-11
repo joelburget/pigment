@@ -2,7 +2,7 @@
 
 import { Record } from 'immutable';
 
-import { ELIM, Hole } from '../../theory/tm';
+import { ELIM, Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
 import { bind } from '../../theory/evaluation';
 import { mkRel } from '../../theory/ref';
@@ -13,13 +13,13 @@ import type { Tm } from '../../theory/tm';
 import type { AbsRef } from '../../theory/ref';
 
 
-const appShape = Record({
+const AppShape = Record({
   func: null,
   arg: null,
   type: null,
 }, 'app');
 
-export default class App extends appShape {
+export default class App extends AppShape {
 
   step(root: AbsRef, ctx: Map<string, Tm>): EvaluationResult {
     return bind(
@@ -33,15 +33,15 @@ export default class App extends appShape {
     throw new Error('unimplemented - App.subst');
   }
 
-  static fillHole(type: Tm): App {
+  static fillHole(): App {
     // how to quantify this variable so it's the same in both places?
     // future plan: instantiate here with a quantifier, its context menu allows
     // you to instantiate it and remove the quantifier.
-    const x = Type.singleton;
+    const type = Type.singleton;
 
     return new App(
       new Hole('f', XXX /* this needs to be an arrow... */),
-      new Hole('x', x),
+      new Hole('x', type),
       type
     );
   }

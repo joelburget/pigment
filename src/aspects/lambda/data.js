@@ -64,10 +64,12 @@ export default class Lam extends LamShape {
 
   // apply just one argument
   step(root: AbsRef, ctx: Map<string, Tm>): EvaluationResult {
+    const { name } = this;
     let { body } = this;
 
     // if the name is null it's not really doing anything
-    if (this.name != null) {
+    if (name != null) {
+      const arg = ctx.get(name);
       body = body.subst(root, mkRel('..', 'binder'), arg);
     }
     // if the name is null it's not really doing anything

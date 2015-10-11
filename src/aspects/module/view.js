@@ -400,7 +400,8 @@ class Item extends Component {
 
   render() {
     const { item, path } = this.props;
-    const { moveItem, renameDefinition, expressionMouseClick } = this.context;
+    const { renameDefinition, expressionMouseClick, moveItem } = this.context;
+
     const props = {
       item, renameDefinition, path, expressionMouseClick, moveItem
     };

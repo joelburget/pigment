@@ -1,3 +1,4 @@
+import History from 'history';
 import React, {Component, PropTypes} from 'react';
 import {Link} from 'react-router';
 import {bindActionCreators} from 'redux';
@@ -47,6 +48,7 @@ export default class App extends Component {
     children: PropTypes.object.isRequired,
     user: PropTypes.object,
     logout: PropTypes.func.isRequired,
+    history: PropTypes.instanceOf(History).isRequired,
   }
 
   static contextTypes = {
@@ -63,6 +65,19 @@ export default class App extends Component {
     }
   }
 
+  handleLogout(event) {
+    event.preventDefault();
+    this.props.logout();
+  }
+
+  static fetchData(store) {
+    const promises = [];
+    if (!isAuthLoaded(store.getState())) {
+      promises.push(store.dispatch(loadAuth()));
+    }
+    return Promise.all(promises);
+  }
+
   render() {
     const {user} = this.props;
     return (
@@ -77,7 +92,7 @@ export default class App extends Component {
 
           <div className={styles.login}>
             {user &&
-            /*<p className={styles.loggedInMessage + ' navbar-text'}>Logged in as <strong>{user.name}</strong>.</p>*/
+            /* <p className={styles.loggedInMessage + ' navbar-text'}>Logged in as <strong>{user.name}</strong>.</p> */
             <Avatar fbId='joelburget' round='true' size={40} />}
             <div>
               {!user && <Link to='/login'>LOGIN</Link>}
@@ -103,19 +118,6 @@ export default class App extends Component {
 
       </div>
     );
-  }
-
-  handleLogout(event) {
-    event.preventDefault();
-    this.props.logout();
-  }
-
-  static fetchData(store) {
-    const promises = [];
-    if (!isAuthLoaded(store.getState())) {
-      promises.push(store.dispatch(loadAuth()));
-    }
-    return Promise.all(promises);
   }
 }
 

@@ -1,14 +1,22 @@
+/* eslint react/no-multi-comp: 0 */
+
 // names (that you can click on)
 
+import { List } from 'immutable';
 import React, {Component, PropTypes} from 'react';
 
 import { AbsRef } from '../../theory/ref';
-import { Hole } from '../../theory/tm';
+import { Hole, Var as VarData } from '../../theory/tm';
 
 const styles = require('./Name.scss');
 
 
 class NameContextMenu extends Component {
+  static propTypes = {
+    name: PropTypes.string,
+    path: PropTypes.instanceOf(List).isRequired,
+  };
+
   static contextTypes = {
     updateAt: PropTypes.func.isRequired,
   };
@@ -35,6 +43,11 @@ class NameContextMenu extends Component {
 
 
 export default class Var extends Component {
+  static propTypes = {
+    children: PropTypes.instanceOf(VarData).isRequired,
+    path: PropTypes.instanceOf(List).isRequired,
+  };
+
   static contextTypes = {
     lookupRef: PropTypes.func.isRequired,
   };
@@ -51,7 +64,7 @@ export default class Var extends Component {
     const nameRef = this.props.children.ref;
     const path = this.props.path;
 
-    var absRef: AbsRef;
+    let absRef: AbsRef;
     if (nameRef instanceof AbsRef) {
       absRef = nameRef;
     } else {
