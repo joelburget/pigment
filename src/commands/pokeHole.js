@@ -5,6 +5,9 @@ import { List } from 'immutable';
 import { openNewEdit } from '../theory/edit';
 import { Hole } from '../theory/tm'; // XXX this loops
 
+import type Edit from '../theory/edit';
+import type { Tm } from '../theory/tm';
+
 export const POKE_HOLE = 'POKE_HOLE';
 
 export const pokeHole = {
@@ -12,7 +15,7 @@ export const pokeHole = {
   title: 'poke hole',
 };
 
-export function doPokeHole(here) {
+export function doPokeHole(here: Tm): Edit {
   return openNewEdit(
     POKE_HOLE,
     here,

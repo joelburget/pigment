@@ -17,7 +17,7 @@ import type Edit, { Action } from './edit';
 export const VARIABLE = 'VARIABLE';
 export const INTRO = 'INTRO';
 export const ELIM = 'ELIM';
-export type IntroElim = INTRO | ELIM;
+// export type IntroElim = INTRO | ELIM;
 
 
 export type Tm = {
@@ -31,6 +31,8 @@ export type Tm = {
   actions: () => List<Action>;
 
   performEdit: (id: string) => Edit;
+
+  type: Tm;
 
   // static form: IntroElim;
 

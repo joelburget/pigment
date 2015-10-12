@@ -42,7 +42,7 @@ export default class Row extends rowShape {
     );
 
     if (id === ADD_ENTRY) {
-      const { entries } = this;
+      const entries = this.entries;
 
       const label = makeLabel(entries);
       const val = new Hole(null, Type.singleton);
