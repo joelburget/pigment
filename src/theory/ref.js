@@ -3,6 +3,8 @@
 // global reference
 
 import { List, Record, is } from 'immutable';
+import ImmutablePropTypes from 'react-immutable-proptypes';
+import { PropTypes } from 'react';
 
 // TODO come to terms with the fact that these '..'s are de bruijn indices
 export class RelRef extends Record({ path: null }) {
@@ -97,3 +99,12 @@ export function mkAbs(): AbsRef {
   const path = List(arguments);
   return new AbsRef({ path });
 }
+
+
+export const PropTypesPath = ImmutablePropTypes.listOf(PropTypes.string);
+export const PropTypesRelRef = PropTypes.instanceOf(RelRef);
+export const PropTypesAbsRef = PropTypes.instanceOf(AbsRef);
+export const PropTypesRef = PropTypes.oneOfType([
+  PropTypesRelRef,
+  PropTypesAbsRef,
+]);

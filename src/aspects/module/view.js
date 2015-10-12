@@ -4,14 +4,10 @@ import React, { Component, PropTypes } from 'react';
 import { List, is } from 'immutable';
 import { DragSource, DropTarget } from 'react-dnd';
 
-// import DropDownMenu from 'material-ui/lib/drop-down-menu';
-// import TextField from 'material-ui/lib/text-field';
-// import MuiList from 'material-ui/lib/lists/list';
-// import ListItem from 'material-ui/lib/lists/list-item';
-
 import isPrefix from '../../util/isPrefix';
 import { expr } from '../../components/Expression';
 import { Type, Hole } from '../../theory/tm';
+import { PropTypesPath } from '../../theory/ref';
 
 import * as data from './data';
 import {
@@ -83,7 +79,7 @@ class Draggable extends Component {
 class Example extends Component {
   static propTypes = {
     item: PropTypes.instanceOf(ExampleData).isRequired,
-    path: PropTypes.instanceOf(List).isRequired,
+    path: PropTypesPath.isRequired,
     moveItem: PropTypes.func.isRequired,
   };
 
@@ -116,7 +112,7 @@ class Example extends Component {
 class Property extends Component {
   static propTypes = {
     item: PropTypes.instanceOf(PropertyData).isRequired,
-    path: PropTypes.instanceOf(List).isRequired,
+    path: PropTypesPath.isRequired,
     moveItem: PropTypes.func.isRequired,
   };
 
@@ -145,7 +141,7 @@ class Property extends Component {
 class Note extends Component {
   static propTypes = {
     item: PropTypes.instanceOf(NoteData).isRequired,
-    path: PropTypes.instanceOf(List).isRequired,
+    path: PropTypesPath.isRequired,
     moveItem: PropTypes.func.isRequired,
   };
 
@@ -169,7 +165,7 @@ class Note extends Component {
 class ItemTitle extends Component {
   static propTypes = {
     value: PropTypes.string.isRequired,
-    path: PropTypes.instanceOf(List).isRequired,
+    path: PropTypesPath.isRequired,
   };
 
   static contextTypes = {
