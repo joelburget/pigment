@@ -12,7 +12,7 @@ describe('unification', () => {
   });
 
   it('holes unify with everything', () => {
-    const hole = new Hole('hole', type);
+    const hole = new Hole({ name: 'hole', type });
     expectImmutableIs(hole.unify(type), type);
   });
 

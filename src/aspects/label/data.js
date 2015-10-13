@@ -14,14 +14,10 @@ import type { Tm } from '../../theory/tm';
 
 const LabelShape = Record({
   name: null, // string
-  type: null, // Tm
 }, 'label');
 
-export default class Label extends LabelShape {
 
-  constructor(name: string): void {
-    super({ name, type: Type.singleton });
-  }
+export default class Label extends LabelShape {
 
   step(): EvaluationResult {
     return mkSuccess(this);
@@ -39,6 +35,7 @@ export default class Label extends LabelShape {
   }
 
   getIntroUp(): Tm {
+    // TODO is this right? Should there be a LabelTy?
     return Type.singlaton;
   }
 
@@ -48,5 +45,6 @@ export default class Label extends LabelShape {
 
   static form = INTRO;
 }
+
 
 register('label', Label);

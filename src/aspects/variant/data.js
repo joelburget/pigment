@@ -31,6 +31,11 @@ const VariantShape = Record({
 });
 
 
+// Interesting special cases:
+// * enumerations
+// * single-field variants (newtype, essentially)
+//
+// Both would be useful to visually distinguish.
 export default class Variant extends VariantShape {
 
   step(): EvaluationResult {

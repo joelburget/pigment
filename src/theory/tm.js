@@ -106,10 +106,6 @@ const HoleShape = Record({
 
 export class Hole extends HoleShape {
 
-  constructor(name: ?string, type: Tm): void {
-    super({ name, type });
-  }
-
   step(): EvaluationResult {
     return mkStuck(this);
   }
@@ -139,10 +135,6 @@ const VarShape = Record({
 }, 'var');
 
 export class Var extends VarShape {
-
-  constructor(ref: Ref, type: Tm): void {
-    super({ ref, type });
-  }
 
   step(): EvaluationResult {
     throw new Error('stepping variable!');

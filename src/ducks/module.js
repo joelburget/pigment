@@ -121,11 +121,11 @@ const contents = Immutable.fromJS([
 ]);
 
 
-const scratchTy = new Hole(null, Type.singleton);
+const scratchTy = new Hole({ type: Type.singleton });
 const scratch = new Definition({
   // TODO: 'new definition' here, 'new item' in module/view
   name: 'new definition',
-  defn: new Hole('_', scratchTy),
+  defn: new Hole({ name: '_', type: scratchTy }),
   visibility: MODULE_PUBLIC,
   type: scratchTy,
 });

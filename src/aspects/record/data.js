@@ -1,6 +1,6 @@
 // @flow
 
-import { List, Record, Map } from 'immutable';
+import { List, Record } from 'immutable';
 import invariant from 'invariant';
 
 import { INTRO, Hole, Type } from '../../theory/tm';
@@ -35,7 +35,6 @@ import type Edit, { Action } from '../../theory/edit';
 
 const RecordTyShape = Record({
   row: null, // Row
-  type: null, // Type
 });
 
 
@@ -45,14 +44,9 @@ export class RecordTy extends RecordTyShape {
 
 const RecordShape = Record({
   values: null, // Map<string, Tm>
-  type: null,
 }, 'rec');
 
 export default class Rec extends RecordShape {
-
-  constructor(values: Map<string, Tm>, type: Row) {
-    super({ values, type });
-  }
 
   step(): EvaluationResult {
     // TODO step all children?
@@ -75,15 +69,16 @@ export default class Rec extends RecordShape {
     );
 
     if (id === ADD_ENTRY) {
-      const { values, type } = this;
+      const { values } = this;
       const label = makeLabel(values);
 
-      const ty = new Hole(null, Type.singleton);
-      const val = new Hole(null, ty);
+      const ty = new Hole({ type: Type.singleton });
+      const val = new Hole({ type: ty });
 
       const newTm = new Rec(
         values.set(label, val),
-        new Row(type.entries.set(label, ty))
+        XXX
+        // new Row(type.entries.set(label, ty))
       );
 
       return openNewEdit(id, this, newTm, new List());

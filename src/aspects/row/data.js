@@ -40,7 +40,7 @@ export default class Row extends rowShape {
       const entries = this.entries;
 
       const label = makeLabel(entries);
-      const val = new Hole(null, Type.singleton);
+      const val = new Hole({ type: Type.singleton });
       const newRow = new Row(entries.set(label, val));
 
       return openNewEdit(id, this, newRow, new List());

@@ -8,7 +8,7 @@ const type = Type.singleton;
 export const id = new Lam(
   'x',
   type,
-  new Var(mkRel('..', 'binder'), type),
+  new Var({ ref: mkRel('..', 'binder'), type }),
   type,
 );
 
@@ -19,7 +19,7 @@ export const k = new Lam(
   new Lam(
     'y',
     type,
-    new Var(mkRel('..', '..', 'binder'), type),
+    new Var({ ref: mkRel('..', '..', 'binder'), type }),
     type
   ),
   type

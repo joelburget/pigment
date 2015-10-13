@@ -56,8 +56,8 @@ export const readHandlers = {
 
   // tm
   'type': () => Type.singleton,
-  'hole': rep => new Hole(rep[0], rep[1]),
-  'var': rep => new Var(rep[0], rep[1]),
+  'hole': ([name, type]) => new Hole({ name, type }),
+  'var': ([ref, type]) => new Var({ ref, type }),
 
   // ref
   'absref': path => new AbsRef({ path }),

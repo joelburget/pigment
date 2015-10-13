@@ -60,13 +60,9 @@ export function Arrow({ children: item, path }) {
 
 
 export function Lambda(props) {
-  // const { names, result } = this.props.children;
-
   const { name, domain, body } = props.children;
   const { path } = props;
 
-  // XXX gross making this var here
-      // {names.map(name => <Name>{new Var(name).children}</Name>)}
   return (
     <div className={styles.lambda}>
       <Binder path={path.push('binder')} name={name} type={domain} />

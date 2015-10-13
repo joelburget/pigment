@@ -21,7 +21,7 @@ describe('eval', () => {
   });
 
   it('gets stuck on holes', () => {
-    const hole = new Hole('hole', type);
+    const hole = new Hole({ name: 'hole', type });
     expect(hole.step(emptyCtx.bind(mkAbs())))
       .toEqual(mkStuck(hole));
 

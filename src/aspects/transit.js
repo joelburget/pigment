@@ -91,7 +91,7 @@ export const readHandlers = {
 
   // record
   // 'label': rep => new Label(rep),
-  'rec': rep => new Rec(rep[0], rep[1]),
+  'rec': ([values]) => new Rec({ values }),
   // 'rowkind': () => RowKind.singleton,
   // 'row': rep => new Row(rep),
   // 'selectrow': rep => new SelectRow(rep[0], rep[1], rep[2]),

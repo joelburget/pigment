@@ -19,7 +19,7 @@ export function doPokeHole(here: Tm): Edit {
   return openNewEdit(
     POKE_HOLE,
     here,
-    new Hole(null, here.type),
+    new Hole({ type: here.type }),
     List()
   );
 }
