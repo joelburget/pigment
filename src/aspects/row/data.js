@@ -1,7 +1,7 @@
 // @flow
 
 import invariant from 'invariant';
-import { Record, Map, List } from 'immutable';
+import { Record, List } from 'immutable';
 
 import { INTRO, Hole, Type } from '../../theory/tm';
 import { mkSuccess } from '../../theory/evaluation';
@@ -17,15 +17,10 @@ import type Edit, { Action } from '../../theory/edit';
 
 const rowShape = Record({
   entries: null, // Map<string, Tm>
-  type: null, // Tm
 }, 'row');
 
-export default class Row extends rowShape {
 
-  // TODO maybe this should be an OrderedMap?
-  constructor(entries: Map<string, Tm>): void {
-    super({ entries, type: Type.singleton });
-  }
+export default class Row extends rowShape {
 
   step(): EvaluationResult {
     return mkSuccess(this);
@@ -54,18 +49,16 @@ export default class Row extends rowShape {
     }
   }
 
-  static typeClass = Type;
+  getIntroUp(): Tm {
+    return Type.singleton;
+  }
 
-  static fillHole(type: Tm): Row {
-    invariant(
-      type === Type.singleton,
-      'Row asked to fill a hole of type other than *'
-    );
-
-    return new Row(Map({}));
+  getIntroDown(): ?Tm {
+    return new Hole({ type: this });
   }
 
   static form = INTRO;
 }
+
 
 register('row', Row);

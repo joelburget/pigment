@@ -44,7 +44,7 @@ export class RecordTy extends RecordTyShape {
 
 
 const RecordShape = Record({
-  values: null,
+  values: null, // Map<string, Tm>
   type: null,
 }, 'rec');
 
@@ -92,19 +92,14 @@ export default class Rec extends RecordShape {
     }
   }
 
-  static typeClass = Row;
+  getIntroUp(): Tm {
+    const entries = this.values.map(tm => tm.getIntroUp());
 
-  static fillHole(type: Row): Rec {
-    invariant(
-      type.constructor === Row,
-      'Rec asked to fill a hole of type other than Row'
-    );
+    return new Row({ entries });
+  }
 
-    const values = type.entries.map(
-      (holeTy, name) => new Hole(name + ' hole', holeTy)
-    );
-
-    return new Rec(values, type);
+  getIntroDown(): ?Tm {
+    return null;
   }
 
   static form = INTRO;

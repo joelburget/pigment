@@ -1,16 +1,15 @@
 // @flow
 
 import invariant from 'invariant';
-import { List, Record, Set } from 'immutable';
+import { List, Record } from 'immutable';
 
 import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
 import { INTRO, Type } from '../../theory/tm';
-import Relation, { IS_TYPE, MATCHES } from '../../theory/relation';
 
+import type Edit, { Action } from '../../theory/edit';
 import type { EvaluationResult } from '../../theory/evaluation';
 import type { Tm } from '../../theory/tm';
-import type Edit, { Action } from '../../theory/edit';
 
 
 const LabelShape = Record({
@@ -39,18 +38,13 @@ export default class Label extends LabelShape {
     );
   }
 
-  static typeClass = Type;
+  getIntroUp(): Tm {
+    return Type.singlaton;
+  }
 
-  static fillHole = [
-    Set([
-      new Relation({
-        type: IS_TYPE,
-        subject: this.path,
-        object: this.path.type,
-      });
-    ]),
-    new Label('new label'),
-  ]
+  getIntroDown(): ?Tm {
+    return null;
+  }
 
   static form = INTRO;
 }

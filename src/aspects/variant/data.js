@@ -5,7 +5,7 @@
 import { List, Record } from 'immutable';
 import invariant from 'invariant';
 
-import { INTRO, Hole } from '../../theory/tm';
+import { INTRO } from '../../theory/tm';
 import { register } from '../../theory/registry';
 
 import Row from '../row/data';
@@ -53,19 +53,14 @@ export default class Variant extends VariantShape {
     );
   }
 
-  static typeClass = Row;
+  getIntroUp(): Tm {
+    const entries = Map([this.label.name, XXX]);
 
-  static fillHole(type: Row): Variant {
-    invariant(
-      type.constructor === Row,
-      'Variant asked to fill a hole of type other than Row'
-    );
+    return new Row({ entries });
+  }
 
-    const values = type.entries.map(
-      (colTy, name) => new Hole(name + ' hole', colTy)
-    );
-
-    return new Variant({ values, type });
+  getIntroDown(): ?Tm {
+    return null;
   }
 
   static form = INTRO;

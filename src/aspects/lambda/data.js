@@ -1,12 +1,10 @@
 // @flow
 
-import invariant from 'invariant';
-import { Record, List, Set } from 'immutable';
+import { Record, List } from 'immutable';
 
 import { INTRO, Type, Hole } from '../../theory/tm';
 import { mkRel } from '../../theory/ref';
 import { register } from '../../theory/registry';
-import Relation from '../../theory/relation';
 
 import type { EvaluationResult } from '../../theory/evaluation';
 import type { AbsRef, Ref } from '../../theory/ref';
@@ -27,30 +25,18 @@ export class Arrow extends ArrowShape {
   static searchAliases = ['arrow', 'function', 'lambda'];
 
   static form = INTRO;
-  static typeClass = Type;
 
-  -- [Set<Relation>, Lambda]
-  static fillHole = [
-    Set([
-      new Relation({
-        type: IS_TYPE,
-        subject: this.path.push('domain'),
-        object: this.path.push('type'),
-      }),
+  getIntroUp(): Tm {
+    return Type.singleton;
+  }
 
-      new Relation({
-        type: IS_TYPE,
-        subject: this.path.push('codomain'),
-        object: this.path.push('type'),
-      }),
-    ]),
-
-    new Arrow({
-      domain: new Hole(null, type),
-      codomain: new Hole(null, type),
-      type,
-    }),
-  ]
+  getIntroDown(): ?Tm {
+    return new Lam({ // eslint-disable-line no-use-before-define
+      // XXX binder type = this.domain
+      name: 'x',
+      body: new Hole({ type: this.codomain }),
+    });
+  }
 
   actions(): List<Action> {
     return List([]);
@@ -98,31 +84,19 @@ export default class Lam extends LamShape {
     );
   }
 
-  static fillHole(type: Tm): [Set<Relation>, Lam] {
-    invariant(
-      type instanceof Arrow,
-      'Lam can only fill holes of type Arrow'
-    );
-
-    const relations = Set([
-      new Relation({
-        type: IS_TYPE,
-        subject: this.path.push('body'),
-        object: this.path.push('type'),
-      })
-    ]);
-
-    const tm = new Lam({
-      name: 'x',
-      body: new Hole(null, type.codomain),
-      type,
+  getIntroUp(): Tm {
+    return new Arrow({
+      // XXX this.binder
+      domain: this.binder.getType(),
+      codomain: this.body.getType(),
     });
+  }
 
-    return [relations, tm];
+  getIntroDown(): ?Tm {
+    return null;
   }
 
   static form = INTRO;
-  static typeClass = Arrow;
 
   actions(): List<Action> {
     return List([]);

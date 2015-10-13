@@ -32,17 +32,27 @@ export type Tm = {
 
   performEdit: (id: string) => Edit;
 
-  type: Tm;
+  // getIntroUp / getIntroDown
+  //
+  // These two functions mirror each other, sending us up and down a level.
+  //
+  // getIntroDown
+  //  ^   |
+  //  |   v
+  // getIntroUp
+  //
+  // Both used for autocomplete / the interactive builder to generate /
+  // constrain holes.
+  //
+  // It's worth considering why the're not named getType / getInhabitant.
+  // That's a useful intuition to have, but getIntro* emphasizes that we're
+  // only getting the introduction form of any term -- it could just as well be
+  // introduced as an elimination.
+
+  getIntroUp: () => Tm;
+  getIntroDown: () => ?Tm;
 
   // static form: IntroElim;
-
-  // static typeClass
-  // - the class of the type this inhabits!
-  // - INTRO *only*
-
-  // static fillHole(type: Tm) => Tm
-  // - return an instance that fills this type of hole
-  // - INTRO *only*
 };
 
 
@@ -73,15 +83,12 @@ export class Type {
     return doPokeHole(this);
   }
 
-  static typeClass = Type;
-
-  static fillHole(type: Tm): [Set<Relation>, Type] {
-    invariant(
-      type === Type.singleton,
-      'Type asked to fill a hole of type other than Type'
-    );
-
+  getIntroUp(): Tm {
     return Type.singleton;
+  }
+
+  getIntroDown(): ?Tm {
+    return new Hole(); // eslint-disable-line no-use-before-define
   }
 
   static form = INTRO;

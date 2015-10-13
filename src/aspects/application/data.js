@@ -21,6 +21,23 @@ const AppShape = Record({
 }, 'app');
 
 
+// how to quantify this variable so it's the same in both places?
+// future plan: instantiate here with a quantifier, its context menu allows
+// you to instantiate it and remove the quantifier.
+const type = Type.singleton;
+
+const internalMatch = new Relation({
+  type: MATCHES,
+  subject: mkRel('arg', 'type'),
+  object: mkRel('func', 'type', 'domain')
+});
+
+const externalMatch = new Relation({
+  type: MATCHES,
+  subject: mkRel('func', 'type', 'codomain'),
+  object: mkRel('type'),
+});
+
 export default class App extends AppShape {
 
   step(root: AbsRef, ctx: Map<string, Tm>): EvaluationResult {
@@ -35,35 +52,24 @@ export default class App extends AppShape {
     throw new Error('unimplemented - App.subst');
   }
 
-    // how to quantify this variable so it's the same in both places?
-    // future plan: instantiate here with a quantifier, its context menu allows
-    // you to instantiate it and remove the quantifier.
-    const type = Type.singleton;
-
-  let internalMatch = new Relation({
-    type: MATCHES,
-    subject: this.path.push('arg', 'type'),
-    object: this.path.push('func', 'type', 'domain')
-  });
-
-  let externalMatch = new Relation({
-    type: MATCHES,
-    subject: this.path.push('func', 'type', 'codomain'),
-    object: this.path.push('type'),
-  });
-
-  static fillHole = [
-    Set([
+  generateConstraints(): Set<Relation> {
+    return Set([
       // TODO - could either match be expressed better as an IS_TYPE?
-      internalMatch,
+      new Relation({
+        type: MATCHES,
+        subject: mkRel('func', 'type', 'domain'),
+        object: mkRel('arg', 'type'),
+      }),
       externalMatch,
-    ]),
-    new App(
-      new Hole('f', XXX /* this needs to be an arrow... */),
-      new Hole('x', type),
-      type
-    ),
-  ];
+      new Relation({
+        type: IS_TYPE,
+        subject: mkRel(),
+        // object: mkRel('type'),
+        // XXX bleh
+        type: new Arrow(XXX)
+      }),
+    ]);
+  }
 
   static form = ELIM;
 }
