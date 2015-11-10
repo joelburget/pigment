@@ -5,12 +5,13 @@ import * as containers from './containers';
 
 
 const {
-  CounterPage
+  CounterPage,
+  GadgetPage
 } = containers;
 
 
 export default (
   <Route component={App}>
-    <Route path="/" component={CounterPage} />
+    <Route path="/" component={GadgetPage} />
   </Route>
 );

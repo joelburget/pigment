@@ -9,10 +9,15 @@
     "react/jsx-uses-react": 2,
     "react/jsx-uses-vars": 2,
     "react/react-in-jsx-scope": 2,
+    "jsx-quotes": [2, "prefer-single"],
 
-    // Disable until Flow supports let and const
-    "no-var": 0,
     "vars-on-top": 0,
+
+    // immutable.js...
+    "new-cap": 0,
+
+    // defining styles at the bottom, etc
+    "no-use-before-define": 0,
 
     "comma-dangle": 0,
 
