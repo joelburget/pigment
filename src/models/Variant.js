@@ -1,8 +1,9 @@
 import { Record as ImmRecord, OrderedMap } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
-import { messages } from './Gadget';
 import Firmament from './Firmament';
+
+import { messages } from '../messages';
 
 const {
   SET_TAG,
@@ -17,7 +18,7 @@ export const Variant = ImmRecord({
 
 export class VariantTy extends ImmRecord({ tags: OrderedMap() }) {
   handlers = {
-    SET_TAG(global, signal) {
+    [SET_TAG](global, signal) {
       const { path, tag } = signal;
       const loc = global.get(path);
 
@@ -25,14 +26,14 @@ export class VariantTy extends ImmRecord({ tags: OrderedMap() }) {
       return global.set(path, location_);
     },
 
-    ADD_VARIANT(global, signal) {
+    [ADD_VARIANT](global, signal) {
       const { path, tag, type } = signal;
       const loc = global.get(path);
 
       loc.type.tags.set(tag, type);
     },
 
-    REMOVE_VARIANT(global, signal) {
+    [REMOVE_VARIANT](global, signal) {
       const { path, tag } = signal;
       const loc = global.get(path);
 

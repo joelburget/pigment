@@ -2,10 +2,10 @@ import { Record as ImmRecord, OrderedMap } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
 import Firmament from './Firmament';
-import { messages } from './Gadget';
 import { holeLoc } from './Hole';
 import Merger from './Merger';
 
+import { messages } from '../messages';
 import deleteButton from '../actions/remove_field';
 
 

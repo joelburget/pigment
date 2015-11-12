@@ -2,9 +2,7 @@ import React from 'react';
 
 import deleteButtonStyle from '../styles/deleteButtonStyle';
 
-
-export const REMOVE_FIELD = Symbol('remove field');
-
+import { REMOVE_FIELD } from '../messages';
 
 export function removeField(path, key) {
   const clickHandler = () => {

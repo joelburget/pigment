@@ -2,12 +2,12 @@
 import React, { Component, PropTypes } from 'react';
 import { OrderedMap } from 'immutable';
 
-import { messages } from './Gadget';
 import Firmament from './Firmament';
 import { Location } from './Location';
 import { Record, RecordView, RecordTy, RecordTyView, Projection, ProjectionView } from './Record';
 import { Variant, VariantView, VariantTy, VariantTyView } from './Variant';
 
+import { messages } from '../messages';
 
 const {
   FILL_HOLE

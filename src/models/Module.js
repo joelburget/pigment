@@ -3,13 +3,13 @@
 import { Record as ImmRecord, OrderedMap } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
-import { messages } from './Gadget';
 import Firmament from './Firmament';
 import { holeLoc } from './Hole';
 
+import { messages } from '../messages';
+
 import deleteButton from '../actions/remove_field';
 import pokeHoleButton from '../actions/poke_hole';
-
 
 const {
   MAKE_DEFINITION,

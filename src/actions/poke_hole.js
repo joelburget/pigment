@@ -3,7 +3,7 @@ import React from 'react';
 import deleteButtonStyle from '../styles/deleteButtonStyle';
 
 
-export const POKE_HOLE = Symbol('poke hole');
+import { POKE_HOLE } from '../messages';
 
 
 export default function pokeHole(path, level) {
