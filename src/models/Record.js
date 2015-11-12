@@ -3,34 +3,82 @@ import React, { Component, PropTypes } from 'react';
 
 import Firmament from './Firmament';
 import { messages } from './Gadget';
-import { Hole, HoleView } from './Hole';
-import { Location } from './Location';
+import { holeLoc } from './Hole';
 import Merger from './Merger';
 
-import deleteButtonStyle from '../styles/deleteButtonStyle';
+import deleteButton from '../actions/remove_field';
+
+
+const INTRODUCTION = Symbol('introduction form');
+const ELIMINATION = Symbol('elimination form');
+const METAVAR = Symbol('metavariable');
+
 
 const {
   SET_FIELD,
-  REMOVE_FIELD,
   UNIFY,
+  STEP,
 } = messages;
 
 export const Record = ImmRecord({
   fields: OrderedMap(),
 });
 
+const ProjectionTyShape = ImmRecord({
+  recordTy: METAVAR,
+  tag: METAVAR,
+  resultTy: METAVAR,
+});
+
+// And elimination can require two types to be the same -- if so, it simply has
+// two references to the same location. (what about equality?)
+export class ProjectionTy extends ProjectionTyShape {
+  type = ELIMINATION;
+
+  handlers = {
+    // TODO - think about not using global all over the place
+    // TODO what's the best name for this? It's not really unification --
+    // "take a look at your children and
+    [UNIFY](global, path) {
+      // record and tag need to agree on a field name
+      const loc = global.get(path);
+      const { recordTy, tag } = loc;
+
+      let recordTy_ = recordTy;
+      let tag_ = tag;
+
+      if (recordTy === METAVAR && tag === METAVAR) {
+      } else if (recordTy === METAVAR) {
+        // this must must have `tag` in it
+      } else if (tag === METAVAR) {
+        // this must come from the set of tags in record
+      } else {
+        // find out if it's possible to unify them! do both of the previous
+        // constraints hold?
+      }
+    },
+
+    [STEP](global, path) {
+      const loc = global.get(path);
+    },
+  };
+}
+
+export const Projection = ImmRecord({
+  // TODO also point to record location
+
+  // This is tricky -- we need to be able to fill in tag, but it must be
+  // limited to the tags this record supports. Need some protocol for queries.
+  tag: null,
+  record: null,
+});
+
 export class RecordTy extends ImmRecord({ fields: OrderedMap() }) {
-  receiveSignal(global, signal) {
-    switch (signal.action) {
-      // XXX we don't consider eliminators here --
-      // given a type this assumes its term is the matching introduction, but
-      // it could be an eliminator.
-      //
-      // i guess the same is true of term -> type
-      //
-      // perhaps the most ergonomic way to deal with this is to introduce a
-      // normal form -> eliminator refactor.
-    case SET_FIELD: {
+  type = INTRODUCTION;
+
+  handlers = {
+    // XXX - need to distinguish these things between type and value level
+    [SET_FIELD](global, signal) {
       const { path, name } = signal;
       const loc = global.get(path);
 
@@ -42,21 +90,14 @@ export class RecordTy extends ImmRecord({ fields: OrderedMap() }) {
       });
 
       const location_ = loc.merge({ implementation, type });
-
-      const newLocation = new Location({
-        implementation: new Hole(),
-        implementationView: HoleView,
-        type: new Hole(),
-        typeView: HoleView,
-      });
-
       const namePath = path.concat(name);
+
       return global
         .set(path, location_)
-        .set(namePath, newLocation);
-    }
+        .set(namePath, holeLoc);
+    },
 
-    case REMOVE_FIELD: {
+    [REMOVE_FIELD](global, signal) {
       const { name, path } = signal;
       const loc = global.get(path);
       const implementation = new Record({
@@ -68,9 +109,9 @@ export class RecordTy extends ImmRecord({ fields: OrderedMap() }) {
       const location_ = loc.merge({ implementation, type });
       // TODO garbage collect field?
       return global.set(path, location_);
-    }
+    },
 
-    case UNIFY: {
+    [UNIFY](global, signal) {
       // Unify *implementations* This doesn't touch type or documentation.
       //
       // TODO - what if the type is only partially specified? I suppose that's
@@ -95,15 +136,35 @@ export class RecordTy extends ImmRecord({ fields: OrderedMap() }) {
       return global;
 
       // if right is a metavarable, we give all the information we can!
-    }
+    },
+  };
+}
 
-    default:
-      console.warn(
-        'Warning: unhandled signal: ' + signal.action,
-        signal
-      );
-      return global;
-    }
+
+export class ProjectionView extends Component {
+
+  static propTypes = {
+    path: PropTypes.arrayOf(PropTypes.string).isRequired,
+    name: PropTypes.string.isRequired,
+    level: PropTypes.number.isRequired,
+  };
+
+  static contextTypes = {
+    update: PropTypes.func.isRequired,
+    global: PropTypes.instanceOf(Firmament).isRequired,
+  };
+
+  render() {
+    const { global } = this.context;
+    const { path, level } = this.props;
+    const location = global.get(path);
+    const { tag } = location;
+
+    return (
+      <div>
+        <RecordView path={path.concat('record')} name={'XXX(name)'} level={level} />.{tag}
+      </div>
+    );
   }
 }
 
@@ -113,11 +174,11 @@ export class RecordTyView extends Component {
   static propTypes = {
     path: PropTypes.arrayOf(PropTypes.string).isRequired,
     name: PropTypes.string.isRequired,
+    level: PropTypes.number.isRequired,
   };
 
   static contextTypes = {
     update: PropTypes.func.isRequired,
-    signal: PropTypes.func.isRequired,
     global: PropTypes.instanceOf(Firmament).isRequired,
   };
 
@@ -131,16 +192,12 @@ export class RecordTyView extends Component {
       .fields
       .map((value, key) => {
         // TODO - Locations should align on the left and right sides.
-        const clickHandler = () => {
-          this.context.signal(path, { action: REMOVE_FIELD, name: key, path });
-        };
-
         const rowLoc = global.get(path.concat(key));
         const RowComponent = rowLoc.typeView;
 
         return (
           <div style={rowStyle} key={key}>
-            <button onClick={clickHandler} style={deleteButtonStyle}>[delete]</button>
+            {deleteButton.call(this, [], key)}
             <RowComponent name={key} path={path.concat(key)} />
           </div>
         );
@@ -153,7 +210,7 @@ export class RecordTyView extends Component {
         <div style={recordTyStyle}>
           {rows}
         </div>
-        <RowControls signal={action => { this.context.signal(path, action); }} path={path} />
+        <RowControls path={path} />
         {'}'}
       </div>
     );
@@ -166,11 +223,11 @@ export class RecordView extends Component {
   static propTypes = {
     path: PropTypes.arrayOf(PropTypes.string).isRequired,
     name: PropTypes.string.isRequired,
+    level: PropTypes.number.isRequired,
   };
 
   static contextTypes = {
     update: PropTypes.func.isRequired,
-    signal: PropTypes.func.isRequired,
     global: PropTypes.instanceOf(Firmament).isRequired,
   };
 
@@ -183,16 +240,12 @@ export class RecordView extends Component {
     const rows = implementation
       .fields
       .map((value, key) => {
-        const clickHandler = () => {
-          this.context.signal(path, { action: REMOVE_FIELD, name: key, path });
-        };
-
         const rowLoc = global.get(path.concat(key));
         const RowComponent = rowLoc.implementationView;
 
         return (
           <div style={rowStyle} key={key}>
-            <button onClick={clickHandler} style={deleteButtonStyle}>[delete]</button>
+            {deleteButton.call(this, [], key)}
             <RowComponent name={key} path={path.concat(key)} />
           </div>
         );
@@ -205,7 +258,7 @@ export class RecordView extends Component {
         <div style={rowsStyle}>
           {rows}
         </div>
-        <RowControls signal={action => { this.context.signal(path, action); }} path={path} />
+        <RowControls path={path} />
         {'}'}
       </div>
     );
@@ -217,7 +270,10 @@ class RowControls extends Component {
 
   static propTypes = {
     path: PropTypes.arrayOf(PropTypes.string).isRequired,
-    signal: PropTypes.func.isRequired
+  };
+
+  static contextTypes = {
+    signal: PropTypes.func.isRequired,
   };
 
   state = {
@@ -236,12 +292,15 @@ class RowControls extends Component {
 
   handleKeyPress(event) {
     if (event.key === 'Enter') {
-      this.props.signal({
-        action: SET_FIELD,
-        name: this.state.nameInput,
-        path: this.props.path,
-        type: this.state.selectedType,
-      });
+      this.context.signal(
+        this.props.path,
+        {
+          action: SET_FIELD,
+          name: this.state.nameInput,
+          path: this.props.path,
+          type: this.state.selectedType,
+        }
+      );
       this.setState({ nameInput: '' });
     }
   }

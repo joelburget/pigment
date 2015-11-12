@@ -1,26 +1,8 @@
 import React, { PropTypes, Component } from 'react';
-// import { bindActionCreators } from 'redux';
-// import { connect } from 'react-redux';
-// import * as GadgetActions from '../actions/gadgets';
 
 import { Module, ModuleTy, ModuleView, ModuleTyView } from '../models/Module';
 import { Location } from '../models/Location';
 import Firmament, { fromBaseLocation } from '../models/Firmament';
-
-
-// function mapStateToProps(state) {
-//   return {
-//     // note plural to singular
-//     gadget: state.gadgets,
-//     path: [],
-//     name: 'base',
-//   };
-// }
-
-
-// function mapDispatchToProps(dispatch) {
-//   return bindActionCreators(GadgetActions, dispatch);
-// }
 
 
 const initialBaseLocation = new Location({
@@ -61,14 +43,8 @@ export default class GadgetPage extends Component {
   render() {
     return (
       <div style={typedTermStyle}>
-        <ModuleView
-          name='root'
-          path={[]}
-          focus='implementation' />
-        <ModuleTyView
-          name='root'
-          path={[]}
-          focus='type' />
+        <ModuleView path={[]} level={0} />
+        <ModuleTyView path={[]} level={1} />
       </div>
     );
   }
@@ -78,6 +54,3 @@ const typedTermStyle = {
   display: 'flex',
   flexDirection: 'row',
 };
-
-
-// export default connect(mapStateToProps, mapDispatchToProps)(Gadget);

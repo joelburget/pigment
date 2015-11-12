@@ -5,7 +5,7 @@ import { OrderedMap } from 'immutable';
 import { messages } from './Gadget';
 import Firmament from './Firmament';
 import { Location } from './Location';
-import { Record, RecordView, RecordTy, RecordTyView } from './Record';
+import { Record, RecordView, RecordTy, RecordTyView, Projection, ProjectionView } from './Record';
 import { Variant, VariantView, VariantTy, VariantTyView } from './Variant';
 
 
@@ -15,14 +15,26 @@ const {
 
 
 export class Hole {
-  receiveSignal(global, signal) {
-    switch (signal.action) {
-    case FILL_HOLE: {
+  handlers = {
+    FILL_HOLE(global, signal) {
       const { selectedType, path } = signal;
       const loc = global.get(path);
 
-      let implementation, type, implementationView, typeView, global_ = global;
-      if (selectedType === 'record') {
+      let global_ = global;
+      let implementation;
+      let type;
+      let implementationView = new Hole();
+      let typeView = HoleView;
+
+      // TODO use a sentinel to implement all of these
+      if (selectedType === 'projection') {
+        implementation = new Projection({
+          // tag,
+          // record,
+        });
+        implementationView = ProjectionView;
+        // leave the type and typeView as holes?
+      } else if (selectedType === 'record') {
         implementation = new Record();
         implementationView = RecordView;
         type = new RecordTy();
@@ -30,13 +42,6 @@ export class Hole {
       } else { // 'variant'
         // start this variant off with a single option for now
         const tag = 'A';
-
-        const holeLoc = new Location({
-          implementation: new Hole(),
-          implementationView: HoleView,
-          type: new Hole(),
-          typeView: HoleView,
-        });
 
         // XXX hack
         const holePath = path.concat(['_type', tag]);
@@ -48,26 +53,18 @@ export class Hole {
         type = new VariantTy({ tags });
         typeView = VariantTyView;
       }
-      const location_ = new Location({
+
+      const location_ = loc.merge({
         implementation,
         implementationView,
         type,
         typeView,
-        documentation: loc.documentation,
       });
 
       // TODO garbage collect field?
       return global_.set(path, location_);
-    }
-
-    default:
-      console.warn(
-        'Warning: Hole unhandled signal: ' + signal.action,
-        signal
-      );
-      return global;
-    }
-  }
+    },
+  };
 }
 
 
@@ -75,6 +72,7 @@ export class HoleView extends Component {
 
   static propTypes = {
     path: PropTypes.arrayOf(PropTypes.string).isRequired,
+    level: PropTypes.number.isRequired,
   };
 
   static contextTypes = {
@@ -85,12 +83,12 @@ export class HoleView extends Component {
 
   handleSelectChange(event) {
     const selectedType = event.target.value;
-    const { path } = this.props;
+    const { path, level } = this.props;
 
     if (selectedType !== '') {
       this.context.signal(
         path,
-        { action: FILL_HOLE, selectedType, path }
+        { action: FILL_HOLE, selectedType, path, level }
       );
     }
   }
@@ -103,9 +101,30 @@ export class HoleView extends Component {
                   <option value='default' disabled></option>
                   <option value='record'>Record</option>
                   <option value='variant'>Variant</option>
+                  <option value='projection'>Projection</option>
                 </select>
         </div>
       </div>
     );
   }
 }
+
+
+export const holeLoc = new Location({
+  implementation: new Hole(),
+  implementationView: HoleView,
+  type: new Hole(),
+  typeView: HoleView,
+});
+
+
+export const implementationHole = {
+  implementation: new Hole(),
+  implementationView: HoleView,
+};
+
+
+export const typeHole = {
+  type: new Hole(),
+  typeView: HoleView,
+};

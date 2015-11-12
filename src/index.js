@@ -1,13 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Root from './containers/Root';
-import createBrowserHistory from 'history/lib/createBrowserHistory';
-
-
-const history = createBrowserHistory();
+import GadgetPage from './containers/GadgetPage';
 
 
 ReactDOM.render(
-  <Root history={history} />,
+  <GadgetPage />,
   document.getElementById('root')
 );

@@ -16,39 +16,30 @@ export const Variant = ImmRecord({
 });
 
 export class VariantTy extends ImmRecord({ tags: OrderedMap() }) {
-  receiveSignal(global, signal) {
-    switch (signal.action) {
-    case SET_TAG: {
+  handlers = {
+    SET_TAG(global, signal) {
       const { path, tag } = signal;
       const loc = global.get(path);
 
       const location_ = loc.set('implementation', tag);
       return global.set(path, location_);
-    }
+    },
 
-    case ADD_VARIANT: {
+    ADD_VARIANT(global, signal) {
       const { path, tag, type } = signal;
       const loc = global.get(path);
 
       loc.type.tags.set(tag, type);
-    }
+    },
 
-    case REMOVE_VARIANT: {
+    REMOVE_VARIANT(global, signal) {
       const { path, tag } = signal;
       const loc = global.get(path);
 
       // XXX how to handle if implementation uses that variant?
       loc.type.tags.delete(tag);
-    }
-
-    default:
-      console.warn(
-        'Warning: unhandled signal: ' + signal.action,
-        signal
-      );
-      return global;
-    }
-  }
+    },
+  };
 }
 
 export class VariantView extends Component {

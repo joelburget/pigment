@@ -19,6 +19,9 @@
     // defining styles at the bottom, etc
     "no-use-before-define": 0,
 
+    // doesn't work well with aspects
+    "react/no-multi-comp": 0,
+
     "comma-dangle": 0,
 
     // Temporarirly disabled due to a possible bug in babel-eslint (todomvc example)

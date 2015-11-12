@@ -5,14 +5,15 @@ import React, { Component, PropTypes } from 'react';
 
 import { messages } from './Gadget';
 import Firmament from './Firmament';
-import { Location } from './Location';
-import { Hole, HoleView } from './Hole';
+import { holeLoc } from './Hole';
 
-import deleteButtonStyle from '../styles/deleteButtonStyle';
+import deleteButton from '../actions/remove_field';
+import pokeHoleButton from '../actions/poke_hole';
 
 
 const {
   MAKE_DEFINITION,
+  // XXX dupicated symbol?
   REMOVE_FIELD,
 } = messages;
 
@@ -23,9 +24,8 @@ export const Module = ImmRecord({
 
 
 export class ModuleTy extends ImmRecord({ definitions: OrderedMap() }) {
-  receiveSignal(global, signal) {
-    switch (signal.action) {
-    case MAKE_DEFINITION: {
+  handlers = {
+    [MAKE_DEFINITION](global, signal) {
       const { name, typeName } = signal;
       const loc = global.get([]);
 
@@ -38,22 +38,15 @@ export class ModuleTy extends ImmRecord({ definitions: OrderedMap() }) {
 
       const location_ = loc.merge({ implementation, type });
 
-      const newLocation = new Location({
-        implementation: new Hole(),
-        implementationView: HoleView,
-        type: new Hole(),
-        typeView: HoleView,
-      });
-
       return global
         .set([], location_)
-        .set([name], newLocation);
-    }
+        .set([name], holeLoc);
+    },
 
     // TODO - clear up definition / field terminology
     // should we use the same term for both modules and records?
     // they're analogous, but typed differently.
-    case REMOVE_FIELD: {
+    [REMOVE_FIELD](global, signal) {
       const { name } = signal;
       const loc = global.get([]);
       const implementation = new Module({
@@ -65,20 +58,17 @@ export class ModuleTy extends ImmRecord({ definitions: OrderedMap() }) {
       const location_ = loc.merge({ implementation, type });
       // TODO garbage collect field?
       return global.set([], location_);
-    }
-
-    default:
-      console.warn(
-        'Warning: Module unhandled signal: ' + signal.action,
-        signal
-      );
-      return global;
-    }
-  }
+    },
+  };
 }
 
 
 export class ModuleTyView extends Component {
+
+  static propTypes = {
+    path: PropTypes.arrayOf(PropTypes.string).isRequired,
+    level: PropTypes.number.isRequired,
+  };
 
   static contextTypes = {
     update: PropTypes.func.isRequired,
@@ -88,24 +78,25 @@ export class ModuleTyView extends Component {
 
   render() {
     const { global } = this.context;
-    const loc = global.get([]);
+    const { path, level } = this.props;
+    const loc = global.get(path);
     const type = loc.type;
 
     const rows = type
       .definitions
       // XXX what *is* the value here, anyway?
       .map((value, key) => {
-        const clickHandler = () => {
-          this.context.signal([], { action: REMOVE_FIELD, name: key });
-        };
-
-        const rowLoc = global.get([key]);
+        const path_ = path.concat(key);
+        const rowLoc = global.get(path_);
         const RowComponent = rowLoc.typeView;
 
         return (
           <div style={rowStyle} key={key}>
-            <button onClick={clickHandler} style={deleteButtonStyle}>[delete]</button>
-            <RowComponent name={key} path={[key]} />
+            <div style={colStyle}>
+              {deleteButton.call(this, path, key)}
+              {pokeHoleButton.call(this, path_, level)}
+            </div>
+            <RowComponent name={key} path={path_} level={level} />
           </div>
         );
       })
@@ -117,9 +108,7 @@ export class ModuleTyView extends Component {
         <div style={moduleTyStyle}>
           {rows}
         </div>
-        <div style={controlsStyle}>
-          <Controls signal={action => { this.context.signal([], action); }} />
-        </div>
+        <Controls signal={action => { this.context.signal(path, action); }} />
         {'}'}
       </div>
     );
@@ -137,26 +126,24 @@ export class ModuleView extends Component {
 
   render() {
     const { global } = this.context;
-    const location = global.get([]);
+    const { path, level } = this.props;
+    const location = global.get(path);
     const implementation = location.implementation;
 
     const rows = implementation
       .definitions
       .map((value, key) => {
-        const clickHandler = () => {
-          this.context.signal([], { action: REMOVE_FIELD, name: key });
-        };
-
-        const rowLoc = global.get([key]);
+        const path_ = path.concat(key);
+        const rowLoc = global.get(path_);
         const RowComponent = rowLoc.implementationView;
-        if (RowComponent == null) {
-          debugger;
-        }
 
         return (
           <div style={rowStyle} key={key}>
-            <button onClick={clickHandler} style={deleteButtonStyle}>[delete]</button>
-            <RowComponent name={key} path={[key]} />
+            <div style={colStyle}>
+              {deleteButton.call(this, path, key)}
+              {pokeHoleButton.call(this, path_, level)}
+            </div>
+            <RowComponent name={key} path={path_} level={level} />
           </div>
         );
       })
@@ -168,9 +155,7 @@ export class ModuleView extends Component {
         <div style={rowsStyle}>
           {rows}
         </div>
-        <div style={controlsStyle}>
-          <Controls signal={action => { this.context.signal([], action); }} />
-        </div>
+        <Controls signal={action => { this.context.signal(path, action); }} />
         {'}'}
       </div>
     );
@@ -213,7 +198,7 @@ class Controls extends Component {
     };
 
     return (
-      <div>
+      <div style={controlsStyle}>
         <div>
           New Row
         </div>
