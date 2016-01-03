@@ -21,6 +21,9 @@ export default {
   cursor: 'pointer',
   textDecoration: 'none',
   textAlign: 'center',
-  lineHeight: '36px', // XXX `36` does not automatically have 'px' added to it, is interpreted as... something bigger
+
+  // `36` does not automatically have 'px' added to it, is interpreted as...
+  // something bigger
+  lineHeight: '36px',
   verticalAlign: 'middle',
 };

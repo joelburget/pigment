@@ -1,65 +1,88 @@
-import { Record as ImmRecord, OrderedMap } from 'immutable';
+// @flow
+import { Record, List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
 import Firmament from './Firmament';
 
-import { messages } from '../messages';
+import type { Element } from 'react';
 
-const {
-  SET_TAG,
-  ADD_VARIANT,
-  REMOVE_VARIANT
-} = messages;
+import type { RemoveVariantSignal, AddVariantSignal } from '../messages';
+
+import { INTRODUCTION } from '../messages';
+
+import Rows from '../components/Rows';
 
 
-export const Variant = ImmRecord({
+const VARIANT = Symbol('VARIANT');
+const VARIANT_TY = Symbol('VARIANT_TY');
+
+const VariantData = Record({
   tag: null,
 });
 
-export class VariantTy extends ImmRecord({ tags: OrderedMap() }) {
-  handlers = {
-    [SET_TAG](global, signal) {
-      const { path, tag } = signal;
-      const loc = global.get(path);
+const VariantTyData = Record({
+  tags: List(),
+});
 
-      const location_ = loc.set('implementation', tag);
-      return global.set(path, location_);
-    },
+const variantTyHandlers = {
+  // SET_TAG(global: Firmament, signal) {
+  //   const { path, tag } = signal;
+  //   const loc = global.getLocation(path);
 
-    [ADD_VARIANT](global, signal) {
-      const { path, tag, type } = signal;
-      const loc = global.get(path);
+  //   const loc_ = loc.set('data', tag);
+  //   return global.set(path, loc_);
+  // },
 
-      loc.type.tags.set(tag, type);
-    },
+  ADD_VARIANT(
+    global: Firmament,
+    signal: AddVariantSignal
+  ): Firmament {
+    const { path, tag, type } = signal;
+    const pointer = global.followPath(path);
+    const loc = global.getLocation(pointer);
 
-    [REMOVE_VARIANT](global, signal) {
-      const { path, tag } = signal;
-      const loc = global.get(path);
+    const newLoc = loc
+      .updateIn(['data', 'tags'], tags => tags.push(tag))
+      .setIn(['locations', tag], type);
 
-      // XXX how to handle if implementation uses that variant?
-      loc.type.tags.delete(tag);
-    },
-  };
-}
+    return global.update(pointer, newLoc);
+  },
+
+  REMOVE_VARIANT(
+    global: Firmament,
+    signal: RemoveVariantSignal
+  ): Firmament {
+    const { path, tag } = signal;
+    const pointer = global.followPath(path);
+    const loc = global.getLocation(pointer);
+
+    const newLoc = loc
+      .updateIn(['data', 'tags'], tags => tags.filter(tag_ => tag_ !== tag))
+      .deleteIn(['locations', tag]);
+
+    return global.update(pointer, newLoc);
+  },
+};
 
 export class VariantView extends Component {
 
+  static propTypes = {
+    path: PropTypes.array.isRequired,
+  };
+
   static contextTypes = {
-    update: PropTypes.func.isRequired,
     signal: PropTypes.func.isRequired,
     global: PropTypes.instanceOf(Firmament).isRequired,
   };
 
-  render() {
+  render(): Element {
     const { global } = this.context;
-    const { name, path } = this.props;
-    const location = global.get(path);
-    const { implementation } = location;
+    const { path } = this.props;
+    const loc = global.getLocation(path);
 
     return (
       <div>
-        VariantView: {implementation.tag}
+        VariantView: {loc.data.tag}
       </div>
     );
   }
@@ -68,59 +91,51 @@ export class VariantView extends Component {
 
 export class VariantTyView extends Component {
 
+  static propTypes = {
+    path: PropTypes.array.isRequired,
+  };
+
   static contextTypes = {
-    update: PropTypes.func.isRequired,
     signal: PropTypes.func.isRequired,
     global: PropTypes.instanceOf(Firmament).isRequired,
   };
 
-  render() {
+  render(): Element {
     const { global } = this.context;
-    const { name, path } = this.props;
-    const location = global.get(path);
-    const { type } = location;
+    const { path } = this.props;
+    const loc = global.getLocation(path);
 
-    const rows = type
-      .tags
-      .map((value, key) => {
-        const clickHandler = () => {
-          this.context.signal(path, { action: REMOVE_VARIANT, name: key, path });
-        };
-
-        // XXX hack
-        const rowLoc = global.get(path.concat(['_type', key]));
-        const RowComponent = rowLoc.typeView;
-
-        return (
-          <div style={rowStyle} key={key}>
-            <button onClick={clickHandler}>[delete]</button>
-            <RowComponent
-              name={key}
-              path={path.concat(key)} />
-          </div>
-        );
-      })
-      .toArray();
-
+    // XXX figure out how to use this handler (different from other row
+    // handlers).
+    // const clickHandler = () => {
+    //   this.context.signal(path, { action: REMOVE_VARIANT, name: key, path });
+    // };
 
     return (
       <div>
         VariantTyView:
-          <div style={rowsStyle}>
-            {rows}
-          </div>
+          <Rows fields={loc.type.fields} path={path} />
       </div>
     );
   }
 }
 
-const rowsStyle = {
-  marginLeft: 10,
-  display: 'flex',
-  flexDirection: 'column',
+export const Variant = {
+  name: 'Variant',
+  symbol: VARIANT,
+  type: INTRODUCTION,
+  minLevel: 0,
+  handlers: {},
+  render: VariantView,
+  data: VariantData,
 };
 
-const rowStyle = {
-  display: 'flex',
-  flexDirection: 'row',
+export const VariantTy = {
+  name: 'VariantTy',
+  symbol: VARIANT_TY,
+  type: INTRODUCTION,
+  minLevel: 1,
+  handlers: variantTyHandlers,
+  render: VariantTyView,
+  data: VariantTyData,
 };

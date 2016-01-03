@@ -1,115 +1,135 @@
-/* eslint new-cap: 0 */
-/* eslint react/no-multi-comp: 0 */
-import { Record as ImmRecord, OrderedMap } from 'immutable';
+// @flow
+import { Record, List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
-import Firmament from './Firmament';
-import { holeLoc } from './Hole';
-
-import { messages } from '../messages';
-
-import deleteButton from '../actions/remove_field';
-import pokeHoleButton from '../actions/poke_hole';
-
-const {
-  MAKE_DEFINITION,
-  // XXX dupicated symbol?
+import Firmament, { UpLevel } from './Firmament';
+import {
+  NEW_FIELD,
+  INTRODUCTION,
   REMOVE_FIELD,
-} = messages;
+} from '../messages';
+import { handler as removeField } from '../actions/remove_field';
+import { handler as newField } from '../actions/new_field';
+import { column } from '../styles/flex';
+import Rows from '../components/Rows';
+
+import type { Element } from 'react';
+
+import type {
+  ImplementationUpdatedSignal,
+  ReferenceUpdatedSignal,
+} from '../messages';
 
 
-export const Module = ImmRecord({
-  definitions: OrderedMap(),
+const MODULE = Symbol('MODULE');
+const MODULE_TY = Symbol('MODULE_TY');
+
+
+const ModuleData = Record({
+  fields: List(),
 });
 
+const ModuleTyData = Record({
+  fields: List(),
+});
 
-export class ModuleTy extends ImmRecord({ definitions: OrderedMap() }) {
-  handlers = {
-    [MAKE_DEFINITION](global, signal) {
-      const { name, typeName } = signal;
-      const loc = global.get([]);
+function moduleTyUpdate(
+  global: Firmament,
+  signal: ImplementationUpdatedSignal
+): Firmament {
 
-      const implementation = new Module({
-        definitions: loc.implementation.definitions.set(name, [name]),
-      });
-      const type = new ModuleTy({
-        definitions: loc.type.definitions.set(name, [name]),
-      });
+  if (signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) {
+    const { target, signal: { action, name, path: { root, steps } } } = signal;
 
-      const location_ = loc.merge({ implementation, type });
+    const signal_ = {
+      // Flow apparently isn't sophisticated enough to understand this could be
+      // of either type.
+      // $FlowIgnore: I think this is fine...
+      action,
+      name,
+      path: {
+        root,
+        steps: steps.concat(UpLevel),
+      },
+    };
 
-      return global
-        .set([], location_)
-        .set([name], holeLoc);
-    },
+    return action === NEW_FIELD ?
+      newField(global, signal_) :
+      removeField(global, signal_);
+  }
 
-    // TODO - clear up definition / field terminology
-    // should we use the same term for both modules and records?
-    // they're analogous, but typed differently.
-    [REMOVE_FIELD](global, signal) {
-      const { name } = signal;
-      const loc = global.get([]);
-      const implementation = new Module({
-        definitions: loc.implementation.definitions.delete(name)
-      });
-      const type = new ModuleTy({
-        definitions: loc.type.definitions.delete(name)
-      });
-      const location_ = loc.merge({ implementation, type });
-      // TODO garbage collect field?
-      return global.set([], location_);
-    },
-  };
+  return global;
 }
 
+function moduleUpdate(
+  global: Firmament,
+  signal: ReferenceUpdatedSignal
+): Firmament {
 
-export class ModuleTyView extends Component {
+  const original = global.getLocation(signal.original);
 
-  static propTypes = {
-    path: PropTypes.arrayOf(PropTypes.string).isRequired,
-    level: PropTypes.number.isRequired,
-  };
+  if ((signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) && original.tag === ModuleTy) {
+    const { referer, original, signal: { action, name, path: { root, steps } } } = signal;
 
-  static contextTypes = {
-    update: PropTypes.func.isRequired,
-    signal: PropTypes.func.isRequired,
-    global: PropTypes.instanceOf(Firmament).isRequired,
-  };
+    // XXX need to treat differently depending on what kind of reference this is
+    const signal_ = {
+      // Flow apparently isn't sophisticated enough to understand this could be
+      // of either type.
+      // $FlowIgnore: I think this is fine...
+      action,
+      name,
+      path: {
+        root: referer, // XXX
+        steps: [],
+      },
+    };
 
-  render() {
+    return action === NEW_FIELD ?
+      newField(global, signal_) :
+      removeField(global, signal_);
+  }
+
+  return global;
+}
+
+// Need to figure out how these handlers can really have a different effect for
+// Module vs ModuleTy. A module change affects its type and vice-versa. They're
+// tied together. Modules are tied upward and ModuleTys are tied downward.
+const fieldHandlers = {
+  NEW_FIELD: newField,
+  REMOVE_FIELD: removeField,
+};
+
+
+const contextTypes = {
+  signal: PropTypes.func.isRequired,
+  global: PropTypes.instanceOf(Firmament).isRequired,
+};
+
+
+const propTypes = {
+  path: PropTypes.shape({
+    root: PropTypes.symbol,
+    steps: PropTypes.array,
+  }).isRequired,
+};
+
+
+class ModuleTyView extends Component {
+
+  static propTypes = propTypes;
+  static contextTypes = contextTypes;
+
+  render(): Element {
     const { global } = this.context;
-    const { path, level } = this.props;
-    const loc = global.get(path);
-    const type = loc.type;
-
-    const rows = type
-      .definitions
-      // XXX what *is* the value here, anyway?
-      .map((value, key) => {
-        const path_ = path.concat(key);
-        const rowLoc = global.get(path_);
-        const RowComponent = rowLoc.typeView;
-
-        return (
-          <div style={rowStyle} key={key}>
-            <div style={colStyle}>
-              {deleteButton.call(this, path, key)}
-              {pokeHoleButton.call(this, path_, level)}
-            </div>
-            <RowComponent name={key} path={path_} level={level} />
-          </div>
-        );
-      })
-      .toArray();
+    const { path } = this.props;
+    const loc = global.getPath(path);
 
     return (
-      <div style={colStyle}>
-        {'Module: {'}
-        <div style={moduleTyStyle}>
-          {rows}
-        </div>
+      <div style={column}>
+        ModuleTy:
+        <Rows fields={loc.data.fields} path={path} />
         <Controls signal={action => { this.context.signal(path, action); }} />
-        {'}'}
       </div>
     );
   }
@@ -118,45 +138,19 @@ export class ModuleTyView extends Component {
 
 export class ModuleView extends Component {
 
-  static contextTypes = {
-    update: PropTypes.func.isRequired,
-    signal: PropTypes.func.isRequired,
-    global: PropTypes.instanceOf(Firmament).isRequired,
-  };
+  static propTypes = propTypes;
+  static contextTypes = contextTypes;
 
-  render() {
+  render(): Element {
     const { global } = this.context;
-    const { path, level } = this.props;
-    const location = global.get(path);
-    const implementation = location.implementation;
-
-    const rows = implementation
-      .definitions
-      .map((value, key) => {
-        const path_ = path.concat(key);
-        const rowLoc = global.get(path_);
-        const RowComponent = rowLoc.implementationView;
-
-        return (
-          <div style={rowStyle} key={key}>
-            <div style={colStyle}>
-              {deleteButton.call(this, path, key)}
-              {pokeHoleButton.call(this, path_, level)}
-            </div>
-            <RowComponent name={key} path={path_} level={level} />
-          </div>
-        );
-      })
-      .toArray();
+    const { path } = this.props;
+    const loc = global.getPath(path);
 
     return (
-      <div style={colStyle}>
-        {'Module: {'}
-        <div style={rowsStyle}>
-          {rows}
-        </div>
+      <div style={column}>
+        Module:
+        <Rows fields={loc.data.fields} path={path} />
         <Controls signal={action => { this.context.signal(path, action); }} />
-        {'}'}
       </div>
     );
   }
@@ -166,7 +160,7 @@ export class ModuleView extends Component {
 class Controls extends Component {
 
   static propTypes = {
-    signal: PropTypes.func.isRequired
+    signal: PropTypes.func.isRequired,
   };
 
   state = {
@@ -180,18 +174,16 @@ class Controls extends Component {
   handleKeyPress(event) {
     if (event.key === 'Enter') {
       this.props.signal({
-        action: MAKE_DEFINITION,
+        action: NEW_FIELD,
         name: this.state.nameInput,
-        typeName: this.state.selectedType,
       });
       this.setState({ nameInput: '' });
     }
   }
 
-  render() {
+  render(): Element {
     const { nameInput } = this.state;
 
-    // TODO - can I bundle up both parts of the input with value linking?
     const valueLink = {
       value: nameInput,
       requestChange: value => this.handleChange(value),
@@ -214,27 +206,33 @@ class Controls extends Component {
 }
 
 
-const moduleTyStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-};
-
 const controlsStyle = {
   marginTop: 20,
 };
 
-const colStyle = {
-  display: 'flex',
-  flexDirection: 'column',
+
+export const Module = {
+  name: 'Module',
+  symbol: MODULE,
+  type: INTRODUCTION,
+  minLevel: 0,
+  handlers: {
+    ...fieldHandlers,
+    REFERENCE_UPDATED: moduleUpdate,
+  },
+  render: ModuleView,
+  data: ModuleData,
 };
 
-const rowsStyle = {
-  marginLeft: 10,
-  display: 'flex',
-  flexDirection: 'column',
-};
-
-const rowStyle = {
-  display: 'flex',
-  flexDirection: 'row',
+export const ModuleTy = {
+  name: 'ModuleTy',
+  symbol: MODULE_TY,
+  type: INTRODUCTION,
+  minLevel: 1,
+  handlers: {
+    ...fieldHandlers,
+    IMPLEMENTATION_UPDATED: moduleTyUpdate,
+  },
+  render: ModuleTyView,
+  data: ModuleTyData,
 };

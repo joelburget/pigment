@@ -1,44 +1,45 @@
-import { Record } from 'immutable';
+// @flow
+import { Map, Record } from 'immutable';
 
-
-import { implementationHole, typeHole } from './Hole';
-
-
-export const Documentation = Record({
-  docs: ''
-});
+import type Firmament from './Firmament';
+import type { AnySignal } from '../messages';
 
 
 export class Location extends Record({
-  implementation: null,
-  implementationView: null,
-  type: null,
-  typeView: null,
-  documentation: new Documentation(),
+  tag: null,
+  locations: new Map(),
+  data: null,
 }) {
 
-  signal(global, sig) {
-    const handler = this.type.handlers[sig.action];
-    const tyName = this.type.constructor.name;
+  signal(global: Firmament, sig: AnySignal): Location {
+    const handler = this.tag.handlers[sig.action];
+    const tyName = this.tag.symbol.toString();
 
     if (sig.action === 'POKE_HOLE') {
-      const { path } = sig;
-      const hole = sig.level === 0 ? implementationHole : typeHole;
+      // TODO: what is path used for? is it redundant in the presence of loc?
+      // Isn't global.getLocation(sym) always this?
+      // const { path } = sig;
+      // const sym = global.getPath(path);
 
-      const loc = global.get(path);
-      const loc_ = loc.merge(hole);
-
-      return global.set(sig.path, loc_);
+      // hole data is empty
+      // XXX this needs updated
+      // return global.getLocation(sym).merge({ tag: Hole });
+      return global;
 
     } else if (handler) {
       return handler(global, sig);
 
     } else { // eslint-disable-line no-else-return
       console.warn( // eslint-disable-line no-console
-        `Warning: unhandled signal: ${tyName}: ${sig.action}`,
-        sig
+        `Warning: unhandled signal: ${tyName}: ${sig.action.toString()}`,
+        sig,
+        this.toJS()
       );
+
+      // just return the same old thing
       return global;
     }
   }
+
+  // need to add watching / event bubbling
 }

@@ -5,11 +5,15 @@
     "mocha": true,
     "node": true
   },
+  "parser": "babel-eslint",
   "rules": {
     "react/jsx-uses-react": 2,
     "react/jsx-uses-vars": 2,
     "react/react-in-jsx-scope": 2,
     "jsx-quotes": [2, "prefer-single"],
+
+    "flow-vars/define-flow-type": 1,
+    "flow-vars/use-flow-type": 1,
 
     "vars-on-top": 0,
 
@@ -30,6 +34,7 @@
     "padded-blocks": 0
   },
   "plugins": [
-    "react"
+    "react",
+    "flow-vars"
   ]
 }

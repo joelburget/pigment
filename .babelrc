@@ -9,7 +9,8 @@
         // Include babel-plugin-react-display-name if you’re
         // using React.createClass() *before* react-transform:
         // "react-display-name",
-        "react-transform"
+        "react-transform",
+        "transform-flow-strip-types"
       ],
       "extra": {
         // must be defined and be an array

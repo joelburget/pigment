@@ -1,14 +1,21 @@
-import React from 'react';
-
-import deleteButtonStyle from '../styles/deleteButtonStyle';
-
+// @flow
+import React, { PropTypes } from 'react';
 
 import { POKE_HOLE } from '../messages';
+import deleteButtonStyle from '../styles/deleteButtonStyle';
+
+import type { Element } from 'react';
+
+import type { PokeHoleSignal } from '../messages';
+import type { Path } from '../models/Firmament';
 
 
-export default function pokeHole(path, level) {
+export default function PokeHole(
+  { path }: { path: Path },
+  { signal }: { signal: (path: Path, sig: PokeHoleSignal) => void }
+  ) : Element {
   const clickHandler = () => {
-    this.context.signal(path, { action: [POKE_HOLE], path, level });
+    signal(path, { action: POKE_HOLE, path });
   };
 
   return (
@@ -17,3 +24,15 @@ export default function pokeHole(path, level) {
     </button>
   );
 }
+
+
+PokeHole.propTypes = {
+  path: PropTypes.shape({
+    root: PropTypes.symbol,
+    steps: PropTypes.array,
+  }).isRequired,
+};
+
+PokeHole.contextTypes = {
+  signal: PropTypes.func.isRequired,
+};
