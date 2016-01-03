@@ -62,7 +62,6 @@ function handleClick(
   const loc = global.getPath(path);
   const name = findName(loc.data.fields, 'new row');
 
-  console.log('started handling');
   signal(
     path,
     {
@@ -71,6 +70,4 @@ function handleClick(
       path,
     }
   );
-
-  console.log('finished handling');
 }

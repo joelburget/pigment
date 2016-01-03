@@ -67,7 +67,6 @@ export default class Page extends Component {
     let p = { root: rootPointer, steps: [UpLevel] };
 
     while (toSignal.length > 0) {
-      console.log(toSignal.length);
       const [ [ pointer, signal ], ...toSignal_ ] = toSignal;
       toSignal = toSignal_;
       const loc = global.getLocation(pointer);
@@ -113,7 +112,7 @@ export default class Page extends Component {
           })
         );
       } else {
-        console.log(signal, "doesn't result in update");
+        console.warn(signal, "doesn't result in update");
       }
     }
 

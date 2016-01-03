@@ -2,10 +2,12 @@
 import { Record as ImmRecord, List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
-import Firmament from './Firmament';
+import Firmament, { UpLevel } from './Firmament';
 import {
   INTRODUCTION,
   ELIMINATION,
+  REMOVE_FIELD,
+  NEW_FIELD,
 } from '../messages';
 import { handler as removeField } from '../actions/remove_field';
 import { handler as newField } from '../actions/new_field';
@@ -27,8 +29,6 @@ const fieldHandlers = {
   FILL_HOLE: fillHole,
 };
 
-const recordHandlers = fieldHandlers;
-
 const RecordData = ImmRecord({
   fields: List(),
 });
@@ -48,6 +48,67 @@ function fillHole(
   });
 
   return global.set(path, loc_);
+}
+
+function recordTyUpdate(
+  global: Firmament,
+  signal: ImplementationUpdatedSignal
+): Firmament {
+
+  console.log('here1');
+  if (signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) {
+    console.log('here2');
+    const { target, signal: { action, name, path: { root, steps } } } = signal;
+
+    const signal_ = {
+      // Flow apparently isn't sophisticated enough to understand this could be
+      // of either type.
+      // $FlowIgnore: I think this is fine...
+      action,
+      name,
+      path: {
+        root,
+        steps: steps.concat(UpLevel),
+      },
+    };
+
+    return action === NEW_FIELD ?
+      newField(global, signal_) :
+      removeField(global, signal_);
+  }
+
+  return global;
+}
+
+function recordUpdate(
+  global: Firmament,
+  signal: ReferenceUpdatedSignal
+): Firmament {
+
+  const original = global.getLocation(signal.original);
+
+  if ((signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) && original.tag === ModuleTy) {
+    const { referer, original, signal: { action, name, path: { root, steps } } } = signal;
+
+    // XXX need to treat differently depending on what kind of reference this is
+    const signal_ = {
+      // Flow apparently isn't sophisticated enough to understand this could be
+      // of either type.
+      // $FlowIgnore: I think this is fine...
+      action,
+      name,
+      path: {
+        root: referer, // XXX
+        steps: [],
+      },
+    };
+
+    return action === NEW_FIELD ?
+      newField(global, signal_) :
+      removeField(global, signal_);
+  }
+
+  return global;
 }
 
 const ProjectionData = ImmRecord({
@@ -71,8 +132,6 @@ const projectionHandlers = {
     return record.concat(tag);
   },
 };
-
-const recordTyHandlers = fieldHandlers;
 
 
 export class ProjectionView extends Component {
@@ -150,7 +209,11 @@ export const Record = {
   symbol: RECORD,
   type: INTRODUCTION,
   minLevel: 0,
-  handlers: recordHandlers,
+  handlers: {
+    ...fieldHandlers,
+    // XXX this is exactly the same as the equivalent module op
+    REFERENCE_UPDATED: recordUpdate,
+  },
   render: RecordView,
   data: RecordData,
 };
@@ -160,7 +223,11 @@ export const RecordTy = {
   symbol: RECORD_TY,
   type: INTRODUCTION,
   minLevel: 1,
-  handlers: recordTyHandlers,
+  handlers: {
+    ...fieldHandlers,
+    // XXX this is exactly the same as the equivalent module op
+    IMPLEMENTATION_UPDATED: recordTyUpdate,
+  },
   render: RecordTyView,
   data: RecordTyData,
 };
