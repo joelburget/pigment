@@ -18,6 +18,8 @@ import type { Element } from 'react';
 import type {
   ImplementationUpdatedSignal,
   ReferenceUpdatedSignal,
+  NewFieldSignal,
+  RemoveFieldSignal,
 } from '../messages';
 
 
@@ -39,7 +41,9 @@ function moduleTyUpdate(
 ): Firmament {
 
   if (signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) {
-    const { target, signal: { action, name, path: { root, steps } } } = signal;
+    const subSignal : NewFieldSignal | RemoveFieldSignal = signal.signal;
+    const target: Symbol = signal.target;
+    const { action, name, path: { root, steps } } = subSignal;
 
     const signal_ = {
       // Flow apparently isn't sophisticated enough to understand this could be

@@ -63,7 +63,7 @@ export default class Page extends Component {
     return globalHistory[globalHistory.length-1];
   }
 
-  setGlobal(global: Firmament): Firmament {
+  setGlobal(global: Firmament): void {
     const { globalHistory } = this.state;
     this.setState({
       globalHistory: globalHistory.concat(global),

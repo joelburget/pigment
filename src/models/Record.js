@@ -16,6 +16,12 @@ import Rows from '../components/Rows';
 import type { Element } from 'react';
 
 import type { Path } from './Firmament';
+import type {
+  ImplementationUpdatedSignal,
+  ReferenceUpdatedSignal,
+  NewFieldSignal,
+  RemoveFieldSignal,
+} from '../messages';
 
 
 const RECORD = Symbol('RECORD');
@@ -55,10 +61,10 @@ function recordTyUpdate(
   signal: ImplementationUpdatedSignal
 ): Firmament {
 
-  console.log('here1');
   if (signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) {
-    console.log('here2');
-    const { target, signal: { action, name, path: { root, steps } } } = signal;
+    const subSignal : NewFieldSignal | RemoveFieldSignal = signal.signal;
+    const target: Symbol = signal.target;
+    const { action, name, path: { root, steps } } = subSignal;
 
     const signal_ = {
       // Flow apparently isn't sophisticated enough to understand this could be
@@ -87,7 +93,7 @@ function recordUpdate(
 
   const original = global.getLocation(signal.original);
 
-  if ((signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) && original.tag === ModuleTy) {
+  if ((signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) && original.tag === RecordTy) {
     const { referer, original, signal: { action, name, path: { root, steps } } } = signal;
 
     // XXX need to treat differently depending on what kind of reference this is
