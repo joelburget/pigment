@@ -10,6 +10,7 @@ import Firmament, { UpLevel } from './models/Firmament';
 import { Ty } from './models/Ty';
 import { row, column } from './styles/flex';
 import Memory from './components/Memory';
+import Undo from './components/Undo';
 
 import type { Element } from 'react';
 
@@ -41,7 +42,7 @@ export default class Page extends Component {
 
   constructor() {
     super();
-    this.state = { global: global2 };
+    this.state = { globalHistory: [global2] };
   }
 
   static childContextTypes = {
@@ -50,14 +51,32 @@ export default class Page extends Component {
   };
 
   getChildContext(): GlobalContext<AnySignal> {
+    const { globalHistory } = this.state;
     return {
       signal: (path, action) => this.signal(path, action),
-      global: this.state.global,
+      global: globalHistory[globalHistory.length-1],
     };
   }
 
+  getGlobal(): Firmament {
+    const { globalHistory } = this.state;
+    return globalHistory[globalHistory.length-1];
+  }
+
+  setGlobal(global: Firmament): Firmament {
+    const { globalHistory } = this.state;
+    this.setState({
+      globalHistory: globalHistory.concat(global),
+    });
+  }
+
+  handleUndo(): void {
+    const { globalHistory } = this.state;
+    this.setState({ globalHistory: globalHistory.slice(0, -1) });
+  }
+
   signal(path: Path, initialAction: AnySignal): void {
-    let { global } = this.state;
+    let global = this.getGlobal();
 
     // set of signals to send before setting state
     let toSignal = [
@@ -72,6 +91,7 @@ export default class Page extends Component {
       const loc = global.getLocation(pointer);
 
       global = loc.signal(global, signal);
+      this.setGlobal(global);
       const newVal = global.getLocation(pointer);
 
       // * check if loc has changed:
@@ -115,12 +135,11 @@ export default class Page extends Component {
         console.warn(signal, "doesn't result in update");
       }
     }
-
-    this.setState({ global });
   }
 
   render(): Element {
-    const { global } = this.state;
+    const { globalHistory } = this.state;
+    const global = this.getGlobal();
     const modPath = { root: rootPointer, steps: [] };
     const modTyPath = { root: rootPointer, steps: [UpLevel] };
 
@@ -129,6 +148,7 @@ export default class Page extends Component {
 
     return (
       <div style={column}>
+        <Undo globalHistory={globalHistory} onUndo={() => this.handleUndo()} />
         <div style={row}>
           <ModuleView path={modPath} />
           <ModuleTyView path={modTyPath} />
