@@ -18,7 +18,7 @@ import { Ty } from './Ty';
 
 import type { Element, SyntheticEvent } from 'react';
 
-import type Firmament, { WithGlobal } from './Firmament';
+import type Firmament, { Path, WithGlobal } from './Firmament';
 import type { Introduction, FillHoleSignal, PokeHoleSignal } from '../messages';
 
 
@@ -34,7 +34,7 @@ const allIntroductions: Array<Introduction> = [
   Ty,
 ];
 
-class HoleView extends Component {
+class HoleView extends Component<{}, { path: Path }, {}> {
 
   static propTypes = {
     path: PropTypes.shape({

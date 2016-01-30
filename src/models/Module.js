@@ -14,6 +14,7 @@ import { column } from '../styles/flex';
 import Rows from '../components/Rows';
 
 import type { Element } from 'react';
+import type { Path } from './Firmament';
 
 import type {
   ImplementationUpdatedSignal,
@@ -119,7 +120,7 @@ const propTypes = {
 };
 
 
-class ModuleTyView extends Component {
+class ModuleTyView extends Component<{}, { path: Path }, {}> {
 
   static propTypes = propTypes;
   static contextTypes = contextTypes;
@@ -140,7 +141,7 @@ class ModuleTyView extends Component {
 }
 
 
-export class ModuleView extends Component {
+export class ModuleView extends Component<{}, { path: Path }, {}> {
 
   static propTypes = propTypes;
   static contextTypes = contextTypes;
@@ -161,7 +162,12 @@ export class ModuleView extends Component {
 }
 
 
-class Controls extends Component {
+type ControlsProps = {
+  signal: (sig: NewFieldSignal) => void;
+};
+
+
+class Controls extends Component<{}, ControlsProps, {nameInput: string}> {
 
   static propTypes = {
     signal: PropTypes.func.isRequired,

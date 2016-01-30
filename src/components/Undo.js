@@ -6,6 +6,15 @@ import Firmament from '../models/Firmament';
 
 import type { Element } from 'react';
 
+
+type UndoProps = {
+  globalHistory: Array<Firmament>;
+  historyIndex: number;
+  onUndo: () => void;
+  onRedo: () => void;
+};
+
+
 export default class Undo extends Component {
   render(): Element {
     const { globalHistory, historyIndex, onUndo, onRedo } = this.props;

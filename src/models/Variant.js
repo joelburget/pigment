@@ -3,14 +3,13 @@ import { Record, List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
 import Firmament from './Firmament';
+import { INTRODUCTION } from '../messages';
+import Rows from '../components/Rows';
 
 import type { Element } from 'react';
 
 import type { RemoveVariantSignal, AddVariantSignal } from '../messages';
-
-import { INTRODUCTION } from '../messages';
-
-import Rows from '../components/Rows';
+import type { Path } from './Firmament';
 
 
 const VARIANT = Symbol('VARIANT');
@@ -64,7 +63,7 @@ const variantTyHandlers = {
   },
 };
 
-export class VariantView extends Component {
+export class VariantView extends Component<{}, { path: Path }, {}> {
 
   static propTypes = {
     path: PropTypes.array.isRequired,
@@ -89,7 +88,7 @@ export class VariantView extends Component {
 }
 
 
-export class VariantTyView extends Component {
+export class VariantTyView extends Component<{}, { path: Path }, {}> {
 
   static propTypes = {
     path: PropTypes.array.isRequired,

@@ -140,7 +140,12 @@ const projectionHandlers = {
 };
 
 
-export class ProjectionView extends Component {
+type ProjectionViewProps = {
+  path: Path;
+};
+
+
+export class ProjectionView extends Component<{}, ProjectionViewProps, {}> {
 
   static propTypes = {
     path: PropTypes.array.isRequired,
@@ -180,7 +185,12 @@ const propTypes = {
 };
 
 
-export class RecordTyView extends Component {
+type RecordLikeProps = {
+  path: Path;
+};
+
+
+export class RecordTyView extends Component<{}, RecordLikeProps, {}> {
 
   static propTypes = propTypes;
   static contextTypes = contextTypes;
@@ -195,7 +205,7 @@ export class RecordTyView extends Component {
 }
 
 
-export class RecordView extends Component {
+export class RecordView extends Component<{}, RecordLikeProps, {}> {
 
   static propTypes = propTypes;
   static contextTypes = contextTypes;

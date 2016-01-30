@@ -13,7 +13,7 @@ const TY = Symbol();
 const TyData = Record();
 
 
-class TyView extends Component {
+class TyView extends Component<{}, {}, {}> {
   render(): Element {
     return <span>Ty</span>;
   }

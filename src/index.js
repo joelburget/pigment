@@ -38,7 +38,13 @@ const { global: global2, it: rootPointer } = global1.newLocation({
 });
 
 
-export default class Page extends Component {
+type PageState = {
+  globalHistory: Array<Firmament>;
+  historyIndex: number;
+};
+
+
+export default class Page extends Component<{}, {}, PageState> {
 
   constructor() {
     super();

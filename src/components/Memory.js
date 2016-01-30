@@ -25,7 +25,8 @@ function PointerView({ name, pointer, selected, callback }) {
 }
 
 
-export default class Memory extends Component {
+export default class Memory
+  extends Component<{}, { global: Firmament }, { selected: ?boolean }> {
   constructor(props: { global: Firmament }) {
     super(props);
     this.state = {
