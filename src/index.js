@@ -42,7 +42,10 @@ export default class Page extends Component {
 
   constructor() {
     super();
-    this.state = { globalHistory: [global2] };
+    this.state = {
+      globalHistory: [global2],
+      historyIndex: 0,
+    };
   }
 
   static childContextTypes = {
@@ -51,28 +54,37 @@ export default class Page extends Component {
   };
 
   getChildContext(): GlobalContext<AnySignal> {
-    const { globalHistory } = this.state;
+    const { globalHistory, historyIndex } = this.state;
     return {
       signal: (path, action) => this.signal(path, action),
-      global: globalHistory[globalHistory.length-1],
+      global: globalHistory[historyIndex],
     };
   }
 
   getGlobal(): Firmament {
-    const { globalHistory } = this.state;
-    return globalHistory[globalHistory.length-1];
+    const { globalHistory, historyIndex } = this.state;
+    return globalHistory[historyIndex];
   }
 
   setGlobal(global: Firmament): void {
-    const { globalHistory } = this.state;
+    const { globalHistory, historyIndex } = this.state;
+    const newGlobal = globalHistory.slice(0, historyIndex + 1).concat(global);
     this.setState({
-      globalHistory: globalHistory.concat(global),
+      globalHistory: newGlobal,
+      historyIndex: newGlobal.length - 1,
     });
   }
 
   handleUndo(): void {
-    const { globalHistory } = this.state;
-    this.setState({ globalHistory: globalHistory.slice(0, -1) });
+    const { historyIndex } = this.state;
+    const newIndex = Math.max(0, historyIndex - 1);
+    this.setState({ historyIndex: newIndex });
+  }
+
+  handleRedo(): void {
+    const { globalHistory, historyIndex } = this.state;
+    const newIndex = Math.min(globalHistory.length, historyIndex + 1);
+    this.setState({ historyIndex: newIndex });
   }
 
   signal(path: Path, initialAction: AnySignal): void {
@@ -138,7 +150,7 @@ export default class Page extends Component {
   }
 
   render(): Element {
-    const { globalHistory } = this.state;
+    const { globalHistory, historyIndex } = this.state;
     const global = this.getGlobal();
     const modPath = { root: rootPointer, steps: [] };
     const modTyPath = { root: rootPointer, steps: [UpLevel] };
@@ -148,9 +160,18 @@ export default class Page extends Component {
 
     return (
       <div style={column}>
-        <Undo globalHistory={globalHistory} onUndo={() => this.handleUndo()} />
+        <Undo
+          globalHistory={globalHistory}
+          historyIndex={historyIndex}
+          onUndo={() => this.handleUndo()}
+          onRedo={() => this.handleRedo()}
+        />
         <div style={row}>
           <ModuleView path={modPath} />
+          <div
+            // add in some space
+            style={{ width: 50 }}
+          />
           <ModuleTyView path={modTyPath} />
         </div>
         <Memory global={global} />

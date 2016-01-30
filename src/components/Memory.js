@@ -11,8 +11,8 @@ import type Firmament from '../models/Firmament';
 function PointerView({ name, pointer, selected, callback }) {
   const myStyle = Object.assign(
     {},
-    pointer === selected ? style.selected : style.standard,
-    style.li
+    style.li,
+    pointer === selected ? style.selected : {},
   );
   return (
     <li
@@ -54,8 +54,10 @@ export default class Memory extends Component {
         .toArray();
 
       return (
-        <tr style={key === selected ? style.selected : style.standard}>
-          <td style={style.td}>{tag.name}</td>
+        <tr style={key === selected ? style.selected : {}}>
+          <td style={style.td} onClick={() => this.handleClick(key)}>
+            {tag.name}
+          </td>
           <td style={style.td}>{data && JSON.stringify(data.toJS())}</td>
           <td style={style.td}>
             <ul style={style.locations}>{locs}</ul>
@@ -88,10 +90,7 @@ export default class Memory extends Component {
 
 const style = {
   selected: {
-    borderLeft: '5px solid red',
-  },
-  standard: {
-    marginLeft: 5,
+    borderLeft: '2px solid red',
   },
   table: {
     borderCollapse: 'collapse',
@@ -117,6 +116,7 @@ const style = {
     listStyleType: 'none',
   },
   li: {
+    boxSizing: 'border-box',
     padding: 5,
   },
 };

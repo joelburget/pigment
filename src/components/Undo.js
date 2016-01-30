@@ -8,15 +8,27 @@ import type { Element } from 'react';
 
 export default class Undo extends Component {
   render(): Element {
-    const { globalHistory, onUndo } = this.props;
-    const disabled = globalHistory.length === 1;
+    const { globalHistory, historyIndex, onUndo, onRedo } = this.props;
+
+    const undoDisabled = historyIndex === 0;
+    const redoDisabled = historyIndex === globalHistory.length - 1;
+
+    const undoCount = historyIndex;
+    const redoCount = globalHistory.length - historyIndex - 1;
 
     return (
       <div>
         <button
-          disabled={disabled}
-          onClick={() => onUndo()}>
-          undo
+          disabled={undoDisabled}
+          onClick={() => onUndo()}
+        >
+          undo ({undoCount})
+        </button>
+        <button
+          disabled={redoDisabled}
+          onClick={() => onRedo()}
+        >
+          redo ({redoCount})
         </button>
       </div>
     );
@@ -28,5 +40,7 @@ Undo.propTypes = {
     PropTypes.arrayOf(
       PropTypes.instanceOf(Firmament)
     ).isRequired,
+  historyIndex: PropTypes.number.isRequire,
   onUndo: PropTypes.func.isRequired,
+  onRedo: PropTypes.func.isRequired,
 };
