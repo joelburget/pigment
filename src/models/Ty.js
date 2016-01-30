@@ -7,7 +7,7 @@ import { INTRODUCTION } from '../messages';
 import type { Element } from 'react';
 
 
-const TY = Symbol();
+const TY = Symbol('TY');
 
 
 const TyData = Record();

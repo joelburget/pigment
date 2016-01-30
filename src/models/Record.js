@@ -158,8 +158,8 @@ export class ProjectionView extends Component<{}, ProjectionViewProps, {}> {
   render(): Element {
     const { global } = this.context;
     const { path } = this.props;
-    const location = global.getPath(path);
-    const { tag } = location;
+    const loc = global.getPath(path);
+    const { tag } = loc;
 
     return (
       <div>
@@ -170,7 +170,7 @@ export class ProjectionView extends Component<{}, ProjectionViewProps, {}> {
 }
 
 
-// TODO remove duplicatoin in Module.js
+// TODO remove duplication in Module.js
 const contextTypes = {
   signal: PropTypes.func.isRequired,
   global: PropTypes.instanceOf(Firmament).isRequired,
