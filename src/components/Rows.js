@@ -1,15 +1,14 @@
 import React, { PropTypes } from 'react';
 
-import PokeHoleButton from '../actions/poke_hole';
-import { DeleteButton } from '../actions/remove_field';
-import { NewField } from '../actions/new_field';
+// import PokeHoleButton from '../actions/poke_hole';
+// import { DeleteButton } from '../actions/remove_field';
 
 import Firmament from '../models/Firmament';
 
 import { row, column } from '../styles/flex';
 import { borderGray } from '../styles/color';
 
-export default function Rows({ fields, path }, { global }) {
+export default function Rows({ fields, path }, { global, signal }) {
   const rows = fields
     .map(key => {
       // TODO - Locations should align on the left and right sides.
@@ -47,11 +46,8 @@ export default function Rows({ fields, path }, { global }) {
     .toArray();
 
   return (
-    <div style={column}>
-      <div style={styles.rows}>
-        {rows}
-      </div>
-      <NewField path={path} />
+    <div style={styles.rows}>
+      {rows}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { handler as removeField } from '../actions/remove_field';
 import { handler as newField } from '../actions/new_field';
 import { column } from '../styles/flex';
+import NewField from '../components/NewField';
 import Rows from '../components/Rows';
 
 import type { Element } from 'react';
@@ -126,7 +127,7 @@ class ModuleTyView extends Component<{}, { path: Path }, {}> {
   static contextTypes = contextTypes;
 
   render(): Element {
-    const { global } = this.context;
+    const { global, signal } = this.context;
     const { path } = this.props;
     const loc = global.getPath(path);
 
@@ -134,7 +135,7 @@ class ModuleTyView extends Component<{}, { path: Path }, {}> {
       <div style={column}>
         ModuleTy:
         <Rows fields={loc.data.fields} path={path} />
-        <Controls signal={action => { this.context.signal(path, action); }} />
+        <NewField signal={action => { signal(path, action); }} />
       </div>
     );
   }
@@ -147,7 +148,7 @@ export class ModuleView extends Component<{}, { path: Path }, {}> {
   static contextTypes = contextTypes;
 
   render(): Element {
-    const { global } = this.context;
+    const { global, signal } = this.context;
     const { path } = this.props;
     const loc = global.getPath(path);
 
@@ -155,57 +156,7 @@ export class ModuleView extends Component<{}, { path: Path }, {}> {
       <div style={styles.module}>
         Module:
         <Rows fields={loc.data.fields} path={path} />
-        <Controls signal={action => { this.context.signal(path, action); }} />
-      </div>
-    );
-  }
-}
-
-
-type ControlsProps = {
-  signal: (sig: NewFieldSignal) => void;
-};
-
-
-class Controls extends Component<{}, ControlsProps, {nameInput: string}> {
-
-  static propTypes = {
-    signal: PropTypes.func.isRequired,
-  };
-
-  state = {
-    nameInput: '',
-  };
-
-  handleChange(nameInput) {
-    this.setState({ nameInput });
-  }
-
-  handleKeyPress(event) {
-    if (event.key === 'Enter') {
-      this.props.signal({
-        action: NEW_FIELD,
-        name: this.state.nameInput,
-      });
-      this.setState({ nameInput: '' });
-    }
-  }
-
-  render(): Element {
-    const { nameInput } = this.state;
-
-    const valueLink = {
-      value: nameInput,
-      requestChange: value => this.handleChange(value),
-    };
-
-    return (
-      <div style={styles.control}>
-        <input
-          type='text'
-          valueLink={valueLink}
-          onKeyPress={event => this.handleKeyPress(event)}
-        />
+        <NewField signal={action => { signal(path, action); }} />
       </div>
     );
   }
@@ -217,9 +168,6 @@ const styles = {
     ...column,
     margin: '10px 0',
   },
-  control: {
-    marginTop: 20,
-  }
 };
 
 
