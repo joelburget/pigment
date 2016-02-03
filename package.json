@@ -88,6 +88,7 @@
     "invariant": "^2.2.0",
     "keymirror": "^0.1.1",
     "react": "^0.14.4",
+    "react-autocomplete": "^0.1.4",
     "react-dom": "^0.14.0",
     "react-redux": "^4.0.0",
     "react-router": "^1.0.0-rc3",

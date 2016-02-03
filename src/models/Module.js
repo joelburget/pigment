@@ -152,7 +152,7 @@ export class ModuleView extends Component<{}, { path: Path }, {}> {
     const loc = global.getPath(path);
 
     return (
-      <div style={column}>
+      <div style={styles.module}>
         Module:
         <Rows fields={loc.data.fields} path={path} />
         <Controls signal={action => { this.context.signal(path, action); }} />
@@ -200,24 +200,26 @@ class Controls extends Component<{}, ControlsProps, {nameInput: string}> {
     };
 
     return (
-      <div style={controlsStyle}>
-        <div>
-          New Row
-        </div>
-        <div>
-          label: <input
-            type='text'
-            valueLink={valueLink}
-            onKeyPress={event => this.handleKeyPress(event)} />
-        </div>
+      <div style={styles.control}>
+        <input
+          type='text'
+          valueLink={valueLink}
+          onKeyPress={event => this.handleKeyPress(event)}
+        />
       </div>
     );
   }
 }
 
 
-const controlsStyle = {
-  marginTop: 20,
+const styles = {
+  module: {
+    ...column,
+    margin: '10px 0',
+  },
+  control: {
+    marginTop: 20,
+  }
 };
 
 

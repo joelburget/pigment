@@ -1,6 +1,7 @@
 // @flow
 import { Map } from 'immutable';
 import React, { Component, PropTypes } from 'react';
+import Autocomplete from 'react-autocomplete';
 
 // cycle :(
 // import Firmament from './Firmament';
@@ -50,8 +51,7 @@ class HoleView extends Component<{}, { path: Path }, {}> {
     global: PropTypes.object.isRequired,
   };
 
-  handleSelectChange(event: SyntheticEvent) {
-    const selectedType = event.target.value;
+  handleSelectChange(selectedType: string) {
     const { path } = this.props;
     const { global, signal } = this.context;
 
@@ -76,18 +76,31 @@ class HoleView extends Component<{}, { path: Path }, {}> {
     const level = path.steps.filter(step => step === UpLevel).length;
 
     const options = allIntroductions
-      .filter(intro => intro.minLevel <= level)
-      .map(({ name }) => <option key={name} value={name}>{name}</option>);
+      .filter(intro => intro.minLevel <= level);
+    console.log(allIntroductions, options);
+
+    // TODO: put meta info somewhere
+    // level: {level}
 
     return (
       <div>
-        <div>
-          level: {level}
-          type: <select value='default'
-                        onChange={val => this.handleSelectChange(val)}>
-                  {options}
-                </select>
-        </div>
+        <Autocomplete
+          items={options}
+          getItemValue={item => { console.log(item.name); return item.name; }}
+          shouldItemRender={(item, val) => {
+            const re = new RegExp(val, 'i');
+            return re.test(item.name);
+          }}
+          renderItem={(item, isHighlighted) => (
+            <div
+              key={item.name}
+              style={isHighlighted ? styles.highlightedItem : styles.item}
+            >
+              {item.name}
+            </div>
+          )}
+          onSelect={val => this.handleSelectChange(val)}
+        />
       </div>
     );
   }
@@ -103,7 +116,9 @@ const holeHandlers = {
     { referer, name, selectedType }: FillHoleSignal
   ): Firmament {
     // TODO this is really weird: I think we should have referer / name
-    const tag: Introduction = allIntroductions.find(intro => intro.name === selectedType);
+    const tag: Introduction = allIntroductions.find(
+      intro => intro.name === selectedType
+    );
 
     if (tag === Record) {
 
@@ -139,6 +154,15 @@ const holeHandlers = {
   //   // TODO: introduce sharing? Symbol('REDIRECT') sentinel?
   //   return global.setIn(['memory', primary], you);
   // },
+};
+
+
+const styles = {
+  item: {
+  },
+  highlightedItem: {
+    borderLeft: '2px solid gray',
+  },
 };
 
 

@@ -159,10 +159,8 @@ export default class Page extends Component<{}, {}, PageState> {
     const { globalHistory, historyIndex } = this.state;
     const global = this.getGlobal();
     const modPath = { root: rootPointer, steps: [] };
-    const modTyPath = { root: rootPointer, steps: [UpLevel] };
 
     const ModuleView = global.getPath(modPath).tag.render;
-    const ModuleTyView = global.getPath(modTyPath).tag.render;
 
     return (
       <div style={column}>
@@ -174,11 +172,6 @@ export default class Page extends Component<{}, {}, PageState> {
         />
         <div style={row}>
           <ModuleView path={modPath} />
-          <div
-            // add in some space
-            style={{ width: 50 }}
-          />
-          <ModuleTyView path={modTyPath} />
         </div>
         <Memory global={global} />
       </div>

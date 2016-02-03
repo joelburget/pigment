@@ -7,6 +7,7 @@ import { NewField } from '../actions/new_field';
 import Firmament from '../models/Firmament';
 
 import { row, column } from '../styles/flex';
+import { borderGray } from '../styles/color';
 
 export default function Rows({ fields, path }, { global }) {
   const rows = fields
@@ -20,12 +21,25 @@ export default function Rows({ fields, path }, { global }) {
       const RowComponent = rowLoc.tag.render;
 
       return (
-        <div style={row} key={key}>
-          <DeleteButton path={path} name={key} />
-          <PokeHoleButton path={path_} />
-          <div>
+        <div style={styles.row} key={key}>
+          <div style={styles.header}>
             {key}:
-            <RowComponent path={path_} />
+          </div>
+          <div style={styles.belowHeader}>
+            {/*
+            <div style={styles.controls}>
+              <div style={styles.controlHeader}>
+                controls
+              </div>
+              <div style={styles.controlBody}>
+                <DeleteButton path={path} name={key} />
+                <PokeHoleButton path={path_} />
+              </div>
+            </div>
+            */}
+            <div style={styles.body}>
+              <RowComponent path={path_} />
+            </div>
           </div>
         </div>
       );
@@ -34,12 +48,10 @@ export default function Rows({ fields, path }, { global }) {
 
   return (
     <div style={column}>
-      {'{'}
-      <div style={rowsStyle}>
+      <div style={styles.rows}>
         {rows}
       </div>
       <NewField path={path} />
-      {'}'}
     </div>
   );
 }
@@ -50,7 +62,33 @@ Rows.contextTypes = {
 };
 
 
-const rowsStyle = {
-  ...column,
-  marginLeft: 10,
+const styles = {
+  rows: {
+    ...column,
+    marginLeft: 10,
+  },
+  row: {
+    ...column,
+  },
+  header: {
+    borderBottom: `1px solid ${borderGray}`,
+    padding: '5px 0',
+    marginBottom: 5,
+  },
+  belowHeader: {
+    ...row,
+  },
+  controls: {
+    ...column,
+    borderRight: `1px solid ${borderGray}`,
+  },
+  controlHeader: {
+    // margin: '0 auto',
+  },
+  controlBody: {
+    ...row,
+  },
+  body: {
+    padding: 5,
+  },
 };

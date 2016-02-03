@@ -49,7 +49,7 @@ Undo.propTypes = {
     PropTypes.arrayOf(
       PropTypes.instanceOf(Firmament)
     ).isRequired,
-  historyIndex: PropTypes.number.isRequire,
+  historyIndex: PropTypes.number.isRequired,
   onUndo: PropTypes.func.isRequired,
   onRedo: PropTypes.func.isRequired,
 };

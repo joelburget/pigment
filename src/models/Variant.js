@@ -26,7 +26,7 @@ const VariantTyData = Record({
 const variantTyHandlers = {
   // SET_TAG(global: Firmament, signal) {
   //   const { path, tag } = signal;
-  //   const loc = global.getLocation(path);
+  //   const loc = global.getPath(path);
 
   //   const loc_ = loc.set('data', tag);
   //   return global.set(path, loc_);
@@ -38,7 +38,7 @@ const variantTyHandlers = {
   ): Firmament {
     const { path, tag, type } = signal;
     const pointer = global.followPath(path);
-    const loc = global.getLocation(pointer);
+    const loc = global.getPath(pointer);
 
     const newLoc = loc
       .updateIn(['data', 'tags'], tags => tags.push(tag))
@@ -77,11 +77,11 @@ export class VariantView extends Component<{}, { path: Path }, {}> {
   render(): Element {
     const { global } = this.context;
     const { path } = this.props;
-    const loc = global.getLocation(path);
+    const loc = global.getPath(path);
 
     return (
       <div>
-        VariantView: {loc.data.tag}
+        Variant: {loc.data.tag}
       </div>
     );
   }
@@ -102,7 +102,7 @@ export class VariantTyView extends Component<{}, { path: Path }, {}> {
   render(): Element {
     const { global } = this.context;
     const { path } = this.props;
-    const loc = global.getLocation(path);
+    const loc = global.getPath(path);
 
     // XXX figure out how to use this handler (different from other row
     // handlers).
