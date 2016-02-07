@@ -1,8 +1,9 @@
 // @flow
-import { Map } from 'immutable';
+import { Map, Record as ImmRecord } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 import Autocomplete from 'react-autocomplete';
 
+import { Colon } from './Colon';
 // cycle :(
 // import Firmament from './Firmament';
 import { UpLevel } from './Firmament';
@@ -25,24 +26,32 @@ import type { Introduction, FillHoleSignal, PokeHoleSignal } from '../messages';
 
 const HOLE = Symbol('HOLE');
 
-const allIntroductions: Array<Introduction> = [
-  Module,
-  ModuleTy,
-  Record,
-  RecordTy,
-  Variant,
-  VariantTy,
-  Ty,
-];
+const HoleData = ImmRecord({});
+
+type Scope = Map<string, Symbol>;
+
+function getInScope(global: Firmament, { root, steps }: Path): Scope {
+  let inAllScope: Scope = Map();
+  let currentPointer = root;
+  let thisLoc = global.getLocation(currentPointer);
+
+  for (let step of steps) {
+    const inThisScope: Map<string, Symbol> =
+      thisLoc.tag.getNamesInScope(thisLoc);
+
+    // important: to merge in this scope, overwriting shadowed names. even
+    // better would be to not allow shadowing
+    inAllScope = inAllScope.merge(inThisScope);
+
+    // important: we start off examining root, never actually examine the last
+    // step (which can't add anything to its own scope)
+    thisLoc = global.getLocation(thisLoc.locations.get(step));
+  }
+
+  return inAllScope;
+}
 
 class HoleView extends Component<{}, { path: Path }, {}> {
-
-  static propTypes = {
-    path: PropTypes.shape({
-      root: PropTypes.symbol,
-      steps: PropTypes.array,
-    }).isRequired,
-  };
 
   static contextTypes = {
     signal: PropTypes.func.isRequired,
@@ -51,7 +60,7 @@ class HoleView extends Component<{}, { path: Path }, {}> {
     global: PropTypes.object.isRequired,
   };
 
-  handleSelectChange(selectedType: string) {
+  handleSelectChange(action) {
     const { path } = this.props;
     const { global, signal } = this.context;
 
@@ -59,25 +68,41 @@ class HoleView extends Component<{}, { path: Path }, {}> {
       root: path.root,
       steps: path.steps.slice(0, -1),
     };
-    const referer = global.followPath(path_);
-    const name = path.steps[path.steps.length-1];
 
-    if (selectedType !== '') {
-      signal(
-        path,
-        { action: FILL_HOLE, selectedType, referer, name }
-      );
-    }
+    // need to get the holder of the hole so we can modify it
+    const referer = global.followPath(path_);
+    const holeName = path.steps[path.steps.length-1];
+
+    signal(
+      path,
+      { ...action, referer, holeName }
+    );
   }
 
   // TODO - enumerate a list of things this says it can accept
   render(): Element {
     const { path } = this.props;
+    const { global } = this.context;
     const level = path.steps.filter(step => step === UpLevel).length;
 
-    const options = allIntroductions
-      .filter(intro => intro.minLevel <= level);
-    console.log(allIntroductions, options);
+    const namesInScope: Scope = getInScope(global, path);
+    let nameOptions: Array<[string, Symbol]> =
+      namesInScope.entrySeq().toArray();
+    nameOptions = nameOptions.filter(([ _, sym ]) => sym !== global.holePointer);
+    nameOptions = nameOptions.map(([ name, sym ]) => ({
+      action: FILL_HOLE,
+      type: 'REFERENCE',
+      name,
+      sym,
+    }));
+    nameOptions = nameOptions.concat([
+      { action: FILL_HOLE, type: 'INTRODUCTION', name: 'Record' },
+      { action: FILL_HOLE, type: 'INTRODUCTION', name: 'Ty' },
+      { action: FILL_HOLE, type: 'INTRODUCTION', name: 'Colon' },
+      // RecordTy, Module, ModuleTy, VariantTy
+      //
+      // how to deal with Variant?
+    ]);
 
     // TODO: put meta info somewhere
     // level: {level}
@@ -85,21 +110,21 @@ class HoleView extends Component<{}, { path: Path }, {}> {
     return (
       <div>
         <Autocomplete
-          items={options}
-          getItemValue={item => { console.log(item.name); return item.name; }}
-          shouldItemRender={(item, val) => {
-            const re = new RegExp(val, 'i');
-            return re.test(item.name);
+          items={nameOptions}
+          getItemValue={({ name }) => name}
+          shouldItemRender={({ name }, str) => {
+            const re = new RegExp(str, 'i');
+            return re.test(name);
           }}
-          renderItem={(item, isHighlighted) => (
+          renderItem={({ name }, isHighlighted) => (
             <div
-              key={item.name}
+              key={name}
               style={isHighlighted ? styles.highlightedItem : styles.item}
             >
-              {item.name}
+              {name}
             </div>
           )}
-          onSelect={val => this.handleSelectChange(val)}
+          onSelect={(_, action) => this.handleSelectChange(action)}
         />
       </div>
     );
@@ -113,37 +138,48 @@ const holeHandlers = {
   },
   FILL_HOLE(
     global: Firmament,
-    { referer, name, selectedType }: FillHoleSignal
+    action: FillHoleSignal
   ): Firmament {
-    // TODO this is really weird: I think we should have referer / name
-    const tag: Introduction = allIntroductions.find(
-      intro => intro.name === selectedType
-    );
+    const { type, referer, holeName } = action;
 
-    if (tag === Record) {
+    if (type === 'REFERENCE') {
+      throw new Error('REFERENCE not yet implemented');
+    } else { // type === 'INTRODUCTION'
+      const { name } = action;
 
-      const { it, global: global_ } = global.newLocation({
-        tag: RecordTy,
-        locations: new Map([[ UpLevel, global.tyPointer ]]),
-        data: new RecordTy.data(),
-      });
+      const tagMap = {
+        Record,
+        Ty,
+        Colon,
+      };
 
-      const { it: it_, global: global__ } = global_.newLocation({
-        tag: Record,
-        locations: new Map([[ UpLevel, it ]]),
-        data: new Record.data(),
-      });
+      const tag = tagMap[name];
 
-      return global__.setIn(['memory', referer, 'locations', name], it_);
-    } else {
+      if (tag === Record) {
 
-      const { it, global: global_ } = global.newLocation({
-        tag,
-        locations: new Map([[ UpLevel, global.tyPointer ]]),
-        data: new tag.data(),
-      });
+        const { it, global: global_ } = global.newLocation({
+          tag: RecordTy,
+          locations: new Map([[ UpLevel, global.tyPointer ]]),
+          data: new RecordTy.data(),
+        });
 
-      return global_.setIn(['memory', referer, 'locations', name], it);
+        const { it: it_, global: global__ } = global_.newLocation({
+          tag: Record,
+          locations: new Map([[ UpLevel, it ]]),
+          data: new Record.data(),
+        });
+
+        return global__.setIn(['memory', referer, 'locations', holeName], it_);
+      } else {
+
+        const { it, global: global_ } = global.newLocation({
+          tag,
+          locations: new Map([[ UpLevel, global.tyPointer ]]),
+          data: new tag.data(),
+        });
+
+        return global_.setIn(['memory', referer, 'locations', holeName], it);
+      }
     }
   },
   // UNIFY(
@@ -173,4 +209,5 @@ export const Hole = {
   minLevel: 0,
   handlers: holeHandlers,
   render: HoleView,
+  data: HoleData,
 };

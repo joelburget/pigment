@@ -63,6 +63,7 @@ export type GlobalContext<A> = {
 
 export type FillHoleSignal = {
   action: 'FILL_HOLE';
+  type: 'INTRODUCTION' | 'REFERENCE';
   referer: Symbol;
   name: string;
   selectedType: string;

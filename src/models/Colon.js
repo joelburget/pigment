@@ -1,7 +1,8 @@
 // @flow
-import React, { Component } from 'react';
-import { Record } from 'immutable';
+import React, { Component, PropTypes } from 'react';
+import { Map, Record } from 'immutable';
 
+import Firmament from './Firmament';
 import { INTRODUCTION } from '../messages';
 
 import type { Path } from './Firmament';
@@ -10,10 +11,15 @@ import type { Path } from './Firmament';
 const COLON = Symbol('COLON');
 
 
-const ColonData = Record();
+const ColonData = Record({});
 
 
 class ColonView extends Component<{}, {path: Path}, {}> {
+
+  static contextTypes = {
+    global: PropTypes.instanceOf(Firmament).isRequired,
+  };
+
   render(): Element {
     const { global } = this.context;
     const { path } = this.props;
@@ -60,4 +66,7 @@ export const Colon = {
   },
   render: ColonView,
   data: ColonData,
+  getNamesInScope(loc: Location) {
+    return Map();
+  },
 };

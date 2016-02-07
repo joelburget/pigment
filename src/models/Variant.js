@@ -127,6 +127,9 @@ export const Variant = {
   handlers: {},
   render: VariantView,
   data: VariantData,
+  getNamesInScope(loc: Location) {
+    throw new Error("can't get names of Variant");
+  },
 };
 
 export const VariantTy = {
@@ -137,4 +140,7 @@ export const VariantTy = {
   handlers: variantTyHandlers,
   render: VariantTyView,
   data: VariantTyData,
+  getNamesInScope(loc: Location) {
+    throw new Error("can't get names of VariantTy");
+  },
 };

@@ -11,6 +11,7 @@ import {
 } from '../messages';
 import { handler as removeField } from '../actions/remove_field';
 import { handler as newField } from '../actions/new_field';
+import NewField from '../components/NewField';
 import Rows from '../components/Rows';
 
 import type { Element } from 'react';
@@ -147,10 +148,6 @@ type ProjectionViewProps = {
 
 export class ProjectionView extends Component<{}, ProjectionViewProps, {}> {
 
-  static propTypes = {
-    path: PropTypes.array.isRequired,
-  };
-
   static contextTypes = {
     global: PropTypes.instanceOf(Firmament).isRequired,
   };
@@ -177,14 +174,6 @@ const contextTypes = {
 };
 
 
-const propTypes = {
-  path: PropTypes.shape({
-    root: PropTypes.symbol,
-    steps: PropTypes.array,
-  }).isRequired,
-};
-
-
 type RecordLikeProps = {
   path: Path;
 };
@@ -192,7 +181,6 @@ type RecordLikeProps = {
 
 export class RecordTyView extends Component<{}, RecordLikeProps, {}> {
 
-  static propTypes = propTypes;
   static contextTypes = contextTypes;
 
   render(): Element {
@@ -207,15 +195,19 @@ export class RecordTyView extends Component<{}, RecordLikeProps, {}> {
 
 export class RecordView extends Component<{}, RecordLikeProps, {}> {
 
-  static propTypes = propTypes;
   static contextTypes = contextTypes;
 
   render(): Element {
-    const { global } = this.context;
+    const { global, signal } = this.context;
     const { path } = this.props;
     const loc = global.getPath(path);
 
-    return <Rows fields={loc.data.fields} path={path} />;
+    return (
+      <div>
+        <Rows fields={loc.data.fields} path={path} />
+        <NewField signal={action => { signal(path, action); }} />
+      </div>
+    );
   }
 }
 
@@ -232,6 +224,11 @@ export const Record = {
   },
   render: RecordView,
   data: RecordData,
+  getNamesInScope(loc: Location) {
+    return loc
+      .locations
+      .filter((_, key) => key !== UpLevel);
+  },
 };
 
 export const RecordTy = {
@@ -246,6 +243,9 @@ export const RecordTy = {
   },
   render: RecordTyView,
   data: RecordTyData,
+  getNamesInScope(loc: Location) {
+    throw new Error("can't get names of RecordTy");
+  },
 };
 
 export const Projection = {

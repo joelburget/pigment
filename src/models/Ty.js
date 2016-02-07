@@ -10,7 +10,7 @@ import type { Element } from 'react';
 const TY = Symbol('TY');
 
 
-const TyData = Record();
+const TyData = Record({});
 
 
 class TyView extends Component<{}, {}, {}> {
@@ -29,4 +29,7 @@ export const Ty = {
   },
   render: TyView,
   data: TyData,
+  getNamesInScope(loc: Location) {
+    throw new Error("can't get names of Ty");
+  },
 };

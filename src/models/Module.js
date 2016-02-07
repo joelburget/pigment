@@ -182,6 +182,11 @@ export const Module = {
   },
   render: ModuleView,
   data: ModuleData,
+  getNamesInScope(loc: Location) {
+    return loc
+      .locations
+      .filter((_, key) => key !== UpLevel);
+  },
 };
 
 export const ModuleTy = {
@@ -195,4 +200,7 @@ export const ModuleTy = {
   },
   render: ModuleTyView,
   data: ModuleTyData,
+  getNamesInScope(loc: Location) {
+    throw new Error("can't get names of ModuleTy");
+  },
 };
