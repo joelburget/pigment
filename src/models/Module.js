@@ -148,7 +148,7 @@ class ModuleTyView extends Component<{}, { path: Path }, {}> {
     return (
       <div style={column}>
         ModuleTy:
-        <Rows fields={loc.data.fields} path={path} />
+        <Rows fields={loc.data.fields} locations={loc.locations} path={path} />
         <NewField signal={action => { signal(path, action); }} />
       </div>
     );
@@ -168,7 +168,7 @@ export class ModuleView extends Component<{}, { path: Path }, {}> {
     return (
       <div style={styles.module}>
         Module:
-        <Rows fields={loc.data.fields} path={path} />
+        <Rows fields={loc.data.fields} locations={loc.locations} path={path} />
         <NewField signal={action => { signal(path, action); }} />
       </div>
     );

@@ -72,6 +72,7 @@ export default class Firmament extends FirmamentShape {
     // XXX tie the knot -- set the types of Hole and Ty
   }
 
+  // follow a sublocation's references until we end up at an immediate pointer
   subLocToPointer(subLoc: SubLocation): Symbol {
     if (subLoc.tag === 'REFERENCE') {
       const { parent, name } = subLoc;
@@ -103,6 +104,10 @@ export default class Firmament extends FirmamentShape {
   }
 
   // find every location pointing to pointer
+  //
+  // warning: this iterates through ever location in memory
+  //
+  // note: this follows indirections, ie REFERENCEs
   getReferers(pointer: Symbol): Array<[Symbol, string]> {
     const targets = [];
 

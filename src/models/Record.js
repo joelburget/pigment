@@ -201,7 +201,7 @@ export class RecordTyView extends Component<{}, RecordLikeProps, {}> {
     const { path } = this.props;
     const loc = global.getPath(path);
 
-    return <Rows fields={loc.data.fields} path={path} />;
+    return <Rows fields={loc.data.fields} locations={loc.locations} path={path} />;
   }
 }
 
@@ -217,7 +217,7 @@ export class RecordView extends Component<{}, RecordLikeProps, {}> {
 
     return (
       <div>
-        <Rows fields={loc.data.fields} path={path} />
+        <Rows fields={loc.data.fields} locations={loc.locations} path={path} />
         <NewField signal={action => { signal(path, action); }} />
       </div>
     );

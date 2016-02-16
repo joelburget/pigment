@@ -1,3 +1,4 @@
+// @flow
 import React, { PropTypes } from 'react';
 
 // import PokeHoleButton from '../actions/poke_hole';
@@ -8,16 +9,41 @@ import Firmament from '../models/Firmament';
 import { row, column } from '../styles/flex';
 import { borderGray } from '../styles/color';
 
-export default function Rows({ fields, path }, { global, signal }) {
+import type { Element } from 'react';
+import type Immutable from 'immutable';
+
+import type { SubLocation } from '../messages';
+import type { Path, Step } from '../models/Firmament';
+
+type Props = {
+  fields: Immutable.List<string>;
+  locations: Immutable.Map<Step, SubLocation>;
+  path: Path;
+};
+
+// TODO - Locations should align on the left and right sides.
+export default function Rows(
+  { fields, locations, path }: Props,
+  { global }: { global: Firmament }
+): Element {
   const rows = fields
     .map(key => {
-      // TODO - Locations should align on the left and right sides.
-      const path_ = {
-        root: path.root,
-        steps: path.steps.concat(key),
-      };
-      const rowLoc = global.getPath(path_);
-      const RowComponent = rowLoc.tag.render;
+      const subLoc: SubLocation = locations.get(key);
+
+      let subRender: ?Element = null;
+      if (subLoc.tag === 'IMMEDIATE') {
+        const path_ = {
+          root: path.root,
+          steps: path.steps.concat(key),
+        };
+        const rowLoc = global.getPath(path_);
+        const RowComponent = rowLoc.tag.render;
+        subRender = <RowComponent path={path_} />;
+      } else { // 'REFERENCE'
+        subRender = (
+          <div>{subLoc.name}</div>
+        );
+      }
 
       return (
         <div style={styles.row} key={key}>
@@ -37,7 +63,7 @@ export default function Rows({ fields, path }, { global, signal }) {
             </div>
             */}
             <div style={styles.body}>
-              <RowComponent path={path_} />
+              {subRender}
             </div>
           </div>
         </div>

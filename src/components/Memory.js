@@ -47,8 +47,8 @@ export default class Memory
 
     const rows = global.memory.map(({ tag, data, locations }, key) => {
       const locs = locations.map((subLoc, name) => {
-        const pointer = global.subLocToPointer(subLoc);
         if (subLoc.tag === 'IMMEDIATE') {
+          const pointer = subLoc.location;
           return (
             <PointerView
               {...{ name, pointer, selected }}
@@ -59,10 +59,6 @@ export default class Memory
           return (
             <div>
               reference: {subLoc.name}
-              <PointerView
-                {...{ name, pointer, selected }}
-                callback={pointer => this.handleClick(pointer)}
-              />
             </div>
           );
         }

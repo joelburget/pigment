@@ -123,7 +123,7 @@ export class VariantTyView extends Component<{}, { path: Path }, {}> {
     return (
       <div>
         VariantTyView:
-          <Rows fields={loc.type.fields} path={path} />
+          <Rows fields={loc.type.fields} locations={loc.locations} path={path} />
       </div>
     );
   }

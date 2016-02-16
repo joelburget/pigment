@@ -132,8 +132,6 @@ export default class Page extends Component<{}, {}, PageState> {
           target,
           signal,
         };
-        const x = UpLevel;
-        // debugger;
 
         toSignal.push([target, sig]);
 
