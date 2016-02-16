@@ -136,17 +136,8 @@ const contextTypes = {
 };
 
 
-const propTypes = {
-  path: PropTypes.shape({
-    root: PropTypes.symbol,
-    steps: PropTypes.array,
-  }).isRequired,
-};
-
-
 class ModuleTyView extends Component<{}, { path: Path }, {}> {
 
-  static propTypes = propTypes;
   static contextTypes = contextTypes;
 
   render(): Element {
@@ -167,7 +158,6 @@ class ModuleTyView extends Component<{}, { path: Path }, {}> {
 
 export class ModuleView extends Component<{}, { path: Path }, {}> {
 
-  static propTypes = propTypes;
   static contextTypes = contextTypes;
 
   render(): Element {
