@@ -46,12 +46,27 @@ export default class Memory
     const { selected } = this.state;
 
     const rows = global.memory.map(({ tag, data, locations }, key) => {
-      const locs = locations.map((pointer, name) => (
-        <PointerView
-          {...{ name, pointer, selected }}
-          callback={pointer => this.handleClick(pointer)}
-        />
-      ))
+      const locs = locations.map((subLoc, name) => {
+        const pointer = global.subLocToPointer(subLoc);
+        if (subLoc.tag === 'IMMEDIATE') {
+          return (
+            <PointerView
+              {...{ name, pointer, selected }}
+              callback={pointer => this.handleClick(pointer)}
+            />
+          );
+        } else { // REFERENCE
+          return (
+            <div>
+              reference: {subLoc.name}
+              <PointerView
+                {...{ name, pointer, selected }}
+                callback={pointer => this.handleClick(pointer)}
+              />
+            </div>
+          );
+        }
+      })
         .toArray();
 
       return (

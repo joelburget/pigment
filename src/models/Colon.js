@@ -1,6 +1,6 @@
 // @flow
 import React, { Component, PropTypes } from 'react';
-import { Map, Record } from 'immutable';
+import { Set, Record } from 'immutable';
 
 import Firmament from './Firmament';
 import { INTRODUCTION } from '../messages';
@@ -66,7 +66,7 @@ export const Colon = {
   },
   render: ColonView,
   data: ColonData,
-  getNamesInScope(loc: Location) {
-    return Map();
+  getNamesInScope(loc: Location): Set<string> {
+    return Set();
   },
 };

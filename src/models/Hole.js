@@ -1,5 +1,5 @@
 // @flow
-import { Map, Record as ImmRecord } from 'immutable';
+import { Map, Record as ImmRecord, Set } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 import Autocomplete from 'react-autocomplete';
 
@@ -20,8 +20,17 @@ import { Ty } from './Ty';
 
 import type { Element, SyntheticEvent } from 'react';
 
-import type Firmament, { Path, WithGlobal } from './Firmament';
-import type { Introduction, FillHoleSignal, PokeHoleSignal } from '../messages';
+import type Firmament, {
+  Path,
+  WithGlobal,
+} from './Firmament';
+import type {
+  ImmediateFill,
+  Reference,
+  Introduction,
+  FillHoleSignal,
+  PokeHoleSignal,
+} from '../messages';
 
 
 const HOLE = Symbol('HOLE');
@@ -30,14 +39,24 @@ const HoleData = ImmRecord({});
 
 type Scope = Map<string, Symbol>;
 
+// The information needed to make an autocompletion. How to fill the hole and
+// what to call it. We'll additionally send the referer and hole name with the
+// fill signal.
+type FillCompletion = (ImmediateFill | Reference) & { name: string };
+
 function getInScope(global: Firmament, { root, steps }: Path): Scope {
   let inAllScope: Scope = Map();
   let currentPointer = root;
-  let thisLoc = global.getLocation(currentPointer);
 
   for (let step of steps) {
-    const inThisScope: Map<string, Symbol> =
-      thisLoc.tag.getNamesInScope(thisLoc);
+    const currentLoc = global.getLocation(currentPointer);
+
+    const inThisScopeSet: Set<string> = currentLoc.tag
+      .getNamesInScope(currentLoc)
+      // HACK
+      .delete(UpLevel);
+    // // CONFUSING: map from name to its parent
+    const inThisScope = inThisScopeSet.toMap().map(() => currentPointer);
 
     // important: to merge in this scope, overwriting shadowed names. even
     // better would be to not allow shadowing
@@ -45,7 +64,7 @@ function getInScope(global: Firmament, { root, steps }: Path): Scope {
 
     // important: we start off examining root, never actually examine the last
     // step (which can't add anything to its own scope)
-    thisLoc = global.getLocation(thisLoc.locations.get(step));
+    currentPointer = currentLoc.locations.get(step);
   }
 
   return inAllScope;
@@ -60,7 +79,7 @@ class HoleView extends Component<{}, { path: Path }, {}> {
     global: PropTypes.object.isRequired,
   };
 
-  handleSelectChange(action) {
+  handleSelectChange(fill: FillCompletion) {
     const { path } = this.props;
     const { global, signal } = this.context;
 
@@ -75,7 +94,12 @@ class HoleView extends Component<{}, { path: Path }, {}> {
 
     signal(
       path,
-      { ...action, referer, holeName }
+      {
+        action: FILL_HOLE,
+        referer,
+        holeName,
+        fill,
+      }
     );
   }
 
@@ -86,22 +110,19 @@ class HoleView extends Component<{}, { path: Path }, {}> {
     const level = path.steps.filter(step => step === UpLevel).length;
 
     const namesInScope: Scope = getInScope(global, path);
-    let nameOptions: Array<[string, Symbol]> =
-      namesInScope.entrySeq().toArray();
-    nameOptions = nameOptions.filter(([ _, sym ]) => sym !== global.holePointer);
-    nameOptions = nameOptions.map(([ name, sym ]) => ({
-      action: FILL_HOLE,
-      type: 'REFERENCE',
-      name,
-      sym,
-    }));
+    let nameOptions: Array<FillCompletion> = namesInScope
+      .entrySeq()
+      .toArray()
+      .map(([ name, parent ]) => ({
+        tag: 'REFERENCE',
+        name,
+        parent,
+      }));
     nameOptions = nameOptions.concat([
-      { action: FILL_HOLE, type: 'INTRODUCTION', name: 'Record' },
-      { action: FILL_HOLE, type: 'INTRODUCTION', name: 'Ty' },
-      { action: FILL_HOLE, type: 'INTRODUCTION', name: 'Colon' },
+      { tag: 'IMMEDIATE_FILL', name: 'Record', introduction: Record },
+      { tag: 'IMMEDIATE_FILL', name: 'Ty', introduction: Ty },
+      { tag: 'IMMEDIATE_FILL', name: 'Colon', introduction: Colon },
       // RecordTy, Module, ModuleTy, VariantTy
-      //
-      // how to deal with Variant?
     ]);
 
     // TODO: put meta info somewhere
@@ -140,45 +161,52 @@ const holeHandlers = {
     global: Firmament,
     action: FillHoleSignal
   ): Firmament {
-    const { type, referer, holeName } = action;
+    const { fill, referer, holeName } = action;
 
-    if (type === 'REFERENCE') {
-      throw new Error('REFERENCE not yet implemented');
-    } else { // type === 'INTRODUCTION'
-      const { name } = action;
+    if (fill.tag === 'REFERENCE') {
+      return global.setIn(
+        ['memory', referer, 'locations', holeName],
+        fill
+      );
+    } else { // fill.tag === 'IMMEDIATE_FILL'
+      const { introduction } = fill;
 
-      const tagMap = {
-        Record,
-        Ty,
-        Colon,
-      };
-
-      const tag = tagMap[name];
-
-      if (tag === Record) {
+      if (introduction === Record) {
 
         const { it, global: global_ } = global.newLocation({
           tag: RecordTy,
-          locations: new Map([[ UpLevel, global.tyPointer ]]),
+          locations: new Map([
+            [ UpLevel, { tag: 'IMMEDIATE', location: global.tyPointer } ]
+          ]),
           data: new RecordTy.data(),
         });
 
         const { it: it_, global: global__ } = global_.newLocation({
           tag: Record,
-          locations: new Map([[ UpLevel, it ]]),
+          locations: new Map([
+            [ UpLevel, { tag: 'IMMEDIATE', location: it } ]
+          ]),
           data: new Record.data(),
         });
 
-        return global__.setIn(['memory', referer, 'locations', holeName], it_);
+        return global__.setIn(
+          ['memory', referer, 'locations', holeName],
+          { tag: 'IMMEDIATE', location: it_ }
+        );
       } else {
 
         const { it, global: global_ } = global.newLocation({
-          tag,
-          locations: new Map([[ UpLevel, global.tyPointer ]]),
-          data: new tag.data(),
+          tag: introduction,
+          locations: new Map([
+            [ UpLevel, { tag: 'IMMEDIATE', location: global.tyPointer } ]
+          ]),
+          data: new introduction.data(),
         });
 
-        return global_.setIn(['memory', referer, 'locations', holeName], it);
+        return global_.setIn(
+          ['memory', referer, 'locations', holeName],
+          { tag: 'IMMEDIATE', introduction }
+        );
       }
     }
   },

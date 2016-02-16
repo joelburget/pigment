@@ -2,7 +2,9 @@
 import type { Record } from 'immutable';
 import type { Component } from 'react';
 
-import type Firmament, { Path } from './models/Firmament';
+import type Firmament, {
+  Path,
+} from './models/Firmament';
 
 
 export const NEW_FIELD = 'NEW_FIELD';
@@ -61,12 +63,32 @@ export type GlobalContext<A> = {
   signal: (path: Path, signal: A) => void;
 };
 
+export type Reference = {
+  tag: 'REFERENCE';
+
+  parent: Symbol;
+  name: string;
+  // location: Symbol;
+};
+
+export type Immediate = {
+  tag: 'IMMEDIATE';
+  location: Symbol;
+};
+
+export type ImmediateFill = {
+  tag: 'IMMEDIATE_FILL';
+  introduction: Introduction;
+};
+
+export type SubLocation = Reference | Immediate;
+
 export type FillHoleSignal = {
   action: 'FILL_HOLE';
-  type: 'INTRODUCTION' | 'REFERENCE';
   referer: Symbol;
-  name: string;
-  selectedType: string;
+  holeName: string;
+
+  fill: ImmediateFill | Reference;
 };
 
 export type PokeHoleSignal = {

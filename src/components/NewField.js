@@ -1,25 +1,32 @@
 // @flow
 import React, { Component } from 'react';
 
-import { NEW_FIELD } from '../messages';
+import {
+  NEW_FIELD,
+  NewFieldSignal
+} from '../messages';
 
 type ControlsProps = {
   signal: (sig: NewFieldSignal) => void;
 };
 
+type State = {
+  nameInput: string;
+};
+
 
 export default class NewFieldInput
-  extends Component<{}, ControlsProps, {nameInput: string}> {
+  extends Component<{}, ControlsProps, State> {
 
-  state = {
+  state: State = {
     nameInput: '',
   };
 
-  handleChange(nameInput) {
+  handleChange(nameInput: string) {
     this.setState({ nameInput });
   }
 
-  handleKeyPress(event) {
+  handleKeyPress(event: SyntheticKeyboardEvent) {
     if (event.key === 'Enter') {
       this.props.signal({
         action: NEW_FIELD,

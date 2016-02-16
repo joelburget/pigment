@@ -18,6 +18,7 @@ import type { Element } from 'react';
 
 import type { Path } from './Firmament';
 import type {
+  FillHoleSignal,
   ImplementationUpdatedSignal,
   ReferenceUpdatedSignal,
   NewFieldSignal,
@@ -46,26 +47,33 @@ const RecordTyData = ImmRecord({
 
 function fillHole(
   global: Firmament,
-  { path }: { path: Path },
-  loc: Location): Firmament {
+  signal: FillHoleSignal
+): Firmament {
+
+  const { referer, holeName, fill } = signal;
+
+  const loc: Location = global.getLocation(referer);
 
   // $FlowIgnore: this is inherited from Record
-  const loc_ = loc.merge({
-    data: new RecordData(),
-  });
+  const loc_: Location = loc.setIn(['locations', holeName], fill);
 
-  return global.set(path, loc_);
+  return global.set(referer, loc_);
 }
 
 function recordTyUpdate(
   global: Firmament,
   signal: ImplementationUpdatedSignal
 ): Firmament {
+  const action = signal.signal.action;
 
-  if (signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) {
-    const subSignal : NewFieldSignal | RemoveFieldSignal = signal.signal;
+  if (action === NEW_FIELD || action === REMOVE_FIELD) {
+    // * why is this supposedly an object type?
+    // * i think flow isn't able to refine this beyond AnySignal to
+    //   (NewFieldSignal | RemoveFieldSignal)
+    // $FlowIgnore
+    const subSignal: NewFieldSignal | RemoveFieldSignal = signal.signal;
     const target: Symbol = signal.target;
-    const { action, name, path: { root, steps } } = subSignal;
+    const { name, path: { root, steps } } = subSignal;
 
     const signal_ = {
       // Flow apparently isn't sophisticated enough to understand this could be
@@ -79,9 +87,10 @@ function recordTyUpdate(
       },
     };
 
-    return action === NEW_FIELD ?
-      newField(global, signal_) :
-      removeField(global, signal_);
+    return action === NEW_FIELD
+      ? newField(global, signal_)
+      // $FlowIgnore
+      : removeField(global, signal_);
   }
 
   return global;
@@ -92,10 +101,14 @@ function recordUpdate(
   signal: ReferenceUpdatedSignal
 ): Firmament {
 
+  const action = signal.signal.action;
   const original = global.getLocation(signal.original);
 
-  if ((signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) && original.tag === RecordTy) {
-    const { referer, original, signal: { action, name, path: { root, steps } } } = signal;
+  if ((action === NEW_FIELD || action === REMOVE_FIELD) && original.tag === RecordTy) {
+    // $FlowIgnore see note in recordTyUpdate
+    const subSignal : NewFieldSignal | RemoveFieldSignal = signal.signal;
+    const { referer, original } = signal;
+    const { name, path: { root, steps } } = subSignal;
 
     // XXX need to treat differently depending on what kind of reference this is
     const signal_ = {
@@ -224,10 +237,9 @@ export const Record = {
   },
   render: RecordView,
   data: RecordData,
-  getNamesInScope(loc: Location) {
-    return loc
-      .locations
-      .filter((_, key) => key !== UpLevel);
+  getNamesInScope(loc: Location): Set<string> {
+    // $FlowIgnore: immutable record problems :(
+    return loc.locations.keySeq().toSet();
   },
 };
 
@@ -243,7 +255,7 @@ export const RecordTy = {
   },
   render: RecordTyView,
   data: RecordTyData,
-  getNamesInScope(loc: Location) {
+  getNamesInScope(loc: Location): Set<string> {
     throw new Error("can't get names of RecordTy");
   },
 };

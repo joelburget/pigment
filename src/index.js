@@ -28,13 +28,17 @@ const global0 = new Firmament(Ty, Hole);
 const { global: global1, it: rootTyPointer } = global0.newLocation({
   tag: ModuleTy,
   data: new ModuleTy.data(),
-  locations: new Map([[ UpLevel, global0.tyPointer ]]),
+  locations: new Map([
+    [ UpLevel, { tag: 'IMMEDIATE', location: global0.tyPointer } ]
+  ]),
 });
 
 const { global: global2, it: rootPointer } = global1.newLocation({
   tag: Module,
   data: new Module.data(),
-  locations: new Map([[ UpLevel, rootTyPointer ]]),
+  locations: new Map([
+    [ UpLevel, { tag: 'IMMEDIATE', location: rootTyPointer } ]
+  ]),
 });
 
 
@@ -128,6 +132,8 @@ export default class Page extends Component<{}, {}, PageState> {
           target,
           signal,
         };
+        const x = UpLevel;
+        // debugger;
 
         toSignal.push([target, sig]);
 

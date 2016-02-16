@@ -20,9 +20,14 @@ export function handler(
   const loc = global.getLocation(pointer);
   const newData = loc.data.update('fields', fields => fields.push(name));
 
+  const holeSubLoc = {
+    tag: 'IMMEDIATE',
+    location: global.holePointer,
+  };
+
   const newLoc = loc
     .set('data', newData)
-    .setIn(['locations', name], global.holePointer);
+    .setIn(['locations', name], holeSubLoc);
 
   if (pointer === global.holePointer) {
     debugger;

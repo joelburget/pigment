@@ -25,14 +25,6 @@ export function DeleteButton(
   );
 }
 
-DeleteButton.propTypes = {
-  path: PropTypes.shape({
-    root: PropTypes.symbol,
-    steps: PropTypes.array,
-  }).isRequired,
-  name: PropTypes.string.isRequired,
-};
-
 DeleteButton.contextTypes = {
   signal: PropTypes.func.isRequired,
 };

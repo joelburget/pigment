@@ -3,6 +3,11 @@ import { Map, Record } from 'immutable';
 
 import { Location } from './Location';
 
+import type {
+  Introduction,
+  SubLocation,
+} from '../messages';
+
 export const UpLevel = Symbol('UpLevel');
 
 // Need multiple paths to point to the same location.
@@ -26,9 +31,10 @@ export const UpLevel = Symbol('UpLevel');
 //   Probably not -- just have all types point to ty's location!
 // * Change bubbling
 //   - How to prevent ty from bubbling to itself repeatedly?
+//     + which conditions did ekmett say suffice? ascending chain?
 //   - Maybe changes only bubble if you change, which can't happen for ty
 
-export type Step = string|Symbol;
+export type Step = string | Symbol;
 
 export type Path = {
   root: Symbol; // TODO root type
@@ -51,6 +57,7 @@ const FirmamentShape = Record({
 
 export default class Firmament extends FirmamentShape {
   tyPointer: Symbol;
+  holePointer: Symbol;
   memory: Map<Symbol, Location>;
 
   constructor(tyVal: any, holeVal: any): void {
@@ -65,15 +72,26 @@ export default class Firmament extends FirmamentShape {
     // XXX tie the knot -- set the types of Hole and Ty
   }
 
+  subLocToPointer(subLoc: SubLocation): Symbol {
+    if (subLoc.tag === 'REFERENCE') {
+      const { parent, name } = subLoc;
+      const subLoc_ = this.getLocation(parent).locations.get(name);
+      return this.subLocToPointer(subLoc_);
+    } else { // IMMEDIATE
+      return subLoc.location;
+    }
+  }
+
   followPath({ root, steps }: Path): Symbol {
-    let nextLoc = root;
+    let nextPointer: Symbol = root;
 
     for (const step: Step of steps) {
-      const loc: Location = this.getLocation(nextLoc);
-      nextLoc = loc.locations.get(step);
+      const loc: Location = this.getLocation(nextPointer);
+      const subLoc: SubLocation = loc.locations.get(step);
+      nextPointer = this.subLocToPointer(subLoc);
     }
 
-    return nextLoc;
+    return nextPointer;
   }
 
   getPath(path: Path): Location {
@@ -89,13 +107,16 @@ export default class Firmament extends FirmamentShape {
     const targets = [];
 
     for (const [symbol] of this.memory) {
-      const loc = this.getLocation(symbol);
-      for (const [ name, locPointer ] of loc.locations) {
+    // this.memory.forEach((_, symbol) => {
+      const loc: Location = this.getLocation(symbol);
+      for (const [ name, subLoc ] of loc.locations) {
+        const locPointer: Symbol = this.subLocToPointer(subLoc);
         if (locPointer === pointer) {
           targets.push([symbol, name]);
           break;
         }
       }
+    // });
     }
 
     return targets;

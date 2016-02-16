@@ -1,5 +1,5 @@
 // @flow
-import { Record, List } from 'immutable';
+import { Record, Set, List } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
 import Firmament from './Firmament';
@@ -38,11 +38,16 @@ const variantTyHandlers = {
   ): Firmament {
     const { path, tag, type } = signal;
     const pointer = global.followPath(path);
-    const loc = global.getPath(pointer);
+    const loc = global.getLocation(pointer);
+
+    const subLoc = {
+      tag: 'IMMEDIATE',
+      location: loc,
+    };
 
     const newLoc = loc
       .updateIn(['data', 'tags'], tags => tags.push(tag))
-      .setIn(['locations', tag], type);
+      .setIn(['locations', tag], subLoc);
 
     return global.update(pointer, newLoc);
   },
@@ -55,9 +60,14 @@ const variantTyHandlers = {
     const pointer = global.followPath(path);
     const loc = global.getLocation(pointer);
 
+    const subLoc = {
+      tag: 'IMMEDIATE',
+      location: loc,
+    };
+
     const newLoc = loc
       .updateIn(['data', 'tags'], tags => tags.filter(tag_ => tag_ !== tag))
-      .deleteIn(['locations', tag]);
+      .deleteIn(['locations', subLoc]);
 
     return global.update(pointer, newLoc);
   },
@@ -127,7 +137,7 @@ export const Variant = {
   handlers: {},
   render: VariantView,
   data: VariantData,
-  getNamesInScope(loc: Location) {
+  getNamesInScope(loc: Location): Set<string> {
     throw new Error("can't get names of Variant");
   },
 };
@@ -140,7 +150,7 @@ export const VariantTy = {
   handlers: variantTyHandlers,
   render: VariantTyView,
   data: VariantTyData,
-  getNamesInScope(loc: Location) {
+  getNamesInScope(loc: Location): Set<string> {
     throw new Error("can't get names of VariantTy");
   },
 };

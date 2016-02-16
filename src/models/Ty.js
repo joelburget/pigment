@@ -1,8 +1,9 @@
 // @flow
-import { Record } from 'immutable';
+import { Record, Set } from 'immutable';
 import React, { Component } from 'react';
 
 import { INTRODUCTION } from '../messages';
+import Firmament from './Firmament';
 
 import type { Element } from 'react';
 
@@ -29,7 +30,7 @@ export const Ty = {
   },
   render: TyView,
   data: TyData,
-  getNamesInScope(loc: Location) {
+  getNamesInScope(loc: Location): Set<string> {
     throw new Error("can't get names of Ty");
   },
 };

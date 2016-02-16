@@ -25,14 +25,6 @@ export default function PokeHole(
   );
 }
 
-
-PokeHole.propTypes = {
-  path: PropTypes.shape({
-    root: PropTypes.symbol,
-    steps: PropTypes.array,
-  }).isRequired,
-};
-
 PokeHole.contextTypes = {
   signal: PropTypes.func.isRequired,
 };

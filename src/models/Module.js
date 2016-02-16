@@ -1,5 +1,5 @@
 // @flow
-import { Record, List } from 'immutable';
+import { List, Record, Set } from 'immutable';
 import React, { Component, PropTypes } from 'react';
 
 import Firmament, { UpLevel } from './Firmament';
@@ -18,6 +18,7 @@ import type { Element } from 'react';
 import type { Path } from './Firmament';
 
 import type {
+  FillHoleSignal,
   ImplementationUpdatedSignal,
   ReferenceUpdatedSignal,
   NewFieldSignal,
@@ -61,6 +62,7 @@ function moduleTyUpdate(
 
     return action === NEW_FIELD ?
       newField(global, signal_) :
+      // $FlowIgnore
       removeField(global, signal_);
   }
 
@@ -73,9 +75,13 @@ function moduleUpdate(
 ): Firmament {
 
   const original = global.getLocation(signal.original);
+  const action = signal.signal.action;
 
-  if ((signal.signal.action === NEW_FIELD || signal.signal.action === REMOVE_FIELD) && original.tag === ModuleTy) {
-    const { referer, original, signal: { action, name, path: { root, steps } } } = signal;
+  if ((action === NEW_FIELD || action === REMOVE_FIELD) && original.tag === ModuleTy) {
+    // $FlowIgnore see note in recordTyUpdate
+    const subSignal : NewFieldSignal | RemoveFieldSignal = signal.signal;
+    const { referer, original } = signal;
+    const { name, path: { root, steps } } = subSignal;
 
     // XXX need to treat differently depending on what kind of reference this is
     const signal_ = {
@@ -98,12 +104,29 @@ function moduleUpdate(
   return global;
 }
 
+
+function fillHole(
+  global: Firmament,
+  signal: FillHoleSignal
+): Firmament {
+
+  const { referer, holeName, fill } = signal;
+
+  const loc = global.getLocation(referer);
+
+  const loc_ = loc.setIn(['locations', holeName], fill);
+
+  return global.set(referer, loc_);
+}
+
+
 // Need to figure out how these handlers can really have a different effect for
 // Module vs ModuleTy. A module change affects its type and vice-versa. They're
 // tied together. Modules are tied upward and ModuleTys are tied downward.
 const fieldHandlers = {
   NEW_FIELD: newField,
   REMOVE_FIELD: removeField,
+  FILL_HOLE: fillHole,
 };
 
 
@@ -182,10 +205,9 @@ export const Module = {
   },
   render: ModuleView,
   data: ModuleData,
-  getNamesInScope(loc: Location) {
-    return loc
-      .locations
-      .filter((_, key) => key !== UpLevel);
+  getNamesInScope(loc: Location): Set<string> {
+    // $FlowIgnore: immutable record problems :(
+    return loc.locations.keySeq().toSet();
   },
 };
 
@@ -200,7 +222,7 @@ export const ModuleTy = {
   },
   render: ModuleTyView,
   data: ModuleTyData,
-  getNamesInScope(loc: Location) {
+  getNamesInScope(loc: Location): Set<string> {
     throw new Error("can't get names of ModuleTy");
   },
 };
