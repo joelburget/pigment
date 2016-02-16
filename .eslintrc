@@ -10,6 +10,10 @@
     "react/jsx-uses-react": 2,
     "react/jsx-uses-vars": 2,
     "react/react-in-jsx-scope": 2,
+
+    // use flow instead
+    "react/prop-types": 0,
+
     "jsx-quotes": [2, "prefer-single"],
 
     "flow-vars/define-flow-type": 1,

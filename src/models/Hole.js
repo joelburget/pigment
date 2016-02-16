@@ -7,27 +7,22 @@ import { Colon } from './Colon';
 // cycle :(
 // import Firmament from './Firmament';
 import { UpLevel } from './Firmament';
-import { Location } from './Location';
 import {
   FILL_HOLE,
   INTRODUCTION,
-  POKE_HOLE,
 } from '../messages';
 import { Module, ModuleTy } from './Module';
 import { Record, RecordTy } from './Record';
-import { Variant, VariantTy } from './Variant';
 import { Ty } from './Ty';
 
-import type { Element, SyntheticEvent } from 'react';
+import type { Element } from 'react';
 
 import type Firmament, {
   Path,
-  WithGlobal,
 } from './Firmament';
 import type {
   ImmediateFill,
   Reference,
-  Introduction,
   FillHoleSignal,
   PokeHoleSignal,
 } from '../messages';
@@ -48,7 +43,7 @@ function getInScope(global: Firmament, { root, steps }: Path): Scope {
   let inAllScope: Scope = Map();
   let currentPointer = root;
 
-  for (let step of steps) {
+  for (const step of steps) {
     const currentLoc = global.getLocation(currentPointer);
 
     const inThisScopeSet: Set<string> = currentLoc.tag
@@ -90,7 +85,7 @@ class HoleView extends Component<{}, { path: Path }, {}> {
 
     // need to get the holder of the hole so we can modify it
     const referer = global.followPath(path_);
-    const holeName = path.steps[path.steps.length-1];
+    const holeName = path.steps[path.steps.length - 1];
 
     signal(
       path,
@@ -107,7 +102,7 @@ class HoleView extends Component<{}, { path: Path }, {}> {
   render(): Element {
     const { path } = this.props;
     const { global } = this.context;
-    const level = path.steps.filter(step => step === UpLevel).length;
+    // const level = path.steps.filter(step => step === UpLevel).length;
 
     const namesInScope: Scope = getInScope(global, path);
     let nameOptions: Array<FillCompletion> = namesInScope

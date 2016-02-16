@@ -112,7 +112,6 @@ export default class Firmament extends FirmamentShape {
     const targets = [];
 
     for (const [symbol] of this.memory) {
-    // this.memory.forEach((_, symbol) => {
       const loc: Location = this.getLocation(symbol);
       for (const [ name, subLoc ] of loc.locations) {
         const locPointer: Symbol = this.subLocToPointer(subLoc);
@@ -121,7 +120,6 @@ export default class Firmament extends FirmamentShape {
           break;
         }
       }
-    // });
     }
 
     return targets;

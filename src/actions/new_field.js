@@ -1,14 +1,7 @@
 // @flow
-import React, { PropTypes } from 'react';
-
 import Firmament from '../models/Firmament';
-import { NEW_FIELD } from '../messages';
-import findName from '../utils/findName';
 
-import type { Element } from 'react';
-
-import type { Path } from '../models/Firmament';
-import type { GlobalContext, NewFieldSignal } from '../messages';
+import type { NewFieldSignal } from '../messages';
 
 
 export function handler(
