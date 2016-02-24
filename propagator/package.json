@@ -1,0 +1,15 @@
+{
+  "name": "propagator",
+  "version": "1.0.0",
+  "description": "The Art of the Propagator in JS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "propagator",
+    "constraint"
+  ],
+  "author": "joelburget@gmail.com",
+  "license": "MIT"
+}
