@@ -12,6 +12,7 @@ import {
 } from './index';
 import Interval, { intervalQuadratic, intervalProduct } from './interval';
 import Num, { sum } from './number';
+import Type, { application, arrowType, baseType } from './type';
 
 test('getting a value from a cell', t => {
   const scheduler = new Scheduler();
@@ -108,4 +109,46 @@ test('partial information flowing the other way', t => {
   const [timeMin, timeMax] = fallTime.content;
   t.true(almostEqual(timeMin, 3.009, 0.001));
   t.true(almostEqual(timeMax, 3.107, 0.001));
+});
+
+
+// send a number to an interval
+test('adaptors', t => {
+});
+
+
+test('type checking / synthesis', t => {
+  const scheduler = new Scheduler();
+
+  // f : a -> b -> b -> a
+  // x : Foo
+  // y : Bar
+  // z : ?
+  // w : ?
+  //
+  // =>
+  //
+  // f : Foo -> Bar -> Bar -> Foo
+  // z : Bar
+  // w : Foo
+  const {f, x, y, z, w} = makeCells(scheduler, {
+    f: [Type, arrowType({ x: null, y: null, z: null }, null)],
+    x: [Type, baseType('Foo')],
+    y: [Type, baseType('Bar')],
+    z: Type,
+    w: Type,
+  });
+
+  application(scheduler, f, {x, y, z}, w);
+
+  t.is(f.content.args.x.name, 'Foo');
+  t.is(f.content.args.y.name, 'Bar');
+
+  // TODO
+  // t.is(x.content, 'Bar');
+  // t.is(w.content, 'Foo');
+});
+
+
+test('provenance', t => {
 });

@@ -30,6 +30,11 @@ type Protocol<A> = {
   merge: Merge<A>;
 };
 
+type CellExtra<A> = {
+  name?: string;
+  content?: A;
+};
+
 // A cell contains "information about a value" rather than a value per se.
 //
 // - https://github.com/ekmett/propagators/blob/master/src/Data/Propagator/Cell.hs
@@ -37,18 +42,22 @@ type Protocol<A> = {
 // The shared connection mechanism is called a "cell" and the machines they
 // connect are called "propagators".
 export class Cell<A> {
+  scheduler: Scheduler;
   protocol: Protocol<A>;
+  name: ?string;
+  content: ?A;
+  neighbors: Array<Cell<mixed>>;
 
   constructor(
     scheduler: Scheduler,
     protocol: Protocol<A>,
-    name?: string
+    extra: CellExtra<A>
   ) {
     this.scheduler = scheduler;
     this.protocol = protocol;
-    this.name = name;
+    this.name = extra.name || null;
+    this.content = extra.content || null;
     this.neighbors = [];
-    this.content = null;
   }
 
   _member(cell: Cell): boolean {
@@ -81,7 +90,7 @@ export class Propagator {
 
   constructor(
     scheduler: Scheduler,
-    neighbors: Array<Cell>,
+    neighbors: Array<Cell<mixed>>,
     todo: () => void
   ) {
     this.scheduler = scheduler;
@@ -142,12 +151,22 @@ export const functionPropagator = R.curry(function functionPropagator_(
   );
 });
 
+// TODO: take initial value for all cells
+type CellDescription<A> = Protocol | [Protocol, A];
+
 export function makeCells(
   scheduler: Scheduler,
-  protocols: { [key:string]: Protocol }
+  protocols: { [key:string]: CellDescription<mixed> }
 ): { [key:string]: Cell<mixed> } {
   return R.mapObjIndexed(
-    (protocol, name) => new Cell(scheduler, protocol, name),
+    (desc, name) => {
+      if (Array.isArray(desc)) {
+        const [ protocol, content ] = desc;
+        return new Cell(scheduler, protocol, { name, content });
+      } else {
+        return new Cell(scheduler, desc, { name });
+      }
+    },
     protocols
   );
 }

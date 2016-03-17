@@ -25,7 +25,8 @@ export function emptyInterval([low, high]: Interval): boolean {
   return low > high;
 }
 
-export function intervalMerge(
+// TODO always start with the infinite interval, rather than null
+export function merge(
   content: Interval,
   increment: Interval
 ): Change<Interval> {
@@ -98,7 +99,7 @@ export function intervalQuadratic(scheduler, x, x2) {
 }
 
 export default {
-  merge: intervalMerge,
+  merge,
   times: intervalMultiplier,
   division: intervalDivider,
   square: intervalSquarer,
