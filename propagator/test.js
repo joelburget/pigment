@@ -3,30 +3,15 @@ import test from 'ava';
 import R from 'ramda';
 
 import Scheduler from './scheduler';
-import { Cell, Propagator, compoundPropagator, functionPropagator, makeCells } from './index';
+import {
+  Cell,
+  Propagator,
+  compoundPropagator,
+  functionPropagator,
+  makeCells,
+} from './index';
 import { intervalMerge, intervalQuadratic, intervalProduct } from './interval';
-
-function numberMerger(x: ?number, y: ?number): Change<number> {
-  if (x == null || y == null) {
-    const content = x || y;
-    return {
-      tag: 'FORWARD_CHANGE',
-      gain: content != null,
-      content,
-    };
-  } else if (x === y) {
-    return {
-      tag: 'FORWARD_CHANGE',
-      gain: false,
-      content: x,
-    };
-  } else {
-    return {
-      tag: 'CONTRADICTION',
-      message: 'number merge contradiction: ' + x + ' /= ' + y,
-    };
-  }
-}
+import { numberMerger, sum } from './number';
 
 test('getting a value from a cell', t => {
   const scheduler = new Scheduler();
@@ -40,16 +25,7 @@ test('getting a value from a cell', t => {
   t.is(x.content, 2);
 });
 
-const adder = functionPropagator(R.__, R.add);
-const subtractor = functionPropagator(R.__, R.subtract);
-
-function sum(scheduler, x, y, total) {
-  adder(scheduler, [x, y, total]);
-  subtractor(scheduler, [total, x, y]);
-  subtractor(scheduler, [total, y, x]);
-}
-
-test('adder', t => {
+test('sum', t => {
   const scheduler = new Scheduler();
   const [x, y, xPlusY] =
     makeCells(scheduler, [numberMerger, numberMerger, numberMerger]);
@@ -63,7 +39,7 @@ test('adder', t => {
   t.is(xPlusY.content, 4);
 });
 
-test('running backwards', t => {
+test('sum running backwards', t => {
   const scheduler = new Scheduler();
   const [x, y, xPlusY] =
     makeCells(scheduler, [numberMerger, numberMerger, numberMerger]);
