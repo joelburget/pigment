@@ -81,10 +81,10 @@ function sqrtInterval([low, high]: Interval): Interval {
   return [Math.sqrt(low, low), Math.sqrt(high, high)];
 }
 
-export const intervalMultiplier = functionPropagator(R.__, mulInterval);
-export const intervalDivider = functionPropagator(R.__, divInterval);
-export const intervalSquarer = functionPropagator(R.__, squareInterval);
-export const intervalSqrter = functionPropagator(R.__, sqrtInterval);
+const intervalMultiplier = functionPropagator(R.__, mulInterval);
+const intervalDivider = functionPropagator(R.__, divInterval);
+const intervalSquarer = functionPropagator(R.__, squareInterval);
+const intervalSqrter = functionPropagator(R.__, sqrtInterval);
 
 export function intervalProduct(scheduler, x, y, total) {
   intervalMultiplier(scheduler, [x, y, total]);
@@ -96,3 +96,11 @@ export function intervalQuadratic(scheduler, x, x2) {
   intervalSquarer(scheduler, [x, x2]);
   intervalSqrter(scheduler, [x2, x]);
 }
+
+export default {
+  merge: intervalMerge,
+  times: intervalMultiplier,
+  division: intervalDivider,
+  square: intervalSquarer,
+  sqrt: intervalSqrter,
+};

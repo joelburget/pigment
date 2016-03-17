@@ -10,12 +10,12 @@ import {
   functionPropagator,
   makeCells,
 } from './index';
-import { intervalMerge, intervalQuadratic, intervalProduct } from './interval';
-import { numberMerger, sum } from './number';
+import Interval, { intervalQuadratic, intervalProduct } from './interval';
+import Num, { sum } from './number';
 
 test('getting a value from a cell', t => {
   const scheduler = new Scheduler();
-  const x = new Cell(scheduler, numberMerger);
+  const x = new Cell(scheduler, Num, 'x');
 
   t.is(x.content, null);
   x.addContent(2);
@@ -27,8 +27,11 @@ test('getting a value from a cell', t => {
 
 test('sum', t => {
   const scheduler = new Scheduler();
-  const [x, y, xPlusY] =
-    makeCells(scheduler, [numberMerger, numberMerger, numberMerger]);
+  const {x, y, xPlusY} = makeCells(scheduler, {
+    x: Num,
+    y: Num,
+    xPlusY: Num,
+  });
 
   sum(scheduler, x, y, xPlusY);
   x.addContent(2);
@@ -41,8 +44,11 @@ test('sum', t => {
 
 test('sum running backwards', t => {
   const scheduler = new Scheduler();
-  const [x, y, xPlusY] =
-    makeCells(scheduler, [numberMerger, numberMerger, numberMerger]);
+  const {x, y, xPlusY} = makeCells(scheduler, {
+    x: Num,
+    y: Num,
+    xPlusY: Num,
+  });
 
   sum(scheduler, x, y, xPlusY);
   x.addContent(2);
@@ -56,8 +62,12 @@ test('sum running backwards', t => {
 // h = 1/2 g t^2
 function fallDuration(scheduler, t, h) {
   return compoundPropagator(scheduler, [t, h], () => {
-    const [g, oneHalf, tSquared, gtSquared] =
-      makeCells(scheduler, [intervalMerge, intervalMerge, intervalMerge, intervalMerge]);
+    const {g, oneHalf, tSquared, gtSquared} = makeCells(scheduler, {
+      g: Interval,
+      oneHalf: Interval,
+      tSquared: Interval,
+      gtSquared: Interval,
+    });
 
     // XXX constant propagator?
     g.addContent([9.789, 9.832]);
@@ -71,8 +81,10 @@ function fallDuration(scheduler, t, h) {
 
 test('partial information', t => {
   const scheduler = new Scheduler();
-  const [fallTime, buildingHeight] =
-    makeCells(scheduler, [intervalMerge, intervalMerge]);
+  const {fallTime, buildingHeight} = makeCells(scheduler, {
+    fallTime: Interval,
+    buildingHeight: Interval,
+  });
 
   fallDuration(scheduler, fallTime, buildingHeight);
   fallTime.addContent([2.9, 3.1]);
@@ -85,8 +97,10 @@ test('partial information', t => {
 
 test('partial information flowing the other way', t => {
   const scheduler = new Scheduler();
-  const [fallTime, buildingHeight] =
-    makeCells(scheduler, [intervalMerge, intervalMerge]);
+  const {fallTime, buildingHeight} = makeCells(scheduler, {
+    fallTime: Interval,
+    buildingHeight: Interval,
+  });
 
   fallDuration(scheduler, fallTime, buildingHeight);
   buildingHeight.addContent([44.514, 47.243]);

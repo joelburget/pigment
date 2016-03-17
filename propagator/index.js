@@ -24,6 +24,11 @@ type Contradiction = {
 };
 
 type Change<A> = ForwardChange<A> | Contradiction;
+type Merge<A> = (left: A, right: A) => Change<A>;
+
+type Protocol<A> = {
+  merge: Merge<A>;
+};
 
 // A cell contains "information about a value" rather than a value per se.
 //
@@ -32,14 +37,16 @@ type Change<A> = ForwardChange<A> | Contradiction;
 // The shared connection mechanism is called a "cell" and the machines they
 // connect are called "propagators".
 export class Cell<A> {
-  mergeStrategy: (left: A, right: A) => Change<A>;
+  protocol: Protocol<A>;
 
   constructor(
     scheduler: Scheduler,
-    mergeStrategy: (left: A, right: A) => Change<A>
+    protocol: Protocol<A>,
+    name?: string
   ) {
     this.scheduler = scheduler;
-    this.mergeStrategy = mergeStrategy;
+    this.protocol = protocol;
+    this.name = name;
     this.neighbors = [];
     this.content = null;
   }
@@ -57,7 +64,7 @@ export class Cell<A> {
 
   // Update the value of this cell, propagating any updates
   addContent(increment: A) {
-    const answer = this.mergeStrategy(this.content, increment);
+    const answer = this.protocol.merge(this.content, increment);
     if (answer.tag === 'CONTRADICTION') {
       throw new Error('Ack! Inconsistency!\n' + answer.message);
     } else if (answer.gain) {
@@ -135,6 +142,12 @@ export const functionPropagator = R.curry(function functionPropagator_(
   );
 });
 
-export function makeCells(scheduler: Scheduler, mergers): Array<Cell<mixed>> {
-  return mergers.map(merger => new Cell(scheduler, merger));
+export function makeCells(
+  scheduler: Scheduler,
+  protocols: { [key:string]: Protocol }
+): { [key:string]: Cell<mixed> } {
+  return R.mapObjIndexed(
+    (protocol, name) => new Cell(scheduler, protocol, name),
+    protocols
+  );
 }

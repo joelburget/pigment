@@ -2,7 +2,7 @@ import R from 'ramda';
 
 import { functionPropagator } from './index';
 
-export function numberMerger(x: ?number, y: ?number): Change<number> {
+export function numberMerge(x: ?number, y: ?number): Change<number> {
   if (x == null || y == null) {
     const content = x || y;
     return {
@@ -32,3 +32,8 @@ export function sum(scheduler, x, y, total) {
   subtractor(scheduler, [total, x, y]);
   subtractor(scheduler, [total, y, x]);
 }
+
+export default {
+  merge: numberMerge,
+  sum,
+};
