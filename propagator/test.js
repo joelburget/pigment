@@ -3,9 +3,9 @@ import test from 'ava';
 import R from 'ramda';
 
 import Scheduler from './scheduler';
+import Cell from './cell';
+import Propagator from './propagator';
 import {
-  Cell,
-  Propagator,
   compoundPropagator,
   functionPropagator,
   makeCells,

@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import { Propagator } from './index'
+import Propagator from './propagator'
 
 type BaseType = {
   tag: 'BASE_TYPE';
