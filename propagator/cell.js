@@ -31,7 +31,7 @@ export type Protocol<A> = {
 
 export type CellExtra<A> = {
   name?: string;
-  content?: A;
+  content: A;
 };
 
 // A cell contains "information about a value" rather than a value per se.
@@ -43,27 +43,28 @@ export type CellExtra<A> = {
 export default class Cell<A> {
   scheduler: Scheduler;
   protocol: Protocol<A>;
-  name: ?string;
-  content: ?A;
+  name: string | null;
+  content: A;
   neighbors: Array<Cell<mixed>>;
 
   constructor(
     scheduler: Scheduler,
     protocol: Protocol<A>,
-    extra: CellExtra<A>
+    content: A,
+    name?: string
   ) {
     this.scheduler = scheduler;
     this.protocol = protocol;
-    this.name = extra.name || null;
-    this.content = extra.content || null;
+    this.content = content;
+    this.name = name || null;
     this.neighbors = [];
   }
 
-  _member(cell: Cell): boolean {
+  _member(cell: Cell<mixed>): boolean {
     return R.contains(cell, this.neighbors);
   }
 
-  newNeighbor(neighbor: Cell) {
+  newNeighbor(neighbor: Cell<mixed>) {
     if (!this._member(neighbor)) {
       this.neighbors.push(neighbor);
       this.scheduler.alertPropagators([neighbor]);
@@ -73,6 +74,9 @@ export default class Cell<A> {
   // Update the value of this cell, propagating any updates
   addContent(increment: A) {
     const answer = this.protocol.merge(this.content, increment);
+    console.log('content:', this.content);
+    console.log('increment:', increment);
+    console.log('answer:', answer);
     if (answer.tag === 'CONTRADICTION') {
       throw new Error('Ack! Inconsistency!\n' + answer.message);
     } else if (answer.gain) {

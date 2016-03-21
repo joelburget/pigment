@@ -54,22 +54,15 @@ export const functionPropagator = R.curry(function functionPropagator_(
   );
 });
 
-// TODO: take initial value for all cells
-type CellDescription<A> = Protocol | [Protocol, A];
+type CellDescription<A> = [Protocol, A];
 
 export function makeCells(
   scheduler: Scheduler,
   protocols: { [key:string]: CellDescription<mixed> }
 ): { [key:string]: Cell<mixed> } {
   return R.mapObjIndexed(
-    (desc, name) => {
-      if (Array.isArray(desc)) {
-        const [ protocol, content ] = desc;
-        return new Cell(scheduler, protocol, { name, content });
-      } else {
-        return new Cell(scheduler, desc, { name });
-      }
-    },
+    ([ protocol, content ], name) =>
+      new Cell(scheduler, protocol, content, name),
     protocols
   );
 }

@@ -31,11 +31,11 @@ export function merge(
   increment: Interval
 ): Change<Interval> {
   if (content == null || increment == null) {
-    const content = content || increment;
+    const result = content || increment;
     return {
       tag: 'FORWARD_CHANGE',
-      gain: content != null,
-      content,
+      gain: !R.equals(result, content),
+      content: result,
     };
   }
 
@@ -55,7 +55,7 @@ export function merge(
   } else if (emptyInterval(newRange)) {
     return {
       tag: 'CONTRADICTION',
-      message: 'interval merge contradiction',
+      message: 'interval merge contradiction: ' + JSON.stringify(content) + " doesn't merge with " + JSON.stringify(increment),
     };
   } else {
     return {
@@ -79,7 +79,7 @@ function squareInterval([low, high]: Interval): Interval {
 }
 
 function sqrtInterval([low, high]: Interval): Interval {
-  return [Math.sqrt(low, low), Math.sqrt(high, high)];
+  return [Math.sqrt(low), Math.sqrt(high)];
 }
 
 const intervalMultiplier = functionPropagator(R.__, mulInterval);
@@ -98,8 +98,12 @@ export function intervalQuadratic(scheduler, x, x2) {
   intervalSqrter(scheduler, [x2, x]);
 }
 
+export const bottom = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+export const nonNegativeBottom = [0, Number.POSITIVE_INFINITY];
+
 export default {
   merge,
+  bottom,
   times: intervalMultiplier,
   division: intervalDivider,
   square: intervalSquarer,

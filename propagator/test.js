@@ -16,7 +16,7 @@ import Type, { application, arrowType, baseType } from './type';
 
 test('getting a value from a cell', t => {
   const scheduler = new Scheduler();
-  const x = new Cell(scheduler, Num, 'x');
+  const x = new Cell(scheduler, Num, null, 'x');
 
   t.is(x.content, null);
   x.addContent(2);
@@ -29,9 +29,9 @@ test('getting a value from a cell', t => {
 test('sum', t => {
   const scheduler = new Scheduler();
   const {x, y, xPlusY} = makeCells(scheduler, {
-    x: Num,
-    y: Num,
-    xPlusY: Num,
+    x: [Num, null],
+    y: [Num, null],
+    xPlusY: [Num, null],
   });
 
   sum(scheduler, x, y, xPlusY);
@@ -46,9 +46,9 @@ test('sum', t => {
 test('sum running backwards', t => {
   const scheduler = new Scheduler();
   const {x, y, xPlusY} = makeCells(scheduler, {
-    x: Num,
-    y: Num,
-    xPlusY: Num,
+    x: [Num, null],
+    y: [Num, null],
+    xPlusY: [Num, null],
   });
 
   sum(scheduler, x, y, xPlusY);
@@ -64,10 +64,10 @@ test('sum running backwards', t => {
 function fallDuration(scheduler, t, h) {
   return compoundPropagator(scheduler, [t, h], () => {
     const {g, oneHalf, tSquared, gtSquared} = makeCells(scheduler, {
-      g: Interval,
-      oneHalf: Interval,
-      tSquared: Interval,
-      gtSquared: Interval,
+      g: [Interval, Interval.bottom],
+      oneHalf: [Interval, Interval.bottom],
+      tSquared: [Interval, Interval.bottom],
+      gtSquared: [Interval, Interval.bottom],
     });
 
     // XXX constant propagator?
@@ -83,8 +83,8 @@ function fallDuration(scheduler, t, h) {
 test('partial information', t => {
   const scheduler = new Scheduler();
   const {fallTime, buildingHeight} = makeCells(scheduler, {
-    fallTime: Interval,
-    buildingHeight: Interval,
+    fallTime: [Interval, Interval.nonNegativeBottom],
+    buildingHeight: [Interval, Interval.nonNegativeBottom],
   });
 
   fallDuration(scheduler, fallTime, buildingHeight);
@@ -99,8 +99,8 @@ test('partial information', t => {
 test('partial information flowing the other way', t => {
   const scheduler = new Scheduler();
   const {fallTime, buildingHeight} = makeCells(scheduler, {
-    fallTime: Interval,
-    buildingHeight: Interval,
+    fallTime: [Interval, Interval.nonNegativeBottom],
+    buildingHeight: [Interval, Interval.nonNegativeBottom],
   });
 
   fallDuration(scheduler, fallTime, buildingHeight);
@@ -135,8 +135,8 @@ test('type checking / synthesis', t => {
     f: [Type, arrowType({ x: null, y: null, z: null }, null)],
     x: [Type, baseType('Foo')],
     y: [Type, baseType('Bar')],
-    z: Type,
-    w: Type,
+    z: [Type, null],
+    w: [Type, null],
   });
 
   application(scheduler, f, {x, y, z}, w);

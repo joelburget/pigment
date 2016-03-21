@@ -19,7 +19,7 @@ function merge(x: ?number, y: ?number): Change<number> {
   } else {
     return {
       tag: 'CONTRADICTION',
-      message: 'number merge contradiction: ' + x + ' /= ' + y,
+      message: 'number merge contradiction: ' + JSON.stringify(x) + ' /= ' + JSON.stringify(y),
     };
   }
 }
