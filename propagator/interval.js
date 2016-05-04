@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import { functionPropagator } from './index';
+import functionPropagator from './functionPropagator';
 
 export type Interval = [number, number];
 
@@ -50,7 +50,7 @@ export function merge(
     return {
       tag: 'FORWARD_CHANGE',
       gain: true,
-      increment,
+      content: increment,
     };
   } else if (emptyInterval(newRange)) {
     return {
@@ -61,7 +61,7 @@ export function merge(
     return {
       tag: 'FORWARD_CHANGE',
       gain: true,
-      newRange,
+      content: newRange,
     };
   }
 }

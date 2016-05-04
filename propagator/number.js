@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import { functionPropagator } from './index';
+import functionPropagator from './functionPropagator';
 
 function merge(x: ?number, y: ?number): Change<number> {
   if (x == null || y == null) {

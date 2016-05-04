@@ -1,6 +1,4 @@
 // @flow
-import R from 'ramda';
-
 import type Scheduler from './scheduler';
 
 export type ForwardChange<A> = {
@@ -29,11 +27,6 @@ export type Protocol<A> = {
   merge: Merge<A>;
 };
 
-export type CellExtra<A> = {
-  name?: string;
-  content: A;
-};
-
 // A cell contains "information about a value" rather than a value per se.
 //
 // - https://github.com/ekmett/propagators/blob/master/src/Data/Propagator/Cell.hs
@@ -45,7 +38,7 @@ export default class Cell<A> {
   protocol: Protocol<A>;
   name: string | null;
   content: A;
-  neighbors: Array<Cell<mixed>>;
+  id: number;
 
   constructor(
     scheduler: Scheduler,
@@ -57,31 +50,17 @@ export default class Cell<A> {
     this.protocol = protocol;
     this.content = content;
     this.name = name || null;
-    this.neighbors = [];
-  }
-
-  _member(cell: Cell<mixed>): boolean {
-    return R.contains(cell, this.neighbors);
-  }
-
-  newNeighbor(neighbor: Cell<mixed>) {
-    if (!this._member(neighbor)) {
-      this.neighbors.push(neighbor);
-      this.scheduler.alertPropagators([neighbor]);
-    }
+    this.id = scheduler.registerCell(this);
   }
 
   // Update the value of this cell, propagating any updates
   addContent(increment: A) {
     const answer = this.protocol.merge(this.content, increment);
-    console.log('content:', this.content);
-    console.log('increment:', increment);
-    console.log('answer:', answer);
     if (answer.tag === 'CONTRADICTION') {
-      throw new Error('Ack! Inconsistency!\n' + answer.message);
+      throw new Error(`Ack! Inconsistency!\n ${answer.errorMessage}`);
     } else if (answer.gain) {
       this.content = answer.content;
-      this.scheduler.alertPropagators(this.neighbors);
+      this.scheduler.markDirty(this.id);
     }
 
     // else no change

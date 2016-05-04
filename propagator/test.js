@@ -1,15 +1,11 @@
 import almostEqual from 'almost-equal';
 import test from 'ava';
-import R from 'ramda';
 
 import Scheduler from './scheduler';
 import Cell from './cell';
 import Propagator from './propagator';
-import {
-  compoundPropagator,
-  functionPropagator,
-  makeCells,
-} from './index';
+import functionPropagator from './functionPropagator';
+import makeCells from './makeCells';
 import Interval, { intervalQuadratic, intervalProduct } from './interval';
 import Num, { sum } from './number';
 import Type, { application, arrowType, baseType } from './type';
@@ -61,8 +57,9 @@ test('sum running backwards', t => {
 });
 
 // h = 1/2 g t^2
-function fallDuration(scheduler, t, h) {
-  return compoundPropagator(scheduler, [t, h], () => {
+class FallDurationPropagator extends Propagator {
+  run() {
+    const {neighbors: [t, h], scheduler} = this;
     const {g, oneHalf, tSquared, gtSquared} = makeCells(scheduler, {
       g: [Interval, Interval.bottom],
       oneHalf: [Interval, Interval.bottom],
@@ -73,10 +70,15 @@ function fallDuration(scheduler, t, h) {
     // XXX constant propagator?
     g.addContent([9.789, 9.832]);
     oneHalf.addContent([0.5, 0.5]);
+    // tSquared = t ^ 2
     intervalQuadratic(scheduler, t, tSquared);
+
+    // gt^2 = g * t^2
     intervalProduct(scheduler, g, tSquared, gtSquared);
+
+    // h = 1/2 gt^2
     intervalProduct(scheduler, oneHalf, gtSquared, h);
-  });
+  }
 }
 
 
@@ -87,8 +89,10 @@ test('partial information', t => {
     buildingHeight: [Interval, Interval.nonNegativeBottom],
   });
 
-  fallDuration(scheduler, fallTime, buildingHeight);
+  new FallDurationPropagator(scheduler, [fallTime, buildingHeight]);
   fallTime.addContent([2.9, 3.1]);
+
+  scheduler.run();
 
   const [heightMin, heightMax] = buildingHeight.content;
   t.true(almostEqual(heightMin, 41.163, 0.001));
@@ -103,8 +107,10 @@ test('partial information flowing the other way', t => {
     buildingHeight: [Interval, Interval.nonNegativeBottom],
   });
 
-  fallDuration(scheduler, fallTime, buildingHeight);
+  new FallDurationPropagator(scheduler, [fallTime, buildingHeight]);
   buildingHeight.addContent([44.514, 47.243]);
+
+  scheduler.run();
 
   const [timeMin, timeMax] = fallTime.content;
   t.true(almostEqual(timeMin, 3.009, 0.001));
@@ -140,6 +146,8 @@ test('type checking / synthesis', t => {
   });
 
   application(scheduler, f, {x, y, z}, w);
+
+  scheduler.run();
 
   t.is(f.content.args.x.name, 'Foo');
   t.is(f.content.args.y.name, 'Bar');

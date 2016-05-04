@@ -1,6 +1,10 @@
+// @flow
+
 import R from 'ramda';
 
-import Propagator from './propagator'
+import Propagator from './propagator';
+import Scheduler from './scheduler';
+import Cell from './cell';
 
 type BaseType = {
   tag: 'BASE_TYPE';
@@ -150,7 +154,7 @@ export function application(
 ) {
   // for each slot, create a binding (two propagators) between the function's
   // param and the argument
-  for (let name of Object.keys(args)) {
+  for (const name of Object.keys(args)) {
     const arg = args[name];
     bindPart(scheduler, f, name, arg);
   }
