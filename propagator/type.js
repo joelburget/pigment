@@ -37,21 +37,14 @@ export function arrowType(
 
 type Type = BaseType | ArrowType;
 
-function merge(x: ?Type, y: ?Type): Change<Type> {
+function merge(x: Type, y: Type): Change<Type> {
   const contra = {
     tag: 'CONTRADICTION',
     message: 'Type merge contradiction: ' + JSON.stringify(x) + ' /= ' + JSON.stringify(y),
   };
 
-  if (x == null || y == null) {
-    const content = x || y;
-    return {
-      tag: 'FORWARD_CHANGE',
-      gain: content != null,
-      content,
-    };
   // TODO maybe we want to replace this with immutable data structures?
-  } else if (R.equals(x, y)) {
+  if (R.equals(x, y)) {
     return {
       tag: 'FORWARD_CHANGE',
       gain: false,
