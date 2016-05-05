@@ -3,14 +3,7 @@ import R from 'ramda';
 import functionPropagator from './functionPropagator';
 
 function merge(x: ?number, y: ?number): Change<number> {
-  if (x == null || y == null) {
-    const content = x || y;
-    return {
-      tag: 'FORWARD_CHANGE',
-      gain: content != null,
-      content,
-    };
-  } else if (x === y) {
+  if (x === y) {
     return {
       tag: 'FORWARD_CHANGE',
       gain: false,
@@ -40,4 +33,5 @@ export function sum(
 
 export default {
   merge,
+  sum,
 };

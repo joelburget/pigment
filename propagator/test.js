@@ -9,10 +9,11 @@ import makeCells from './makeCells';
 import Interval, { intervalQuadratic, intervalProduct } from './interval';
 import Num, { sum } from './number';
 import Type, { application, arrowType, baseType } from './type';
+import Nullable from './nullable';
 
 test('getting a value from a cell', t => {
   const scheduler = new Scheduler();
-  const x = new Cell(scheduler, Num, null, 'x');
+  const x = new Cell(scheduler, Nullable(Num), null, 'x');
 
   t.is(x.content, null);
   x.addContent(2);
@@ -25,9 +26,9 @@ test('getting a value from a cell', t => {
 test('sum', t => {
   const scheduler = new Scheduler();
   const {x, y, xPlusY} = makeCells(scheduler, {
-    x: [Num, null],
-    y: [Num, null],
-    xPlusY: [Num, null],
+    x: [Nullable(Num), null],
+    y: [Nullable(Num), null],
+    xPlusY: [Nullable(Num), null],
   });
 
   sum(scheduler, x, y, xPlusY);
@@ -42,9 +43,9 @@ test('sum', t => {
 test('sum running backwards', t => {
   const scheduler = new Scheduler();
   const {x, y, xPlusY} = makeCells(scheduler, {
-    x: [Num, null],
-    y: [Num, null],
-    xPlusY: [Num, null],
+    x: [Nullable(Num), null],
+    y: [Nullable(Num), null],
+    xPlusY: [Nullable(Num), null],
   });
 
   sum(scheduler, x, y, xPlusY);
