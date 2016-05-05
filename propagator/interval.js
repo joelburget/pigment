@@ -25,20 +25,10 @@ export function emptyInterval([low, high]: Interval): boolean {
   return low > high;
 }
 
-// TODO always start with the infinite interval, rather than null
 export function merge(
   content: Interval,
   increment: Interval
 ): Change<Interval> {
-  if (content == null || increment == null) {
-    const result = content || increment;
-    return {
-      tag: 'FORWARD_CHANGE',
-      gain: !R.equals(result, content),
-      content: result,
-    };
-  }
-
   const newRange = intersectIntervals(content, increment);
   if (intervalEqual(newRange, content)) {
     return {
@@ -104,6 +94,7 @@ export const nonNegativeBottom = [0, Number.POSITIVE_INFINITY];
 export default {
   merge,
   bottom,
+  nonNegativeBottom,
   times: intervalMultiplier,
   division: intervalDivider,
   square: intervalSquarer,
