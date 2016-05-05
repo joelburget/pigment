@@ -4,7 +4,6 @@ import test from 'ava';
 import Scheduler from './scheduler';
 import Cell from './cell';
 import Propagator from './propagator';
-import functionPropagator from './functionPropagator';
 import makeCells from './makeCells';
 import Interval, { intervalQuadratic, intervalProduct } from './interval';
 import Num, { sum } from './number';

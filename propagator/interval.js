@@ -1,5 +1,3 @@
-import R from 'ramda';
-
 import functionPropagator from './functionPropagator';
 
 export type Interval = [number, number];
@@ -72,10 +70,10 @@ function sqrtInterval([low, high]: Interval): Interval {
   return [Math.sqrt(low), Math.sqrt(high)];
 }
 
-const intervalMultiplier = functionPropagator(R.__, mulInterval);
-const intervalDivider = functionPropagator(R.__, divInterval);
-const intervalSquarer = functionPropagator(R.__, squareInterval);
-const intervalSqrter = functionPropagator(R.__, sqrtInterval);
+const intervalMultiplier = functionPropagator(mulInterval);
+const intervalDivider = functionPropagator(divInterval);
+const intervalSquarer = functionPropagator(squareInterval);
+const intervalSqrter = functionPropagator(sqrtInterval);
 
 export function intervalProduct(scheduler, x, y, total) {
   intervalMultiplier(scheduler, [x, y, total]);

@@ -17,8 +17,8 @@ function merge(x: ?number, y: ?number): Change<number> {
   }
 }
 
-const adder = functionPropagator(R.__, R.add);
-const subtractor = functionPropagator(R.__, R.subtract);
+const adder = functionPropagator(R.add);
+const subtractor = functionPropagator(R.subtract);
 
 export function sum(
   scheduler: Scheduler,

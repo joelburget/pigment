@@ -46,8 +46,8 @@ class FunctionPropagator extends Propagator {
 // Lift a function over these to a propagator network. This is returns a
 // directional propagator.
 const functionPropagator = R.curry(function functionPropagator_(
-  scheduler: Scheduler,
   f: Function,
+  scheduler: Scheduler,
   // TODO separate inputs and output
   cells: Array<Cell<mixed>>
 ): Propagator {
