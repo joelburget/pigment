@@ -5,7 +5,7 @@
 import { List } from 'immutable';
 import React, {Component, PropTypes} from 'react';
 
-import { AbsRef } from '../../theory/ref';
+import { FreeVar } from '../../theory/ref';
 import { Hole, Var as VarData } from '../../theory/tm';
 
 const styles = require('./Name.scss');
@@ -26,7 +26,7 @@ class NameContextMenu extends Component {
   handleUnbind() {
     const { name, path } = this.props;
     this.context.updateAt(
-      new AbsRef({ path }),
+      new FreeVar({ path }),
       ({ type }) => new Hole({ name, type })
     );
   }
@@ -64,11 +64,11 @@ export default class Var extends Component {
     const nameRef = this.props.children.ref;
     const path = this.props.path;
 
-    let absRef: AbsRef;
-    if (nameRef instanceof AbsRef) {
+    let absRef: FreeVar;
+    if (nameRef instanceof FreeVar) {
       absRef = nameRef;
     } else {
-      absRef = new AbsRef({ path }).extend(nameRef);
+      absRef = new FreeVar({ path }).extend(nameRef);
     }
     const { name } = this.context.lookupRef(absRef);
 

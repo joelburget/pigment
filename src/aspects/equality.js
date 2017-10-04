@@ -12,6 +12,9 @@ const EqualityShape = Record({
 
 
 // Propositional Equality type
+//
+// * Should this be entirely defined in userland?
+// * How does the reflection rule work?
 export class Equality extends EqualityShape {
   static arity = [0];
 

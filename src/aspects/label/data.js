@@ -1,50 +1,27 @@
 // @flow
 
-import invariant from 'invariant';
-import { List, Record } from 'immutable';
+import { Record } from 'immutable';
 
-import { mkSuccess } from '../../theory/evaluation';
 import { register } from '../../theory/registry';
-import { INTRO, Type } from '../../theory/tm';
-
-import type Edit, { Action } from '../../theory/edit';
-import type { EvaluationResult } from '../../theory/evaluation';
-import type { Tm } from '../../theory/tm';
 
 
-const LabelShape = Record({
+// formation
+
+export const LabelShape = Record({
   name: null, // string
 }, 'label');
 
 
-export default class Label extends LabelShape {
+// TODO - decide to drop this or actually build it
+const signature = {
+  formation: null,
+  intros: null,
+  elims: null,
 
-  step(): EvaluationResult {
-    return mkSuccess(this);
-  }
+  searchAliases: ['label', 'name'],
+};
 
-  actions(): List<Action> {
-    return List();
-  }
-
-  performEdit(): Edit {
-    invariant(
-      false,
-      "Label.performEdit doesn't know any actions"
-    );
-  }
-
-  getIntroUp(): Tm {
-    // TODO is this right? Should there be a LabelTy?
-    return Type.singlaton;
-  }
-
-  getIntroDown(): ?Tm {
-    return null;
-  }
-
-  static form = INTRO;
-}
+export default signature;
 
 
-register('label', Label);
+register('label', signature);

@@ -1,7 +1,7 @@
 import expect from 'expect';
 
 import { mkSuccess, bind } from '../theory/tm';
-import Arr from './lambda/data';
+import Arr from './function/data';
 import { JsBoolean, JsNumber, JsApp, JsFunction } from './external';
 
 const disable = () => {};

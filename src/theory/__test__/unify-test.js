@@ -1,23 +1,22 @@
 import { Type, Hole, Var } from '../tm';
-import { mkRel } from '../ref';
+import { mkBound } from '../ref';
 
 import expectImmutableIs from '../../testutil/expectImmutableIs';
 
 
 describe('unification', () => {
-  const type = Type.singleton;
 
   it('unifies type', () => {
-    expectImmutableIs(type.unify(type), type);
+    expectImmutableIs(Type.unify(Type), Type);
   });
 
   it('holes unify with everything', () => {
-    const hole = new Hole({ name: 'hole', type });
-    expectImmutableIs(hole.unify(type), type);
+    const hole = new Hole({ name: 'hole', Type });
+    expectImmutableIs(hole.unify(Type), Type);
   });
 
   it('vars unify with everything', () => {
-    const v = new Var(mkRel('..', 'binder'), type); // eslint-disable-line id-length
-    expectImmutableIs(v.unify(type), type);
+    const v = new Var(mkBound('..', 'binder'), Type); // eslint-disable-line id-length
+    expectImmutableIs(v.unify(Type), Type);
   });
 });

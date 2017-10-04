@@ -3,10 +3,9 @@ import { Map } from 'immutable';
 
 import { Type, Hole } from '../tm';
 import { mkSuccess, mkStuck } from '../evaluation';
-import { mkAbs } from '../ref';
+import { mkFree } from '../ref';
 
-import Lam from '../../aspects/lambda/data';
-import App from '../../aspects/application/data';
+import { mkFunction, mkApplication } from '../../aspects/function/data';
 
 
 const emptyCtx = Map();
@@ -16,17 +15,17 @@ describe('eval', () => {
 
   it('steps type', () => {
     // start with an empty context;
-    expect(type.step(emptyCtx.bind(mkAbs())))
+    expect(type.step(emptyCtx.bind(mkFree())))
       .toEqual(mkSuccess(type));
   });
 
   it('gets stuck on holes', () => {
     const hole = new Hole({ name: 'hole', type });
-    expect(hole.step(emptyCtx.bind(mkAbs())))
+    expect(hole.step(emptyCtx.bind(mkFree())))
       .toEqual(mkStuck(hole));
 
-    const returningHole = new App({
-      func: new Lam(
+    const returningHole = mkApplication({
+      func: mkFunction(
         null,
         type,
         hole,
@@ -35,17 +34,17 @@ describe('eval', () => {
       arg: type,
       type,
     });
-    expect(returningHole.step(emptyCtx.bind(mkAbs())))
+    expect(returningHole.step(emptyCtx.bind(mkFree())))
       .toEqual(mkStuck(hole));
   });
 
-  describe('lam', () => {
+  describe('function', () => {
     // TODO would be awesome for this to be parametric
     const ctx = Map({'x': type});
 
     it('works with var', () => {
-      const tm = new App({
-        func: new Lam(
+      const tm = mkApplication({
+        func: mkFunction(
           'x',
           type,
           type,
@@ -55,13 +54,13 @@ describe('eval', () => {
         type,
       });
 
-      expect(tm.step(mkAbs(), ctx))
+      expect(tm.step(mkFree(), ctx))
         .toEqual(mkSuccess(type));
     });
 
     it('works with wildcards', () => {
-      const tm = new App({
-        func: new Lam(
+      const tm = mkApplication({
+        func: mkFunction(
           null,
           type,
           type,
@@ -71,7 +70,7 @@ describe('eval', () => {
         type,
       });
 
-      expect(tm.step(mkAbs(), ctx))
+      expect(tm.step(mkFree(), ctx))
         .toEqual(mkSuccess(type));
     });
   });

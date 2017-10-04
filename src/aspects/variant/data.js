@@ -1,34 +1,62 @@
 // @flow
-//
+
 // Variants! I suppose records and variants together are the way to go!
 
-import { List, Record } from 'immutable';
+import { List, Record, Set } from 'immutable';
 import invariant from 'invariant';
 
-import { INTRO } from '../../theory/tm';
+import { CANONICAL, ELIMINATOR } from '../../theory/tm';
 import { register } from '../../theory/registry';
+import defnEq from '../../theory/definitionalEquality';
+import unify from '../../theory/unify';
 
-import Row from '../row/data';
-
-import type { EvaluationResult } from '../../theory/evaluation';
+// import type { EvaluationResult } from '../../theory/evaluation';
 import type { Tm } from '../../theory/tm';
 import type Edit, { Action } from '../../theory/edit';
 
 
-const VariantTyShape = Record({
-  row: null, // Row
-  type: null, // Type
-});
+const VariantTy = Record({
+  row: null, // : Row
+}, 'variantty');
 
 
-export class VariantTy extends VariantTyShape {
-}
+const variantTyConstructor = {
+  ruleType: CANONICAL,
+
+  getPieces: function* getPieces(tm: Tm) {
+    // XXX
+    yield* tm.data.row;
+  },
+
+  actions(): List<Action> {
+    return List([]);
+  },
+
+  performEdit(): Edit {
+    invariant(
+      false,
+      'Variant.performEdit knows nothing!'
+    );
+  },
+
+  equals(tm1: Tm, tm2: Tm): Boolean {
+    return defnEq(tm1.row, tm2.row);
+  },
+
+  unify(tm1: Tm, tm2: Tm): ?Tm {
+    const row = unify(tm1.row, tm2.row);
+    return row != null ?
+      new VariantTy({ row }) :
+      null;
+  },
+
+};
 
 
-const VariantShape = Record({
+const Variant = Record({
   label: null, // Label
-  type: null,  // Type
-});
+  value: null, // Tm
+}, 'variant');
 
 
 // Interesting special cases:
@@ -36,40 +64,83 @@ const VariantShape = Record({
 // * single-field variants (newtype, essentially)
 //
 // Both would be useful to visually distinguish.
-export default class Variant extends VariantShape {
+const variantConstructor = {
+  ruleType: CANONICAL,
 
-  step(): EvaluationResult {
-    // TODO step all children?
-    throw new Error('unimplemented - Variant.step');
-  }
-
-  subst(): Tm {
-    throw new Error('unimplemented - Variant.subst');
-  }
+  getPieces: function* getPieces(tm: Tm) {
+    // XXX
+    yield* tm.data.row;
+  },
 
   actions(): List<Action> {
     return List([]);
-  }
+  },
 
   performEdit(): Edit {
     invariant(
       false,
       'Variant.performEdit knows nothing!'
     );
-  }
+  },
 
-  getIntroUp(): Tm {
-    const entries = Map([this.label.name, XXX]);
+  equals(tm1: Tm, tm2: Tm): Boolean {
+    const { label: l1, value: v1 } = tm1;
+    const { label: l2, value: v2 } = tm2;
+    return defnEq(l1, l2) && defnEq(v1, v2);
+  },
 
-    return new Row({ entries });
-  }
+  unify(tm1: Tm, tm2: Tm): ?Tm {
+    const { label: l1, value: v1 } = tm1;
+    const { label: l2, value: v2 } = tm2;
 
-  getIntroDown(): ?Tm {
-    return null;
-  }
+    const label = unify(l1, l2);
+    if (label == null) {
+      return null;
+    }
 
-  static form = INTRO;
+    const value = unify(v1, v2);
+    if (value == null) {
+      return null;
+    }
 
-}
+    return new Variant({ label, value });
+  },
 
-register('variant', Variant);
+};
+
+
+// (a -> r) ... (z -> r) -> Variant [a...z] -> r
+const caseElimination = {
+  ruleType: ELIMINATOR,
+  getPieces: function* getPieces(tm: Tm) {
+    yield* tm.data.recursors;
+  },
+  step(tm: Tm): Tm {
+    // TODO recursors, variant
+    // TODO label,
+    const { recursors, variant } = tm.data;
+    const { label, value } = variant.data;
+    // TODO this depends on functions -- is that cool?
+    return mkApplication(recursors[label], value);
+  },
+};
+
+
+const feature = {
+  constructors: Set([variantConstructor, variantTyConstructor]),
+  eliminators: Set([caseElimination]),
+
+  canTyRules: Set([
+    // variantty : Row -> *
+    // variant : variantty
+  ]),
+  elimTyRules: Set([
+    // caseElim: (a -> r) ... (z -> r) -> Variant [a...z] -> r
+  ]),
+
+  searchAliases: ['variant', 'sum'],
+};
+
+export default feature;
+
+register('variant', feature);

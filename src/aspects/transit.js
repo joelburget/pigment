@@ -2,7 +2,8 @@
 import transit from 'transit-js';
 
 import Lam from './lambda/data';
-import App from './application/data';
+// XXX redo all these
+// import App from './application/data';
 import Rec from './record/data';
 import Module, { Note, Definition, Property, Example } from './module/data';
 

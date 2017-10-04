@@ -2,16 +2,17 @@ import { Record } from 'immutable';
 
 import { Tm } from '../theory/tm';
 import { mkSuccess } from '../theory/evaluation';
-import Lam, { Arrow } from './lambda/data';
+import { mkFunction, mkArrow } from './function/data';
 
 import type { EvaluationResult } from '../../theory/evaluation';
 
 
-export class External extends Record({ external: null, type: null }, 'external') {
+const ExternalShape = Record({
+  external: null,
+}, 'external');
 
-  constructor(external: any, type: Tm): void {
-    super({ external, type });
-  }
+
+export class External extends ExternalShape {
 
   step(): EvaluationResult<Tm> {
     throw new Error('External.step not yet implemented');
@@ -32,7 +33,12 @@ export class External extends Record({ external: null, type: null }, 'external')
 // * function
 
 
-export class JsExternalType extends Record({ typeName: null }, 'externaltype') {
+const ExternalType = Record({
+  typeName: null
+}, 'externaltype');
+
+
+export class JsExternalType extends ExternalType {
   constructor(typeName: string): void {
     super({ typeName });
   }
@@ -87,7 +93,7 @@ export class JsApp extends External {
     super([ fun, arg ], undefined);
   }
 
-  func(): Lam {
+  func() {
     return this.children[0];
   }
 

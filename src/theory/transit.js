@@ -1,7 +1,7 @@
 /* eslint id-length: 0 */
 import transit from 'transit-js';
 
-import { AbsRef, RelRef } from './ref';
+import { FreeVar, BoundVar } from './ref';
 import { Type, Var, Hole } from './tm';
 import Edit from './edit';
 import Relation from './relation';
@@ -34,11 +34,11 @@ export const writeHandlers = [
   }),
 
   // ref
-  AbsRef, transit.makeWriteHandler({
+  FreeVar, transit.makeWriteHandler({
     tag: () => 'absref',
     rep: v => v.path,
   }),
-  RelRef, transit.makeWriteHandler({
+  BoundVar, transit.makeWriteHandler({
     tag: () => 'relref',
     rep: v => v.path,
   }),
@@ -60,7 +60,7 @@ export const readHandlers = {
   'var': ([ref, type]) => new Var({ ref, type }),
 
   // ref
-  'absref': path => new AbsRef({ path }),
-  'relref': path => new RelRef({ path }),
+  'absref': path => new FreeVar({ path }),
+  'relref': path => new BoundVar({ path }),
 
 };

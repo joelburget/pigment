@@ -6,105 +6,50 @@ import { List, Record, is } from 'immutable';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { PropTypes } from 'react';
 
-// TODO come to terms with the fact that these '..'s are de bruijn indices
-export class RelRef extends Record({ path: null }) {
-  normalize(): RelRef {
-    const stack = [];
-    let last = '..';
 
-    this.path.forEach(piece => {
-      if (piece === '..' && last !== '..') {
-        stack.pop();
-      } else {
-        stack.push(piece);
-      }
-      last = piece;
-    });
-
-    const path = List(stack);
-    return new RelRef({ path });
+export class BoundVar extends Record({ index: 0, name: null }) {
+  is(ref: Ref, root: FreeVar): boolean {
+    return ref instanceOf BoundVar ?
+      ref.index === this.index : // XXX also disambiguate name
+      XXX;
   }
+}
 
-  extend(ref: RelRef): RelRef {
+
+export class FreeVar extends Record({ path: null }) {
+  extend(ref: BoundVar): FreeVar {
     const path = this.path.concat(ref.path);
-    return new RelRef({ path }).normalize();
+    return new FreeVar({ path });
   }
 
-  is(ref: Ref, root: AbsRef): boolean {
-    return is(
-      ref instanceof RelRef ?
-        this.normalize().path :
-        root.extend(this).normalize().path,
-      ref.normalize().path
-    );
-  }
-
-  goIn(): RelRef {
-    return new RelRef({ path: '..' }).extend(this);
+  is(ref: Ref, root: FreeVar): boolean {
+    return ref instanceof FreeVar ?
+      is(this, ref) :
+      XXX;
   }
 }
 
 
-export class AbsRef extends Record({ path: null }) {
-  normalize(): AbsRef {
-    const relNormalized = new RelRef({ path: this.path }).normalize();
-    const path = relNormalized.path;
+export type Ref = BoundVar | FreeVar;
 
-    if (path.get(0) === '..') {
-      throw new Error('AbsRef.normalize went below root');
-    } else {
-      return new AbsRef({ path });
-    }
-  }
 
-  relativize(root: RelRef): RelRef {
-    const path = root.path.concat(this.path);
-    return new RelRef({ path }).normalize();
-  }
-
-  extend(ref: RelRef): AbsRef {
-    const path = this.path.concat(ref.path);
-    return new AbsRef({ path }).normalize();
-  }
-
-  is(ref: Ref, root: AbsRef): boolean {
-    return is(
-      ref instanceof AbsRef ?
-        this.normalize().path :
-        root.extend(this).normalize().path,
-      ref.normalize().path
-    );
-  }
-
-  goIn(): AbsRef {
-    return this;
-  }
+export function mkBound(index: number, ?name: string): BoundVar {
+  return new BoundVar({ index, name });
 }
 
 
-export type Ref = RelRef | AbsRef;
-
-
-// export function mkRel(...parts: Array<string>): RelRef {
+// export function mkFree(...parts: Array<string>): FreeVar {
 //   const path = List(parts);
-export function mkRel(): RelRef {
+export function mkFree(): FreeVar {
   const path = List(arguments);
-  return new RelRef({ path });
-}
-
-
-// export function mkAbs(...parts: Array<string>): AbsRef {
-//   const path = List(parts);
-export function mkAbs(): AbsRef {
-  const path = List(arguments);
-  return new AbsRef({ path });
+  return new FreeVar({ path });
 }
 
 
 export const PropTypesPath = ImmutablePropTypes.listOf(PropTypes.string);
-export const PropTypesRelRef = PropTypes.instanceOf(RelRef);
-export const PropTypesAbsRef = PropTypes.instanceOf(AbsRef);
+export const PropTypesBoundVar = PropTypes.instanceOf(BoundVar);
+export const PropTypesFreeVar = PropTypes.instanceOf(FreeVar);
 export const PropTypesRef = PropTypes.oneOfType([
-  PropTypesRelRef,
-  PropTypesAbsRef,
+  PropTypesBoundVar,
+  PropTypesFreeVar,
 ]);

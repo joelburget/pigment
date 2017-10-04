@@ -18,11 +18,11 @@ import Lam from '../aspects/lambda/data';
 import { OPEN } from '../theory/edit';
 import { read as readRegistry } from '../theory/registry';
 import { VARIABLE, INTRO, ELIM, Hole, Type } from '../theory/tm';
-import { AbsRef } from '../theory/ref';
+import { FreeVar } from '../theory/ref';
 
 // import { Var, Hole, Type } from '../theory/tm';
 // import { Rec, Row } from '../theory/record';
-// import { mkRel, mkAbs } from '../theory/ref';
+// import { mkBound, mkFree } from '../theory/ref';
 
 import type { Ref } from '../theory/ref';
 import type { Tm } from '../theory/tm';
@@ -80,8 +80,8 @@ const contents = Immutable.fromJS([
   //       new Binder({ name: 'y', type }),
   //       type
   //       // new Row(
-  //       //   new Var(mkRel('..', '..', 'binder'), type),
-  //       //   new Var(mkRel('..', 'binder'), type)
+  //       //   new Var(mkBound('..', '..', 'binder'), type),
+  //       //   new Var(mkBound('..', 'binder'), type)
   //       // )
   //     )
   //   ),
@@ -99,14 +99,14 @@ const contents = Immutable.fromJS([
   // }),
   // new Property({
   //   name: "pairer property",
-  //   // defn: new Var(mkAbs('TODO'), type),
+  //   // defn: new Var(mkFree('TODO'), type),
   //   defn: type,
   // }),
   // new Definition({
   //   name: 'uses var',
   //   defn: new Lam(
   //     new Binder({ name: 'x', type }),
-  //     new Var(mkRel('..', 'binder'), type)
+  //     new Var(mkBound('..', 'binder'), type)
   //   ),
   //   visibility: MODULE_PRIVATE,
   // }),
@@ -257,7 +257,7 @@ export default function reducer(state = initialState, action = {}) {
 // just look up a ref when you want to know about it. The dangerous part is
 // that the ref could have updated without updating things that rely on it.
 // Right?
-export function lookupRef(state: ModuleState, ref: AbsRef): Tm {
+export function lookupRef(state: ModuleState, ref: FreeVar): Tm {
   // this is slick. thank you records!
   return state.getIn(ref.path);
 }
@@ -295,7 +295,7 @@ type Completions = {
 // * its prefix
 export function findCompletions(state: ModuleState,
                                 type: Tm,
-                                ref: AbsRef,
+                                ref: FreeVar,
                                 prefix: string): Completions {
   let matches = [];
 
@@ -368,7 +368,7 @@ export function expressionMouseClick(path) {
 }
 
 
-export function updateAt(ref: AbsRef, update) {
+export function updateAt(ref: FreeVar, update) {
   return {
     type: UPDATE_AT,
     ref,

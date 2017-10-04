@@ -1,6 +1,6 @@
 import { Type } from '../tm';
-import { mkRel, mkAbs } from '../ref';
-import Lam from '../../aspects/lambda/data';
+import { mkBound, mkFree } from '../ref';
+import { mkFunction } from '../../aspects/function/data';
 
 import { id, k } from '../../testutil/examples';
 import expectImmutableIs from '../../testutil/expectImmutableIs';
@@ -10,27 +10,27 @@ describe('lambda', () => {
   const type = Type.singleton;
 
   it("doesn't substitute", () => {
-    const noVarLam = new Lam(
+    const noVarLam = mkFunction(
       ['x', type],
       type
     );
 
     expectImmutableIs(
-      noVarLam.subst(mkAbs(), mkRel('binder'), type),
+      noVarLam.subst(mkFree(), mkBound('binder'), type),
       noVarLam
     );
 
     // different variable
     expectImmutableIs(
-      id.subst(mkAbs(), mkRel(), type),
+      id.subst(mkFree(), mkBound(), type),
       id
     );
   });
 
   it('substitutes', () => {
     expectImmutableIs(
-      id.subst(mkAbs(), mkRel('binder'), type),
-      new Lam(
+      id.subst(mkFree(), mkBound('binder'), type),
+      mkFunction(
         'x',
         type,
         type,
@@ -42,17 +42,17 @@ describe('lambda', () => {
 
     // substituting for y does nothing
     expectImmutableIs(
-      k.subst(mkAbs(), mkRel('body', 'binder'), type),
+      k.subst(mkFree(), mkBound('body', 'binder'), type),
       k
     );
 
     // substituting for x replaces the inner body!
     expectImmutableIs(
-      k.subst(mkAbs(), mkRel('binder'), type),
-      new Lam(
+      k.subst(mkFree(), mkBound('binder'), type),
+      mkFunction(
         'x',
         type,
-        new Lam(
+        mkFunction(
           'y',
           type,
           type,
@@ -64,11 +64,11 @@ describe('lambda', () => {
 
     // we can also use the absolute path (we're starting at root here)!
     expectImmutableIs(
-      k.subst(mkAbs(), mkAbs('binder'), type),
-      new Lam(
+      k.subst(mkFree(), mkFree('binder'), type),
+      mkFunction(
         'x',
         type,
-        new Lam(
+        mkFunction(
           'y',
           type,
           type,
@@ -80,13 +80,13 @@ describe('lambda', () => {
 
     // y's absolute path doesn't change anything
     expectImmutableIs(
-      k.subst(mkAbs(), mkAbs('body', 'binder'), type),
+      k.subst(mkFree(), mkFree('body', 'binder'), type),
       k
     );
 
     // some random path also doesn't change anything
     expectImmutableIs(
-      k.subst(mkAbs(), mkAbs('a', 'b', 'c'), type),
+      k.subst(mkFree(), mkFree('a', 'b', 'c'), type),
       k
     );
   });

@@ -1,7 +1,7 @@
 import { List } from 'immutable';
 import React, {Component, PropTypes} from 'react';
 
-import { AbsRef } from '../../theory/ref';
+import { FreeVar } from '../../theory/ref';
 import { Var, Hole as HoleData, VARIABLE, INTRO } from '../../theory/tm';
 import Expression from '../Expression';
 import Autocomplete from '../Autocomplete';
@@ -55,7 +55,7 @@ export default class Hole extends Component {
     // This is the really important bit -- search is type-directed.
     return this.context.findCompletions(
       hole.type,
-      new AbsRef({ path }),
+      new FreeVar({ path }),
       value
     );
   }

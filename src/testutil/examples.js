@@ -1,25 +1,25 @@
 /* eslint id-length: 0 */
 import { Type, Var } from '../theory/tm';
-import { mkRel } from '../theory/ref';
-import Lam from '../aspects/lambda/data';
+import { mkBound } from '../theory/ref';
+import { mkFunction } from '../aspects/function/data';
 
 const type = Type.singleton;
 
-export const id = new Lam(
+export const id = mkFunction(
   'x',
   type,
-  new Var({ ref: mkRel('..', 'binder'), type }),
+  new Var({ ref: mkBound('..', 'binder'), type }),
   type,
 );
 
 
-export const k = new Lam(
+export const k = mkFunction(
   'x',
   type,
-  new Lam(
+  mkFunction(
     'y',
     type,
-    new Var({ ref: mkRel('..', '..', 'binder'), type }),
+    new Var({ ref: mkBound('..', '..', 'binder'), type }),
     type
   ),
   type

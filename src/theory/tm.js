@@ -1,191 +1,106 @@
 // @flow
-//
-// TODO:
-// * source positions? how does this relate to names?
-import invariant from 'invariant';
 import { List, Record } from 'immutable';
 
-import { mkStuck, mkSuccess } from './evaluation';
-import { register } from './registry';
-import { POKE_HOLE, pokeHole, doPokeHole } from '../commands/pokeHole';
-
-import type { EvaluationResult } from './evaluation';
-import type { Ref, AbsRef } from './ref';
+import type { FreeVar } from './ref';
 import type Edit, { Action } from './edit';
+import Scope from './scope';
+import Context from './context';
 
 
-export const VARIABLE = 'VARIABLE';
-export const INTRO = 'INTRO';
-export const ELIM = 'ELIM';
-// export type IntroElim = INTRO | ELIM;
+const TmShape = Record({
+  id: null, // unique identifier
+  data: null,
+  form: null, // Canonical | Eliminator
+}, 'tm');
 
 
-export type Tm = {
-  // * Instead we can pass in the arguments it's being applied to. Tie this in
-  //   with the binding structure we expect to know from a term and we should
-  //   always know the right amount of arguments to pass in.
-  step: (root: AbsRef, args: [Tm]) => EvaluationResult;
+export class Tm extends TmShape {
+  // bind a free variable to make a scope
+  close(free: FreeVar): Scope {
+    return this.close_(0, free);
+  }
 
-  subst: (root: AbsRef, ref: Ref, value: Tm) => Tm;
+  // replace some free variable with a given bound variable
+  close_(bound: number, free: FreeVar): Scope {
+    // delegate to tm class
+    // TODO replace this.form.close
+    return this.form.close(this, bound, free);
+  }
 
+  // substitute the environment for bound variables
+  // Epigram reloaded calls this `close`
+  //
+  // threshold: "the first bound variable to replace". Anything less than this
+  // you leave bound. Anything greater than or equal to, you replace.
+  substEnv(ctx: Context, threshold: number): Scope {
+    return ctx.size === 0 ?
+      this :
+      // TODO replace this.form.substEnv
+      this.form.substEnv(this, ctx, threshold);
+    // TODO - see epigram reloaded for interesting rule re bound variables
+  }
+}
+
+
+const CANONICAL = 'CANONICAL';
+const ELIMINATOR = 'ELIMINATOR';
+
+
+export type Canonical = {
+  ruleType: CANONICAL;
+
+  // where this thing belongs, what it expects of its neighbors
+  rule: Rule;
+
+  // getPieces -> traverse?
+  getPieces: Function; // (tm: Tm) => *Scope
   actions: () => List<Action>;
-
   performEdit: (id: string) => Edit;
 
-  // getIntroUp / getIntroDown
-  //
-  // These two functions mirror each other, sending us up and down a level.
-  //
-  // getIntroDown
-  //  ^   |
-  //  |   v
-  // getIntroUp
-  //
-  // Both used for autocomplete / the interactive builder to generate /
-  // constrain holes.
-  //
-  // It's worth considering why the're not named getType / getInhabitant.
-  // That's a useful intuition to have, but getIntro* emphasizes that we're
-  // only getting the introduction form of any term -- it could just as well be
-  // introduced as an elimination.
-
-  getIntroUp: () => Tm;
-  getIntroDown: () => ?Tm;
-
-  // static form: IntroElim;
+  equals: (tm1: Tm, tm2: Tm) => Boolean;
+  unify: (tm1: Tm, tm2: Tm) => ?Tm;
 };
 
 
-export class Type {
-  static name: string;
+export type Eliminator = {
+  ruleType: ELIMINATOR;
 
-  // $flowstatic
-  static singleton: Type = new Type();
+  // where this thing belongs, what it expects of its neighbors
+  rule: Rule;
 
-  step(): EvaluationResult {
-    return mkSuccess(this);
-  }
+  // getPieces -> traverse?
+  getPieces: Function; // (tm: Tm) => *Scope
 
-  subst(): Tm {
-    return this;
-  }
-
-  actions(): List<Action> {
-    return List([pokeHole]);
-  }
-
-  performEdit(id: string): Edit {
-    invariant(
-      id === POKE_HOLE,
-      'Type.edit only knows of POKE_HOLE'
-    );
-
-    return doPokeHole(this);
-  }
-
-  getIntroUp(): Tm {
-    return Type.singleton;
-  }
-
-  getIntroDown(): ?Tm {
-    return new Hole(); // eslint-disable-line no-use-before-define
-  }
-
-  static form = INTRO;
-}
-
-Type.singleton.type = Type.singleton;
-
-register('type', Type);
+  // describe the evaluation semantics
+  step: Function; // TODO signature
+};
 
 
-const HoleShape = Record({
-  name: null,
-  type: null,
-}, 'hole');
-
-export class Hole extends HoleShape {
-
-  step(): EvaluationResult {
-    return mkStuck(this);
-  }
-
-  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
-    return ref.is(this.ref, root) ? value : this;
-  }
-
-  actions(): List<Action> {
-    return List();
-  }
-
-  // static form = INTRO;
-}
-
-
-// what's the difference between a variable and a hole?
-// a variable is intangible / a hole sits in for a term
-// a slot can be a variable, but not a hole
-//
-// what's a slot? a term or a variable?
-
-
-const VarShape = Record({
-  ref: null,
-  type: null
-}, 'var');
-
-export class Var extends VarShape {
-
-  step(): EvaluationResult {
-    throw new Error('stepping variable!');
-  }
-
-  subst(root: AbsRef, ref: Ref, value: Tm): Tm {
-    return ref.is(this.ref, root) ? value : this;
-  }
-
-  actions(): List<Action> {
-    return List();
-  }
-
-  // static form =
-}
-
-
-const ConflictShape = Record({
-  left: null,
-  right: null,
+const OfType = Record({
+  subject: null,
+  object: null,
 });
 
 
-const TAKE_LEFT = 'TAKE_LEFT';
-const TAKE_RIGHT = 'TAKE_RIGHT';
+// A rule operates in much the same way as a traditional inference rule:
+//
+// > Hey, given the context you're in, it's possible to use this form
+//
+// The preconditions are a telescope, with bound variables. The postcondition
+// is a term.
+export type Rule = (subject: Tm) =>
+  // TODO - describe how to bind a term and a type together
 
-export class Conflict extends ConflictShape {
 
-  actions(): List<Action> {
-    return List([
-      {
-        title: 'take left',
-        id: TAKE_LEFT,
-      },
-      {
-        title: 'take right',
-        id: TAKE_RIGHT,
-      },
-    ]);
-  }
+export type Feature = {
+  // (canonical) constructors for any relevant terms and types
+  constructors: Set<Canonical>;
+  eliminators: Set<Eliminator>;
 
-  performEdit(id: string): Edit {
-    invariant(
-      id === TAKE_LEFT || id === TAKE_RIGHT,
-      'Conflict only knows TAKE_LEFT and TAKE_RIGHT'
-    );
+  // not sure if it's necessary to separate these, but epigram does
+  canTyRules: Set<Rule>;
+  elimTyRules: Set<Rule>;
 
-    return {
-      TAKE_LEFT: this.left,
-      TAKE_RIGHT: this.right,
-    }[id];
-  }
-
-}
+  // names that will bring up this form through autocomplete
+  searchAliases: Set<string>;
+};

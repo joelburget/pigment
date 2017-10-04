@@ -3,8 +3,7 @@
 import invariant from 'invariant';
 import { Record, List } from 'immutable';
 
-import { INTRO, Hole, Type } from '../../theory/tm';
-import { mkSuccess } from '../../theory/evaluation';
+import { Hole, Type } from '../../theory/tm';
 import { register } from '../../theory/registry';
 import { openNewEdit } from '../../theory/edit';
 import { ADD_ENTRY, addEntry, makeLabel } from '../../commands/addEntry';
@@ -15,22 +14,25 @@ import type { Tm } from '../../theory/tm';
 import type Edit, { Action } from '../../theory/edit';
 
 
-const rowShape = Record({
+// formation
+
+const Row = Record({
   entries: null, // Map<string, Tm>
 }, 'row');
 
 
-export default class Row extends rowShape {
+export const mkRow = entries => new Tm(
+  ['Row', 'formation'], new Row({ entries })
+);
 
-  step(): EvaluationResult {
-    return mkSuccess(this);
-  }
 
-  actions(): List<Action> {
-    return List([addEntry, pokeHole]);
-  }
+const formation = {
+  term: mkRow(XXX),
+  type: Type,
 
-  performEdit(id: string): Edit {
+  actions: () => List([addEntry, pokeHole]),
+
+  performEdit: (id: string) => {
     invariant(
       id === ADD_ENTRY || id === POKE_HOLE,
       'Row.performEdit only knows of ADD_ENTRY and POKE_HOLE'
@@ -48,17 +50,21 @@ export default class Row extends rowShape {
       return doPokeHole(this);
     }
   }
-
-  getIntroUp(): Tm {
-    return Type.singleton;
-  }
-
-  getIntroDown(): ?Tm {
-    return new Hole({ type: this });
-  }
-
-  static form = INTRO;
-}
+};
 
 
-register('row', Row);
+const signature = {
+  formation,
+
+  // no introduction / elimination! (for now?)
+  intros: [],
+  elims: [],
+
+  searchAliases: ['row'],
+};
+
+
+export default signature;
+
+
+register('row', signature);
